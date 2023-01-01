@@ -1,4 +1,4 @@
-# temporai
+# TemporAI
 
 TemporAI: ML-centric Toolkit for Medical Time Series
 

@@ -1,0 +1,21 @@
+# Requirements for development.
+black[jupyter]>=22.12.0
+blacken-docs>=1.12.1
+build>=0.9.0  # For building
+flake8>=4.0.1
+git+https://github.com/bashtage/sphinx-material.git
+isort>=5.11.4
+mypy>=0.991
+pre-commit>=2.21.0
+pydantic>=1.10.4
+pylint>=2.14.5
+pyscaffold>=4.3.1
+pyscaffoldext-markdown>=0.5
+pytest>=7.1.2
+pytest-cov>=4.0.0
+setuptools>=65.5.0
+setuptools-scm>=7.1.0
+sphinx >=5.0.2, !=5.1.0
+tox>=3.28.0
+# tox-conda>=0.10.1  # If you want tox to use conda environments.
+twine>=4.0.2  # For publishing
