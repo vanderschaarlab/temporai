@@ -31,7 +31,7 @@ sys.path.insert(0, os.path.join(__location__, "../src"))
 try:  # for Sphinx >= 1.7
     from sphinx.ext import apidoc
 except ImportError:
-    from sphinx import apidoc
+    from sphinx import apidoc  # type: ignore
 
 output_dir = os.path.join(__location__, "api")
 module_dir = os.path.join(__location__, "../src/tempor")
@@ -51,13 +51,13 @@ try:
         args = args[1:]
 
     apidoc.main(args)
-except Exception as e:
+except Exception as e:  # pylint: disable=broad-except
     print("Running `sphinx-apidoc` failed!\n{}".format(e))
 
 # -- General configuration ---------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
-# needs_sphinx = '1.0'
+needs_sphinx = '5.0.0'
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
@@ -105,8 +105,8 @@ source_suffix = [".rst", ".md"]
 master_doc = "index"
 
 # General information about the project.
-project = "temporai"
-copyright = "2022, Evgeny Saveliev"
+project = "TemporAI"
+copyright = "2022, van der Schaar Lab"  # pylint: disable=redefined-builtin
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -171,15 +171,34 @@ todo_emit_warnings = True
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = "alabaster"
+html_theme = "sphinx_material"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-html_theme_options = {
-    "sidebar_width": "300px",
-    "page_width": "1200px"
-}
+
+# Material theme options (see theme.conf for more information)
+# html_theme_options = {
+#     # Set the name of the project to appear in the navigation.
+#     'nav_title': 'Project Name',
+#     # Set you GA account ID to enable tracking
+#     'google_analytics_account': 'UA-XXXXX',
+#     # Specify a base_url used to generate sitemap.xml. If not
+#     # specified, then no sitemap will be built.
+#     'base_url': 'https://project.github.io/project',
+#     # Set the color and the accent color
+#     'color_primary': 'blue',
+#     'color_accent': 'light-blue',
+#     # Set the repo location to get a badge with stats
+#     'repo_url': 'https://github.com/project/project/',
+#     'repo_name': 'Project',
+#     # Visible levels of the global TOC; -1 means unlimited
+#     'globaltoc_depth': 3,
+#     # If False, expand all TOC entries
+#     'globaltoc_collapse': False,
+#     # If True, show hidden TOC entries
+#     'globaltoc_includehidden': False,
+# }
 
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = []
@@ -264,7 +283,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-    ("index", "user_guide.tex", "temporai Documentation", "Evgeny Saveliev", "manual")
+    ("index", "user_guide.tex", "TemporAI Documentation", "Evgeny Saveliev", "manual")
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
