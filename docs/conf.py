@@ -8,8 +8,8 @@
 # serve to show the default.
 
 import os
-import sys
 import shutil
+import sys
 
 # -- Path setup --------------------------------------------------------------
 
@@ -57,7 +57,7 @@ except Exception as e:  # pylint: disable=broad-except
 # -- General configuration ---------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
-needs_sphinx = '5.0.0'
+needs_sphinx = "5.0.0"
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
@@ -178,27 +178,30 @@ html_theme = "sphinx_material"
 # documentation.
 
 # Material theme options (see theme.conf for more information)
-# html_theme_options = {
-#     # Set the name of the project to appear in the navigation.
-#     'nav_title': 'Project Name',
-#     # Set you GA account ID to enable tracking
-#     'google_analytics_account': 'UA-XXXXX',
-#     # Specify a base_url used to generate sitemap.xml. If not
-#     # specified, then no sitemap will be built.
-#     'base_url': 'https://project.github.io/project',
-#     # Set the color and the accent color
-#     'color_primary': 'blue',
-#     'color_accent': 'light-blue',
-#     # Set the repo location to get a badge with stats
-#     'repo_url': 'https://github.com/project/project/',
-#     'repo_name': 'Project',
-#     # Visible levels of the global TOC; -1 means unlimited
-#     'globaltoc_depth': 3,
-#     # If False, expand all TOC entries
-#     'globaltoc_collapse': False,
-#     # If True, show hidden TOC entries
-#     'globaltoc_includehidden': False,
-# }
+html_theme_options = {
+    # Set the name of the project to appear in the navigation.
+    "nav_title": "TemporAI",
+    # Set you GA account ID to enable tracking
+    # "google_analytics_account": "UA-XXXXX",
+    #
+    # TODO: Sitemap.
+    # Specify a base_url used to generate sitemap.xml. If not
+    # specified, then no sitemap will be built.
+    # 'base_url': 'https://project.github.io/project',
+    #
+    # Set the color and the accent color
+    "color_primary": "blue",
+    "color_accent": "light-blue",
+    # Set the repo location to get a badge with stats
+    "repo_url": "https://github.com/vanderschaarlab/temporai",
+    "repo_name": "temporai",
+    # Visible levels of the global TOC; -1 means unlimited
+    "globaltoc_depth": 3,
+    # If False, expand all TOC entries
+    "globaltoc_collapse": False,
+    # If True, show hidden TOC entries
+    "globaltoc_includehidden": False,
+}
 
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = []
@@ -282,9 +285,7 @@ latex_elements = {
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
-latex_documents = [
-    ("index", "user_guide.tex", "TemporAI Documentation", "Evgeny Saveliev", "manual")
-]
+latex_documents = [("index", "user_guide.tex", "TemporAI Documentation", "Evgeny Saveliev", "manual")]
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.

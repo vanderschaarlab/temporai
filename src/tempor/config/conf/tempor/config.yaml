@@ -1,0 +1,7 @@
+logging:
+  mode: LIBRARY  # {LIBRARY, SCRIPT}
+  level: DEBUG
+  diagnose: false
+  backtrace: true
+  file_log: true
+working_directory: "$PWD"  # {"$PWD", "~", <any path>}
