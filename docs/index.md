@@ -5,21 +5,18 @@ TemporAI: ML-centric Toolkit for Medical Time Series
 
 ## Note
 
-> This is the main page of your project's [Sphinx] documentation. It is
-> formatted in [Markdown]. Add additional pages by creating md-files in
-> `docs` or rst-files (formatted in [reStructuredText]) and adding links to
-> them in the `Contents` section below.
->
-> Please check [Sphinx] and [MyST] for more information
-> about how to document your project and how to configure your preferences.
+> **💡 Status**: Migrating from the [previous iteration of the project](https://github.com/vanderschaarlab/clairvoyance2).
+
 
 
 ## Contents
 
 ```{toctree}
-:maxdepth: 2
+:glob:
+:maxdepth: 3
 
-Overview <readme>
+Overview <overview>
+User guide <user_guide/index>
 Contributions & Help <contributing>
 License <license>
 Authors <authors>

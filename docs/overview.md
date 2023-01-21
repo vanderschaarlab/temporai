@@ -9,13 +9,8 @@
 [![Twitter](https://img.shields.io/twitter/url/http/shields.io.svg?style=social&label=Twitter)](https://twitter.com/temporai)
 -->
 
-<!-- exclude_docs -->
-[![ReadTheDocs](https://readthedocs.org/projects/temporai/badge/?version=latest)][docs]
-[![PythonVersions](https://img.shields.io/badge/python-py38%20%7C%20py39%20%7C%20py310%20%7C%20py311-blue)](https://docs.python.org/3.8/)
-[![License](https://img.shields.io/github/license/vanderschaarlab/temporai)](./LICENSE.txt)
-<!-- exclude_docs_end -->
 
-# <img src="docs/assets/TemporAI_Logo_Icon.png" height=25> TemporAI
+# <img src="assets/TemporAI_Logo_Icon.png" height=25> TemporAI
 
 > **💡 Status**: Migrating from the [previous iteration of the project](https://github.com/vanderschaarlab/clairvoyance2).
 
@@ -23,12 +18,9 @@
 
 Key concepts:
 
-<!-- exclude_docs -->
-<img src="docs/assets/Conceptual.png" width="600" alt="key concepts">
-<!-- exclude_docs_end -->
-<!-- include_docs
-<img src="docs/assets/Conceptual.png" width="750" alt="key concepts">
-include_docs_end -->
+
+<img src="assets/Conceptual.png" width="750" alt="key concepts">
+
 
 
 ## Installation
@@ -39,7 +31,7 @@ include_docs_end -->
 pip install git+https://github.com/vanderschaarlab/temporai.git
 ```
 
-To view the list of dependencies, see [here](./setup.cfg#L50).
+To view the list of dependencies, see [here](https://github.com/vanderschaarlab/temporai/setup.cfg#L50).
 
 
 
@@ -94,22 +86,14 @@ To view the list of dependencies, see [here](./setup.cfg#L50).
 ## TemporAI Pipeline
 The diagram below illustrates the structure of a *TemporAI* pipeline:
 
-<img src="docs/assets/Pipeline.png" alt="pipeline diagram">
+<img src="assets/Pipeline.png" alt="pipeline diagram">
 
-See [User Guide][docs/user_guide] for tutorials/examples.
+See [User Guide](user_guide/index) for tutorials/examples.
 
 
-<!-- exclude_docs -->
-## Documentation
-
-📖 See the project documentation [here](https://temporai.readthedocs.io/en/latest/).
-<!-- exclude_docs_end -->
 
 
 
 <!--- Reusable --->
   [van der Schaar Lab]:    https://www.vanderschaar-lab.com/
   [docs]:                  https://temporai.readthedocs.io/en/latest/
-<!-- exclude_docs -->
-  [docs/user_guide]:       https://temporai.readthedocs.io/en/latest/user_guide/index.html
-<!-- exclude_docs_end -->

@@ -196,9 +196,9 @@ html_theme_options = {
     "repo_url": "https://github.com/vanderschaarlab/temporai",
     "repo_name": "temporai",
     # Visible levels of the global TOC; -1 means unlimited
-    "globaltoc_depth": 3,
+    "globaltoc_depth": 2,
     # If False, expand all TOC entries
-    "globaltoc_collapse": False,
+    "globaltoc_collapse": True,
     # If True, show hidden TOC entries
     "globaltoc_includehidden": False,
 }
@@ -215,7 +215,7 @@ html_theme_options = {
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-# html_logo = ""
+html_logo = "assets/TemporAI_Logo.svg"
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
@@ -236,7 +236,9 @@ html_static_path = ["_static"]
 # html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
-# html_sidebars = {}
+html_sidebars = {
+    "**": ["logo-text.html", "globaltoc.html", "localtoc.html", "searchbox.html"]
+}
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
@@ -274,7 +276,7 @@ htmlhelp_basename = "temporai-doc"
 
 # -- Options for LaTeX output ------------------------------------------------
 
-latex_elements = {
+latex_elements = {  # type: ignore
     # The paper size ("letterpaper" or "a4paper").
     # "papersize": "letterpaper",
     # The font size ("10pt", "11pt" or "12pt").
