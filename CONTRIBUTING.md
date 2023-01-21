@@ -1,40 +1,13 @@
-```{todo} THIS IS SUPPOSED TO BE AN EXAMPLE. MODIFY IT ACCORDING TO YOUR NEEDS!
-
-   The document assumes you are using a source repository service that promotes a
-   contribution model similar to [GitHub's fork and pull request workflow].
-   While this is true for the majority of services (like GitHub, GitLab,
-   BitBucket), it might not be the case for private repositories (e.g., when
-   using Gerrit).
-
-   Also notice that the code examples might refer to GitHub URLs or the text
-   might use GitHub specific terminology (e.g., *Pull Request* instead of *Merge
-   Request*).
-
-   Please make sure to check the document having these assumptions in mind
-   and update things accordingly.
-```
-
-```{todo} Provide the correct links/replacements at the bottom of the document.
-```
-
-```{todo} You might want to have a look on [PyScaffold's contributor's guide],
-
-   especially if your project is open source. The text should be very similar to
-   this template, but there are a few extra contents that you might decide to
-   also include, like mentioning labels of your issue tracker or automated
-   releases.
-```
-
 # Contributing
 
-Welcome to `temporai` contributor's guide.
+Welcome to *TemporAI* contributor's guide. This is adapted from [PyScaffold] contributor's guide template.
 
 This document focuses on getting any potential contributor familiarized with
 the development processes, but [other kinds of contributions] are also appreciated.
 
 If you are new to using [git] or have never collaborated in a project previously,
 please have a look at [contribution-guide.org]. Other resources are also
-listed in the excellent [guide created by FreeCodeCamp] [^contrib1].
+listed in the excellent [guide created by FreeCodeCamp].
 
 Please notice, all users and contributors are expected to be **open,
 considerate, reasonable, and respectful**. When in doubt,
@@ -43,15 +16,13 @@ behavior guidelines.
 
 ## Issue Reports
 
-If you experience bugs or general issues with `temporai`, please have a look
+If you experience bugs or general issues with *TemporAI*, please have a look
 on the [issue tracker].
 If you don't see anything useful there, please feel free to fire an issue report.
 
-:::{tip}
-Please don't forget to include the closed issues in your search.
+> Please don't forget to include the closed issues in your search.
 Sometimes a solution was already reported, and the problem is considered
 **solved**.
-:::
 
 New issue reports should include information about your programming environment
 (e.g., operating system, Python version) and steps to reproduce the problem.
@@ -61,35 +32,27 @@ you help us to identify the root cause of the issue.
 
 ## Documentation Improvements
 
-You can help improve `temporai` docs by making them more readable and coherent, or
+You can help improve *TemporAI* docs by making them more readable and coherent, or
 by adding missing information and correcting mistakes.
 
-`temporai` documentation uses [Sphinx] as its main documentation compiler.
+*TemporAI* documentation uses [Sphinx] as its main documentation compiler.
 This means that the docs are kept in the same repository as the project code, and
 that any documentation update is done in the same way was a code contribution.
 
-```{todo} Don't forget to mention which markup language you are using.
+We use [CommonMark] as the markup language for the documentation, facilitated by the [MyST] extension. This also allows the use of [reStructuredText] where necessary.
 
-    e.g.,  [reStructuredText] or [CommonMark] with [MyST] extensions.
-```
-
-```{todo} If your project is hosted on GitHub, you can also mention the following tip:
-
-   :::{tip}
-      Please notice that the [GitHub web interface] provides a quick way of
-      propose changes in `temporai`'s files. While this mechanism can
-      be tricky for normal code contributions, it works perfectly fine for
-      contributing to the docs, and can be quite handy.
-
-      If you are interested in trying this method out, please navigate to
-      the `docs` folder in the source [repository], find which file you
-      would like to propose changes and click in the little pencil icon at the
-      top, to open [GitHub's code editor]. Once you finish editing the file,
-      please write a message in the form at the bottom of the page describing
-      which changes have you made and what are the motivations behind them and
-      submit your proposal.
-   :::
-```
+> Please notice that the [GitHub web interface] provides a quick way of
+propose changes in *TemporAI*'s files. While this mechanism can
+be tricky for normal code contributions, it works perfectly fine for
+contributing to the docs, and can be quite handy.
+>
+> If you are interested in trying this method out, please navigate to
+the `docs` folder in the source [repository], find which file you
+would like to propose changes and click in the little pencil icon at the
+top, to open [GitHub's code editor]. Once you finish editing the file,
+please write a message in the form at the bottom of the page describing
+which changes have you made and what are the motivations behind them and
+submit your proposal.
 
 When working on documentation changes in your local machine, you can
 compile them using [tox] :
@@ -107,12 +70,7 @@ python3 -m http.server --directory 'docs/_build/html'
 
 ## Code Contributions
 
-```{todo} Please include a reference or explanation about the internals of the project.
-
-   An architecture description, design principles or at least a summary of the
-   main concepts will make it easy for potential contributors to get started
-   quickly.
-```
+TBC: An architecture description, design principles or at least a summary of the main concepts.
 
 ### Submit an issue
 
@@ -134,7 +92,7 @@ source <PATH TO VENV>/bin/activate
 or [Miniconda]:
 
 ```
-conda create -n temporai python=3 six virtualenv pytest pytest-cov
+conda create -n temporai python=3.8
 conda activate temporai
 ```
 
@@ -142,35 +100,38 @@ conda activate temporai
 
 1. Create an user account on GitHub if you do not already have one.
 
-2. Fork the project [repository]: click on the *Fork* button near the top of the
+1. Fork the project [repository]: click on the *Fork* button near the top of the
    page. This creates a copy of the code under your account on GitHub.
 
-3. Clone this copy to your local disk:
+1. Clone this copy to your local disk:
 
    ```
    git clone git@github.com:YourLogin/temporai.git
    cd temporai
    ```
 
-4. You should run:
+1. Install development requirements:
 
    ```
-   pip install -U pip setuptools -e .
+   pip install -r requirements-dev.txt
+   ```
+
+1. You should run:
+
+   ```
+   pip install -U pip -e .
    ```
 
    to be able to import the package under development in the Python REPL.
 
-   ```{todo} if you are not using pre-commit, please remove the following item:
-   ```
-
-5. Install [pre-commit]:
+1. Install [pre-commit]:
 
    ```
    pip install pre-commit
    pre-commit install
    ```
 
-   `temporai` comes with a lot of hooks configured to automatically help the
+   *TemporAI* comes with a lot of hooks configured to automatically help the
    developer to check the code being written.
 
 ### Implement your changes
@@ -186,7 +147,7 @@ conda activate temporai
 2. Start your work on this branch. Don't forget to add [docstrings] to new
    functions, modules and classes, especially if they are part of public APIs.
 
-3. Add yourself to the list of contributors in `AUTHORS.rst`.
+3. Add yourself to the list of contributors in `AUTHORS.md`.
 
 4. When you’re done editing, do:
 
@@ -197,17 +158,13 @@ conda activate temporai
 
    to record your changes in [git].
 
-   ```{todo} if you are not using pre-commit, please remove the following item:
-   ```
-
    Please make sure to see the validation messages from [pre-commit] and fix
    any eventual issues.
    This should automatically use [flake8]/[black] to check/fix the code style
    in a way that is compatible with the project.
 
-   :::{important}
-   Don't forget to add unit tests and documentation in case your
-   contribution adds an additional feature and is not just a bugfix.
+   **Don't forget to add unit tests and documentation in case your
+   contribution adds an additional feature and is not just a bugfix.**
 
    Moreover, writing a [descriptive commit message] is highly recommended.
    In case of doubt, you can check the commit history with:
@@ -241,13 +198,9 @@ conda activate temporai
 2. Go to the web page of your fork and click "Create pull request"
    to send your changes for review.
 
-   ```{todo} if you are using GitHub, you can uncomment the following paragraph
-
-      Find more detailed information in [creating a PR]. You might also want to open
-      the PR as a draft first and mark it as ready for review after the feedbacks
-      from the continuous integration (CI) system or any required fixes.
-
-   ```
+   Find more detailed information in [creating a PR]. You might also want to open
+   the PR as a draft first and mark it as ready for review after the feedbacks
+   from the continuous integration (CI) system or any required fixes.
 
 ### Troubleshooting
 
@@ -306,15 +259,9 @@ package:
 
 ### Releases
 
-```{todo} This section assumes you are using PyPI to publicly release your package.
-
-   If instead you are using a different/private package index, please update
-   the instructions accordingly.
-```
-
 If you are part of the group of maintainers and have correct user permissions
 on [PyPI], the following steps can be used to release a new version for
-`temporai`:
+*TemporAI*:
 
 1. Make sure all unit tests are successful.
 2. Tag the current commit on the main branch with a release tag, e.g., `v1.2.3`.
@@ -330,10 +277,6 @@ on [PyPI], the following steps can be used to release a new version for
 6. Run `tox -e publish -- --repository pypi` and check that everything was
    uploaded to [PyPI] correctly.
 
-[^contrib1]: Even though, these resources focus on open source projects and
-    communities, the general ideas behind collaborating with other developers
-    to collectively create software are general and can be applied to all sorts
-    of environments, including private companies and proprietary code bases.
 
 
 [black]: https://pypi.org/project/black/
@@ -354,7 +297,8 @@ on [PyPI], the following steps can be used to release a new version for
 [other kinds of contributions]: https://opensource.guide/how-to-contribute
 [pre-commit]: https://pre-commit.com/
 [pypi]: https://pypi.org/
-[pyscaffold's contributor's guide]: https://pyscaffold.org/en/stable/contributing.html
+[PyScaffold contributor's guide template]: https://github.com/pyscaffold/pyscaffold/blob/835eb4f986e37409d33fdb3f4d150e41ee07a111/src/pyscaffold/templates/contributing.template
+[pyscaffold]: https://pyscaffold.org/
 [pytest can drop you]: https://docs.pytest.org/en/stable/usage.html#dropping-to-pdb-python-debugger-at-the-start-of-a-test
 [python software foundation's code of conduct]: https://www.python.org/psf/conduct/
 [restructuredtext]: https://www.sphinx-doc.org/en/master/usage/restructuredtext/
@@ -364,8 +308,5 @@ on [PyPI], the following steps can be used to release a new version for
 [virtualenv]: https://virtualenv.pypa.io/en/stable/
 
 
-```{todo} Please review and change the following definitions:
-```
-
-[repository]: https://github.com/<USERNAME>/temporai
-[issue tracker]: https://github.com/<USERNAME>/temporai/issues
+[repository]: https://github.com/vanderschaarlab/temporai
+[issue tracker]: https://github.com/vanderschaarlab/temporai/issues
