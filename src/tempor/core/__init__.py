@@ -1,4 +1,4 @@
-from . import _supports_impl as supports_impl
+from . import supports_impl
 from ._register_method_decorator import RegisterMethodDecorator
 
 __all__ = [

@@ -9,7 +9,7 @@ import pytest
 
 import tempor.data._settings as settings
 import tempor.data._types as types
-from tempor.data import _check_data_container_def as check
+from tempor.data.container import _check_data_container_def as check
 
 
 class DummyDataCategory(enum.Enum):

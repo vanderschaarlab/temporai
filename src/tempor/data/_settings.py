@@ -46,3 +46,15 @@ DEFAULT_CONTAINER_FLAVOR: Dict[Tuple[types.DataCategory, type], types.ContainerF
     (types.DataCategory.TIME_SERIES, pd.DataFrame): types.ContainerFlavor.DF_SAMPLE_TIMESTEP_X_FEATURE,
     (types.DataCategory.EVENT, pd.DataFrame): types.ContainerFlavor.DF_SAMPLE_TIME_X_EVENT,
 }
+
+DEFAULT_CONTAINER_FLAVOR_SPEC: types.ContainerFlavorSpec = {
+    "Xt": None,
+    "Xs": None,
+    "Xe": None,
+    "Yt": None,
+    "Ys": None,
+    "Ye": None,
+    "At": None,
+    "As": None,
+    "Ae": None,
+}

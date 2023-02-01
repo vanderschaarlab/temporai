@@ -1,25 +1,27 @@
-from abc import ABC, abstractmethod
-from typing import Callable, Dict, List, Type
+import abc
+from typing import Callable, Dict, Sequence, Type
 
 import tempor.core
-import tempor.data as dat
-import tempor.data.requirements as r
+import tempor.data._types as types
+import tempor.data.container._requirements as dr
 import tempor.exc
-from tempor.data.validator import interface
+from tempor.data.container._validator import interface
 from tempor.log import log_helpers, logger
 
-_ValidationMethod = Callable[["ValidatorImplementation", dat.DataContainer, r.DataRequirement], dat.DataContainer]
+_ValidationMethod = Callable[
+    ["ValidatorImplementation", types.DataContainer, dr.DataContainerRequirement], types.DataContainer
+]
 
 
-class ValidatorImplementation(interface.DataValidatorInterface, ABC):
-    validation_methods: Dict[Type[r.DataRequirement], _ValidationMethod]
+class ValidatorImplementation(interface.DataValidatorInterface, abc.ABC):
+    validation_methods: Dict[Type[dr.DataContainerRequirement], _ValidationMethod]
     _validation_records: Dict
 
     def __init__(self) -> None:
         super().__init__()
 
         # Check all data requirements are handled:
-        expected_reqs = r.DATA_REQUIREMENTS[self.data_category]
+        expected_reqs = dr.DATA_CONTAINER_REQUIREMENTS_REGISTRY[self.data_category]
         found_reqs = set(self.validation_methods.keys())
         if expected_reqs != found_reqs:
             raise TypeError(
@@ -28,36 +30,41 @@ class ValidatorImplementation(interface.DataValidatorInterface, ABC):
             )
 
     @property
-    @abstractmethod
-    def data_category(self) -> dat.DataCategory:  # pragma: no cover
+    @abc.abstractmethod
+    def data_category(self) -> types.DataCategory:  # pragma: no cover
         ...
 
-    @abstractmethod
-    def root_validate(self, data: dat.DataContainer) -> dat.DataContainer:  # pragma: no cover
+    @abc.abstractmethod
+    def root_validate(self, target: types.DataContainer) -> types.DataContainer:  # pragma: no cover
         # Always do this validation.
         ...
 
-    def validate(
-        self, data: dat.DataContainer, requirements: List[r.DataRequirement], container_flavor: dat.ContainerFlavor
-    ) -> dat.DataContainer:
+    def _validate(
+        self,
+        target: types.DataContainer,
+        *,
+        requirements: Sequence[dr.DataContainerRequirement],
+        container_flavor: types.ContainerFlavor,
+        **kwargs,
+    ) -> types.DataContainer:
         with log_helpers.exc_to_log():
             try:
                 self._validation_records = dict()
                 logger.debug("Doing root validation")
-                data = self.root_validate(data)
+                target = self.root_validate(target)
                 for req in requirements:
                     logger.debug(f"Validating requirement {req}")
-                    data = self.validation_methods[type(req)](self, data, req)
+                    target = self.validation_methods[type(req)](self, target, req)
                 self._validation_records = dict()
             except Exception as ex:
                 raise tempor.exc.DataValidationFailedException(
                     "Data validation failed, see traceback for more details"
                 ) from ex
-        return data
+        return target
 
 
 class RegisterValidation(tempor.core.RegisterMethodDecorator):
     owner_class: type = ValidatorImplementation
     registration_dict_attribute_name: str = "validation_methods"
-    key_type: type = r.DataRequirement
+    key_type: type = dr.DataContainerRequirement
     method_category_name: str = "validation"

@@ -6,9 +6,9 @@ from unittest.mock import Mock
 
 import pytest
 
-import tempor.data._check_data_container_def as check
 import tempor.data._types as types
-import tempor.data.validator as v
+import tempor.data.container._check_data_container_def as check
+import tempor.data.container._validator as v
 
 MockCategoryA = Mock()
 
@@ -99,12 +99,12 @@ def test_validator_validate_success(dummy_implementation, set_dummy_container_ty
 
     validator = TestDataValidator()
     validator.validate(
-        data=DummyContainerA(),  # pyright: ignore
+        target=DummyContainerA(),  # pyright: ignore
         requirements=[],
         container_flavor=DummyContainerFlavor.CONT_A_1,  # pyright: ignore
     )
     validator.validate(
-        data=DummyContainerB(),  # pyright: ignore
+        target=DummyContainerB(),  # pyright: ignore
         requirements=[],
         container_flavor=DummyContainerFlavor.CONT_B_1,  # pyright: ignore
     )
@@ -131,7 +131,7 @@ def test_validator_validate_fails_not_data_container_type(
 
     with pytest.raises(TypeError, match=".supported types.*"):
         validator.validate(
-            data="string_is_wrong_type",  # pyright: ignore
+            target="string_is_wrong_type",  # pyright: ignore
             requirements=[],
             container_flavor=DummyContainerFlavor.CONT_A_1,  # pyright: ignore
         )

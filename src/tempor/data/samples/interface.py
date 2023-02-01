@@ -1,23 +1,23 @@
-from abc import ABC, abstractmethod
+import abc
 from typing import Optional
 
 import numpy as np
 import pandas as pd
 
-import tempor.data as dat
+import tempor.data._types as types
 
 
-class SamplesInterface(ABC):
-    @abstractmethod
-    def __init__(self, data: dat.DataContainer, container_flavor: Optional[dat.ContainerFlavor] = None) -> None:
+class SamplesInterface(abc.ABC):
+    @abc.abstractmethod
+    def __init__(self, data: types.DataContainer, container_flavor: Optional[types.ContainerFlavor] = None) -> None:
         ...
 
     @property
-    @abstractmethod
-    def data(self) -> dat.DataContainer:
+    @abc.abstractmethod
+    def data(self) -> types.DataContainer:
         ...
 
-    @abstractmethod
+    @abc.abstractmethod
     def as_data_frame(self) -> pd.DataFrame:
         ...
 
@@ -26,16 +26,18 @@ class SamplesInterface(ABC):
 
 
 class StaticSamplesInterface(SamplesInterface):
-    @abstractmethod
+    @abc.abstractmethod
     def as_array(self) -> np.ndarray:
         ...
 
 
 class TimeSeriesSamplesInterface(SamplesInterface):
-    @abstractmethod
+    @abc.abstractmethod
     def as_array(self, padding_indicator) -> np.ndarray:
         ...
 
 
 class EventSamplesInterface(SamplesInterface):
-    pass
+    @abc.abstractmethod
+    def as_array(self) -> np.ndarray:
+        ...

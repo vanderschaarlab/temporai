@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 
-import tempor.data as dat
+import tempor.data._types as types
 from tempor.data import utils
 
 from . import _impl as impl
@@ -19,7 +19,7 @@ class SamplesImplementationDF(impl.SamplesImplementation):
 
 
 class StaticSamples(SamplesImplementationDF, impl.StaticSamplesImplementation):
-    def __init__(self, data: pd.DataFrame, container_flavor: dat.ContainerFlavor) -> None:
+    def __init__(self, data: pd.DataFrame, container_flavor: types.ContainerFlavor) -> None:
         SamplesImplementationDF.__init__(self, data, container_flavor)
         impl.StaticSamplesImplementation.__init__(self, data, container_flavor)
 
@@ -31,7 +31,7 @@ class StaticSamples(SamplesImplementationDF, impl.StaticSamplesImplementation):
 
 
 class TimeSeriesSamples(SamplesImplementationDF, impl.TimeSeriesSamplesImplementation):
-    def __init__(self, data: pd.DataFrame, container_flavor: dat.ContainerFlavor) -> None:
+    def __init__(self, data: pd.DataFrame, container_flavor: types.ContainerFlavor) -> None:
         SamplesImplementationDF.__init__(self, data, container_flavor)
         impl.TimeSeriesSamplesImplementation.__init__(self, data, container_flavor)
 
@@ -45,7 +45,7 @@ class TimeSeriesSamples(SamplesImplementationDF, impl.TimeSeriesSamplesImplement
 
 
 class EventSamples(SamplesImplementationDF, impl.EventSamplesImplementation):
-    def __init__(self, data: pd.DataFrame, container_flavor: dat.ContainerFlavor) -> None:
+    def __init__(self, data: pd.DataFrame, container_flavor: types.ContainerFlavor) -> None:
         SamplesImplementationDF.__init__(self, data, container_flavor)
         impl.EventSamplesImplementation.__init__(self, data, container_flavor)
 

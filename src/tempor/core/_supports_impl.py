@@ -1,11 +1,11 @@
-from abc import ABC, abstractmethod
+import abc
 from typing import Dict, Generic, Tuple, TypeVar
 
 SupportsT = TypeVar("SupportsT")
 ImplementationT = TypeVar("ImplementationT")
 
 
-class SupportsImplementations(Generic[SupportsT, ImplementationT], ABC):
+class SupportsImplementations(Generic[SupportsT, ImplementationT], abc.ABC):
     def __init__(self) -> None:
         super().__init__()
         self._implementations: Dict[SupportsT, ImplementationT] = self._register_implementations()
@@ -26,11 +26,11 @@ class SupportsImplementations(Generic[SupportsT, ImplementationT], ABC):
         return self._implementations[key]
 
     @property
-    @abstractmethod
+    @abc.abstractmethod
     def supports_implementations_for(self) -> Tuple[SupportsT, ...]:  # pragma: no cover
         ...
 
-    @abstractmethod
+    @abc.abstractmethod
     def _register_implementations(self) -> Dict[SupportsT, ImplementationT]:  # pragma: no cover
         ...
 

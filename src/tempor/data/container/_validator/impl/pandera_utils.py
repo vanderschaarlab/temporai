@@ -3,7 +3,7 @@ from typing import Any, Dict, Iterable, List, Set, Tuple
 import pandas as pd
 import pandera as pa
 
-import tempor.data as dat
+import tempor.data._types as types
 from tempor.log import logger
 
 _DATA_FRAME_SCHEMA_INIT_ARGUMENTS = [
@@ -78,7 +78,7 @@ def update_multiindex(multi_index: pa.MultiIndex, **kwargs) -> pa.MultiIndex:
     return pa.MultiIndex(**items)
 
 
-PA_DTYPE_MAP: Dict[dat.Dtype, pa.DataType] = {
+PA_DTYPE_MAP: Dict[types.Dtype, pa.DataType] = {
     bool: pa.Bool(),
     int: pa.Int(),
     float: pa.Float(),
@@ -88,7 +88,7 @@ PA_DTYPE_MAP: Dict[dat.Dtype, pa.DataType] = {
 }
 
 
-def get_pa_dtypes(dtypes: Iterable[dat.Dtype]) -> Set[pa.DataType]:
+def get_pa_dtypes(dtypes: Iterable[types.Dtype]) -> Set[pa.DataType]:
     pa_dtypes = []
     for dt in dtypes:
         if isinstance(dt, pa.DataType):
@@ -213,7 +213,7 @@ class checks:  # Functions as a "namespace" for clarity.
 
     class dynamic:
         @staticmethod
-        def values_are_one_of_dtypes(dtypes: Set[dat.Dtype]) -> pa.Check:
+        def values_are_one_of_dtypes(dtypes: Set[types.Dtype]) -> pa.Check:
             series_name = "(Column) Values"
             error = str(f"DataFrame {series_name} dtype validation failed, must be one of: {dtypes}")
             return pa.Check(
@@ -228,7 +228,7 @@ class checks:  # Functions as a "namespace" for clarity.
             )
 
         @staticmethod
-        def index_is_one_of_dtypes(dtypes: Set[dat.Dtype]) -> pa.Check:
+        def index_is_one_of_dtypes(dtypes: Set[types.Dtype]) -> pa.Check:
             series_name = "Index"
             error = str(f"DataFrame {series_name} dtype validation failed, must be one of: {dtypes}")
             return pa.Check(
@@ -243,7 +243,7 @@ class checks:  # Functions as a "namespace" for clarity.
             )
 
         @staticmethod
-        def column_index_is_one_of_dtypes(dtypes: Set[dat.Dtype], *, nullable: bool) -> pa.Check:
+        def column_index_is_one_of_dtypes(dtypes: Set[types.Dtype], *, nullable: bool) -> pa.Check:
             series_name = "Column Index"
             error = str(f"DataFrame {series_name} dtype validation failed, must be one of: {dtypes}")
             return pa.Check(
