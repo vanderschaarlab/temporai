@@ -23,7 +23,7 @@ class TestMultiindexTimeseriesDfToArray:
                 array
                 == np.transpose(
                     np.asarray(
-                        [
+                        [  # pyright: ignore
                             [
                                 [11, 12, 13, 14],
                                 [1.1, 1.2, 1.3, 1.4],
@@ -91,7 +91,7 @@ class TestMultiindexTimeseriesDfToArray:
                 array
                 == np.transpose(
                     np.asarray(
-                        [
+                        [  # pyright: ignore
                             [
                                 [11, 12, 13],
                                 [1.1, 1.2, 1.3],

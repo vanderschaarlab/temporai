@@ -1,9 +1,9 @@
-from abc import ABC, abstractmethod
+import abc
 from typing import Tuple
 
 import pandas as pd
 
-import tempor.data._check_data_container_def as check
+import tempor.data.container._check_data_container_def as check
 from tempor.core import supports_impl as si
 
 from . import _types as types
@@ -11,7 +11,7 @@ from . import _types as types
 DataContainerDef = Tuple[type, types.ContainerFlavor]
 
 
-class SupportsContainer(si.SupportsImplementations[DataContainerDef, si.ImplementationT], ABC):
+class SupportsContainer(si.SupportsImplementations[DataContainerDef, si.ImplementationT], abc.ABC):
     def check_data_container_supported_types(self, data_container: types.DataContainer):
         # Each derived class of `SupportsContainer` may choose to support only a subset of data container types.
         # Hence this pydantic validator added to check that.
@@ -30,7 +30,7 @@ class SupportsContainer(si.SupportsImplementations[DataContainerDef, si.Implemen
         super().__init__()
 
     @property
-    @abstractmethod
+    @abc.abstractmethod
     def data_category(self) -> types.DataCategory:  # pragma: no cover
         ...
 

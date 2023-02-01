@@ -1,5 +1,5 @@
 import enum
-from typing import Literal, Union
+from typing import Dict, Literal, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -18,3 +18,8 @@ class ContainerFlavor(enum.Enum):
     DF_SAMPLE_X_FEATURE = enum.auto()
     DF_SAMPLE_TIMESTEP_X_FEATURE = enum.auto()
     DF_SAMPLE_TIME_X_EVENT = enum.auto()
+
+
+SamplesAttributes = Literal["Xt", "Xs", "Xe", "Yt", "Ys", "Ye", "At", "As", "Ae"]
+
+ContainerFlavorSpec = Dict[SamplesAttributes, Optional[ContainerFlavor]]

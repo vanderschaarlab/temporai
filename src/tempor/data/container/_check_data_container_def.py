@@ -4,8 +4,8 @@ from typing import Type
 import pydantic
 import pydantic.dataclasses
 
-from . import _settings as settings
-from . import _types as types
+import tempor.data._settings as settings
+import tempor.data._types as types
 
 
 @pydantic.dataclasses.dataclass(frozen=True)

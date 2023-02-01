@@ -3,9 +3,9 @@ from typing import Tuple
 import pandas as pd
 import pandera as pa
 
-import tempor.data as dat
-import tempor.data.requirements as r
-from tempor.data import DATA_SETTINGS as DS  # For brevity.
+import tempor.data._types as types
+import tempor.data.container._requirements as dr
+from tempor.data.settings import DATA_SETTINGS as DS  # For brevity.
 from tempor.log import logger
 
 from . import _impl as impl
@@ -21,36 +21,36 @@ class DataValidatorDF(impl.ValidatorImplementation):
     def schema(self, value):
         self._validation_records["schema"] = value
 
-    @impl.RegisterValidation.register_method_for(r.ValueDTypes)
-    def _(self, data: pd.DataFrame, req: r.DataRequirement) -> pd.DataFrame:
-        assert isinstance(req, r.ValueDTypes)
+    @impl.RegisterValidation.register_method_for(dr.ValueDTypes)
+    def _(self, target: pd.DataFrame, req: dr.DataContainerRequirement) -> pd.DataFrame:
+        assert isinstance(req, dr.ValueDTypes)
         self.schema = pu.add_all_column_checks(
             self.schema,
             dtype=None,
             nullable=True,
-            checks_list=[pu.checks.dynamic.values_are_one_of_dtypes(set(req.value_dtypes))],
+            checks_list=[pu.checks.dynamic.values_are_one_of_dtypes(set(req.definition))],
         )
-        return self.schema.validate(data)
+        return self.schema.validate(target)
 
-    @impl.RegisterValidation.register_method_for(r.AllowMissing)
-    def _(self, data: pd.DataFrame, req: r.DataRequirement) -> pd.DataFrame:
-        assert isinstance(req, r.AllowMissing)
+    @impl.RegisterValidation.register_method_for(dr.AllowMissing)
+    def _(self, target: pd.DataFrame, req: dr.DataContainerRequirement) -> pd.DataFrame:
+        assert isinstance(req, dr.AllowMissing)
         self.schema = pu.add_all_column_checks(
             self.schema,
             dtype=None,
-            nullable=req.allow_missing,
+            nullable=req.definition,
             checks_list=[],
         )
-        return self.schema.validate(data)
+        return self.schema.validate(target)
 
 
 class StaticDataValidator(DataValidatorDF):
     @property
-    def data_category(self) -> dat.DataCategory:
-        return dat.DataCategory.STATIC
+    def data_category(self) -> types.DataCategory:
+        return types.DataCategory.STATIC
 
-    def root_validate(self, data: pd.DataFrame) -> pd.DataFrame:
-        schema = pa.infer_schema(data)
+    def root_validate(self, target: pd.DataFrame) -> pd.DataFrame:
+        schema = pa.infer_schema(target)
         assert isinstance(schema, pa.DataFrameSchema)
         logger.debug(f"Inferred schema:\n{schema}")
 
@@ -65,7 +65,7 @@ class StaticDataValidator(DataValidatorDF):
                 ),
             ],
         )
-        schema.validate(data)
+        schema.validate(target)
 
         # (Column) values:
         schema = pu.add_all_column_checks(
@@ -74,33 +74,33 @@ class StaticDataValidator(DataValidatorDF):
             nullable=DS.values_nullable,
             checks_list=[pu.checks.dynamic.values_are_one_of_dtypes(DS.value_dtypes)],
         )
-        data = schema.validate(data)
+        target = schema.validate(target)
 
         # Index:
-        schema, data = pu.set_up_index(
+        schema, target = pu.set_up_index(
             schema,
-            data,
+            target,
             name=DS.sample_index_name,
             nullable=DS.sample_index_nullable,
             unique=DS.sample_index_unique,
             checks_list=[pu.checks.dynamic.index_is_one_of_dtypes(DS.sample_index_dtypes)],
         )
-        data = schema.validate(data)
-        assert isinstance(data, pd.DataFrame)
+        target = schema.validate(target)
+        assert isinstance(target, pd.DataFrame)
 
         logger.debug(f"Final schema:\n{schema}")
 
         self.schema = schema
-        return data
+        return target
 
 
 class TimeSeriesDataValidator(DataValidatorDF):
     @property
-    def data_category(self) -> dat.DataCategory:
-        return dat.DataCategory.TIME_SERIES
+    def data_category(self) -> types.DataCategory:
+        return types.DataCategory.TIME_SERIES
 
-    def root_validate(self, data: pd.DataFrame) -> pd.DataFrame:
-        schema = pa.infer_schema(data)
+    def root_validate(self, target: pd.DataFrame) -> pd.DataFrame:
+        schema = pa.infer_schema(target)
         assert isinstance(schema, pa.DataFrameSchema)
         logger.debug(f"Inferred schema:\n{schema}")
 
@@ -115,7 +115,7 @@ class TimeSeriesDataValidator(DataValidatorDF):
                 ),
             ],
         )
-        schema.validate(data)
+        schema.validate(target)
 
         # (Column) values:
         schema = pu.add_all_column_checks(
@@ -124,7 +124,7 @@ class TimeSeriesDataValidator(DataValidatorDF):
             nullable=DS.values_nullable,
             checks_list=[pu.checks.dynamic.values_are_one_of_dtypes(DS.value_dtypes)],
         )
-        schema.validate(data)
+        schema.validate(target)
 
         # Index:
         multiindex_unique_def: Tuple[str, ...] = tuple()
@@ -132,9 +132,9 @@ class TimeSeriesDataValidator(DataValidatorDF):
             multiindex_unique_def = (DS.sample_index_name,)
         if DS.sample_timestep_index_unique:
             multiindex_unique_def = (DS.sample_index_name, DS.time_index_name)
-        schema, data = pu.set_up_2level_multiindex(
+        schema, target = pu.set_up_2level_multiindex(
             schema,
-            data,
+            target,
             names=(DS.sample_index_name, DS.time_index_name),
             nullable=(DS.sample_index_nullable, DS.time_index_nullable),
             unique=multiindex_unique_def,
@@ -143,22 +143,22 @@ class TimeSeriesDataValidator(DataValidatorDF):
                 [pu.checks.dynamic.index_is_one_of_dtypes(DS.time_index_dtypes)],
             ),
         )
-        data = schema.validate(data)
-        assert isinstance(data, pd.DataFrame)
+        target = schema.validate(target)
+        assert isinstance(target, pd.DataFrame)
 
         logger.debug(f"Final schema:\n{schema}")
 
         self.schema = schema
-        return data
+        return target
 
 
 class EventDataValidator(DataValidatorDF):
     @property
-    def data_category(self) -> dat.DataCategory:
-        return dat.DataCategory.EVENT
+    def data_category(self) -> types.DataCategory:
+        return types.DataCategory.EVENT
 
-    def root_validate(self, data: pd.DataFrame) -> pd.DataFrame:
-        schema = pa.infer_schema(data)
+    def root_validate(self, target: pd.DataFrame) -> pd.DataFrame:
+        schema = pa.infer_schema(target)
         assert isinstance(schema, pa.DataFrameSchema)
         logger.debug(f"Inferred schema:\n{schema}")
 
@@ -174,7 +174,7 @@ class EventDataValidator(DataValidatorDF):
                 ),
             ],
         )
-        schema.validate(data)
+        schema.validate(target)
 
         # (Column) values:
         schema = pu.add_all_column_checks(
@@ -183,7 +183,7 @@ class EventDataValidator(DataValidatorDF):
             nullable=DS.values_nullable,
             checks_list=[pu.checks.dynamic.values_are_one_of_dtypes(DS.value_dtypes)],
         )
-        schema.validate(data)
+        schema.validate(target)
 
         # Index:
         multiindex_unique_def: Tuple[str, ...] = tuple()
@@ -191,9 +191,9 @@ class EventDataValidator(DataValidatorDF):
             multiindex_unique_def = (DS.sample_index_name,)
         if DS.sample_timestep_index_unique:
             multiindex_unique_def = (DS.sample_index_name, DS.time_index_name)
-        schema, data = pu.set_up_2level_multiindex(
+        schema, target = pu.set_up_2level_multiindex(
             schema,
-            data,
+            target,
             names=(DS.sample_index_name, DS.time_index_name),
             nullable=(DS.sample_index_nullable, DS.time_index_nullable),
             unique=multiindex_unique_def,
@@ -202,10 +202,10 @@ class EventDataValidator(DataValidatorDF):
                 [pu.checks.dynamic.index_is_one_of_dtypes(DS.time_index_dtypes)],
             ),
         )
-        data = schema.validate(data)
-        assert isinstance(data, pd.DataFrame)
+        target = schema.validate(target)
+        assert isinstance(target, pd.DataFrame)
 
         logger.debug(f"Final schema:\n{schema}")
 
         self.schema = schema
-        return data
+        return target

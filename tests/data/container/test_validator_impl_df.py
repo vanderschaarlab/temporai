@@ -4,10 +4,10 @@
 import pandas as pd
 import pytest
 
-import tempor.data as dat
-import tempor.data.requirements as r
+import tempor.data.container._requirements as dr
+import tempor.data.types as types
 import tempor.exc
-from tempor.data.validator.impl import df_validator
+from tempor.data.container._validator.impl import df_validator
 
 
 @pytest.fixture
@@ -27,20 +27,20 @@ def df_event(df_event_num_nonan):
 
 def test_static_validator_root_validation(df_static):
     validator = df_validator.StaticDataValidator()
-    validator.validate(df_static, requirements=[], container_flavor=dat.ContainerFlavor.DF_SAMPLE_X_FEATURE)
+    validator.validate(df_static, requirements=[], container_flavor=types.ContainerFlavor.DF_SAMPLE_X_FEATURE)
 
 
 def test_common_requirements_passes(df_static):
     validator = df_validator.StaticDataValidator()
     validator.validate(
         df_static,
-        requirements=[r.ValueDTypes(value_dtypes=[float, "category"])],
-        container_flavor=dat.ContainerFlavor.DF_SAMPLE_X_FEATURE,
+        requirements=[dr.ValueDTypes([float, "category"])],
+        container_flavor=types.ContainerFlavor.DF_SAMPLE_X_FEATURE,
     )
     validator.validate(
         df_static,
-        requirements=[r.AllowMissing(allow_missing=True)],
-        container_flavor=dat.ContainerFlavor.DF_SAMPLE_X_FEATURE,
+        requirements=[dr.AllowMissing(definition=True)],
+        container_flavor=types.ContainerFlavor.DF_SAMPLE_X_FEATURE,
     )
 
 
@@ -50,28 +50,28 @@ def test_common_requirements_fails(df_static):
     with pytest.raises(tempor.exc.DataValidationFailedException):
         validator.validate(
             df_static,
-            requirements=[r.ValueDTypes(value_dtypes=[bool])],
-            container_flavor=dat.ContainerFlavor.DF_SAMPLE_X_FEATURE,
+            requirements=[dr.ValueDTypes(definition=[bool])],
+            container_flavor=types.ContainerFlavor.DF_SAMPLE_X_FEATURE,
         )
 
     with pytest.raises(tempor.exc.DataValidationFailedException):
         validator.validate(
             df_static,
-            requirements=[r.AllowMissing(allow_missing=False)],
-            container_flavor=dat.ContainerFlavor.DF_SAMPLE_X_FEATURE,
+            requirements=[dr.AllowMissing(definition=False)],
+            container_flavor=types.ContainerFlavor.DF_SAMPLE_X_FEATURE,
         )
 
 
 def test_time_series_validator_root_validation(df_time_series):
     validator = df_validator.TimeSeriesDataValidator()
     validator.validate(
-        df_time_series, requirements=[], container_flavor=dat.ContainerFlavor.DF_SAMPLE_TIMESTEP_X_FEATURE
+        df_time_series, requirements=[], container_flavor=types.ContainerFlavor.DF_SAMPLE_TIMESTEP_X_FEATURE
     )
 
 
 def test_event_validator_root_validation(df_event):
     validator = df_validator.EventDataValidator()
-    validator.validate(df_event, requirements=[], container_flavor=dat.ContainerFlavor.DF_SAMPLE_TIMESTEP_X_FEATURE)
+    validator.validate(df_event, requirements=[], container_flavor=types.ContainerFlavor.DF_SAMPLE_TIMESTEP_X_FEATURE)
 
 
 def test_event_validator_root_validation_fails_not_one_to_one_indices():
@@ -88,5 +88,5 @@ def test_event_validator_root_validation_fails_not_one_to_one_indices():
     validator = df_validator.EventDataValidator()
 
     with pytest.raises(tempor.exc.DataValidationFailedException) as excinfo:
-        validator.validate(df, requirements=[], container_flavor=dat.ContainerFlavor.DF_SAMPLE_TIMESTEP_X_FEATURE)
+        validator.validate(df, requirements=[], container_flavor=types.ContainerFlavor.DF_SAMPLE_TIMESTEP_X_FEATURE)
     assert "one-to-one" in str(excinfo.getrepr())
