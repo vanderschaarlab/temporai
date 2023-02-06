@@ -1,3 +1,6 @@
+import enum
+
+
 def get_class_full_name(o: object):
     # See: https://stackoverflow.com/a/2020083
     class_ = o.__class__
@@ -5,3 +8,7 @@ def get_class_full_name(o: object):
     if module == "builtins":
         return class_.__qualname__  # avoid outputs like "builtins.str"
     return module + "." + class_.__qualname__
+
+
+def get_enum_name(enum_: enum.Enum) -> str:
+    return enum_.name.lower()

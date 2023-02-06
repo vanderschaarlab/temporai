@@ -9,8 +9,8 @@ import pytest
 import tempor.core.requirements as r
 import tempor.data._settings as dat_settings
 import tempor.data._types as dat_types
-from tempor.model import _requirements_config as rc
-from tempor.model import _types as types
+from tempor.plugins import _requirements_config as rc
+from tempor.plugins.core import _types as types
 
 
 @pytest.fixture
@@ -71,8 +71,8 @@ class TestRequirementsConfig:
 def MethodConfigUnderTest():
     class MethodConfig(rc._MethodConfig):  # pylint: disable=protected-access
         @property
-        def method_type(self) -> types.MethodTypes:
-            return types.MethodTypes.FIT
+        def method_type(self) -> types.EstimatorMethods:
+            return types.EstimatorMethods.FIT
 
     return MethodConfig
 
@@ -83,7 +83,7 @@ class TestMethodConfig:
             data_present=dummy_data_present_arg, Xt_config=Mock(spec=rc.TimeSeriesDataContainerConfig)
         )
 
-        assert method_config.method_type == types.MethodTypes.FIT  # noqa: E721
+        assert method_config.method_type == types.EstimatorMethods.FIT  # noqa: E721
         assert method_config.Xt_config is not None
         assert method_config.Xs_config is None
         assert method_config.Xe_config is None
@@ -141,7 +141,7 @@ class TestFitConfig:
     def test_init_success(self):
         config = rc.FitConfig()
 
-        assert config.method_type == types.MethodTypes.FIT  # noqa: E721
+        assert config.method_type == types.EstimatorMethods.FIT  # noqa: E721
 
 
 class TestTransformConfig:
@@ -149,7 +149,7 @@ class TestTransformConfig:
         config = rc.TransformConfig(data_present=dummy_data_present_arg)
 
         assert config.data_present == dummy_data_present_arg
-        assert config.method_type == types.MethodTypes.TRANSFORM  # noqa: E721
+        assert config.method_type == types.EstimatorMethods.TRANSFORM  # noqa: E721
 
 
 class TestPredictConfig:
@@ -157,7 +157,7 @@ class TestPredictConfig:
         config = rc.PredictConfig(data_present=dummy_data_present_arg)
 
         assert config.data_present == dummy_data_present_arg
-        assert config.method_type == types.MethodTypes.PREDICT  # noqa: E721
+        assert config.method_type == types.EstimatorMethods.PREDICT  # noqa: E721
 
 
 class TestPredictCounterfactualConfig:
@@ -165,7 +165,7 @@ class TestPredictCounterfactualConfig:
         config = rc.PredictCounterfactualConfig(data_present=dummy_data_present_arg)
 
         assert config.data_present == dummy_data_present_arg
-        assert config.method_type == types.MethodTypes.PREDICT_COUNTERFACTUAL  # noqa: E721
+        assert config.method_type == types.EstimatorMethods.PREDICT_COUNTERFACTUAL  # noqa: E721
 
 
 MockDataCategory = Mock()

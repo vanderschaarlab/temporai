@@ -9,7 +9,7 @@ import tempor.data.types
 from tempor.data.bundle import requirements as br
 from tempor.data.container import _requirements as dr
 
-from . import _types as types
+from .core import _types as types
 
 DataContainerRequirementsSet = Sequence[dr.DataContainerRequirement]
 DataBundleRequirementsSet = Sequence[br.DataBundleRequirement]
@@ -123,7 +123,7 @@ class _MethodConfig(_RequirementsConfigBase):
 
     @property
     @abc.abstractmethod
-    def method_type(self) -> types.MethodTypes:  # pragma: no cover
+    def method_type(self) -> types.EstimatorMethods:  # pragma: no cover
         ...
 
     def get_data_container_requirements(self) -> DataContainerRequirementsSet:
@@ -137,26 +137,26 @@ class FitConfig(_MethodConfig):
     data_present: Sequence[tempor.data.types.SamplesAttributes] = ["Xt"]
 
     @property
-    def method_type(self) -> types.MethodTypes:
-        return types.MethodTypes.FIT
+    def method_type(self) -> types.EstimatorMethods:
+        return types.EstimatorMethods.FIT
 
 
 class TransformConfig(_MethodConfig):
     @property
-    def method_type(self) -> types.MethodTypes:
-        return types.MethodTypes.TRANSFORM
+    def method_type(self) -> types.EstimatorMethods:
+        return types.EstimatorMethods.TRANSFORM
 
 
 class PredictConfig(_MethodConfig):
     @property
-    def method_type(self) -> types.MethodTypes:
-        return types.MethodTypes.PREDICT
+    def method_type(self) -> types.EstimatorMethods:
+        return types.EstimatorMethods.PREDICT
 
 
 class PredictCounterfactualConfig(_MethodConfig):
     @property
-    def method_type(self) -> types.MethodTypes:
-        return types.MethodTypes.PREDICT_COUNTERFACTUAL
+    def method_type(self) -> types.EstimatorMethods:
+        return types.EstimatorMethods.PREDICT_COUNTERFACTUAL
 
 
 class RequirementsConfig(_RequirementsConfigBase):

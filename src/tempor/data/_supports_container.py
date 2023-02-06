@@ -3,7 +3,7 @@ from typing import Tuple
 
 import pandas as pd
 
-import tempor.data.container._check_data_container_def as check
+import tempor.data._check_data_container_def as check
 from tempor.core import supports_impl as si
 
 from . import _types as types

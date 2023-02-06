@@ -6,8 +6,8 @@ from unittest.mock import Mock
 
 import pytest
 
+import tempor.data._check_data_container_def as check
 import tempor.data._types as types
-import tempor.data.container._check_data_container_def as check
 import tempor.data.container._validator as v
 
 MockCategoryA = Mock()
