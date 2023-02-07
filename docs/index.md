@@ -16,7 +16,6 @@ TemporAI: ML-centric Toolkit for Medical Time Series
 :maxdepth: 3
 
 Overview <overview>
-User guide <user_guide/index>
 Contributions & Help <contributing>
 License <license>
 Authors <authors>
