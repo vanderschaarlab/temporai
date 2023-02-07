@@ -10,14 +10,14 @@
 -->
 
 <!-- exclude_docs -->
-[![ReadTheDocs](https://readthedocs.org/projects/temporai/badge/?version=latest)][docs]
+<!-- [![ReadTheDocs](https://readthedocs.org/projects/temporai/badge/?version=latest)][docs] -->
 [![PythonVersions](https://img.shields.io/badge/python-py38%20%7C%20py39%20%7C%20py310%20%7C%20py311-blue)](https://docs.python.org/3.8/)
 [![License](https://img.shields.io/github/license/vanderschaarlab/temporai)](./LICENSE.txt)
 <!-- exclude_docs_end -->
 
 # <img src="docs/assets/TemporAI_Logo_Icon.png" height=25> TemporAI
 
-> **💡 Status**: Migrating from the [previous iteration of the project](https://github.com/vanderschaarlab/clairvoyance2).
+> **⚠️ Status**: **Work in progress, please come back at a later date.** We are migrating from a [previous iteration of the project](https://github.com/vanderschaarlab/clairvoyance).
 
 *TemporAI* is a Machine Learning-centric time-series library for medicine.  The tasks that are currently of focus in TemporAI are: time-series prediction, time-to-event (a.k.a. survival) analysis with time-series data, and counterfactual inference (i.e. \[individualized\] treatment effects).  The library also aims to provide the user with understanding of their data, model, and problem, through e.g. integration with interpretability methods.
 
@@ -43,6 +43,7 @@ To view the list of dependencies, see [here](./setup.cfg#L50).
 
 
 
+<!--
 ## Models
 
 **Time Series Prediction (Forecasting)**
@@ -89,20 +90,23 @@ To view the list of dependencies, see [here](./setup.cfg#L50).
 | [AC-TPC](https://github.com/vanderschaarlab/mlforhealthlabpub/tree/main/alg/ac_tpc) | [van der Schaar Lab] | [📄](https://proceedings.mlr.press/v119/lee20h.html) | 🔵 Planned |
 
 \* `✔️ Available` & `➰ Experimental` may include some items still to be migrated from the [previous iteration of the project](https://github.com/vanderschaarlab/clairvoyance2).
-
+-->
 
 ## TemporAI Pipeline
 The diagram below illustrates the structure of a *TemporAI* pipeline:
 
 <img src="docs/assets/Pipeline.png" alt="pipeline diagram">
 
+<!--
 See [User Guide][docs/user_guide] for tutorials/examples.
-
+-->
 
 <!-- exclude_docs -->
+<!--
 ## Documentation
 
 📖 See the project documentation [here](https://temporai.readthedocs.io/en/latest/).
+-->
 <!-- exclude_docs_end -->
 
 
