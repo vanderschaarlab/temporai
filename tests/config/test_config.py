@@ -19,14 +19,14 @@ def mock_updated_on_configure(monkeypatch):
 def test_updated_on_configure(monkeypatch):
     config = tempor.get_config()
     assert isinstance(config, TemporConfig)
-    assert config.logging.level == "DEBUG"
+    assert config.logging.level == "INFO"
     assert config == tempor.config.get_config()
 
 
 def test_default_config(mock_updated_on_configure):
     config = tempor.get_config()
     assert isinstance(config, TemporConfig)
-    assert config.logging.level == "DEBUG"
+    assert config.logging.level == "INFO"
     assert config == tempor.config.get_config()
 
 
