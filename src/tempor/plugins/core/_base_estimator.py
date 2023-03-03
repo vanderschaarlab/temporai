@@ -7,16 +7,9 @@ import pydantic
 import rich.pretty
 
 import tempor.core.utils
-import tempor.data.bundle
-import tempor.data.container
-import tempor.data.types
-from tempor.data.bundle._bundle import (
-    DataBundle as Dataset,  # TODO: To be dealt with later.
-)
+from tempor.data import dataset
 from tempor.log import logger
 
-from .. import _requirements_config as rq
-from . import _types as types
 from ._params import Params
 from ._plugin import Plugin
 
@@ -28,11 +21,6 @@ class EmptyParamsDefinition:
 
 class BaseEstimator(Plugin, abc.ABC):
     PARAMS_DEFINITION: ClassVar[Type] = EmptyParamsDefinition
-    CONFIG: ClassVar[Dict] = {  # TODO: Simplify / deal with this later.
-        "fit_config": {
-            "data_present": ["Xt"],
-        },
-    }
     _fitted: bool
 
     class _InitArgsValidator(pydantic.BaseModel):
@@ -69,7 +57,6 @@ class BaseEstimator(Plugin, abc.ABC):
     def __init__(self, **params) -> None:
         Plugin.__init__(self)
         self._fitted = False
-        self.config = rq.RequirementsConfig.parse_obj(self.CONFIG)
         args_validator = self._InitArgsValidator(params=params, ParamsDefinitionClass=self.PARAMS_DEFINITION)
         params_processed = args_validator.params_processed
         print(params_processed)
@@ -90,52 +77,12 @@ class BaseEstimator(Plugin, abc.ABC):
     def __repr__(self) -> str:
         return rich.pretty.pretty_repr(self)
 
-    def _validate_estimator_method_config(self, data: Dataset, estimator_method: types.EstimatorMethods):
-        # TODO: Will simplify all this when dealing with Dataloader.
-
-        logger.debug(f"Validating method config for method type {estimator_method} on {self.__class__.__name__}")
-        config_name = f"{tempor.core.utils.get_enum_name(estimator_method)}_config"
-        config = getattr(self.config, config_name, None)
-        if config is None:
-            raise ValueError(f"Expected '{config_name}' to be set in model {self.__class__.__name__} config")
-        logger.trace("Validating data bundle requirements")
-        tempor.data.bundle.requirements.DataBundleValidator().validate(
-            data, requirements=config.get_data_bundle_requirements()
-        )
-        for t_container_name, ts_samples in data.get_time_series_containers.items():
-            logger.trace(f"Validating data container config for {t_container_name}")
-            container_config = getattr(config, f"{t_container_name}_config")
-            tempor.data.container.requirements.TimeSeriesDataValidator().validate(
-                ts_samples.data,
-                requirements=container_config.get_data_container_requirements(),
-                container_flavor=data.container_flavor_spec[t_container_name],  # type: ignore
-            )
-        for s_container_name, s_samples in data.get_static_containers.items():
-            logger.trace(f"Validating data container config for {s_container_name}")
-            container_config = getattr(config, f"{s_container_name}_config")
-            tempor.data.container.requirements.StaticDataValidator().validate(
-                s_samples.data,
-                requirements=container_config.get_data_container_requirements(),
-                container_flavor=data.container_flavor_spec[s_container_name],  # type: ignore
-            )
-        for e_container_name, e_samples in data.get_event_containers.items():
-            logger.trace(f"Validating data container config for {e_container_name}")
-            container_config = getattr(config, f"{e_container_name}_config")
-            tempor.data.container.requirements.EventDataValidator().validate(
-                e_samples.data,
-                requirements=container_config.get_data_container_requirements(),
-                container_flavor=data.container_flavor_spec[e_container_name],  # type: ignore
-            )
-
     def fit(
         self,
-        data: Dataset,
+        data: dataset.Dataset,
         *args,
         **kwargs,
     ) -> "BaseEstimator":
-        logger.debug(f"Validating fit() config on {self.__class__.__name__}")
-        self._validate_estimator_method_config(data, estimator_method=types.EstimatorMethods.FIT)
-
         logger.debug(f"Calling _fit() implementation on {self.__class__.__name__}")
         fitted_model = self._fit(data, *args, **kwargs)
 
@@ -143,7 +90,7 @@ class BaseEstimator(Plugin, abc.ABC):
         return fitted_model
 
     @abc.abstractmethod
-    def _fit(self, data: Dataset, *args, **kwargs) -> "BaseEstimator":  # pragma: no cover
+    def _fit(self, data: dataset.Dataset, *args, **kwargs) -> "BaseEstimator":  # pragma: no cover
         ...
 
     @staticmethod

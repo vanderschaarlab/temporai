@@ -1,2 +1,2 @@
-class DataValidationFailedException(ValueError):
+class DataValidationException(ValueError):
     pass

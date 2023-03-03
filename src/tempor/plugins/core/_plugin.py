@@ -44,6 +44,14 @@ def register_plugin_category(category: str, expected_class: Type) -> None:
     PLUGIN_CATEGORY_REGISTRY[category] = expected_class
 
 
+def _check_same_class(class_1, class_2) -> bool:
+    # To avoid raising "already registered" error when a certain plugin class is being reimported.
+    # Not a bullet proof check but should suffice for practical purposes.
+    return (
+        class_1.__name__ == class_2.__name__ and class_1.__module__.split(".")[-1] == class_2.__module__.split(".")[-1]
+    )
+
+
 def register_plugin(name: str, category: str):
     def inner(cls: Type[Plugin]):
         logger.debug(f"Registering plugin of class {cls}")
@@ -63,10 +71,14 @@ def register_plugin(name: str, category: str):
                 f"{PLUGIN_CATEGORY_REGISTRY[cls.category]} but was {cls}"
             )
         if cls.fqn() in PLUGIN_REGISTRY:
-            raise TypeError(
-                f"Plugin with fully-qualified name {cls.fqn()} already registered (as class "
-                f"{PLUGIN_REGISTRY[cls.fqn()]})"
-            )
+            if not _check_same_class(cls, PLUGIN_REGISTRY[cls.fqn()]):
+                raise TypeError(
+                    f"Plugin with fully-qualified name {cls.fqn()} already registered (as class "
+                    f"{PLUGIN_REGISTRY[cls.fqn()]})"
+                )
+            else:
+                # The same class is being reimported, do not raise error.
+                pass
         PLUGIN_REGISTRY[cls.fqn()] = cls
 
         @functools.wraps(cls)

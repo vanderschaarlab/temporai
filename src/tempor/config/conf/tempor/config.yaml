@@ -1,6 +1,6 @@
 logging:
   mode: LIBRARY  # {LIBRARY, SCRIPT}
-  level: DEBUG
+  level: INFO
   diagnose: false
   backtrace: true
   file_log: true

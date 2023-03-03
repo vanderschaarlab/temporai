@@ -8,14 +8,6 @@ from unittest.mock import MagicMock, Mock
 import pytest
 
 import tempor.plugins.core
-from tempor.data import bundle
-
-
-@pytest.fixture
-def mock_data_bundle(monkeypatch):
-    mock_data_bundle_ = Mock(spec=bundle.DataBundle, __name__="DataBundle")
-    monkeypatch.setattr(bundle, "DataBundle", mock_data_bundle_)
-    return mock_data_bundle_
 
 
 class TestEstimator:
@@ -40,7 +32,7 @@ class TestEstimator:
             def hyperparameter_space(*args: Any, **kwargs: Any):
                 return MagicMock()
 
-            def _fit(self, data: bundle.DataBundle, *args, **kwargs):
+            def _fit(self, data, *args, **kwargs):
                 pass
 
         my_model = MyModel()
@@ -58,7 +50,7 @@ class TestEstimator:
             def hyperparameter_space(*args: Any, **kwargs: Any):
                 return MagicMock()
 
-            def _fit(self, data: bundle.DataBundle, *args, **kwargs):
+            def _fit(self, data, *args, **kwargs):
                 pass
 
         my_model = MyModel()
@@ -75,7 +67,7 @@ class TestEstimator:
             def hyperparameter_space(*args: Any, **kwargs: Any):
                 return MagicMock()
 
-            def _fit(self, data: bundle.DataBundle, *args, **kwargs):
+            def _fit(self, data, *args, **kwargs):
                 pass
 
         my_model = MyModel(foo=2.2, bar=(8, 9, 10), baz="something_else")
@@ -93,7 +85,7 @@ class TestEstimator:
             def hyperparameter_space(*args: Any, **kwargs: Any):
                 return MagicMock()
 
-            def _fit(self, data: bundle.DataBundle, *args, **kwargs):
+            def _fit(self, data, *args, **kwargs):
                 pass
 
         my_model = MyModel(baz="provided")  # Does not fail.
@@ -109,7 +101,7 @@ class TestEstimator:
             def hyperparameter_space(*args: Any, **kwargs: Any):
                 return MagicMock()
 
-            def _fit(self, data: bundle.DataBundle, *args, **kwargs):
+            def _fit(self, data, *args, **kwargs):
                 pass
 
         with pytest.raises(ValueError) as excinfo:
@@ -126,7 +118,7 @@ class TestEstimator:
             def hyperparameter_space(*args: Any, **kwargs: Any):
                 return MagicMock()
 
-            def _fit(self, data: bundle.DataBundle, *args, **kwargs):
+            def _fit(self, data, *args, **kwargs):
                 pass
 
         with pytest.raises(ValueError, match=".*not a supported primitive.*"):
@@ -142,7 +134,7 @@ class TestEstimator:
             def hyperparameter_space(*args: Any, **kwargs: Any):
                 return MagicMock()
 
-            def _fit(self, data: bundle.DataBundle, *args, **kwargs):
+            def _fit(self, data, *args, **kwargs):
                 pass
 
         with pytest.raises(ValueError, match=".*type 'str'.*"):
@@ -158,62 +150,10 @@ class TestEstimator:
             def hyperparameter_space(*args: Any, **kwargs: Any):
                 return MagicMock()
 
-            def _fit(self, data: bundle.DataBundle, *args, **kwargs):
+            def _fit(self, data, *args, **kwargs):
                 pass
 
         my_model = MyModel()
         repr_ = repr(my_model)
 
         assert re.search(r"^MyModel\(.*name='my_model'.*category='my_category'.*params=.?\{.*\}.*\)", repr_, re.S)
-
-    def test_fit_validate_config(self, monkeypatch):
-        # TODO: Deal with this later.
-
-        import tempor.data.bundle.requirements as br
-        import tempor.data.container.requirements as cr
-
-        MockDataBundleValidator = Mock()
-        MockTimeSeriesDataValidator = Mock()
-        MockStaticDataValidator = Mock()
-        MockEventDataValidator = Mock()
-        monkeypatch.setattr(br, "DataBundleValidator", MockDataBundleValidator)
-        monkeypatch.setattr(cr, "TimeSeriesDataValidator", MockTimeSeriesDataValidator)
-        monkeypatch.setattr(cr, "StaticDataValidator", MockStaticDataValidator)
-        monkeypatch.setattr(cr, "EventDataValidator", MockEventDataValidator)
-
-        MockClass = Mock(spec=bundle.DataBundle, __name__="DataBundle")
-        mock_from_data_containers = MagicMock(spec=bundle.DataBundle)
-        mock_from_data_containers.get_time_series_containers = {"Xt": Mock()}
-        mock_from_data_containers.get_static_containers = {"Xs": Mock(), "Ys": Mock()}
-        mock_from_data_containers.get_event_containers = {"Xe": Mock(), "Ye": Mock(), "Ae": Mock()}
-        MockClass.from_data_containers = Mock(return_value=mock_from_data_containers)
-        monkeypatch.setattr(bundle, "DataBundle", MockClass)
-
-        class MyModel(tempor.plugins.core.BaseEstimator):
-            name = "my_model"
-            category = "my_category"
-
-            CONFIG = {
-                "fit_config": {
-                    "data_present": ["Xt", "Xs", "Xe", "Ys", "Ye", "Ae"],
-                }
-            }
-
-            @staticmethod
-            def hyperparameter_space(*args: Any, **kwargs: Any):
-                return MagicMock()
-
-            def _fit(self, data: bundle.DataBundle, *args, **kwargs):
-                pass
-
-        my_model = MyModel()
-
-        my_model.fit(data=mock_from_data_containers)
-
-        MockDataBundleValidator.assert_called()
-        MockTimeSeriesDataValidator.assert_called()
-        assert MockTimeSeriesDataValidator.call_count == 1
-        MockStaticDataValidator.assert_called()
-        assert MockStaticDataValidator.call_count == 2
-        MockEventDataValidator.assert_called()
-        assert MockEventDataValidator.call_count == 3

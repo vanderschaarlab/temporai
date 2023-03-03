@@ -1,10 +1,10 @@
 import abc
+from typing import Any
 
-from tempor.data.bundle._bundle import DataBundle as Dataset
+from tempor.data import dataset
 from tempor.log import logger
 
 from . import _base_estimator as estimator
-from . import _types as types
 
 
 class BaseTransformer(estimator.BaseEstimator):
@@ -13,13 +13,10 @@ class BaseTransformer(estimator.BaseEstimator):
 
     def transform(
         self,
-        data: Dataset,
+        data: dataset.Dataset,
         *args,
         **kwargs,
-    ) -> Dataset:
-        logger.debug(f"Validating transform() config on {self.__class__.__name__}")
-        self._validate_estimator_method_config(data, estimator_method=types.EstimatorMethods.TRANSFORM)
-
+    ) -> Any:
         logger.debug(f"Calling _transform() implementation on {self.__class__.__name__}")
         transformed_data = self._transform(data, *args, **kwargs)
 
@@ -27,13 +24,13 @@ class BaseTransformer(estimator.BaseEstimator):
 
     def fit_transform(
         self,
-        data: Dataset,
+        data: dataset.Dataset,
         *args,
         **kwargs,
-    ) -> Dataset:
+    ) -> Any:
         self.fit(data, *args, **kwargs)
         return self.transform(data, *args, **kwargs)
 
     @abc.abstractmethod
-    def _transform(self, data: Dataset, *args, **kwargs) -> Dataset:  # pragma: no cover
+    def _transform(self, data: dataset.Dataset, *args, **kwargs) -> Any:  # pragma: no cover
         ...

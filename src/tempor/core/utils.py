@@ -12,3 +12,11 @@ def get_class_full_name(o: object):
 
 def get_enum_name(enum_: enum.Enum) -> str:
     return enum_.name.lower()
+
+
+class RichReprStrPassthrough:
+    def __init__(self, string: str) -> None:
+        self.string = string
+
+    def __repr__(self) -> str:
+        return self.string

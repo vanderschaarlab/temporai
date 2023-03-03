@@ -1,11 +1,10 @@
 import abc
 from typing import Any
 
-from tempor.data.bundle._bundle import DataBundle as Dataset
+from tempor.data import dataset
 from tempor.log import logger
 
 from . import _base_estimator as estimator
-from . import _types as types
 
 
 class BasePredictor(estimator.BaseEstimator):
@@ -14,13 +13,10 @@ class BasePredictor(estimator.BaseEstimator):
 
     def predict(
         self,
-        data: Dataset,
+        data: dataset.Dataset,
         *args,
         **kwargs,
     ) -> Any:  # TODO: Narrow down output formats later.
-        logger.debug(f"Validating predict() config on {self.__class__.__name__}")
-        self._validate_estimator_method_config(data, estimator_method=types.EstimatorMethods.PREDICT)
-
         logger.debug(f"Calling _predict() implementation on {self.__class__.__name__}")
         prediction = self._predict(data, *args, **kwargs)
 
@@ -28,7 +24,7 @@ class BasePredictor(estimator.BaseEstimator):
 
     def fit_predict(
         self,
-        data: Dataset,
+        data: dataset.Dataset,
         *args,
         **kwargs,
     ) -> Any:
@@ -36,5 +32,5 @@ class BasePredictor(estimator.BaseEstimator):
         return self.predict(data, *args, **kwargs)
 
     @abc.abstractmethod
-    def _predict(self, data: Dataset, *args, **kwargs) -> Any:  # pragma: no cover
+    def _predict(self, data: dataset.Dataset, *args, **kwargs) -> Any:  # pragma: no cover
         ...
