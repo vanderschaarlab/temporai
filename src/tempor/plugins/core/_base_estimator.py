@@ -36,7 +36,7 @@ class BaseEstimator(Plugin, abc.ABC):
             ParamsDefinitionClass = values.get("ParamsDefinitionClass")
 
             if TYPE_CHECKING:  # pragma: no cover
-                assert ParamsDefinitionClass is not None
+                assert ParamsDefinitionClass is not None  # nosec B101
 
             try:
                 defined_params = omegaconf.OmegaConf.structured(ParamsDefinitionClass(**params))
@@ -61,7 +61,7 @@ class BaseEstimator(Plugin, abc.ABC):
         params_processed = args_validator.params_processed
         print(params_processed)
         if TYPE_CHECKING:  # pragma: no cover
-            assert isinstance(params_processed, omegaconf.DictConfig)
+            assert isinstance(params_processed, omegaconf.DictConfig)  # nosec B101
         self.params = params_processed
 
     @property

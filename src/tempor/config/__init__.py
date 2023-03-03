@@ -86,7 +86,7 @@ def _load(loaded_config: omegaconf.DictConfig) -> TemporConfig:
         merged_validated_config, structured_config_mode=omegaconf.SCMode.INSTANTIATE
     )
     if TYPE_CHECKING:  # pragma: no cover
-        assert isinstance(config_as_dataclass, TemporConfig)
+        assert isinstance(config_as_dataclass, TemporConfig)  # nosec B101
 
     return config_as_dataclass
 
@@ -94,7 +94,7 @@ def _load(loaded_config: omegaconf.DictConfig) -> TemporConfig:
 def load_yaml_file(path: Union[str, pathlib.Path]) -> TemporConfig:
     loaded = OmegaConf.load(path)
     if TYPE_CHECKING:  # pragma: no cover
-        assert isinstance(loaded, omegaconf.DictConfig)
+        assert isinstance(loaded, omegaconf.DictConfig)  # nosec B101
     return _load(loaded)
 
 
