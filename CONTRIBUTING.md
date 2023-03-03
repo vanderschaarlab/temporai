@@ -110,19 +110,11 @@ conda activate temporai
    cd temporai
    ```
 
-1. Install development requirements:
+1. Run the following to install the package and all requirements, including dev requirements:
 
    ```
-   pip install -r requirements-dev.txt
+   pip install -U pip -e .[dev]
    ```
-
-1. You should run:
-
-   ```
-   pip install -U pip -e .
-   ```
-
-   to be able to import the package under development in the Python REPL.
 
 1. Install [pre-commit]:
 
