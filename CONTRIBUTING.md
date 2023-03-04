@@ -57,14 +57,14 @@ submit your proposal.
 When working on documentation changes in your local machine, you can
 compile them using [tox] :
 
-```
+```sh
 tox -e docs
 ```
 
 and use Python's built-in web server for a preview in your web browser
 (`http://localhost:8000`):
 
-```
+```sh
 python3 -m http.server --directory 'docs/_build/html'
 ```
 
@@ -84,14 +84,14 @@ Before you start coding, we recommend creating an isolated [virtual environment]
 to avoid any problems with your installed Python packages.
 This can easily be done via either [virtualenv]:
 
-```
+```sh
 virtualenv <PATH TO VENV>
 source <PATH TO VENV>/bin/activate
 ```
 
 or [Miniconda]:
 
-```
+```sh
 conda create -n temporai python=3.8
 conda activate temporai
 ```
@@ -105,20 +105,20 @@ conda activate temporai
 
 1. Clone this copy to your local disk:
 
-   ```
+   ```sh
    git clone git@github.com:YourLogin/temporai.git
    cd temporai
    ```
 
 1. Run the following to install the package and all requirements, including dev requirements:
 
-   ```
+   ```sh
    pip install -U pip -e .[dev]
    ```
 
 1. Install [pre-commit]:
 
-   ```
+   ```sh
    pip install pre-commit
    pre-commit install
    ```
@@ -130,20 +130,20 @@ conda activate temporai
 
 1. Create a branch to hold your changes:
 
-   ```
+   ```sh
    git checkout -b my-feature
    ```
 
    and start making changes. Never work on the main branch!
 
-2. Start your work on this branch. Don't forget to add [docstrings] to new
+1. Start your work on this branch. Don't forget to add [docstrings] to new
    functions, modules and classes, especially if they are part of public APIs.
 
-3. Add yourself to the list of contributors in `AUTHORS.md`.
+1. Add yourself to the list of contributors in `AUTHORS.md`.
 
-4. When you’re done editing, do:
+1. When you’re done editing, do:
 
-   ```
+   ```sh
    git add <MODIFIED FILES>
    git commit
    ```
@@ -161,17 +161,22 @@ conda activate temporai
    Moreover, writing a [descriptive commit message] is highly recommended.
    In case of doubt, you can check the commit history with:
 
-   ```
+   ```sh
    git log --graph --decorate --pretty=oneline --abbrev-commit --all
    ```
 
    to look for recurring communication patterns.
    :::
 
-5. Please check that your changes don't break any unit tests with:
+1. Please check that your changes don't break any unit tests with:
 
-   ```
-   tox
+   ```sh
+   # Run tests on different tox python environments:
+   tox -r
+   # Run doctests, similarly:
+   tox -r -- src/ --doctest-modules
+   # Run notebook tests:
+   tox -r -e testnb
    ```
 
    (after having installed [tox] with `pip install tox` or `pipx`).
@@ -181,18 +186,25 @@ conda activate temporai
 
 ### Submit your contribution
 
+1. Before submitting your contribution, make sure to read our [code of conduct].
+
 1. If everything works fine, push your local branch to the remote server with:
 
-   ```
+   ```sh
    git push -u origin my-feature
    ```
 
-2. Go to the web page of your fork and click "Create pull request"
+1. Go to the web page of your fork and click "Create pull request"
    to send your changes for review.
 
    Find more detailed information in [creating a PR]. You might also want to open
    the PR as a draft first and mark it as ready for review after the feedbacks
    from the continuous integration (CI) system or any required fixes.
+
+   The [PR template] will guide you through the steps of preparing your PR.
+
+1. When your PR is submitted, some automated [GitHub workflows] will run to double check passing of tests, linting, etc.
+One of our maintainers will review your PR and help if any of the checks are failing.
 
 ### Troubleshooting
 
@@ -207,25 +219,25 @@ package:
    `.eggs`, as well as the `*.egg-info` folders in the `src` folder or
    potentially in the root of your project.
 
-2. Sometimes [tox] misses out when new dependencies are added, especially to
+1. Sometimes [tox] misses out when new dependencies are added, especially to
    `setup.cfg` and `docs/requirements.txt`. If you find any problems with
    missing dependencies when running a command with [tox], try to recreate the
    `tox` environment using the `-r` flag. For example, instead of:
 
-   ```
+   ```sh
    tox -e docs
    ```
 
    Try running:
 
-   ```
+   ```sh
    tox -r -e docs
    ```
 
-3. Make sure to have a reliable [tox] installation that uses the correct
+1. Make sure to have a reliable [tox] installation that uses the correct
    Python version (e.g., 3.7+). When in doubt you can run:
 
-   ```
+   ```sh
    tox --version
    # OR
    which tox
@@ -235,14 +247,14 @@ package:
    also try to create a dedicated [virtual environment] with a [tox] binary
    freshly installed. For example:
 
-   ```
+   ```sh
    virtualenv .venv
    source .venv/bin/activate
    .venv/bin/pip install tox
    .venv/bin/tox -e all
    ```
 
-4. [Pytest can drop you] in an interactive session in the case an error occurs.
+1. [Pytest can drop you] in an interactive session in the case an error occurs.
    In order to do that you need to pass a `--pdb` option (for example by
    running `tox -- -k <NAME OF THE FALLING TEST> --pdb`).
    You can also setup breakpoints manually instead of using the `--pdb` option.
@@ -250,6 +262,8 @@ package:
 ## Maintainer tasks
 
 ### Releases
+
+> 	⚠️ This section is out of date, we now use [GitHub workflows] for releases.
 
 If you are part of the group of maintainers and have correct user permissions
 on [PyPI], the following steps can be used to release a new version for
@@ -272,6 +286,7 @@ on [PyPI], the following steps can be used to release a new version for
 
 
 [black]: https://pypi.org/project/black/
+[code of conduct]: https://github.com/vanderschaarlab/.github/blob/main/CODE_OF_CONDUCT.md
 [commonmark]: https://commonmark.org/
 [contribution-guide.org]: http://www.contribution-guide.org/
 [creating a pr]: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request
@@ -281,11 +296,13 @@ on [PyPI], the following steps can be used to release a new version for
 [flake8]: https://flake8.pycqa.org/en/stable/
 [git]: https://git-scm.com
 [github web interface]: https://docs.github.com/en/github/managing-files-in-a-repository/managing-files-on-github/editing-files-in-your-repository
+[GitHub workflows]: ./.github/workflows
 [github's code editor]: https://docs.github.com/en/github/managing-files-in-a-repository/managing-files-on-github/editing-files-in-your-repository
 [github's fork and pull request workflow]: https://guides.github.com/activities/forking/
 [guide created by freecodecamp]: https://github.com/freecodecamp/how-to-contribute-to-open-source
 [miniconda]: https://docs.conda.io/en/latest/miniconda.html
 [myst]: https://myst-parser.readthedocs.io/en/latest/syntax/syntax.html
+[PR template]: https://github.com/vanderschaarlab/.github/blob/main/.github/pull_request_template.md
 [other kinds of contributions]: https://opensource.guide/how-to-contribute
 [pre-commit]: https://pre-commit.com/
 [pypi]: https://pypi.org/
