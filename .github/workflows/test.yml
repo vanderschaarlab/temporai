@@ -59,3 +59,7 @@ jobs:
           pip install .[dev]
       - name: Test with pytest
         run: pytest -vvvsx -m "not slow" --durations=50
+      - name: Run doctests with pytest
+        run: pytest -vvvsx src/ --doctest-modules --durations=50
+      - name: Test notebooks run without error
+        run: python tests/nb_eval.py --nb_dir ./
