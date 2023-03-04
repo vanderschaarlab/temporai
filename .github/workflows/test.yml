@@ -1,0 +1,60 @@
+name: Run tests
+
+on:
+  push:
+    branches: [main, release]
+  pull_request:
+    types: [opened, synchronize, reopened]
+  schedule:
+    - cron: "21 5 * * 1"
+
+jobs:
+  # Lint code with pre-commit.
+  Linter:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: [3.8]
+        os: [ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install pre-commit
+      - name: Run pre-commit validation
+        run: pre-commit run --all-files
+
+  # Run tests with pytest.
+  Tests:
+    needs: [Linter]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        os: [macos-latest, ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      # Prevents scheduled run being disabled after no commit
+      # for some time (creates a dummy commit):
+      - uses: gautamkrishnar/keepalive-workflow@v1
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip" # Caching pip dependencies.
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r prereq.txt
+          pip install .[dev]
+      - name: Test with pytest
+        run: pytest -vvvsx -m "not slow" --durations=50
