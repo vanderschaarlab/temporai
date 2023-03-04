@@ -3,6 +3,7 @@ name: Package release
 on:
   release:
     types: [created]
+  workflow_dispatch:
 
 jobs:
   # Build for OSX and publish, see scripts/release_osx.sh.
