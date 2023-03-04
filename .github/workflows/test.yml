@@ -18,7 +18,7 @@ jobs:
         python-version: [3.8]
         os: [ubuntu-latest]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: true
       - name: Set up Python ${{ matrix.python-version }}
@@ -41,7 +41,7 @@ jobs:
         python-version: ["3.8", "3.9", "3.10", "3.11"]
         os: [macos-latest, ubuntu-latest, windows-latest]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: true
       # Prevents scheduled run being disabled after no commit
