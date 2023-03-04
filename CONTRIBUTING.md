@@ -296,7 +296,7 @@ on [PyPI], the following steps can be used to release a new version for
 [flake8]: https://flake8.pycqa.org/en/stable/
 [git]: https://git-scm.com
 [github web interface]: https://docs.github.com/en/github/managing-files-in-a-repository/managing-files-on-github/editing-files-in-your-repository
-[GitHub workflows]: ./.github/workflows
+[GitHub workflows]: https://github.com/vanderschaarlab/temporai/tree/main/.github/workflows
 [github's code editor]: https://docs.github.com/en/github/managing-files-in-a-repository/managing-files-on-github/editing-files-in-your-repository
 [github's fork and pull request workflow]: https://guides.github.com/activities/forking/
 [guide created by freecodecamp]: https://github.com/freecodecamp/how-to-contribute-to-open-source
