@@ -23,8 +23,6 @@ repos:
   - id: requirements-txt-fixer
   - id: mixed-line-ending
     args: ['--fix=auto']
-  - id: no-commit-to-branch
-    args: [--branch, main-priv, --branch, main]
 
 - repo: https://github.com/pycqa/isort
   rev: 5.12.0
