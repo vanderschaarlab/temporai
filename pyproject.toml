@@ -12,11 +12,11 @@ version_scheme = "no-guess-dev"
 line-length = 120
 target-version = ['py38', 'py39', 'py310']
 include = '\.pyi?$'
-extend-exclude = '''
-^/(
-    docs/conf.py
-)
-'''
+# extend-exclude = '''
+# ^/(
+#     docs/conf.py
+# )
+# '''
 # ^
 # A regular expression that matches files and directories that should be excluded on recursive searches. An empty
 # value means no paths are excluded. Use forward slashes for directories on all platforms (Windows, too). Exclusions
@@ -45,3 +45,6 @@ extend-exclude = '''
 #   | foo.py           # also separately exclude a file named foo.py in
 #                      # the root of the project
 # )
+
+[tool.bandit]
+exclude_dirs = ["tests"]

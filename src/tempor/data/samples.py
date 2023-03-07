@@ -176,7 +176,7 @@ class StaticSamples(DataSamples):
     def _validate(self) -> None:
         schema = pa.infer_schema(self._data)
         if TYPE_CHECKING:  # pragma: no cover
-            assert isinstance(schema, pa.DataFrameSchema)
+            assert isinstance(schema, pa.DataFrameSchema)  # nosec B101
         logger.debug(f"Inferred schema:\n{schema}")
 
         # DataFrame-level validation:
@@ -323,7 +323,7 @@ class TimeSeriesSamples(DataSamples):
     def _validate(self) -> None:
         schema = pa.infer_schema(self._data)
         if TYPE_CHECKING:  # pragma: no cover
-            assert isinstance(schema, pa.DataFrameSchema)
+            assert isinstance(schema, pa.DataFrameSchema)  # nosec B101
         logger.debug(f"Inferred schema:\n{schema}")
 
         # DataFrame-level validation:
@@ -416,7 +416,7 @@ class TimeSeriesSamples(DataSamples):
         if time_indexes is None:
             time_indexes = _array_default_time_indexes(array, padding_indicator)  # type: ignore
         if TYPE_CHECKING:  # pragma: no cover
-            assert sample_index is not None and feature_index is not None and time_indexes is not None
+            assert sample_index is not None and feature_index is not None and time_indexes is not None  # nosec B101
         return utils.array3d_to_multiindex_timeseries_dataframe(
             array,
             sample_index=sample_index,
@@ -454,7 +454,7 @@ class TimeSeriesSamples(DataSamples):
         """
         multiindex = self._data.index
         if TYPE_CHECKING:  # pragma: no cover
-            assert isinstance(multiindex, pd.MultiIndex)
+            assert isinstance(multiindex, pd.MultiIndex)  # nosec B101
         sample_index = list(self._data.index.levels[0])  # pyright: ignore
         d = dict()
         for s in sample_index:
@@ -516,7 +516,7 @@ class EventSamples(DataSamples):
     def _validate(self) -> None:
         schema = pa.infer_schema(self._data)
         if TYPE_CHECKING:  # pragma: no cover
-            assert isinstance(schema, pa.DataFrameSchema)
+            assert isinstance(schema, pa.DataFrameSchema)  # nosec B101
         logger.debug(f"Inferred schema:\n{schema}")
 
         # DataFrame-level validation:

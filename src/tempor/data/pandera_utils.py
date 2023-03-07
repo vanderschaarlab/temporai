@@ -1,4 +1,4 @@
-from typing import Any, Dict, Iterable, List, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Tuple
 
 import pandas as pd
 import pandera as pa
@@ -161,7 +161,8 @@ def add_regex_column_checks(
             )
         }
     )
-    assert isinstance(schema_out, pa.DataFrameSchema)
+    if TYPE_CHECKING:  # pragma: no cover
+        assert isinstance(schema_out, pa.DataFrameSchema)  # nosec B101
     return schema_out
 
 
