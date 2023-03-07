@@ -67,5 +67,6 @@ jobs:
         env:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        # Problems with using ${GITHUB_WORKSPACE} in windows, so using relative path "../.."
         run: |
-          ${GITHUB_WORKSPACE}/.github/workflows/scripts/release_windows.bat
+          ../../.github/workflows/scripts/release_windows.bat
