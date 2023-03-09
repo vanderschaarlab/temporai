@@ -1,4 +1,9 @@
-from importlib.metadata import PackageNotFoundError, version  # pragma: no cover
+import sys
+
+if sys.version_info[:2] >= (3, 8):  # pragma: no cover
+    from importlib.metadata import PackageNotFoundError, version
+else:  # pragma: no cover
+    from importlib_metadata import PackageNotFoundError, version
 
 try:
     # Change here if project is renamed and does not equal the package name
