@@ -2,7 +2,13 @@
 """
 
 import enum
-from typing import Dict, List, Literal, Tuple, Type, Union
+import sys
+from typing import Dict, List, Tuple, Type, Union
+
+if sys.version_info[:2] >= (3, 8):  # pragma: no cover
+    from typing import Literal
+else:  # pragma: no cover
+    from typing_extensions import Literal
 
 import numpy as np
 import pandas as pd

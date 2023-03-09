@@ -77,19 +77,19 @@ def _get_pa_init_args(pa_object: Any, param_names: List[str]) -> Dict[str, Any]:
     return items
 
 
-def update_schema(schema: pa.DataFrameSchema, /, **kwargs) -> pa.DataFrameSchema:
+def update_schema(schema: pa.DataFrameSchema, **kwargs) -> pa.DataFrameSchema:
     items = _get_pa_init_args(schema, param_names=_PA_DF_SCHEMA_INIT_PARAMETERS)
     items.update(kwargs)
     return pa.DataFrameSchema(**items)
 
 
-def update_index(index: pa.Index, /, **kwargs) -> pa.Index:
+def update_index(index: pa.Index, **kwargs) -> pa.Index:
     items = _get_pa_init_args(index, param_names=_PA_INDEX_INIT_PARAMETERS)
     items.update(kwargs)
     return pa.Index(**items)
 
 
-def update_multiindex(multi_index: pa.MultiIndex, /, **kwargs) -> pa.MultiIndex:
+def update_multiindex(multi_index: pa.MultiIndex, **kwargs) -> pa.MultiIndex:
     items = _get_pa_init_args(multi_index, param_names=_PA_MULTI_INDEX_INIT_PARAMETERS)
     items.update(kwargs)
     return pa.MultiIndex(**items)
@@ -140,13 +140,13 @@ def check_by_series_schema(series: pd.Series, series_name: str, dtypes: List[pa.
     return any(validated)
 
 
-def add_df_checks(schema: pa.DataFrameSchema, /, *, checks_list: List[pa.Check]) -> pa.DataFrameSchema:
+def add_df_checks(schema: pa.DataFrameSchema, *, checks_list: List[pa.Check]) -> pa.DataFrameSchema:
     schema = update_schema(schema, checks=checks_list)
     return schema
 
 
 def add_regex_column_checks(
-    schema: pa.DataFrameSchema, /, *, regex: str = ".*", dtype: Any, nullable: bool, checks_list: List[pa.Check]
+    schema: pa.DataFrameSchema, *, regex: str = ".*", dtype: Any, nullable: bool, checks_list: List[pa.Check]
 ) -> pa.DataFrameSchema:
     """Update `schema` with checks specified in `checks_list`, applied to all columns specified by `regex`.
     `dtype` and `nullable` can also be specified and will apply to all columns.
