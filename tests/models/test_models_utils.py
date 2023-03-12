@@ -62,6 +62,7 @@ class TestEnableReproducibility:
 
         utils.enable_reproducibility(
             random_seed=42,
+            ignore_python_hash_seed_warning=True,
             torch_handle_rnn_cuda_randomness=True,
         )
 
