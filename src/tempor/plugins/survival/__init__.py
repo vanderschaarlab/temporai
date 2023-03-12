@@ -1,3 +1,7 @@
+from typing import Any
+
+import pydantic
+
 import tempor.plugins.core as plugins
 from tempor.data import dataset, samples
 
@@ -11,7 +15,7 @@ class BaseSurvivalAnalysis(plugins.BasePredictor):
         data: dataset.TimeToEventAnalysisDataset,
         *args,
         **kwargs,
-    ) -> "BaseSurvivalAnalysis":
+    ) -> Any:
         return super().fit(data, *args, **kwargs)  # type: ignore[return-value]
 
     def _fit(  # type: ignore[override]
@@ -22,6 +26,7 @@ class BaseSurvivalAnalysis(plugins.BasePredictor):
     ) -> "BaseSurvivalAnalysis":
         return super().fit(data, *args, **kwargs)  # type: ignore[return-value]
 
+    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def predict(  # type: ignore[override]
         self,
         data: dataset.TimeToEventAnalysisDataset,
