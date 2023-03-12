@@ -5,8 +5,7 @@ import warnings
 import numpy as np
 import torch
 import torch.backends.cudnn
-
-DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+import torch.version
 
 
 def enable_reproducibility(
