@@ -10,7 +10,12 @@ class NopScaler(BaseScaler):
     def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
         super().__init__(**params)
 
-    def _fit(self, data: dataset.Dataset, *args, **kwargs) -> "NopScaler":
+    def _fit(
+        self,
+        data: dataset.Dataset,
+        *args,
+        **kwargs,
+    ) -> "NopScaler":  # pyright: ignore
         return self
 
     def _transform(self, data: dataset.Dataset, *args, **kwargs) -> Any:
