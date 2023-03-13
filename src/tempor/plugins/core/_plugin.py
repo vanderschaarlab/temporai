@@ -3,7 +3,9 @@ import glob
 import importlib.abc
 import importlib.util
 import os.path
-from typing import Any, ClassVar, Dict, List, Type
+from typing import TYPE_CHECKING, Any, Callable, ClassVar, Dict, List, Type, TypeVar
+
+from typing_extensions import ParamSpec
 
 from tempor.log import logger
 
@@ -11,6 +13,9 @@ from . import utils
 
 PLUGIN_NAME_NOT_SET = "NOT_SET"
 PLUGIN_CATEGORY_NOT_SET = "NOT_SET"
+
+P = ParamSpec("P")
+T = TypeVar("T")
 
 
 class Plugin:
@@ -53,7 +58,16 @@ def _check_same_class(class_1, class_2) -> bool:
 
 
 def register_plugin(name: str, category: str):
-    def inner(cls: Type[Plugin]):
+    def inner(cls: Callable[P, T]) -> Callable[P, T]:
+        # NOTE:
+        # The Callable[<ParamSpec>, <TypeVar>] approach allows to preserve the type annotation of the parameters of the
+        # wrapped class (its __init__ method, specifically). See resources:
+        #     * https://stackoverflow.com/a/74080156
+        #     * https://docs.python.org/3/library/typing.html#typing.ParamSpec
+
+        if TYPE_CHECKING:  # pragma: no cover
+            assert isinstance(cls, Plugin)  # nosec B101
+
         logger.debug(f"Registering plugin of class {cls}")
         cls.name = name
         cls.category = category
@@ -82,7 +96,7 @@ def register_plugin(name: str, category: str):
         PLUGIN_REGISTRY[cls.fqn()] = cls
 
         @functools.wraps(cls)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:  # See NOTE above.
             return cls(*args, **kwargs)
 
         # To access the class directly if required:
