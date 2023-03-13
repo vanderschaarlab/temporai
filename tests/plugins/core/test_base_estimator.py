@@ -42,7 +42,7 @@ class TestEstimator:
 
     def test_init_success(self):
         class MyModel(tempor.plugins.core.BaseEstimator):
-            PARAMS_DEFINITION = self.MyModelParams
+            ParamsDefinition = self.MyModelParams
             name = "my_model"
             category = "my_category"
 
@@ -61,7 +61,7 @@ class TestEstimator:
         class MyModel(tempor.plugins.core.BaseEstimator):
             name = "my_model"
             category = "my_category"
-            PARAMS_DEFINITION = self.MyModelParams
+            ParamsDefinition = self.MyModelParams
 
             @staticmethod
             def hyperparameter_space(*args: Any, **kwargs: Any):
@@ -79,7 +79,7 @@ class TestEstimator:
             name = "my_model"
             category = "my_category"
 
-            PARAMS_DEFINITION = self.MyModelParamsWithNoDefault
+            ParamsDefinition = self.MyModelParamsWithNoDefault
 
             @staticmethod
             def hyperparameter_space(*args: Any, **kwargs: Any):
@@ -95,7 +95,7 @@ class TestEstimator:
         class MyModel(tempor.plugins.core.BaseEstimator):
             name = "my_model"
             category = "my_category"
-            PARAMS_DEFINITION = self.MyModelParamsWithNoDefault
+            ParamsDefinition = self.MyModelParamsWithNoDefault
 
             @staticmethod
             def hyperparameter_space(*args: Any, **kwargs: Any):
@@ -112,7 +112,7 @@ class TestEstimator:
         class MyModel(tempor.plugins.core.BaseEstimator):
             name = "my_model"
             category = "my_category"
-            PARAMS_DEFINITION = self.MyModelParams
+            ParamsDefinition = self.MyModelParams
 
             @staticmethod
             def hyperparameter_space(*args: Any, **kwargs: Any):
@@ -128,7 +128,7 @@ class TestEstimator:
         class MyModel(tempor.plugins.core.BaseEstimator):
             name = "my_model"
             category = "my_category"
-            PARAMS_DEFINITION = self.MyModelParams
+            ParamsDefinition = self.MyModelParams
 
             @staticmethod
             def hyperparameter_space(*args: Any, **kwargs: Any):
@@ -137,14 +137,14 @@ class TestEstimator:
             def _fit(self, data, *args, **kwargs):
                 pass
 
-        with pytest.raises(ValueError, match=".*type 'str'.*"):
+        with pytest.raises(ValueError, match=".*not.*float.*"):
             _ = MyModel(foo="string")
 
     def test_repr(self):
         class MyModel(tempor.plugins.core.BaseEstimator):
             name = "my_model"
             category = "my_category"
-            PARAMS_DEFINITION = self.MyModelParams
+            ParamsDefinition = self.MyModelParams
 
             @staticmethod
             def hyperparameter_space(*args: Any, **kwargs: Any):
