@@ -20,3 +20,7 @@ class NopImputer(BaseImputer):
 
     def _transform(self, data: dataset.Dataset, *args, **kwargs) -> Any:
         return data
+
+    @staticmethod
+    def hyperparameter_space(*args, **kwargs):
+        return []
