@@ -3,12 +3,8 @@ import os
 import sys
 from typing import Any, Callable, Dict, Union
 
-if sys.version_info[:2] >= (3, 8):  # pragma: no cover
-    from typing import Literal
-else:  # pragma: no cover
-    from typing_extensions import Literal
-
 from loguru import logger
+from typing_extensions import Literal
 
 import tempor.config as conf
 
