@@ -1,5 +1,7 @@
 from typing import Any
 
+from typing_extensions import Self
+
 import tempor.plugins.core as plugins
 from tempor.data import dataset
 from tempor.plugins.preprocessing.imputation import BaseImputer
@@ -15,7 +17,7 @@ class NopImputer(BaseImputer):
         data: dataset.Dataset,
         *args,
         **kwargs,
-    ) -> "NopImputer":  # pyright: ignore
+    ) -> Self:
         return self
 
     def _transform(self, data: dataset.Dataset, *args, **kwargs) -> Any:

@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Dict, List, Optional, Type
 import omegaconf
 import pydantic
 import rich.pretty
+from typing_extensions import Self
 
 import tempor.core.utils
 from tempor.data import dataset
@@ -82,7 +83,7 @@ class BaseEstimator(Plugin, abc.ABC):
         data: dataset.Dataset,
         *args,
         **kwargs,
-    ) -> "BaseEstimator":
+    ) -> Self:
         logger.debug(f"Calling _fit() implementation on {self.__class__.__name__}")
         fitted_model = self._fit(data, *args, **kwargs)
 
@@ -90,7 +91,7 @@ class BaseEstimator(Plugin, abc.ABC):
         return fitted_model
 
     @abc.abstractmethod
-    def _fit(self, data: dataset.Dataset, *args, **kwargs) -> "BaseEstimator":  # pragma: no cover
+    def _fit(self, data: dataset.Dataset, *args, **kwargs) -> Self:
         ...
 
     @staticmethod

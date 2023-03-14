@@ -1,6 +1,7 @@
 import abc
 
 import pydantic
+from typing_extensions import Self
 
 import tempor.plugins.core as plugins
 from tempor.data import dataset, samples
@@ -18,7 +19,7 @@ class BaseSurvivalAnalysis(plugins.BasePredictor):
     def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
         super().__init__(**params)
 
-    def fit(self, data: dataset.Dataset, *args, **kwargs) -> "BaseSurvivalAnalysis":
+    def fit(self, data: dataset.Dataset, *args, **kwargs) -> Self:
         check_data_class(data)
         super().fit(data, *args, **kwargs)
         return self
