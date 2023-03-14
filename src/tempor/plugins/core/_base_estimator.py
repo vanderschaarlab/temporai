@@ -78,6 +78,7 @@ class BaseEstimator(Plugin, abc.ABC):
     def __repr__(self) -> str:
         return rich.pretty.pretty_repr(self)
 
+    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def fit(
         self,
         data: dataset.Dataset,
