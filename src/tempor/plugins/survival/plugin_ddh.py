@@ -88,25 +88,25 @@ class DynamicDeepHitSurvivalAnalysis(BaseSurvivalAnalysis):
         print(self.params)
         # WIP...
 
-    def fit(  # type: ignore[override]
+    def fit(
         self,
-        data: dataset.TimeToEventAnalysisDataset,
-        *args,
-        **kwargs,
-    ) -> "DynamicDeepHitSurvivalAnalysis":  # pyright: ignore
-        return super().fit(data, *args, **kwargs)  # type: ignore[return-value]
-
-    def _fit(  # type: ignore[override]
-        self,
-        data: dataset.TimeToEventAnalysisDataset,
+        data: dataset.Dataset,
         *args,
         **kwargs,
     ) -> "DynamicDeepHitSurvivalAnalysis":  # pyright: ignore
         raise NotImplementedError
 
-    def _predict(  # type: ignore[override]
+    def _fit(
         self,
-        data: dataset.TimeToEventAnalysisDataset,
+        data: dataset.Dataset,
+        *args,
+        **kwargs,
+    ) -> "DynamicDeepHitSurvivalAnalysis":  # pyright: ignore
+        raise NotImplementedError
+
+    def _predict(
+        self,
+        data: dataset.Dataset,
         *args,
         **kwargs,
     ) -> samples.TimeSeriesSamples:
