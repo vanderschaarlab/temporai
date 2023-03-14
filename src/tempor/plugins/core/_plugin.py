@@ -99,8 +99,9 @@ def register_plugin(name: str, category: str):
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:  # See NOTE above.
             return cls(*args, **kwargs)
 
-        # To access the class directly if required:
-        wrapper.cls = cls  # type: ignore
+        # Set attributes.
+        setattr(wrapper, "_cls", cls)  # To access the class directly if required.
+        setattr(wrapper, "_tempor_plugin_", True)
 
         return wrapper
 
