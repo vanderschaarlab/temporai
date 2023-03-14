@@ -7,6 +7,9 @@ from tempor.log import logger
 
 from . import data_typing
 
+pa_major, pa_minor, *_ = [int(v) for v in pa.__version__.split(".")]
+
+
 _PA_DF_SCHEMA_INIT_PARAMETERS = [
     "columns",
     "checks",
@@ -44,8 +47,11 @@ _PA_MULTI_INDEX_INIT_PARAMETERS = [
     "name",
     "ordered",
     "unique",
-    "report_duplicates",
 ]
+
+if pa_major == 0 and pa_minor < 14:
+    # Before v0.14, pandera API had an extra parameter `report_duplicates`.
+    _PA_MULTI_INDEX_INIT_PARAMETERS.append("report_duplicates")
 
 
 def _get_pa_init_args(pa_object: Any, param_names: List[str]) -> Dict[str, Any]:
@@ -134,7 +140,7 @@ def check_by_series_schema(series: pd.Series, series_name: str, dtypes: List[pa.
             logger.trace(f"{series_name} validated? Yes: {type_}")
             validated.append(True)
             break
-        except (pa.errors.SchemaError, pa.errors.SchemaErrors):
+        except (pa.errors.SchemaError, pa.errors.SchemaErrors):  # pyright: ignore
             logger.trace(f"{series_name} validated?  No: {type_}")
             validated.append(False)
     return any(validated)

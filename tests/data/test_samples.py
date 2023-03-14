@@ -47,7 +47,7 @@ def set_up_dfs_test():
     df_s_success_nonan.set_index("sample_idx", drop=True, inplace=True)
 
     df_s_success_nan = df_s_success_nonan.copy()
-    df_s_success_nan.loc[0, "num_feat_1"] = np.nan
+    df_s_success_nan.loc["sample_0", "num_feat_1"] = np.nan
 
     df_s_fail_index_multiindex = df_s_success_nonan.copy()
     df_s_fail_index_multiindex["sample_index"] = list(df_s_fail_index_multiindex.index)
