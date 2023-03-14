@@ -1,5 +1,4 @@
-"""Types (and related code) for TemporAI data handling.
-"""
+"""Types (and related code) for TemporAI data handling."""
 
 import enum
 from typing import Dict, List, Tuple, Type, Union
@@ -12,7 +11,7 @@ DataContainer = Union[pd.DataFrame, np.ndarray]
 
 Dtype = Union[Type, Literal["category", "datetime"]]
 """Type annotation to indicate dtypes. May be `Type`, e.g. `str`, `bool`, or one of the literals:
-`"category"`, `"datetime"`
+``"category"``, ``"datetime"``.
 """
 
 

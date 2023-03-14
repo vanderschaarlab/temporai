@@ -1,5 +1,4 @@
-"""Settings for TemporAI data handling.
-"""
+"""Settings for TemporAI data handling."""
 
 from typing import ClassVar, List
 
