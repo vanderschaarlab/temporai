@@ -67,10 +67,7 @@ class SineDataloader:
             local = list()
 
             # For each feature
-            if self.with_missing:
-                seq_len = np.random.randint(2, self.seq_len, 1)[0]
-            else:
-                seq_len = self.seq_len
+            seq_len = self.seq_len
 
             for k in range(self.temporal_dim):
 
@@ -88,6 +85,10 @@ class SineDataloader:
             local_data = pd.DataFrame(np.transpose(np.asarray(local)))
             local_data.columns = local_data.columns.astype(str)
 
+            if self.with_missing:
+                for col in local_data.columns:
+                    local_data.loc[local_data.sample(frac=self.miss_ratio).index, col] = pd.np.nan
+
             # Stack the generated data
             local_data["sample_idx"] = str(i)
             local_data["time_idx"] = list(range(seq_len))
@@ -95,10 +96,6 @@ class SineDataloader:
 
         time_series_df = pd.concat(temporal_data, ignore_index=True)
         time_series_df.set_index(keys=["sample_idx", "time_idx"], drop=True, inplace=True)
-
-        if self.with_missing:
-            for col in time_series_df.columns:
-                time_series_df.loc[time_series_df.sample(frac=self.miss_ratio).index, col] = pd.np.nan
 
         return OneOffPredictionDataset(
             time_series=time_series_df,

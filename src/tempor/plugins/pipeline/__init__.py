@@ -5,7 +5,6 @@ from typing import Any, Dict, List, Tuple, Type
 from tempor.data import dataset
 from tempor.plugins import plugin_loader
 
-# autoprognosis relative
 from .generators import (
     _generate_constructor,
     _generate_fit,
@@ -82,6 +81,6 @@ def PipelineGroup(names: List[str]) -> Tuple[Type, ...]:
 def Pipeline(plugins_str: List[str]) -> Any:
     plugins = PipelineGroup(plugins_str)
 
-    name = "_".join(p.name() for p in plugins)
+    name = "_".join(p.name for p in plugins)
 
     return PipelineMeta(name, plugins, {})

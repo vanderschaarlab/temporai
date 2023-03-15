@@ -1,6 +1,6 @@
 import tempor.plugins.core as plugins
 
-from . import preprocessing, survival
+from . import classification, preprocessing, regression, survival
 
 plugin_loader = plugins.PluginLoader()
 
@@ -8,4 +8,6 @@ plugin_loader = plugins.PluginLoader()
 __all__ = [
     "preprocessing",
     "survival",
+    "classification",
+    "regression",
 ]

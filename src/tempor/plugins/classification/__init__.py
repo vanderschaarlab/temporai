@@ -56,7 +56,7 @@ class BaseClassifier(plugins.BasePredictor):
 
     def _unpack_dataset(self, data: dataset.Dataset) -> Tuple:
         temporal = data.time_series.numpy()
-        observation_times = data.time_series.time_indexes()
+        observation_times = np.asarray(data.time_series.time_indexes())
         if data.predictive is not None:
             outcome = data.predictive.targets.numpy()
         else:
@@ -67,6 +67,8 @@ class BaseClassifier(plugins.BasePredictor):
         else:
             static = np.zeros((len(temporal), 0))
 
+        if len(outcome.shape) == 1:
+            outcome = outcome.reshape(-1, 1)
         return static, temporal, observation_times, outcome
 
 
