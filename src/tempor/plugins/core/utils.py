@@ -1,5 +1,4 @@
-"""Module with utilities that support plugin functionality.
-"""
+"""Module with utilities that support plugin functionality."""
 
 from typing import Any, Dict, List
 

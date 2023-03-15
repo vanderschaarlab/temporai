@@ -47,7 +47,7 @@ def set_up_dfs_test():
     df_s_success_nonan.set_index("sample_idx", drop=True, inplace=True)
 
     df_s_success_nan = df_s_success_nonan.copy()
-    df_s_success_nan.loc[0, "num_feat_1"] = np.nan
+    df_s_success_nan.loc["sample_0", "num_feat_1"] = np.nan
 
     df_s_fail_index_multiindex = df_s_success_nonan.copy()
     df_s_fail_index_multiindex["sample_index"] = list(df_s_fail_index_multiindex.index)
@@ -559,6 +559,24 @@ class TestTimeSeriesSamples:
     def test_time_indexes_as_dict(self, df_time_series: pd.DataFrame):
         s = samples.TimeSeriesSamples.from_dataframe(df_time_series)
         assert s.time_indexes_as_dict() == {"a": [1, 2, 3, 4], "b": [2, 4], "c": [9]}
+
+    def test_num_timesteps(self, df_time_series: pd.DataFrame):
+        s = samples.TimeSeriesSamples.from_dataframe(df_time_series)
+        assert s.num_timesteps() == [4, 2, 1]
+
+    def test_num_timesteps_as_dict(self, df_time_series: pd.DataFrame):
+        s = samples.TimeSeriesSamples.from_dataframe(df_time_series)
+        assert s.num_timesteps_as_dict() == {"a": 4, "b": 2, "c": 1}
+
+    @pytest.mark.parametrize(
+        "samples, expected",
+        [
+            (samples.TimeSeriesSamples.from_dataframe(dfs_test.df_time_series_success[0]), False),
+            (samples.TimeSeriesSamples.from_numpy(np.ones(shape=(3, 5, 2))), True),
+        ],
+    )
+    def test_num_timesteps_equal(self, samples: samples.TimeSeriesSamples, expected: bool):
+        assert samples.num_timesteps_equal() is expected
 
     def test_repr(self, df_time_series: pd.DataFrame):
         s = samples.TimeSeriesSamples.from_dataframe(df_time_series)

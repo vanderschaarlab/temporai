@@ -46,22 +46,25 @@ class Dataset(abc.ABC):
     ) -> None:
         """Base class representing a dataset used by TemporAI.
 
-        Initialize one of its derived classes (e.g. `OneOffPredictionDataset`, `TimeToEventAnalysisDataset` etc.)
-        depending on the type of task.
+        Initialize one of its derived classes (e.g. :class:`OneOffPredictionDataset`,
+        :class:`TimeToEventAnalysisDataset` etc.) depending on the type of task.
 
-        See also tutorial `tutorials/tutorial01_data_format.ipynb` for examples of use.
+        See also tutorial ``tutorials/tutorial01_data_format.ipynb`` for examples of use.
 
         Args:
-            time_series (numpy.ndarray | pandas.DataFrame): Data representing time series covariates of the samples.
-            Will be initialized as `TimeSeriesSamples`.
-            static (numpy.ndarray | pandas.DataFrame, optional): Data representing static covariates of the samples.
-            Will be initialized as `StaticSamples`. Defaults to None.
-            targets (numpy.ndarray | pandas.DataFrame, optional): Data representing target (outcome) feature(s) of the
-            samples. Will be initialized as `{TimeSeries,Static,Event}Samples` depending on problem setting in the
-            derived class. Defaults to None.
-            treatments (numpy.ndarray | pandas.DataFrame, optional): Data representing treatment (intervention)
-            feature(s) of the samples. Will be initialized as `{TimeSeries,Static,Event}Samples` depending on problem
-            setting in the derived class. Defaults to None.
+            time_series (numpy.ndarray | pandas.DataFrame):
+                Data representing time series covariates of the samples. Will be initialized as `TimeSeriesSamples`.
+            static (numpy.ndarray | pandas.DataFrame, optional):
+                Data representing static covariates of the samples. Will be initialized as `StaticSamples`.
+                Defaults to `None`.
+            targets (numpy.ndarray | pandas.DataFrame, optional):
+                Data representing target (outcome) feature(s) of the samples. Will be initialized as
+                ``{TimeSeries,Static,Event}Samples`` depending on problem setting in the derived class.
+                Defaults to `None`.
+            treatments (numpy.ndarray | pandas.DataFrame, optional):
+                Data representing treatment (intervention) feature(s) of the samples. Will be initialized as
+                ``{TimeSeries,Static,Event}Samples`` depending on problem setting in the derived class.
+                Defaults to `None`.
         """
         self.time_series = samples.TimeSeriesSamples(time_series)
         self.static = samples.StaticSamples(static) if static is not None else None
@@ -90,7 +93,7 @@ class Dataset(abc.ABC):
         treatments: Optional[data_typing.DataContainer] = None,
         **kwargs,
     ) -> None:  # pragma: no cover
-        """A method to initialize `self.predictive` in derived classes."""
+        """A method to initialize ``self.predictive`` in derived classes."""
         ...
 
     @property
@@ -136,9 +139,9 @@ class OneOffPredictionDataset(Dataset):
         treatments: Optional[data_typing.DataContainer] = None,
         **kwargs,
     ) -> None:
-        """A `Dataset` subclass for the one-off prediction problem setting, see `Dataset` docs.
+        """A :class:`Dataset` subclass for the one-off prediction problem setting, see :class:`Dataset` docs.
 
-        In this setting: `targets` are required, will be initialized as `StaticSamples`.
+        In this setting: ``targets`` are required, will be initialized as `StaticSamples`.
         """
         super().__init__(time_series=time_series, static=static, targets=targets, treatments=treatments, **kwargs)
 
@@ -169,9 +172,9 @@ class TemporalPredictionDataset(Dataset):
         treatments: Optional[data_typing.DataContainer] = None,
         **kwargs,
     ) -> None:
-        """A `Dataset` subclass for the temporal prediction problem setting, see `Dataset` docs.
+        """A :class:`Dataset` subclass for the temporal prediction problem setting, see :class:`Dataset` docs.
 
-        In this setting: `targets` are required, will be initialized as `TimeSeriesSamples`.
+        In this setting: ``targets`` are required, will be initialized as `TimeSeriesSamples`.
         """
         super().__init__(time_series=time_series, static=static, targets=targets, treatments=treatments, **kwargs)
 
@@ -204,9 +207,9 @@ class TimeToEventAnalysisDataset(Dataset):
         treatments: Optional[data_typing.DataContainer] = None,
         **kwargs,
     ) -> None:
-        """A `Dataset` subclass for the time-to-event analysis problem setting, see `Dataset` docs.
+        """A :class:`Dataset` subclass for the time-to-event analysis problem setting, see :class:`Dataset` docs.
 
-        In this setting: `targets` are required, will be initialized as `EventSamples`.
+        In this setting: ``targets`` are required, will be initialized as `EventSamples`.
         """
         super().__init__(time_series=time_series, static=static, targets=targets, treatments=treatments, **kwargs)
 
@@ -239,10 +242,10 @@ class OneOffTreatmentEffectsDataset(Dataset):
         static: Optional[data_typing.DataContainer] = None,
         **kwargs,
     ) -> None:
-        """A `Dataset` subclass for the one-off treatment effects problem setting, see `Dataset` docs.
+        """A :class:`Dataset` subclass for the one-off treatment effects problem setting, see :class:`Dataset` docs.
 
-        In this setting: `targets` are required, will be initialized as `TimeSeriesSamples`; `treatments` are required,
-        will be initialized as `EventSamples`.
+        In this setting: ``targets`` are required, will be initialized as `TimeSeriesSamples`; ``treatments`` are
+        required, will be initialized as `EventSamples`.
         """
         super().__init__(time_series=time_series, static=static, targets=targets, treatments=treatments, **kwargs)
 
@@ -280,10 +283,10 @@ class TemporalTreatmentEffectsDataset(Dataset):
         static: Optional[data_typing.DataContainer] = None,
         **kwargs,
     ) -> None:
-        """A `Dataset` subclass for the temporal treatment effects problem setting, see `Dataset` docs.
+        """A :class:`Dataset` subclass for the temporal treatment effects problem setting, see :class:`Dataset` docs.
 
-        In this setting: `targets` are required, will be initialized as `TimeSeriesSamples`; `treatments` are required,
-        will be initialized as `TimeSeriesSamples`.
+        In this setting: ``targets`` are required, will be initialized as `TimeSeriesSamples`; ``treatments`` are
+        required, will be initialized as `TimeSeriesSamples`.
         """
         super().__init__(time_series=time_series, static=static, targets=targets, treatments=treatments, **kwargs)
 

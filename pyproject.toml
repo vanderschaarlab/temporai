@@ -10,7 +10,7 @@ version_scheme = "no-guess-dev"
 
 [tool.black]
 line-length = 120
-target-version = ['py38', 'py39', 'py310']
+target-version = ['py37', 'py38', 'py39', 'py310']
 include = '\.pyi?$'
 # extend-exclude = '''
 # ^/(
@@ -48,3 +48,7 @@ include = '\.pyi?$'
 
 [tool.bandit]
 exclude_dirs = ["tests"]
+
+[tool.pydocstyle]
+convention = "google"
+add-ignore = ["D100", "D101", "D102", "D103", "D104", "D105", "D106", "D107", "D205", "D415"]

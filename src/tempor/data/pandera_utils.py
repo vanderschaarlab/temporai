@@ -7,6 +7,9 @@ from tempor.log import logger
 
 from . import data_typing
 
+pa_major, pa_minor, *_ = [int(v) for v in pa.__version__.split(".")]
+
+
 _PA_DF_SCHEMA_INIT_PARAMETERS = [
     "columns",
     "checks",
@@ -44,27 +47,30 @@ _PA_MULTI_INDEX_INIT_PARAMETERS = [
     "name",
     "ordered",
     "unique",
-    "report_duplicates",
 ]
+
+if pa_major == 0 and pa_minor < 14:
+    # Before v0.14, pandera API had an extra parameter `report_duplicates`.
+    _PA_MULTI_INDEX_INIT_PARAMETERS.append("report_duplicates")
 
 
 def _get_pa_init_args(pa_object: Any, param_names: List[str]) -> Dict[str, Any]:
     """A helper method for updating `pandera` objects dynamically.
 
-    Get values of items in `pa_object`'s `__dict__`, specified by `param_names`.
-    `param_names` should contain names (`str`) of the `__init__` parameters of the `pa_object`.
+    Get values of items in ``pa_object``'s ``__dict__``, specified by ``param_names`` .
+    ``param_names`` should contain names (`str`) of the ``__init__`` parameters of the ``pa_object``.
 
     Algorithm:
-    - Will attempt to get by `param_names` item.
-    - If not found, will attempt to get by `param_names` item prepended with `_`.
-    - If an `arg_name` item isn't found, it is ignored.
+    - Will attempt to get by ``param_names`` item.
+    - If not found, will attempt to get by ``param_names`` item prepended with ``_``.
+    - If an ``arg_name`` item isn't found, it is ignored.
 
     Args:
         pa_object (Any): `pandera` object.
-        param_names (List[str]): list of `pandera` object's `__init__` parameters.
+        param_names (List[str]): list of `pandera` object's ``__init__`` parameters.
 
     Returns:
-        Dict[str, Any]: dictionary mapping `pa_object`'s `__init__` parameter names to their current values.
+        Dict[str, Any]: dictionary mapping ``pa_object`` 's ``__init__`` parameter names to their current values.
     """
     # Try attributes with matching name:
     args = set(param_names)
@@ -77,19 +83,19 @@ def _get_pa_init_args(pa_object: Any, param_names: List[str]) -> Dict[str, Any]:
     return items
 
 
-def update_schema(schema: pa.DataFrameSchema, /, **kwargs) -> pa.DataFrameSchema:
+def update_schema(schema: pa.DataFrameSchema, **kwargs) -> pa.DataFrameSchema:
     items = _get_pa_init_args(schema, param_names=_PA_DF_SCHEMA_INIT_PARAMETERS)
     items.update(kwargs)
     return pa.DataFrameSchema(**items)
 
 
-def update_index(index: pa.Index, /, **kwargs) -> pa.Index:
+def update_index(index: pa.Index, **kwargs) -> pa.Index:
     items = _get_pa_init_args(index, param_names=_PA_INDEX_INIT_PARAMETERS)
     items.update(kwargs)
     return pa.Index(**items)
 
 
-def update_multiindex(multi_index: pa.MultiIndex, /, **kwargs) -> pa.MultiIndex:
+def update_multiindex(multi_index: pa.MultiIndex, **kwargs) -> pa.MultiIndex:
     items = _get_pa_init_args(multi_index, param_names=_PA_MULTI_INDEX_INIT_PARAMETERS)
     items.update(kwargs)
     return pa.MultiIndex(**items)
@@ -103,12 +109,12 @@ PA_DTYPE_MAP: Dict[data_typing.Dtype, pa.DataType] = {
     "category": pa.Category(),
     "datetime": pa.DateTime(),
 }
-"""A mapping from dtype specified as `Dtype` to a `pandera.DataType`.
+"""A mapping from dtype specified as :obj:`~tempor.data.data_typing.Dtype` to a `pandera.DataType`.
 """
 
 
 def get_pa_dtypes(dtypes: Iterable[data_typing.Dtype]) -> List[pa.DataType]:
-    """Return a `set` of `pandera.DataType` corresponding to `dtypes`. Raises `KeyError` If not found."""
+    """Return a list of `pandera.DataType` corresponding to ``dtypes``. Raises `KeyError` If not found."""
     pa_dtypes = []
     for dt in dtypes:
         if isinstance(dt, pa.DataType):
@@ -123,8 +129,8 @@ def get_pa_dtypes(dtypes: Iterable[data_typing.Dtype]) -> List[pa.DataType]:
 
 
 def check_by_series_schema(series: pd.Series, series_name: str, dtypes: List[pa.DataType], **kwargs) -> bool:
-    """Will check that `series` satisfies a `SeriesSchema` with at least one dtype from `dtypes`.
-    May pass additional `SeriesSchema` kwargs via `kwargs`.
+    """Will check that ``series`` satisfies a `pandera.SeriesSchema` with at least one dtype from ``dtypes``.
+    May pass additional `pandera.SeriesSchema` kwargs via ``kwargs``.
     """
     logger.trace(f"Doing {series_name} dtype validation.")
     validated: List[bool] = []
@@ -134,22 +140,22 @@ def check_by_series_schema(series: pd.Series, series_name: str, dtypes: List[pa.
             logger.trace(f"{series_name} validated? Yes: {type_}")
             validated.append(True)
             break
-        except (pa.errors.SchemaError, pa.errors.SchemaErrors):
+        except (pa.errors.SchemaError, pa.errors.SchemaErrors):  # pyright: ignore
             logger.trace(f"{series_name} validated?  No: {type_}")
             validated.append(False)
     return any(validated)
 
 
-def add_df_checks(schema: pa.DataFrameSchema, /, *, checks_list: List[pa.Check]) -> pa.DataFrameSchema:
+def add_df_checks(schema: pa.DataFrameSchema, *, checks_list: List[pa.Check]) -> pa.DataFrameSchema:
     schema = update_schema(schema, checks=checks_list)
     return schema
 
 
 def add_regex_column_checks(
-    schema: pa.DataFrameSchema, /, *, regex: str = ".*", dtype: Any, nullable: bool, checks_list: List[pa.Check]
+    schema: pa.DataFrameSchema, *, regex: str = ".*", dtype: Any, nullable: bool, checks_list: List[pa.Check]
 ) -> pa.DataFrameSchema:
-    """Update `schema` with checks specified in `checks_list`, applied to all columns specified by `regex`.
-    `dtype` and `nullable` can also be specified and will apply to all columns.
+    """Update ``schema`` with checks specified in ``checks_list``, applied to all columns specified by ``regex``.
+    ``dtype`` and ``nullable`` can also be specified and will apply to all columns.
     """
     schema_out = schema.add_columns(
         {
@@ -175,9 +181,9 @@ def set_up_index(
     unique: bool,
     checks_list: List[pa.Check],
 ) -> Tuple[pa.DataFrameSchema, pd.DataFrame]:
-    """Update `schema.index` (`pandera.Index`) with `name`, `nullable`, ... schema settings.
+    """Update ``schema.index`` (`pandera.Index`) with ``name``, ``nullable``, ... schema settings.
 
-    In addition, set the index name of `data` (`pandas.DataFrame`) to `name`.
+    In addition, set the index name of ``data`` (`pandas.DataFrame`) to ``name``.
 
     Returns the schema and the dataframe.
     """
@@ -204,10 +210,10 @@ def set_up_2level_multiindex(
     unique: Tuple[str, ...],
     checks_list: Tuple[List[pa.Check], List[pa.Check]],
 ) -> Tuple[pa.DataFrameSchema, pd.DataFrame]:
-    """Update `schema.index` (`pandera.MultiIndex`), which is expected to have 2 levels, with `name`, `nullable`, ...
-    schema settings.
+    """Update ``schema.index`` (`pandera.MultiIndex`), which is expected to have 2 levels, with ``name``,
+    ``nullable``, ... schema settings.
 
-    In addition, set the index name of `data` (`pandas.DataFrame`) to `name`.
+    In addition, set the index name of ``data`` (`pandas.DataFrame`) to ``name``.
 
     Returns the schema and the dataframe.
     """
@@ -238,7 +244,7 @@ def set_up_2level_multiindex(
 
 
 class checks:
-    """Namespace containing reusable `pandera.Check`s."""
+    """Namespace containing reusable `pandera.Check` s."""
 
     forbid_multiindex_index = pa.Check(
         lambda df: df.index.nlevels == 1,
@@ -263,7 +269,7 @@ class checks:
     )
 
     class configurable:
-        """Namespace containing functions to get configurable `pandera.Check`s."""
+        """Namespace containing functions to get configurable `pandera.Check` s."""
 
         @staticmethod
         def values_satisfy_dtypes(dtypes: List[data_typing.Dtype]) -> pa.Check:

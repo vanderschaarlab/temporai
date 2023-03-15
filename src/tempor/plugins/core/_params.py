@@ -3,9 +3,7 @@ from typing import Any, List, Tuple
 
 
 class Params(abc.ABC):
-    """
-    Helper for describing the hyperparameters for each estimator.
-    """
+    """Helper for describing the hyperparameters for each estimator."""
 
     def __init__(self, name: str, bounds: Tuple[Any, Any]) -> None:
         self.name = name

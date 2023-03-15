@@ -1,17 +1,17 @@
-"""Types (and related code) for TemporAI data handling.
-"""
+"""Types (and related code) for TemporAI data handling."""
 
 import enum
-from typing import Dict, List, Literal, Tuple, Type, Union
+from typing import Dict, List, Tuple, Type, Union
 
 import numpy as np
 import pandas as pd
+from typing_extensions import Literal
 
 DataContainer = Union[pd.DataFrame, np.ndarray]
 
 Dtype = Union[Type, Literal["category", "datetime"]]
 """Type annotation to indicate dtypes. May be `Type`, e.g. `str`, `bool`, or one of the literals:
-`"category"`, `"datetime"`
+``"category"``, ``"datetime"``.
 """
 
 
@@ -40,6 +40,10 @@ TimeIndex = Union[
 SampleToTimeIndexDict = Union[
     Dict[int, TimeIndex],
     Dict[str, TimeIndex],
+]
+SampleToNumTimestepsDict = Union[
+    Dict[int, int],
+    Dict[str, int],
 ]
 SampleTimeIndexTuples = List[
     Union[

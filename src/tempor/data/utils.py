@@ -26,7 +26,7 @@ EXCEPTION_MESSAGES = _ExceptionMessages()
 
 
 def value_in_df(df: pd.DataFrame, *, value: Any) -> bool:
-    """Check if `value` exists in dataframe `df`, accounting for the case where `value` is `nan`."""
+    """Check if ``value`` exists in dataframe ``df``, accounting for the case where ``value`` is `numpy.nan`."""
     return (pd.isnull(value) and df.isna().any().any()) or (df == value).any().any()
 
 
@@ -34,19 +34,21 @@ def value_in_df(df: pd.DataFrame, *, value: Any) -> bool:
 def multiindex_timeseries_dataframe_to_array3d(
     df: pd.DataFrame, *, padding_indicator: Any, max_timesteps: Optional[int] = None
 ) -> np.ndarray:
-    """Convert timeseries dataframe `df` with a 2-level multiindex (sample, timestep) to a 3D numpy array with
-    dimensions `(sample, timestep, feature)`.
+    """Convert timeseries dataframe ``df`` with a 2-level multiindex (sample, timestep) to a 3D numpy array with
+    dimensions ``(sample, timestep, feature)``.
 
     Args:
-        df (pd.DataFrame): Input dataframe
-        padding_indicator (Any): padding indicator value to use to pad the output array in case of unequal number of
-        timesteps for different samples.
-        max_timesteps (int, optional): Maximum number of timesteps to use. This will become the size of the dim 1 of the
-        output array. If set to `None`, this dimension will be set as the highest number of timesteps among the samples.
-        Defaults to None.
+        df (pd.DataFrame):
+            Input dataframe.
+        padding_indicator (Any):
+            padding indicator value to use to pad the output array in case of unequal number of timesteps for
+            different samples.
+        max_timesteps (int, optional):
+            Maximum number of timesteps to use. This will become the size of the dim 1 of the output array. If set to
+            `None`, this dimension will be set as the highest number of timesteps among the samples. Defaults to `None`.
 
     Raises:
-        ValueError: raised if the `padding_indicator` found as one of the data values in `df`.
+        ValueError: raised if the ``padding_indicator`` found as one of the data values in ``df``.
 
     Returns:
         np.ndarray: Output 3D numpy array.
@@ -70,18 +72,18 @@ def multiindex_timeseries_dataframe_to_array3d(
 
 
 def check_bool_array1d_trues_consecutive(array: np.ndarray, at_beginning: bool = False, at_end: bool = False) -> bool:
-    """Check if 1D `array` (containing `bool` values) has all `True` elements consecutively. If `at_{beginning,end}` is
-    set, will also check that a `True` element is present as the first or last element of the `array`, respectively.
-    Raises `ValueError` if input `array` format is unexpected.
+    """Check if 1D ``array`` (containing `bool` values) has all `True` elements consecutively. If ``at_{beginning,end}``
+    is set, will also check that a `True` element is present as the first or last element of the ``array``,
+    respectively. Raises `ValueError` if input `array` format is unexpected.
 
     Examples:
-    >>> import numpy as np
-    >>> check_bool_array1d_trues_consecutive(np.asarray([False, True, True, True, False]))
-    True
-    >>> check_bool_array1d_trues_consecutive(np.asarray([False, True, False, True, False]))
-    False
-    >>> check_bool_array1d_trues_consecutive(np.asarray([False, True, True, True]), at_end=True)
-    True
+        >>> import numpy as np
+        >>> check_bool_array1d_trues_consecutive(np.asarray([False, True, True, True, False]))
+        True
+        >>> check_bool_array1d_trues_consecutive(np.asarray([False, True, False, True, False]))
+        False
+        >>> check_bool_array1d_trues_consecutive(np.asarray([False, True, True, True]), at_end=True)
+        True
     """
     if array.ndim != 1:
         raise ValueError(EXCEPTION_MESSAGES.expected_array1d)
@@ -104,14 +106,14 @@ def check_bool_array1d_trues_consecutive(array: np.ndarray, at_beginning: bool =
 
 
 def check_bool_array2d_identical_along_dim1(array: np.ndarray) -> bool:
-    """Check if 2D `array` (containing `bool` values) has the same values along dimension 1.
+    """Check if 2D ``array`` (containing `bool` values) has the same values along dimension 1.
 
     Examples:
-    >>> import numpy as np
-    >>> check_bool_array2d_identical_along_dim1(np.asarray([[True, True, False], [True, True, False]]).T)
-    True
-    >>> check_bool_array2d_identical_along_dim1(np.asarray([[True, True, False], [False, True, False]]).T)
-    False
+        >>> import numpy as np
+        >>> check_bool_array2d_identical_along_dim1(np.asarray([[True, True, False], [True, True, False]]).T)
+        True
+        >>> check_bool_array2d_identical_along_dim1(np.asarray([[True, True, False], [False, True, False]]).T)
+        False
     """
     if array.ndim != 2:
         raise ValueError(EXCEPTION_MESSAGES.expected_array2d)
@@ -121,16 +123,16 @@ def check_bool_array2d_identical_along_dim1(array: np.ndarray) -> bool:
 
 
 def get_array1d_length_until_padding(array: np.ndarray, padding_indicator: Any = None) -> int:
-    """Get the length of 1D `array` up to first padding indicated by `padding_indicator`. Raises `ValueError` if input
-    `array` format is unexpected.
+    """Get the length of 1D ``array`` up to first padding indicated by ``padding_indicator``. Raises `ValueError` if
+    input ``array`` format is unexpected.
 
     Examples:
-    >>> import numpy as np
-    >>> pad = 999.0
-    >>> get_array1d_length_until_padding(np.asarray([1, 8, -3, 9, pad]), padding_indicator=pad)
-    4
-    >>> get_array1d_length_until_padding(np.asarray([1, 8, -3, 9, 5]), padding_indicator=pad)
-    5
+        >>> import numpy as np
+        >>> pad = 999.0
+        >>> get_array1d_length_until_padding(np.asarray([1, 8, -3, 9, pad]), padding_indicator=pad)
+        4
+        >>> get_array1d_length_until_padding(np.asarray([1, 8, -3, 9, 5]), padding_indicator=pad)
+        5
     """
     if array.ndim != 1:
         raise ValueError(EXCEPTION_MESSAGES.expected_array1d)
@@ -145,10 +147,10 @@ def get_array1d_length_until_padding(array: np.ndarray, padding_indicator: Any =
 
 
 def validate_timeseries_array3d(array: np.ndarray, padding_indicator: Any = None):
-    """Check if 3D `array` representing timeseries satisfies the blow criteria, otherwise raise ValueError:
+    """Check if 3D ``array`` representing timeseries satisfies the blow criteria, otherwise raise `ValueError`:
     - 3 dimensions,
     - Dimension 2 not of size 0,
-    - If `padding_indicator` is provided, also check it is not `np.nan`, as this is not supported.
+    - If ``padding_indicator`` is provided, also check it is not `np.nan`, as this is not supported.
     """
     if array.ndim != 3:
         raise ValueError(EXCEPTION_MESSAGES.expected_array3d)
@@ -159,29 +161,29 @@ def validate_timeseries_array3d(array: np.ndarray, padding_indicator: Any = None
 
 
 def get_seq_lengths_timeseries_array3d(array: np.ndarray, padding_indicator: Any = None) -> List[int]:
-    """Given a 3D numpy `array` that represents timeseries like `(sample, timestep, feature)`, and optionally a
-    `padding_indicator` to indicate padding, get the length (number of [non-padding] timesteps) for each sample.
+    """Given a 3D numpy ``array`` that represents timeseries like ``(sample, timestep, feature)``, and optionally a
+    ``padding_indicator`` to indicate padding, get the length (number of [non-padding] timesteps) for each sample.
 
     Example:
-    >>> import numpy as np
-    >>> pad = 999.0
-    >>> array = np.asarray(  # Array with two samples, with two timeseries features.
-    ...     [
-    ...         # Sample 1:
-    ...         [
-    ...             [11, 12, 13, 14, pad],
-    ...             [1.1, 1.2, 1.3, 1.4, pad],
-    ...         ],
-    ...         # Sample 2:
-    ...         [
-    ...             [21, 22, pad, pad, pad],
-    ...             [2.1, 2.2, pad, pad, pad],
-    ...         ],
-    ...     ]
-    ... )
-    >>> array = np.transpose(array, (0, 2, 1))
-    >>> get_seq_lengths_timeseries_array3d(array, padding_indicator=pad)
-    [4, 2]
+        >>> import numpy as np
+        >>> pad = 999.0
+        >>> array = np.asarray(  # Array with two samples, with two timeseries features.
+        ...     [
+        ...         # Sample 1:
+        ...         [
+        ...             [11, 12, 13, 14, pad],
+        ...             [1.1, 1.2, 1.3, 1.4, pad],
+        ...         ],
+        ...         # Sample 2:
+        ...         [
+        ...             [21, 22, pad, pad, pad],
+        ...             [2.1, 2.2, pad, pad, pad],
+        ...         ],
+        ...     ]
+        ... )
+        >>> array = np.transpose(array, (0, 2, 1))
+        >>> get_seq_lengths_timeseries_array3d(array, padding_indicator=pad)
+        [4, 2]
     """
     validate_timeseries_array3d(array, padding_indicator)
     is_padded = padding_indicator is not None
@@ -208,9 +210,9 @@ def get_seq_lengths_timeseries_array3d(array: np.ndarray, padding_indicator: Any
 
 
 def unpad_timeseries_array3d(array: np.ndarray, padding_indicator: Any) -> List[np.ndarray]:
-    """Given a 3D numpy `array` that represents timeseries like `(sample, timestep, feature)`, and optionally a
-    `padding_indicator` to indicate padding, return a list of length `num_samples`, which contains arrays for each sample
-    like `(timestep, feature)`, with the padding removed.
+    """Given a 3D numpy ``array`` that represents timeseries like ``(sample, timestep, feature)``, and optionally a
+    ``padding_indicator`` to indicate padding, return a list of length ``num_samples``, which contains arrays for each
+    sample like ``(timestep, feature)``, with the padding removed.
     """
     validate_timeseries_array3d(array, padding_indicator)
     lengths = get_seq_lengths_timeseries_array3d(array, padding_indicator)
@@ -223,15 +225,15 @@ def unpad_timeseries_array3d(array: np.ndarray, padding_indicator: Any) -> List[
 def make_sample_time_index_tuples(
     sample_index: data_typing.SampleIndex, time_indexes: data_typing.TimeIndexList
 ) -> data_typing.SampleTimeIndexTuples:
-    """Given a list of elements `sample_index` representing sample IDs and a list (of same length) of lists each
+    """Given a list of elements ``sample_index`` representing sample IDs and a list (of same length) of lists each
     representing the timesteps for the corresponding sample, return a list of tuples like
-    `[(<sample ID>, <timestep>), ...]`.
+    ``[(<sample ID>, <timestep>), ...]``.
 
     Example:
-    >>> sample_index = ["s1", "s2"]
-    >>> time_indexes = [[1, 2, 3], [1, 5, 9, 10]]
-    >>> make_sample_time_index_tuples(sample_index, time_indexes)
-    [('s1', 1), ('s1', 2), ('s1', 3), ('s2', 1), ('s2', 5), ('s2', 9), ('s2', 10)]
+        >>> sample_index = ["s1", "s2"]
+        >>> time_indexes = [[1, 2, 3], [1, 5, 9, 10]]
+        >>> make_sample_time_index_tuples(sample_index, time_indexes)
+        [('s1', 1), ('s1', 2), ('s1', 3), ('s2', 1), ('s2', 5), ('s2', 9), ('s2', 10)]
     """
     if len(sample_index) != len(time_indexes):
         raise ValueError("Expected the same number of elements in `sample_index` and `time_indexes`")
@@ -251,10 +253,10 @@ def array3d_to_multiindex_timeseries_dataframe(
     feature_index: data_typing.FeatureIndex,
     padding_indicator: Any = None,
 ) -> pd.DataFrame:
-    """Given a 3D timeseries `array`, `sample_index`, `time_indexes`, `feature_index`, and a `padding_indicator`, build
-    a 2-level multiindex (sample, timestep) `pandas.DataFrame`.
+    """Given a 3D timeseries ``array``, ``sample_index``, ``time_indexes``, ``feature_index``, and a
+    ``padding_indicator``, build a 2-level multiindex (sample, timestep) `pandas.DataFrame`.
 
-    Padding values of `padding_indicator` can be set inside the array to pad out the length of arrays of different
+    Padding values of ``padding_indicator`` can be set inside the array to pad out the length of arrays of different
     samples in case they differ. Padding needs to go at the end of the timesteps (dim 1). Padding must be the same
     across the feature dimension (dim 2) for each sample.
 
@@ -262,13 +264,17 @@ def array3d_to_multiindex_timeseries_dataframe(
         ValueError: if data or padding format is unexpected.
 
     Args:
-        array (np.ndarray): 3D numpy `array` that represents timeseries like `(sample, timestep, feature)`.
-        sample_index (List[<sample element>): List of sample IDs (should be the same length as dim 0 of `array`).
-        time_indexes (List[List[<timestep element>]]): List of lists containing timesteps for each sample (outer list
-        should be the same length as dim 0 of `array`, inner list should contain as many elements as each sample has
-        timesteps).
-        feature_index (List[<feature element>]): List of feature names.
-        padding_indicator (Any, optional): Padding indicator used in `array` to indicate padding. Defaults to None.
+        array (np.ndarray):
+            3D numpy `array` that represents timeseries like ``(sample, timestep, feature)``.
+        sample_index (List[<sample element>):
+            List of sample IDs (should be the same length as dim 0 of `array`).
+        time_indexes (List[List[<timestep element>]]):
+            List of lists containing timesteps for each sample (outer list should be the same length as dim 0 of
+            `array`, inner list should contain as many elements as each sample has timesteps).
+        feature_index (List[<feature element>]):
+            List of feature names.
+        padding_indicator (Any, optional):
+            Padding indicator used in `array` to indicate padding. Defaults to None.
 
     Returns:
         pd.DataFrame: Resultant dataframe.

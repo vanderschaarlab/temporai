@@ -11,7 +11,7 @@
 
 <!-- exclude_docs -->
 <!-- [![ReadTheDocs](https://readthedocs.org/projects/temporai/badge/?version=latest)][docs] -->
-[![PythonVersions](https://img.shields.io/badge/python-py38%20%7C%20py39%20%7C%20py310%20%7C%20py311-blue)](https://docs.python.org/3.8/)
+[![PythonVersions](https://img.shields.io/badge/python-py37%20%7C%20py38%20%7C%20py39%20%7C%20py310%20%7C%20py311-blue)](https://docs.python.org/3.7/)
 [![License](https://img.shields.io/github/license/vanderschaarlab/temporai)](./LICENSE.txt)
 <!-- exclude_docs_end -->
 
