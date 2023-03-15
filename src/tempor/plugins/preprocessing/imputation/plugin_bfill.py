@@ -9,10 +9,10 @@ from tempor.plugins.core._params import CategoricalParam, Params
 from tempor.plugins.preprocessing.imputation import BaseImputer
 
 
-@plugins.register_plugin(name="ffill", category="preprocessing.imputation")
-class FFillImputer(BaseImputer):
+@plugins.register_plugin(name="bfill", category="preprocessing.imputation")
+class BFillImputer(BaseImputer):
     """
-    Forward-first Time-Series Imputation
+    Backward-first Time-Series Imputation
 
     Args:
         static_imputer: str
@@ -28,7 +28,7 @@ class FFillImputer(BaseImputer):
         self.static_imputer = StaticImputers().get(static_imputer, random_state=random_state)
         self.random_state = random_state
 
-    def _fit(self, data: dataset.Dataset, *args, **kwargs) -> "FFillImputer":
+    def _fit(self, data: dataset.Dataset, *args, **kwargs) -> "BFillImputer":
         if data.static is not None:
             self.static_imputer.fit(data.static.dataframe())
 
@@ -48,8 +48,8 @@ class FFillImputer(BaseImputer):
         sample_ts_index = data.time_series.sample_index()
         imputed_ts = data.time_series.dataframe()
         for idx in sample_ts_index:
-            imputed_ts.loc[(idx,)].ffill(inplace=True)
             imputed_ts.loc[(idx,)].bfill(inplace=True)
+            imputed_ts.loc[(idx,)].ffill(inplace=True)
             imputed_ts.loc[(idx,)].fillna(0, inplace=True)
 
         data.time_series = TimeSeriesSamples.from_dataframe(imputed_ts)
