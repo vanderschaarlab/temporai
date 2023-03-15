@@ -466,11 +466,37 @@ class TimeSeriesSamples(DataSamples):
         sample_index = list(self._data.index.levels[0])  # pyright: ignore
         d = dict()
         for s in sample_index:
-            time_index_locs = multiindex.get_locs(s)
+            time_index_locs = multiindex.get_locs([s, slice(None)])
             d[s] = list(multiindex.get_level_values(1)[time_index_locs])
         return d
 
     # TODO: time indexes sensibly converted to floats would be useful.
+
+    def num_timesteps(self) -> List[int]:
+        """Get the number of timesteps for each sample.
+
+        Returns:
+            List[int]: List containing the number of timesteps for each sample.
+        """
+        return [len(x) for x in self.time_indexes()]
+
+    def num_timesteps_as_dict(self) -> data_typing.SampleToNumTimestepsDict:
+        """Get a dictionary mapping each sample index to its the number of timesteps.
+
+        Returns:
+            List[int]: List containing the number of timesteps for each sample.
+        """
+        return {key: len(x) for key, x in self.time_indexes_as_dict().items()}  # type: ignore
+
+    def num_timesteps_equal(self) -> bool:
+        """Returns `True` if all samples share the same number of timesteps, `False` otherwise.
+
+        Returns:
+            bool: whether all samples share the same number of timesteps.
+        """
+        print(self)
+        timesteps = self.num_timesteps()
+        return True if len(timesteps) == 0 else all([x == timesteps[0] for x in timesteps])
 
     @property
     def num_samples(self) -> int:

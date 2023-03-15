@@ -560,6 +560,24 @@ class TestTimeSeriesSamples:
         s = samples.TimeSeriesSamples.from_dataframe(df_time_series)
         assert s.time_indexes_as_dict() == {"a": [1, 2, 3, 4], "b": [2, 4], "c": [9]}
 
+    def test_num_timesteps(self, df_time_series: pd.DataFrame):
+        s = samples.TimeSeriesSamples.from_dataframe(df_time_series)
+        assert s.num_timesteps() == [4, 2, 1]
+
+    def test_num_timesteps_as_dict(self, df_time_series: pd.DataFrame):
+        s = samples.TimeSeriesSamples.from_dataframe(df_time_series)
+        assert s.num_timesteps_as_dict() == {"a": 4, "b": 2, "c": 1}
+
+    @pytest.mark.parametrize(
+        "samples, expected",
+        [
+            (samples.TimeSeriesSamples.from_dataframe(dfs_test.df_time_series_success[0]), False),
+            (samples.TimeSeriesSamples.from_numpy(np.ones(shape=(3, 5, 2))), True),
+        ],
+    )
+    def test_num_timesteps_equal(self, samples: samples.TimeSeriesSamples, expected: bool):
+        assert samples.num_timesteps_equal() is expected
+
     def test_repr(self, df_time_series: pd.DataFrame):
         s = samples.TimeSeriesSamples.from_dataframe(df_time_series)
         assert "TimeSeriesSamples with data:" in str(s)

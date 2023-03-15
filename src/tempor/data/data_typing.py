@@ -41,6 +41,10 @@ SampleToTimeIndexDict = Union[
     Dict[int, TimeIndex],
     Dict[str, TimeIndex],
 ]
+SampleToNumTimestepsDict = Union[
+    Dict[int, int],
+    Dict[str, int],
+]
 SampleTimeIndexTuples = List[
     Union[
         Tuple[int, float],
