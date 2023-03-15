@@ -19,6 +19,7 @@ def from_module() -> BaseImputer:
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
 def test_static_imputation_plugin_sanity(test_plugin: BaseImputer) -> None:
     assert test_plugin is not None
+    assert test_plugin.name == "static_imputation"
     assert len(test_plugin.hyperparameter_space()) == 2
 
 

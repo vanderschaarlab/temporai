@@ -17,6 +17,7 @@ def from_module() -> BaseRegressor:
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
 def test_nn_regressor_plugin_sanity(test_plugin: BaseRegressor) -> None:
     assert test_plugin is not None
+    assert test_plugin.name == "nn_regressor"
     assert len(test_plugin.hyperparameter_space()) == 9
 
 

@@ -19,6 +19,8 @@ def from_module() -> BaseClassifier:
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
 def test_nn_classifier_plugin_sanity(test_plugin: BaseClassifier) -> None:
     assert test_plugin is not None
+    assert test_plugin.name == "nn_classifier"
+    assert test_plugin.fqn() == "classification.nn_classifier"
     assert len(test_plugin.hyperparameter_space()) == 9
 
 

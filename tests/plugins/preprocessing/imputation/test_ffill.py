@@ -17,6 +17,7 @@ def from_module() -> BaseImputer:
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
 def test_ffill_plugin_sanity(test_plugin: BaseImputer) -> None:
     assert test_plugin is not None
+    assert test_plugin.name == "ffill"
     assert len(test_plugin.hyperparameter_space()) == 1
 
 
