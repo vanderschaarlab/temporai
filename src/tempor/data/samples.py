@@ -3,7 +3,7 @@
 # pylint: disable=useless-super-delegation, unnecessary-ellipsis
 
 import abc
-from typing import TYPE_CHECKING, Any, List, Optional
+from typing import TYPE_CHECKING, Any, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -511,6 +511,9 @@ class TimeSeriesSamples(DataSamples):
         return f"{self.__class__.__name__}([{self.num_samples}, *, {self.num_features}])"
 
 
+_DEFAULT_EVENTS_TIME_FEATURE_SUFFIX = "_time"
+
+
 class EventSamples(DataSamples):
     _data: pd.DataFrame
     _schema: pa.DataFrameSchema
@@ -578,7 +581,7 @@ class EventSamples(DataSamples):
         )
         self._data = schema.validate(self._data)
         # Validate event time and value components:
-        suffix = "_time"
+        suffix = _DEFAULT_EVENTS_TIME_FEATURE_SUFFIX
         data_split = self.split(time_feature_suffix=suffix)
         schema_split = pa.infer_schema(data_split)
         schema_split = pandera_utils.add_regex_column_checks(
@@ -660,7 +663,7 @@ class EventSamples(DataSamples):
         return self._data.shape[1]
 
     @pydantic.validate_arguments(config={"arbitrary_types_allowed": True})
-    def split(self, time_feature_suffix: str = "_time") -> pd.DataFrame:
+    def split(self, time_feature_suffix: str = _DEFAULT_EVENTS_TIME_FEATURE_SUFFIX) -> pd.DataFrame:
         """Return a `pandas.DataFrame` where the time component of each event feature has been split off to its own
         column. The new columns that contain the times will be named ``"<original column name><time_feature_suffix>"``
         and will be inserted before each corresponding ``<original column name>`` column. The ``<original column name>``
@@ -683,6 +686,26 @@ class EventSamples(DataSamples):
         for f in features:
             df[f] = df[f].apply(lambda x: x[1])
         return df
+
+    def split_as_two_dataframes(
+        self, time_feature_suffix: str = _DEFAULT_EVENTS_TIME_FEATURE_SUFFIX
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        """Analogous to :func:`~tempor.data.samples.EventSamples.split` but returns two `pandas.DataFrame` s:
+            - first dataframe contains the event times of each feature.
+            - second dataframe contains the event values (`True`/`False`) of each feature.
+
+        Args:
+            time_feature_suffix (str, optional):
+                A column name suffix string to identify the time columns that will be split off. Defaults to
+                ``"_time"``.
+
+        Returns:
+            Tuple[pd.DataFrame, pd.DataFrame]: Two `pandas.DataFrame` s containing event times and values respectively.
+        """
+        df_split = self.split(time_feature_suffix=time_feature_suffix)
+        df_event_times = df_split.loc[:, [c for c in df_split.columns if time_feature_suffix in c]]
+        df_event_values = df_split.loc[:, [c for c in df_split.columns if time_feature_suffix not in c]]
+        return df_event_times, df_event_values
 
     def short_repr(self) -> str:
         return f"{self.__class__.__name__}([{self.num_samples}, {self.num_features}])"

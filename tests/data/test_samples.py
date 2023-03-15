@@ -685,6 +685,37 @@ class TestEventSamples:
 
         assert s_split.equals(expected_df)
 
+    def test_split_as_two_dataframes(self, df_event: pd.DataFrame):
+        s = samples.EventSamples(data=df_event)
+        s_split_df_event_time, s_split_df_event_value = s.split_as_two_dataframes(time_feature_suffix="_time")
+
+        expected_df_event_time = pd.DataFrame(
+            {
+                "sample_idx": [f"sample_{x}" for x in range(1, 3 + 1)],
+                "feat_1_time": [5, 6, 3],
+                "feat_2_time": [1, 8, 8],
+                "feat_3_time": [
+                    pd.to_datetime("2000-01-02"),
+                    pd.to_datetime("2000-01-03"),
+                    pd.to_datetime("2000-01-01"),
+                ],
+            },
+        )
+        expected_df_event_time.set_index("sample_idx", drop=True, inplace=True)
+
+        expected_df_event_value = pd.DataFrame(
+            {
+                "sample_idx": [f"sample_{x}" for x in range(1, 3 + 1)],
+                "feat_1": [True, False, True],
+                "feat_2": [False, False, True],
+                "feat_3": [False, True, True],
+            },
+        )
+        expected_df_event_value.set_index("sample_idx", drop=True, inplace=True)
+
+        assert s_split_df_event_time.equals(expected_df_event_time)
+        assert s_split_df_event_value.equals(expected_df_event_value)
+
     def test_split_fails_column_naming_conflict(self):
         df = pd.DataFrame({"feat_1_time": [(5, True), (6, False), (3, True)]})
 
