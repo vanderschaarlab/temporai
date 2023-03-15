@@ -2,7 +2,7 @@ from typing import Any, List
 
 import tempor.plugins.core as plugins
 from tempor.data import dataset
-from tempor.plugins.core._params import Params
+from tempor.plugins.core._params import CategoricalParam, Params
 from tempor.plugins.preprocessing.imputation import BaseImputer
 
 
@@ -23,4 +23,4 @@ class FFillImputer(BaseImputer):
 
     @staticmethod
     def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:  # pragma: no cover
-        return []
+        return [CategoricalParam(name="static_imputer", choices=["mean", "ice", "missforest"])]
