@@ -189,7 +189,6 @@ class TemporalPredictionDataset(Dataset):
         self.predictive = pred.TemporalPredictionTaskData(targets=targets, **kwargs)
 
     def _validate(self) -> None:
-        raise
         if self.predictive.targets.sample_index() != self.time_series.sample_index():
             raise ValueError(EXCEPTION_MESSAGES.sample_index_mismatch.targets)
         # TODO: Possible check - check that .time_series and .predictive.targets have the same time_indexes.
