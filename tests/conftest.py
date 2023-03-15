@@ -13,8 +13,8 @@ def patch_module(monkeypatch, request):
     and optionally refresh pydantic.
 
     For reference:
-    - https://github.com/streamlit/streamlit/issues/3218#issuecomment-1050647471
-    - https://docs.pytest.org/en/6.2.x/fixture.html#adding-finalizers-directly
+        - https://github.com/streamlit/streamlit/issues/3218#issuecomment-1050647471
+        - https://docs.pytest.org/en/6.2.x/fixture.html#adding-finalizers-directly
 
     Args:
         monkeypatch: pytest monkeypatch object.
