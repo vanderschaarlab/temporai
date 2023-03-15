@@ -1,11 +1,8 @@
-# stdlib
-from typing import List, Tuple
-
 # third party
 import numpy as np
 import pandas as pd
 
-from temporai.data import TemporalPredictionDataset
+from tempor.data.dataset import TemporalPredictionDataset
 
 
 class SineDataloader:
@@ -40,15 +37,25 @@ class SineDataloader:
 
     def load(
         self,
-    ) -> Tuple[pd.DataFrame, List[pd.DataFrame], List, pd.DataFrame]:
+    ) -> TemporalPredictionDataset:
         # Initialize the output
 
         static_data = pd.DataFrame(np.random.rand(self.no, self.static_dim))
+        static_data["sample_idx"] = [str(i) for i in range(self.no)]
+        static_data.set_index(keys=["sample_idx"], drop=True, inplace=True)
+
         static_data.columns = static_data.columns.astype(str)
+        if self.with_missing:
+            for col in static_data.columns:
+                static_data.loc[static_data.sample(frac=0.1).index, col] = pd.np.nan
+
         temporal_data = []
-        observation_times = []
+
         outcome = pd.DataFrame(np.random.randint(0, 2, self.no))
+        outcome["sample_idx"] = [str(i) for i in range(self.no)]
         outcome.columns = outcome.columns.astype(str)
+
+        outcome.set_index(keys=["sample_idx"], drop=True, inplace=True)
 
         # Generate sine data
 
@@ -80,11 +87,18 @@ class SineDataloader:
             local_data.columns = local_data.columns.astype(str)
 
             # Stack the generated data
+            local_data["sample_idx"] = str(i)
+            local_data["time_idx"] = list(range(seq_len))
             temporal_data.append(local_data)
-            observation_times.append(list(range(seq_len)))
 
+        time_series_df = pd.concat(temporal_data, ignore_index=True)
+        time_series_df.set_index(keys=["sample_idx", "time_idx"], drop=True, inplace=True)
+
+        # TODO: use observation_times
         return TemporalPredictionDataset(
-            time_series=temporal_data,
+            time_series=time_series_df,
             targets=outcome,
             static=static_data,
+            sample_index="sample_idx",
+            time_index="time_idx",
         )
