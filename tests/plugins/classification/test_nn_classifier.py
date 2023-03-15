@@ -49,5 +49,4 @@ def test_nn_classifier_plugin_predict_proba(test_plugin: BaseClassifier) -> None
 def test_hyperparam_sample():
     for repeat in range(100):
         args = plugin._cls.sample_hyperparameters()
-        print(args)
         plugin(**args)

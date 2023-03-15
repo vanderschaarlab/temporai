@@ -1,19 +1,18 @@
 from typing import Any, List, Optional, Tuple
 
-import numpy as np
 from torch.utils.data import sampler
 
 import tempor.plugins.core as plugins
 from tempor.data import dataset, samples
 from tempor.models.constants import DEVICE
 from tempor.models.ts_model import TimeSeriesModel, modes
-from tempor.plugins.classification import BaseClassifier
 from tempor.plugins.core._params import CategoricalParams, FloatParams, IntegerParams
+from tempor.plugins.regression import BaseRegressor
 
 
-@plugins.register_plugin(name="nn_classifier", category="classification")
-class NeuralNetClassifier(BaseClassifier):
-    """Neural-net classifier
+@plugins.register_plugin(name="nn_regressor", category="regression")
+class NeuralNetRegressor(BaseRegressor):
+    """Neural-net regressor
 
     Args
         n_static_units_hidden: int. Default = 102
@@ -123,18 +122,16 @@ class NeuralNetClassifier(BaseClassifier):
         data: dataset.Dataset,
         *args,
         **kwargs,
-    ) -> "NeuralNetClassifier":  # pyright: ignore
+    ) -> "NeuralNetRegressor":  # pyright: ignore
         static, temporal, observation_times, outcome = self._unpack_dataset(data)
         outcome = outcome.squeeze()
 
-        n_classes = len(np.unique(outcome))
-
         self.model = TimeSeriesModel(
-            task_type="classification",
+            task_type="regression",
             n_static_units_in=static.shape[-1],
             n_temporal_units_in=temporal.shape[-1],
             n_temporal_window=temporal.shape[1],
-            output_shape=[n_classes],
+            output_shape=[1],
             n_static_units_hidden=self.n_static_units_hidden,
             n_static_layers_hidden=self.n_static_layers_hidden,
             n_temporal_units_hidden=self.n_temporal_units_hidden,
@@ -171,22 +168,6 @@ class NeuralNetClassifier(BaseClassifier):
         static, temporal, observation_times, _ = self._unpack_dataset(data)
 
         preds = self.model.predict(static, temporal, observation_times)
-        preds = preds.astype(float)
-
-        preds = preds.reshape(-1, 1)
-        return samples.StaticSamples.from_numpy(preds)
-
-    def _predict_proba(
-        self,
-        data: dataset.Dataset,
-        *args,
-        **kwargs,
-    ) -> samples.StaticSamples:
-        if self.model is None:
-            raise RuntimeError("Fit the model first")
-        static, temporal, observation_times, _ = self._unpack_dataset(data)
-
-        preds = self.model.predict_proba(static, temporal, observation_times)
         preds = preds.astype(float)
 
         return samples.StaticSamples.from_numpy(preds)
