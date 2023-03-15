@@ -54,7 +54,8 @@ MANIFEST
 .python-version
 
 ### Custom ###
-dev
-logs
-outputs
 *.csv
+dev/**
+logs/**
+outputs/**
+data/**
