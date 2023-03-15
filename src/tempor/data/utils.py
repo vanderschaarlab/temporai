@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pydantic
 
-from . import data_typing
+from . import data_typing, settings
 
 
 @dataclasses.dataclass(frozen=True)
@@ -237,7 +237,7 @@ def make_sample_time_index_tuples(
     """
     if len(sample_index) != len(time_indexes):
         raise ValueError("Expected the same number of elements in `sample_index` and `time_indexes`")
-    sample_indexes_copied = [[si] * len(tis) for si, tis in zip(sample_index, time_indexes)]
+    sample_indexes_copied = [[si] * len(tis) for si, tis in zip(sample_index, time_indexes)]  # type: ignore[arg-type]
     sample_indexes_flattened = list(itertools.chain.from_iterable(sample_indexes_copied))
     time_indexes_flattened = list(itertools.chain.from_iterable(time_indexes))
     pairs = [(si, ti) for si, ti in zip(sample_indexes_flattened, time_indexes_flattened)]
@@ -287,3 +287,47 @@ def array3d_to_multiindex_timeseries_dataframe(
         index=pd.MultiIndex.from_tuples(make_sample_time_index_tuples(sample_index, time_indexes)),
         columns=feature_index,
     )
+
+
+# --- List of dataframes --> Multiindex timeseries dataframe. ---
+
+
+@pydantic.validate_arguments(config={"arbitrary_types_allowed": True, "smart_union": True})
+def list_of_dataframes_to_multiindex_timeseries_dataframe(
+    list_of_dataframes: List[pd.DataFrame],
+    *,
+    sample_index: data_typing.SampleIndex,
+    time_indexes: Optional[data_typing.TimeIndexList] = None,
+) -> pd.DataFrame:
+    dfs: List[pd.DataFrame] = list_of_dataframes
+
+    if time_indexes is not None and len(list_of_dataframes) != len(time_indexes):
+        raise ValueError(
+            "Expected `list_of_dataframes` and `time_indexes` to be of same length but was "
+            f"{len(list_of_dataframes)} and {len(time_indexes)} respectively"
+        )
+
+    if time_indexes is not None:
+        for idx, df in enumerate(list_of_dataframes):
+            dfs[idx] = df.set_index(
+                keys=pd.Index(time_indexes[idx], name=df.index.name),  # pyright: ignore
+                drop=True,
+                verify_integrity=True,
+            )
+    else:
+        time_indexes = [list(df.index) for df in dfs]
+
+    df_concat = pd.concat(dfs, axis=0, ignore_index=False)
+
+    multiindex = pd.MultiIndex.from_tuples(make_sample_time_index_tuples(sample_index, time_indexes))
+    df_concat.set_index(
+        keys=multiindex,
+        drop=True,
+        verify_integrity=True,
+        inplace=True,  # pyright: ignore
+    )
+    df_concat.index.set_names(
+        [settings.DATA_SETTINGS.sample_index_name, settings.DATA_SETTINGS.time_index_name], inplace=True
+    )
+
+    return df_concat

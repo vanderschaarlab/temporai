@@ -943,3 +943,84 @@ class TestArray3dToMultiindexTimeseriesDataframe:
 
         mock_validate_timeseries_array3d.assert_called()
         assert df.equals(expected)
+
+
+@pytest.fixture
+def list_of_dfs_ts() -> Tuple[List[pd.DataFrame], List[str]]:
+    df_0 = pd.DataFrame(
+        {
+            "time_idx": [1, 2, 3],
+            "feat_1": [11, 12, 13],
+            "feat_2": [1.1, 1.2, 1.3],
+        }
+    )
+    df_0.set_index("time_idx", drop=True, inplace=True)
+    df_1 = pd.DataFrame(
+        {
+            "time_idx": [10, 20],
+            "feat_1": [21, 22],
+            "feat_2": [2.1, 2.2],
+        }
+    )
+    df_1.set_index("time_idx", drop=True, inplace=True)
+    df_2 = pd.DataFrame(
+        {
+            "time_idx": [100],
+            "feat_1": [31],
+            "feat_2": [3.1],
+        }
+    )
+    df_2.set_index("time_idx", drop=True, inplace=True)
+    dfs = [df_0, df_1, df_2]
+    sample_index = ["s1", "s2", "s3"]
+    return dfs, sample_index
+
+
+class TestListOfDataframesToMultiindexTimeseriesDataframe:
+    def test_case_time_indexes_none(self, list_of_dfs_ts):
+        dfs, sample_index = list_of_dfs_ts
+
+        multiindex_df = utils.list_of_dataframes_to_multiindex_timeseries_dataframe(
+            list_of_dataframes=dfs, sample_index=sample_index, time_indexes=None
+        )
+
+        multiindex_df_expected = pd.DataFrame(
+            {
+                "sample_idx": ["s1", "s1", "s1", "s2", "s2", "s3"],
+                "time_idx": [1, 2, 3, 10, 20, 100],
+                "feat_1": [11, 12, 13, 21, 22, 31],
+                "feat_2": [1.1, 1.2, 1.3, 2.1, 2.2, 3.1],
+            }
+        )
+        multiindex_df_expected.set_index(keys=["sample_idx", "time_idx"], drop=True, inplace=True)
+
+        assert multiindex_df.equals(multiindex_df_expected)
+
+    def test_case_time_indexes_provided(self, list_of_dfs_ts):
+        dfs, sample_index = list_of_dfs_ts
+        time_indexes = [[1.5, 2.5, 3.5], [10.5, 20.5], [100.5]]
+
+        multiindex_df = utils.list_of_dataframes_to_multiindex_timeseries_dataframe(
+            list_of_dataframes=dfs, sample_index=sample_index, time_indexes=time_indexes
+        )
+
+        multiindex_df_expected = pd.DataFrame(
+            {
+                "sample_idx": ["s1", "s1", "s1", "s2", "s2", "s3"],
+                "time_idx": [1.5, 2.5, 3.5, 10.5, 20.5, 100.5],
+                "feat_1": [11, 12, 13, 21, 22, 31],
+                "feat_2": [1.1, 1.2, 1.3, 2.1, 2.2, 3.1],
+            }
+        )
+        multiindex_df_expected.set_index(keys=["sample_idx", "time_idx"], drop=True, inplace=True)
+
+        assert multiindex_df.equals(multiindex_df_expected)
+
+    def test_case_time_indexes_provided_fails_length_mismatch(self, list_of_dfs_ts):
+        dfs, sample_index = list_of_dfs_ts
+        time_indexes = [[1.5, 2.5, 3.5], [10.5, 20.5]]
+
+        with pytest.raises(ValueError, match=".*same length.*"):
+            utils.list_of_dataframes_to_multiindex_timeseries_dataframe(
+                list_of_dataframes=dfs, sample_index=sample_index, time_indexes=time_indexes
+            )
