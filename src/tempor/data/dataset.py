@@ -115,7 +115,7 @@ class Dataset(abc.ABC):
         """Validate integrity of the dataset."""
         with log_helpers.exc_to_log("Dataset validation failed"):
             if self.static is not None:
-                if self.static.sample_index() != self.time_series.sample_index():
+                if sorted(self.static.sample_index()) != sorted(self.time_series.sample_index()):
                     raise ValueError(EXCEPTION_MESSAGES.sample_index_mismatch.static)
             self._validate()
 
@@ -156,7 +156,7 @@ class OneOffPredictionDataset(Dataset):
         self.predictive = pred.OneOffPredictionTaskData(targets=targets, **kwargs)
 
     def _validate(self) -> None:
-        if self.predictive.targets.sample_index() != self.time_series.sample_index():
+        if sorted(self.predictive.targets.sample_index()) != sorted(self.time_series.sample_index()):
             raise ValueError(EXCEPTION_MESSAGES.sample_index_mismatch.targets)
 
 

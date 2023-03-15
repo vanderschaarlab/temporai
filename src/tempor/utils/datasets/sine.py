@@ -2,7 +2,7 @@
 import numpy as np
 import pandas as pd
 
-from tempor.data.dataset import TemporalPredictionDataset
+from tempor.data.dataset import OneOffPredictionDataset
 
 
 class SineDataloader:
@@ -27,6 +27,7 @@ class SineDataloader:
         static_dim: int = 4,
         freq_scale: float = 1,
         with_missing: bool = False,
+        miss_ratio: float = 0.1,
     ) -> None:
         self.no = no
         self.seq_len = seq_len
@@ -34,10 +35,11 @@ class SineDataloader:
         self.static_dim = static_dim
         self.freq_scale = freq_scale
         self.with_missing = with_missing
+        self.miss_ratio = miss_ratio
 
     def load(
         self,
-    ) -> TemporalPredictionDataset:
+    ) -> OneOffPredictionDataset:
         # Initialize the output
 
         static_data = pd.DataFrame(np.random.rand(self.no, self.static_dim))
@@ -47,7 +49,7 @@ class SineDataloader:
         static_data.columns = static_data.columns.astype(str)
         if self.with_missing:
             for col in static_data.columns:
-                static_data.loc[static_data.sample(frac=0.1).index, col] = pd.np.nan
+                static_data.loc[static_data.sample(frac=self.miss_ratio).index, col] = pd.np.nan
 
         temporal_data = []
 
@@ -94,8 +96,12 @@ class SineDataloader:
         time_series_df = pd.concat(temporal_data, ignore_index=True)
         time_series_df.set_index(keys=["sample_idx", "time_idx"], drop=True, inplace=True)
 
+        if self.with_missing:
+            for col in time_series_df.columns:
+                time_series_df.loc[time_series_df.sample(frac=self.miss_ratio).index, col] = pd.np.nan
+
         # TODO: use observation_times
-        return TemporalPredictionDataset(
+        return OneOffPredictionDataset(
             time_series=time_series_df,
             targets=outcome,
             static=static_data,

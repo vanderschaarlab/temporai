@@ -23,6 +23,23 @@ def test_ffill_plugin_sanity(test_plugin: BaseImputer) -> None:
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
 def test_ffill_plugin_fit(test_plugin: BaseImputer) -> None:
     dataset = SineDataloader(with_missing=True).load()
-    print(dataset)
-    print(dataset.static)
+    assert dataset.static.dataframe().isna().sum().sum() != 0
+
     test_plugin.fit(dataset)
+
+
+@pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
+def test_ffill_plugin_transform(test_plugin: BaseImputer) -> None:
+    dataset = SineDataloader(with_missing=True).load()
+    assert dataset.static.dataframe().isna().sum().sum() != 0
+
+    output = test_plugin.fit(dataset).transform(dataset)
+
+    assert output.static.dataframe().isna().sum().sum() == 0
+    assert output.time_series.dataframe().isna().sum().sum() == 0
+
+
+def test_hyperparam_sample():
+    for repeat in range(100):
+        args = plugin._cls.sample_hyperparameters()
+        plugin(**args)

@@ -1,7 +1,6 @@
 import abc
+import random
 from typing import Any, List, Tuple
-
-import numpy as np
 
 
 class Params(abc.ABC):
@@ -32,7 +31,7 @@ class CategoricalParam(Params):
         return [self.name, self.choices]
 
     def sample(self) -> Any:
-        return np.random.choice(self.choices, 1)[0]
+        return random.SystemRandom().choice(self.choices)
 
 
 class FloatParams(Params):
@@ -51,7 +50,7 @@ class FloatParams(Params):
         return [self.name, self.low, self.high]
 
     def sample(self) -> Any:
-        return np.random.uniform(self.low, self.high)
+        return random.uniform(self.low, self.high)  # nosec
 
 
 class IntegerParams(Params):
@@ -73,4 +72,6 @@ class IntegerParams(Params):
         return [self.name, self.low, self.high, self.step]
 
     def sample(self) -> Any:
-        return np.random.choice(self.choices, 1)[0]
+        return random.SystemRandom().choice(
+            self.choices,
+        )
