@@ -100,7 +100,6 @@ class SineDataloader:
             for col in time_series_df.columns:
                 time_series_df.loc[time_series_df.sample(frac=self.miss_ratio).index, col] = pd.np.nan
 
-        # TODO: use observation_times
         return OneOffPredictionDataset(
             time_series=time_series_df,
             targets=outcome,

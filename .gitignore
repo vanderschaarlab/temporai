@@ -57,3 +57,4 @@ MANIFEST
 dev
 logs
 outputs
+*.csv
