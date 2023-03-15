@@ -5,7 +5,7 @@ from hyperimpute.plugins.imputers import Imputers as StaticImputers
 import tempor.plugins.core as plugins
 from tempor.data import dataset
 from tempor.data.samples import StaticSamples, TimeSeriesSamples
-from tempor.plugins.core._params import CategoricalParam, Params
+from tempor.plugins.core._params import CategoricalParams, Params
 from tempor.plugins.preprocessing.imputation import BaseImputer
 
 
@@ -57,4 +57,4 @@ class FFillImputer(BaseImputer):
 
     @staticmethod
     def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:  # pragma: no cover
-        return [CategoricalParam(name="static_imputer", choices=["mean", "ice", "missforest"])]
+        return [CategoricalParams(name="static_imputer", choices=["mean", "ice", "missforest"])]

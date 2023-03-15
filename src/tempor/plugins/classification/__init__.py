@@ -1,5 +1,7 @@
 import abc
+from typing import Tuple
 
+import numpy as np
 import pydantic
 from typing_extensions import Self
 
@@ -8,14 +10,14 @@ from tempor.data import dataset, samples
 
 
 def check_data_class(data):
-    if not isinstance(data, dataset.TimeToEventAnalysisDataset):
+    if not isinstance(data, dataset.OneOffPredictionDataset):
         raise TypeError(
-            "Expected `data` passed to a survival analysis estimator to be "
-            f"`{dataset.TimeToEventAnalysisDataset.__name__}` but was {type(data)}"
+            "Expected `data` passed to a classification estimator to be "
+            f"`{dataset.OneOffPredictionDataset.__name__}` but was {type(data)}"
         )
 
 
-class BaseClassification(plugins.BasePredictor):
+class BaseClassifier(plugins.BasePredictor):
     def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
         super().__init__(**params)
 
@@ -30,20 +32,49 @@ class BaseClassification(plugins.BasePredictor):
         data: dataset.Dataset,
         *args,
         **kwargs,
-    ) -> samples.TimeSeriesSamples:
+    ) -> samples.StaticSamples:
         check_data_class(data)
         return super().predict(data, *args, **kwargs)
 
+    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    def predict_proba(
+        self,
+        data: dataset.Dataset,
+        *args,
+        **kwargs,
+    ) -> samples.StaticSamples:
+        check_data_class(data)
+        return super().predict_proba(data, *args, **kwargs)
+
     @abc.abstractmethod
-    def _predict(self, data: dataset.Dataset, *args, **kwargs) -> samples.TimeSeriesSamples:
+    def _predict(self, data: dataset.Dataset, *args, **kwargs) -> samples.StaticSamples:
         ...
 
+    @abc.abstractmethod
+    def _predict_proba(self, data: dataset.Dataset, *args, **kwargs) -> samples.StaticSamples:
+        ...
 
-plugins.register_plugin_category("classification", BaseClassification)
+    def _unpack_dataset(self, data: dataset.Dataset) -> Tuple:
+        temporal = data.time_series.numpy()
+        observation_times = data.time_series.time_indexes()
+        if data.predictive is not None:
+            outcome = data.predictive.targets.numpy()
+        else:
+            outcome = np.zeros((len(temporal), 0))
+
+        if data.static is not None:
+            static = data.static.numpy()
+        else:
+            static = np.zeros((len(temporal), 0))
+
+        return static, temporal, observation_times, outcome
+
+
+plugins.register_plugin_category("classification", BaseClassifier)
 
 plugins.importing.import_plugins(__file__)
 
 __all__ = [  # pyright: ignore
     *plugins.importing.gather_modules_names(__file__),
-    "BaseClassification",
+    "BaseClassifier",
 ]

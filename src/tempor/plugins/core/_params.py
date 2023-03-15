@@ -19,7 +19,7 @@ class Params(abc.ABC):
         ...
 
 
-class CategoricalParam(Params):
+class CategoricalParams(Params):
     """Sample from a categorical distribution."""
 
     def __init__(self, name: str, choices: List[Any]) -> None:

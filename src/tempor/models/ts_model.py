@@ -298,6 +298,37 @@ class TimeSeriesModel(nn.Module):
             else:
                 return yt.cpu().numpy()
 
+    @validate_arguments(config=dict(arbitrary_types_allowed=True))
+    def predict_proba(
+        self,
+        static_data: Union[List, np.ndarray],
+        temporal_data: Union[List, np.ndarray],
+        observation_times: Union[List, np.ndarray],
+    ) -> np.ndarray:
+        self.eval()
+        if self.task_type != "classification":
+            raise RuntimeError("Task valid only for classification")
+        with torch.no_grad():
+            (
+                static_data_t,
+                temporal_data_t,
+                observation_times_t,
+                _,
+                window_batches,
+            ) = self._prepare_input(static_data, temporal_data, observation_times)
+
+            yt = torch.zeros(len(temporal_data), *self.output_shape).to(self.device)
+            for widx in range(len(temporal_data_t)):
+                window_size = len(observation_times_t[widx][0])
+                local_yt = self(
+                    static_data_t[widx],
+                    temporal_data_t[widx],
+                    observation_times_t[widx],
+                )
+                yt[window_batches[window_size]] = local_yt
+
+            return yt.cpu().numpy()
+
     def score(
         self,
         static_data: Union[List, np.ndarray],
