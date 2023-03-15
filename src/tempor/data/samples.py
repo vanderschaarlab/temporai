@@ -1,5 +1,4 @@
-"""Data handling for different data samples modalities supported by TemporAI.
-"""
+"""Data handling for different data samples modalities supported by TemporAI."""
 
 # pylint: disable=useless-super-delegation, unnecessary-ellipsis
 
@@ -41,8 +40,8 @@ class DataSamples(abc.ABC):
             try:
                 self._validate()
             except (
-                pa.errors.SchemaError,
-                pa.errors.SchemaErrors,
+                pa.errors.SchemaError,  # pyright: ignore
+                pa.errors.SchemaErrors,  # pyright: ignore
                 ValueError,
                 TypeError,
             ) as ex:
@@ -53,7 +52,8 @@ class DataSamples(abc.ABC):
     @abc.abstractmethod
     def _validate(self) -> None:  # pragma: no cover
         """Validate integrity of the data samples. Raise any of `ValueError`, `TypeError`,
-        `pandera.errors.SchemaError[s]` (or exceptions derived from these) to indicate validation failure.
+        `pandera.errors.SchemaError`, `pandera.errors.SchemaErrors` (or exceptions derived from these) to indicate
+        validation failure.
         """
         ...
 
@@ -66,26 +66,27 @@ class DataSamples(abc.ABC):
         feature_index: Optional[data_typing.FeatureIndex] = None,
         **kwargs,
     ) -> "DataSamples":  # pragma: no cover
-        """Create `DataSamples` from `numpy.ndarray`.
+        """Create :class:`DataSamples` from `numpy.ndarray`.
 
         Args:
-            array (np.ndarray): The array that represents the data.
-            sample_index (List[<sample element>], optional): List with sample (row) index for each sample.
-            Optional, if `None`, will be of form `[0, 1, ...]`. Defaults to `None`.
-            feature_index (List[<feature element>], optional): List with feature (column) index for each feature.
-            Optional, if `None`, will be of form `["feat_0", "feat_1", ...]`. Defaults to `None`.
+            array (np.ndarray):
+                The array that represents the data.
+            sample_index (List[<sample element>], optional):
+                List with sample (row) index for each sample. Optional, if `None`, will be of form ``[0, 1, ...]``.
+                Defaults to `None`.
+            feature_index (List[<feature element>], optional):
+                List with feature (column) index for each feature. Optional, if `None`, will be of form
+                ``["feat_0", "feat_1", ...]``. Defaults to `None`.
 
         Returns:
-            DataSamples: `DataSamples` object from `array`.
+            DataSamples: :class:`DataSamples` object from ``array``.
         """
         ...
 
     @staticmethod
     @abc.abstractmethod
     def from_dataframe(dataframe: pd.DataFrame, **kwargs) -> "DataSamples":  # pragma: no cover
-        """
-        Create `DataSamples` from `pandas.DataFrame`.
-        """
+        """Create :class:`DataSamples` from `pandas.DataFrame`."""
         ...
 
     @abc.abstractmethod
@@ -151,15 +152,17 @@ class StaticSamples(DataSamples):
         feature_index: Optional[data_typing.FeatureIndex] = None,
         **kwargs,
     ) -> None:
-        """Create a `StaticSamples` object from the `data`.
+        """Create a :class:`StaticSamples` object from the ``data``.
 
         Args:
-            data (numpy.ndarray | pandas.DataFrame): A container with the data.
-            sample_index (List[<sample element>], optional): Used only if `data` is a `numpy.ndarray`. List with sample
-            (row) index for each sample. Optional, if `None`, will be of form `[0, 1, ...]`. Defaults to `None`.
-            feature_index (List[<feature element>], optional): Used only if `data` is a `numpy.ndarray`.  List with
-            feature (column) index for each feature. Optional, if `None`, will be of form `["feat_0", "feat_1", ...]`.
-            Defaults to `None`.
+            data (numpy.ndarray | pandas.DataFrame):
+                A container with the data.
+            sample_index (List[<sample element>], optional):
+                Used only if ``data`` is a `numpy.ndarray`. List with sample (row) index for each sample. Optional,
+                if `None`, will be of form ``[0, 1, ...]``. Defaults to `None`.
+            feature_index (List[<feature element>], optional):
+                Used only if ``data`` is a `numpy.ndarray`.  List with feature (column) index for each feature.
+                Optional, if `None`, will be of form ``["feat_0", "feat_1", ...]``. Defaults to `None`.
         """
         if isinstance(data, pd.DataFrame):
             self._data = data
@@ -284,26 +287,31 @@ class TimeSeriesSamples(DataSamples):
         feature_index: Optional[data_typing.FeatureIndex] = None,
         **kwargs,
     ) -> None:
-        """Create a `TimeSeriesSamples` object from the `data`.
+        """Create a :class:`TimeSeriesSamples` object from the ``data``.
 
-        If `data` is a `pandas.DataFrame`, this should be a 2-level multiindex (sample, timestep) dataframe.
+        If ``data`` is a `pandas.DataFrame`, this should be a 2-level multiindex (sample, timestep) dataframe.
 
-        If `data` is a `numpy.ndarray`, this should be a 3D array, with dimensions `(sample, timestep, feature)`.
-        Optionally, padding values of `padding_indicator` can be set inside the array to pad out the length of arrays
+        If ``data`` is a `numpy.ndarray`, this should be a 3D array, with dimensions ``(sample, timestep, feature)``.
+        Optionally, padding values of ``padding_indicator`` can be set inside the array to pad out the length of arrays
         of different samples in case they differ. Padding needs to go at the end of the timesteps (dim 1). Padding must
         be the same across the feature dimension (dim 2) for each sample.
 
         Args:
-            data (numpy.ndarray | pandas.DataFrame): A container with the data.
-            padding_indicator (Any, optional): Padding indicator used in `data` to indicate padding. Defaults to None.
-            sample_index (List[<sample element>], optional): Used only if `data` is a `numpy.ndarray`. List with sample
-            (row) index for each sample. Optional, if `None`, will be of form `[0, 1, ...]`. Defaults to `None`.
-            time_indexes (List[List[<timestep element>]], optional): Used only if `data` is a `numpy.ndarray`. List of
-            lists containing timesteps for each sample (outer list should be the same length as dim 0 of `data`,
-            inner list should contain as many elements as each sample has timesteps). Optional, if `None`, will be of
-            form `[[0, 1, ...], [0, 1, ...], ...]` Defaults to None.
-            feature_index (List[<feature element>], optional): Used only if `data` is a `numpy.ndarray`.  List with
-            feature (column) index for each feature. Optional, if `None`, will be of form `["feat_0", "feat_1", ...]`.
+            data (numpy.ndarray | pandas.DataFrame):
+                A container with the data.
+            padding_indicator (Any, optional):
+                Padding indicator used in ``data`` to indicate padding. Defaults to `None`.
+            sample_index (List[<sample element>], optional):
+                Used only if ``data`` is a `numpy.ndarray`. List with sample (row) index for each sample.
+                Optional, if `None`, will be of form ``[0, 1, ...]``. Defaults to `None`.
+            time_indexes (List[List[<timestep element>]], optional):
+                Used only if ``data`` is a `numpy.ndarray`. List of lists containing timesteps for each sample (outer
+                list should be the same length as dim 0 of `data`, inner list should contain as many elements as each
+                sample has timesteps). Optional, if `None`, will be of form ``[[0, 1, ...], [0, 1, ...], ...]``
+                Defaults to `None`.
+            feature_index (List[<feature element>], optional):
+                Used only if ``data`` is a `numpy.ndarray`.  List with feature (column) index for each feature.
+                Optional, if `None`, will be of form ``["feat_0", "feat_1", ...]``.
         """
         if isinstance(data, pd.DataFrame):
             self._data = data
@@ -458,11 +466,37 @@ class TimeSeriesSamples(DataSamples):
         sample_index = list(self._data.index.levels[0])  # pyright: ignore
         d = dict()
         for s in sample_index:
-            time_index_locs = multiindex.get_locs(s)
+            time_index_locs = multiindex.get_locs([s, slice(None)])
             d[s] = list(multiindex.get_level_values(1)[time_index_locs])
         return d
 
     # TODO: time indexes sensibly converted to floats would be useful.
+
+    def num_timesteps(self) -> List[int]:
+        """Get the number of timesteps for each sample.
+
+        Returns:
+            List[int]: List containing the number of timesteps for each sample.
+        """
+        return [len(x) for x in self.time_indexes()]
+
+    def num_timesteps_as_dict(self) -> data_typing.SampleToNumTimestepsDict:
+        """Get a dictionary mapping each sample index to its the number of timesteps.
+
+        Returns:
+            List[int]: List containing the number of timesteps for each sample.
+        """
+        return {key: len(x) for key, x in self.time_indexes_as_dict().items()}  # type: ignore
+
+    def num_timesteps_equal(self) -> bool:
+        """Returns `True` if all samples share the same number of timesteps, `False` otherwise.
+
+        Returns:
+            bool: whether all samples share the same number of timesteps.
+        """
+        print(self)
+        timesteps = self.num_timesteps()
+        return True if len(timesteps) == 0 else all([x == timesteps[0] for x in timesteps])
 
     @property
     def num_samples(self) -> int:
@@ -495,15 +529,17 @@ class EventSamples(DataSamples):
         feature_index: Optional[data_typing.FeatureIndex] = None,
         **kwargs,
     ) -> None:
-        """Create an `EventSamples` object from the `data`.
+        """Create an :class:`EventSamples` object from the ``data``.
 
         Args:
-            data (numpy.ndarray | pandas.DataFrame): A container with the data.
-            sample_index (List[<sample element>], optional): Used only if `data` is a `numpy.ndarray`. List with sample
-            (row) index for each sample. Optional, if `None`, will be of form `[0, 1, ...]`. Defaults to `None`.
-            feature_index (List[<feature element>], optional): Used only if `data` is a `numpy.ndarray`.  List with
-            feature (column) index for each feature. Optional, if `None`, will be of form `["feat_0", "feat_1", ...]`.
-            Defaults to `None`.
+            data (numpy.ndarray | pandas.DataFrame):
+                A container with the data.
+            sample_index (List[<sample element>], optional):
+                Used only if ``data`` is a `numpy.ndarray`. List with sample (row) index for each sample. Optional,
+                if `None`, will be of form ``[0, 1, ...]``. Defaults to `None`.
+            feature_index (List[<feature element>], optional):
+                Used only if ``data`` is a `numpy.ndarray`.  List with feature (column) index for each feature.
+                Optional, if `None`, will be of form ``["feat_0", "feat_1", ...]``. Defaults to `None`.
         """
         if isinstance(data, pd.DataFrame):
             self._data = data
@@ -626,13 +662,14 @@ class EventSamples(DataSamples):
     @pydantic.validate_arguments(config={"arbitrary_types_allowed": True})
     def split(self, time_feature_suffix: str = "_time") -> pd.DataFrame:
         """Return a `pandas.DataFrame` where the time component of each event feature has been split off to its own
-        column. The new columns that contain the times will be named `"<original column name><time_feature_suffix>"`
-        and will be inserted before each corresponding `<original column name>` column. The `<original column name>`
+        column. The new columns that contain the times will be named ``"<original column name><time_feature_suffix>"``
+        and will be inserted before each corresponding ``<original column name>`` column. The ``<original column name>``
         columns will contain only the event value.
 
         Args:
-            time_feature_suffix (str, optional): A column name suffix string to identify the time columns that will be
-            split off. Defaults to `"_time"`.
+            time_feature_suffix (str, optional):
+                A column name suffix string to identify the time columns that will be split off. Defaults to
+                ``"_time"``.
 
         Returns:
             pd.DataFrame: The output dataframe.

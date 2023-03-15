@@ -1,9 +1,10 @@
 import logging
 import os
 import sys
-from typing import Any, Callable, Dict, Literal, Union
+from typing import Any, Callable, Dict, Union
 
 from loguru import logger
+from typing_extensions import Literal
 
 import tempor.config as conf
 

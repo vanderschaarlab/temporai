@@ -1,6 +1,8 @@
 import abc
 from typing import Any
 
+import pydantic
+
 from tempor.data import dataset
 from tempor.log import logger
 
@@ -22,6 +24,7 @@ class BasePredictor(estimator.BaseEstimator):
 
         return prediction
 
+    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def fit_predict(
         self,
         data: dataset.Dataset,
