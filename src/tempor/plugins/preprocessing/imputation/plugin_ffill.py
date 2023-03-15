@@ -6,12 +6,16 @@ from tempor.plugins.core._params import Params
 from tempor.plugins.preprocessing.imputation import BaseImputer
 
 
-@plugins.register_plugin(name="nop_imputer", category="preprocessing.imputation")
-class NopImputer(BaseImputer):
-    def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
+@plugins.register_plugin(name="ffill", category="preprocessing.imputation")
+class FFillImputer(BaseImputer):
+    def __init__(
+        self, static_imputer: str = "mean", random_state: int = 0, **params
+    ) -> None:  # pylint: disable=useless-super-delegation
         super().__init__(**params)
+        self.static_imputer = static_imputer
+        self.random_state = random_state
 
-    def _fit(self, data: dataset.Dataset, *args, **kwargs) -> "NopImputer":
+    def _fit(self, data: dataset.Dataset, *args, **kwargs) -> "FFillImputer":
         return self
 
     def _transform(self, data: dataset.Dataset, *args, **kwargs) -> Any:
