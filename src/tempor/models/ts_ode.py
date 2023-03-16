@@ -4,12 +4,14 @@ import numpy as np
 import pydantic
 import torch
 import torchcde
+import torchdiffeq
+import torchlaplace
 from sklearn.model_selection import train_test_split
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset, sampler
 
 from tempor.log import logger as log
-from tempor.models.constants import DEVICE, ModelTaskType, Nonlin
+from tempor.models.constants import DEVICE, ModelTaskType, Nonlin, ODEBackend
 from tempor.models.mlp import MLP
 from tempor.models.samplers import ImbalancedDatasetSampler
 from tempor.models.utils import enable_reproducibility
@@ -19,8 +21,14 @@ class CDEFunc(torch.nn.Module):
     """CDEFunc computes f_\\theta for the CDE model : z_t = z_0 + \\int_0^t f_\\theta(z_s) dX_s
 
     Args:
-        input_din
-        n_units_hidden
+        input_din: int
+            Number of input units
+        n_units_hidden: int
+            Number of hidden units
+        n_layers_hidden: int
+            Number of hidden layers
+        dropout: float
+            Dropout value. If 0, the dropout is not used.
     """
 
     def __init__(
@@ -56,61 +64,174 @@ class CDEFunc(torch.nn.Module):
         return z
 
 
-class NeuralCDE(torch.nn.Module):
+class ODEFunc(torch.nn.Module):
+    """ODEFunc computes f_\\theta for the ODE model : z_t = z_0 + \\int_0^t f_\\theta(z_s) dX_s
+
+    Args:
+        input_din: int
+            Number of input units
+        n_units_hidden: int
+            Number of hidden units
+        n_layers_hidden: int
+            Number of hidden layers
+        dropout: float
+            Dropout value. If 0, the dropout is not used.
+    """
+
+    def __init__(
+        self,
+        n_units_hidden: int,
+        n_layers_hidden: int = 1,
+        nonlin: Nonlin = "relu",
+        dropout: float = 0,
+        device: Any = DEVICE,
+    ):
+        super(ODEFunc, self).__init__()
+        self.n_units_hidden = n_units_hidden
+
+        self.model = MLP(
+            task_type="regression",
+            n_units_in=n_units_hidden,
+            n_units_out=n_units_hidden,
+            n_layers_hidden=n_layers_hidden,
+            n_units_hidden=n_units_hidden,
+            dropout=dropout,
+            nonlin=nonlin,
+            device=device,
+            nonlin_out=[("tanh", n_units_hidden)],
+        )
+
+    def forward(self, t, z):
+        return self.model(z)
+
+
+class ReverseGRUEncoder(nn.Module):
+    """
+    Model (encoder and Laplace representation func)
+    Encodes observed trajectory into latent vector
+    """
+
+    def __init__(
+        self,
+        n_units_in: int,
+        n_units_latent: int,
+        n_units_hidden: int,
+        device: Any = DEVICE,
+    ):
+        super(ReverseGRUEncoder, self).__init__()
+        self.gru = nn.GRU(n_units_in, n_units_hidden, 2, batch_first=True)
+        self.linear_out = nn.Linear(n_units_hidden, n_units_latent).to(device)
+        nn.init.xavier_uniform_(self.linear_out.weight)
+
+    def forward(self, observed_data: torch.Tensor):
+        trajs_to_encode = observed_data  # (batch_size, t_observed_dim, observed_dim)
+        reversed_trajs_to_encode = torch.flip(trajs_to_encode, (1,))
+        out, _ = self.gru(reversed_trajs_to_encode)
+        return self.linear_out(out[:, -1, :])
+
+
+class LaplaceFunc(nn.Module):
+    """
+    SphereSurfaceModel : C^{b+k} -> C^{bxd} -
+    In Riemann Sphere Coords : b dim s reconstruction terms, k is latent encoding dimension, d is output dimension
+    """
+
+    def __init__(
+        self,
+        s_dim,
+        n_units_out,
+        n_units_latent,
+        n_units_hidden=64,
+        device: Any = DEVICE,
+    ):
+        super(LaplaceFunc, self).__init__()
+        self.s_dim = s_dim
+        self.n_units_out = n_units_out
+        self.n_units_latent = n_units_latent
+        self.linear_tanh_stack = nn.Sequential(
+            nn.Linear(s_dim * 2 + n_units_latent, n_units_hidden),
+            nn.Tanh(),
+            nn.Linear(n_units_hidden, n_units_hidden),
+            nn.Tanh(),
+            nn.Linear(n_units_hidden, (s_dim) * 2 * n_units_out),
+        )
+
+        for m in self.linear_tanh_stack.modules():
+            if isinstance(m, nn.Linear):
+                nn.init.xavier_uniform_(m.weight)
+
+        phi_max = torch.pi / 2.0
+        self.phi_scale = phi_max - -torch.pi / 2.0
+
+    def forward(self, i):
+        out = self.linear_tanh_stack(i.view(-1, self.s_dim * 2 + self.n_units_latent)).view(
+            -1, 2 * self.n_units_out, self.s_dim
+        )
+        theta = nn.Tanh()(out[:, : self.n_units_out, :]) * torch.pi  # From - pi to + pi
+        phi = (
+            nn.Tanh()(out[:, self.n_units_out :, :]) * self.phi_scale / 2.0 - torch.pi / 2.0 + self.phi_scale / 2.0
+        )  # Form -pi / 2 to + pi / 2
+        return theta, phi
+
+
+class NeuralODE(torch.nn.Module):
     """The model that computes the integral in : z_t = z_0 + \\int_0^t f_\\theta(z_s) dX_s
 
-    Parameters
-    ----------
-    task_type: str
-        classification or regression
-    n_static_units_in: int
-        Number of features in the static tensor
-    n_temporal_units_in: int
-        Number of features in the temporal tensor
-    output_shape (List[int]):
-        Shape of the output tensor.
-    n_layers_hidden: int
-        Number of hidden layers
-    n_units_hidden: int
-        Number of hidden units in each layer
-    nonlin: string, default 'relu'
-        Nonlinearity to use in NN. Can be 'elu', 'relu', 'selu', 'tanh' or 'leaky_relu'.
-    nonlin_out (Optional[List[Tuple[Nonlin, int]]], optional):
-        List of activations for the output. Example ``[("tanh", 1), ("softmax", 3)]`` - means the output layer
-        will apply ``"tanh"`` for the first unit, and ``"softmax"`` for the following 3 units in the output.
-        Defaults to `None`.
-    # CDE specific
-    atol: float
-        absolute tolerance for solution
-    rtol: float
-        relative tolerance for solution
-    interpolation: str
-        cubic or linear
-    # training
-    lr: float
-        learning rate for optimizer.
-    weight_decay: float
-        l2 (ridge) penalty for the weights.
-    n_iter: int
-        Maximum number of iterations.
-    batch_size: int
-        Batch size
-    n_iter_print: int
-        Number of iterations after which to print updates and check the validation loss.
-    random_state: int
-        random_state used
-    patience: int
-        Number of iterations to wait before early stopping after decrease in validation loss
-    n_iter_min: int
-        Minimum number of iterations to go through before starting early stopping
-    dropout: float
-        Dropout value. If 0, the dropout is not used.
-    clipping_value: int, default 1
-        Gradients clipping value
-    early_stopping: bool
-        Enable/disable early stopping
-    dataloader_sampler (Optional[sampler.Sampler], optional):
-        Custom data sampler for training. Defaults to None.
+        Neural ODEs are a new family of deep neural network models. Instead of specifying a discrete sequence of
+    hidden layers, we parameterize the derivative of the hidden state using a neural network. The output of the network is computed using a blackbox differential equation solver.These are continuous-depth models that have constant memory cost, adapt their evaluation strategy to each input, and can explicitly trade numerical precision for speed.
+
+        Parameters
+        ----------
+        task_type: str
+            classification or regression
+        backend: ODEBackend
+            Which solver to use: cde, ode, laplace
+        n_static_units_in: int
+            Number of features in the static tensor
+        n_temporal_units_in: int
+            Number of features in the temporal tensor
+        output_shape (List[int]):
+            Shape of the output tensor.
+        n_layers_hidden: int
+            Number of hidden layers
+        n_units_hidden: int
+            Number of hidden units in each layer
+        nonlin: string, default 'relu'
+            Nonlinearity to use in NN. Can be 'elu', 'relu', 'selu', 'tanh' or 'leaky_relu'.
+        nonlin_out (Optional[List[Tuple[Nonlin, int]]], optional):
+            List of activations for the output. Example ``[("tanh", 1), ("softmax", 3)]`` - means the output layer
+            will apply ``"tanh"`` for the first unit, and ``"softmax"`` for the following 3 units in the output.
+            Defaults to `None`.
+        # ODE specific
+        atol: float
+            absolute tolerance for solution
+        rtol: float
+            relative tolerance for solution
+        interpolation: str
+            cubic or linear
+        # training
+        lr: float
+            learning rate for optimizer.
+        weight_decay: float
+            l2 (ridge) penalty for the weights.
+        n_iter: int
+            Maximum number of iterations.
+        batch_size: int
+            Batch size
+        n_iter_print: int
+            Number of iterations after which to print updates and check the validation loss.
+        random_state: int
+            random_state used
+        patience: int
+            Number of iterations to wait before early stopping after decrease in validation loss
+        n_iter_min: int
+            Minimum number of iterations to go through before starting early stopping
+        dropout: float
+            Dropout value. If 0, the dropout is not used.
+        clipping_value: int, default 1
+            Gradients clipping value
+        dataloader_sampler (Optional[sampler.Sampler], optional):
+            Custom data sampler for training. Defaults to None.
     """
 
     def __init__(
@@ -124,7 +245,8 @@ class NeuralCDE(torch.nn.Module):
         nonlin: Nonlin = "relu",
         nonlin_out: Optional[List[Tuple[Nonlin, int]]] = None,
         dropout: float = 0,
-        # CDE specific
+        backend: ODEBackend = "cde",
+        # CDE/ODE specific
         atol: float = 1e-2,
         rtol: float = 1e-2,
         interpolation: str = "cubic",
@@ -139,40 +261,70 @@ class NeuralCDE(torch.nn.Module):
         patience: int = 10,
         n_iter_min: int = 100,
         clipping_value: int = 1,
-        early_stopping: bool = True,
         train_ratio: float = 0.8,
         device: Any = DEVICE,
         dataloader_sampler: Optional[sampler.Sampler] = None,
     ):
-        super(NeuralCDE, self).__init__()
+        super(NeuralODE, self).__init__()
 
         enable_reproducibility(random_state)
         if len(output_shape) == 0:
             raise ValueError("Invalid output shape")
 
         self.task_type = task_type
+        self.backend = backend
 
-        self.func = CDEFunc(
-            n_temporal_units_in + 1,  # we add the observation times
-            n_units_hidden,
-            n_layers_hidden=n_layers_hidden,
-            nonlin=nonlin,
-            dropout=dropout,
-            device=device,
-        )
-        self.initial_temporal = MLP(
-            task_type="regression",
-            n_units_in=n_temporal_units_in + 1,  # we add the observation times
-            n_units_out=n_units_hidden,
-            n_layers_hidden=n_layers_hidden,
-            n_units_hidden=n_units_hidden,
-            dropout=dropout,
-            nonlin=nonlin,
-            device=device,
-        )
+        if self.backend == "cde":
+            self.func = CDEFunc(
+                n_temporal_units_in + 1,  # we add the observation times
+                n_units_hidden,
+                n_layers_hidden=n_layers_hidden,
+                nonlin=nonlin,
+                dropout=dropout,
+                device=device,
+            )
+        elif self.backend == "ode":
+            self.func = ODEFunc(
+                n_units_hidden,
+                n_layers_hidden=n_layers_hidden,
+                nonlin=nonlin,
+                dropout=dropout,
+                device=device,
+            )
+        elif self.backend == "laplace":
+            s_recon_terms = 33
+            self.func = LaplaceFunc(
+                s_recon_terms,
+                n_units_out=n_units_hidden,
+                n_units_latent=n_units_hidden,
+                device=device,
+            )
+
+        else:
+            raise RuntimeError(f"Invalid ODE backend {self.backend}")
+
+        if self.backend in ["ode", "cde"]:
+            self.initial_temporal = MLP(
+                task_type="regression",
+                n_units_in=n_temporal_units_in + 1,  # we add the observation times
+                n_units_out=n_units_hidden,
+                n_layers_hidden=n_layers_hidden,
+                n_units_hidden=n_units_hidden,
+                dropout=dropout,
+                nonlin=nonlin,
+                device=device,
+            )
+        elif self.backend == "laplace":
+            self.initial_temporal = ReverseGRUEncoder(
+                n_temporal_units_in + 1,
+                n_units_latent=n_units_hidden,
+                n_units_hidden=n_units_hidden,
+                device=device,
+            ).to(device)
 
         self.output_shape = output_shape
         self.n_units_out = int(np.prod(self.output_shape))
+        self.n_units_hidden = n_units_hidden
 
         output_input_size = n_units_hidden
         self.initial_static: Optional[MLP] = None
@@ -201,7 +353,7 @@ class NeuralCDE(torch.nn.Module):
             nonlin_out=nonlin_out,
         )
 
-        # CDE specific
+        # ODE specific
         self.atol = atol
         self.rtol = rtol
         self.interpolation = interpolation
@@ -213,7 +365,6 @@ class NeuralCDE(torch.nn.Module):
         self.batch_size = batch_size
         self.patience = patience
         self.clipping_value = clipping_value
-        self.early_stopping = early_stopping
         self.device = device
         self.train_ratio = train_ratio
         self.random_state = random_state
@@ -258,14 +409,34 @@ class NeuralCDE(torch.nn.Module):
         else:
             raise RuntimeError(f"Invalid interpolation {self.interpolation}")
 
-        #  Initial hidden state should be a function of the first observation.
-        X0 = spline.evaluate(spline.interval[0])
-        z0 = self.initial_temporal(X0)
+        # Solve the ODE using a solver
+        if self.backend == "cde":
+            #  Initial hidden state should be a function of the first observation.
+            X0 = spline.evaluate(spline.interval[0])
+            z0 = self.initial_temporal(X0)
 
-        # Solve the CDE
-        z_T = torchcde.cdeint(X=spline, func=self.func, z0=z0, t=spline.interval, atol=self.atol, rtol=self.rtol)
-        z_T = z_T[:, 1]
+            z_T = torchcde.cdeint(X=spline, func=self.func, z0=z0, t=spline.interval, atol=self.atol, rtol=self.rtol)
+            z_T = z_T[:, 1]
+        elif self.backend == "ode":
+            X_emb = self.initial_temporal(temporal_data_ext)
 
+            z_T = torchdiffeq.odeint_adjoint(
+                self.func,
+                X_emb,
+                spline.interval,
+                atol=self.atol,
+                rtol=self.rtol,
+            )
+            z_T = z_T[1]
+            z_T = z_T[:, -1, :]  # last time point
+        elif self.backend == "laplace":
+            X_emb = self.initial_temporal(temporal_data_ext)
+            z_T = torchlaplace.laplace_reconstruct(
+                laplace_rep_func=self.func, p=X_emb, t=spline.interval, recon_dim=self.n_units_hidden
+            )
+            z_T = z_T[:, -1, :]
+        else:
+            raise RuntimeError(f"Invalid solver {self.backend}")
         # Compute static embedding
         if static_data is not None and self.initial_static is not None:
             static_emb = self.initial_static(static_data)
@@ -398,6 +569,7 @@ class NeuralCDE(torch.nn.Module):
             if it % self.n_iter_print == 0:
                 val_loss = self._test_epoch(test_dataloaders)
                 log.info(f"Epoch:{it}| train loss: {train_loss}, validation loss: {val_loss}")
+
                 if val_loss < prev_error:
                     patience = 0
                     prev_error = val_loss
@@ -419,6 +591,8 @@ class NeuralCDE(torch.nn.Module):
                 self.optimizer.zero_grad()  # clear gradients for this training step
 
                 pred = self(static_mb, temporal_mb, horizons_mb)  # rnn output
+                if torch.isnan(pred).sum() > 0:
+                    raise RuntimeError("NaNs in the training prediction")
 
                 loss = self.loss(pred.squeeze(), y_mb.squeeze())
 
@@ -439,7 +613,9 @@ class NeuralCDE(torch.nn.Module):
             for step, (static_mb, temporal_mb, horizons_mb, y_mb) in enumerate(  # pylint: disable=unused-variable
                 loader
             ):
-                pred = self(static_mb, temporal_mb, horizons_mb)  # rnn output
+                pred = self(static_mb, temporal_mb, horizons_mb)  # ODE output
+                if torch.isnan(pred).sum() > 0:
+                    raise RuntimeError("NaNs in the test prediction")
                 loss = self.loss(pred.squeeze(), y_mb.squeeze())
 
                 losses.append(loss.detach().cpu())

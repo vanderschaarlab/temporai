@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 import torch
 
-from tempor.models.ts_cde import NeuralCDE
+from tempor.models.ts_ode import NeuralODE
 from tempor.utils.datasets.google_stocks import GoogleStocksDataloader
 from tempor.utils.datasets.sine import SineDataloader
 
@@ -48,16 +48,18 @@ def generate_dummy_data():
     return static, temporal, observation_times, outcome
 
 
-def test_ode_sanity():
+@pytest.mark.parametrize("backend", ["laplace", "ode", "cde"])
+def test_ode_sanity(backend: str):
     static, temporal, observation_times, outcome = generate_dummy_data()
 
-    model = NeuralCDE(
+    model = NeuralODE(
         task_type="classification",
         n_static_units_in=static.shape[-1],
         n_temporal_units_in=temporal.shape[-1],
         output_shape=[2],
         n_units_hidden=8,
         n_iter=10,
+        backend=backend,
     )
     model.fit(static, temporal, observation_times, outcome)
 
@@ -69,20 +71,22 @@ def test_ode_sanity():
 
 
 @pytest.mark.parametrize("source", [GoogleStocksDataloader, SineDataloader])
-def test_ode_regression_fit_predict(source: Any) -> None:
+@pytest.mark.parametrize("backend", ["laplace", "cde", "ode"])
+def test_ode_regression_fit_predict(source: Any, backend: str) -> None:
     static, temporal, observation_times, outcome = unpack_dataset(source)
 
     outcome = outcome.reshape(-1, 1)
 
     outlen = int(len(outcome.reshape(-1)) / len(outcome))
 
-    model = NeuralCDE(
+    model = NeuralODE(
         task_type="regression",
         n_static_units_in=static.shape[-1],
         n_temporal_units_in=temporal.shape[-1],
         output_shape=outcome.shape[1:],
         n_iter=10,
         nonlin_out=[("tanh", outlen)],
+        backend=backend,
     )
 
     model.fit(static, temporal, observation_times, outcome)
@@ -95,18 +99,20 @@ def test_ode_regression_fit_predict(source: Any) -> None:
 
 
 @pytest.mark.parametrize("source", [SineDataloader, GoogleStocksDataloader])
-def test_ode_classification_fit_predict(source: Any) -> None:
+@pytest.mark.parametrize("backend", ["laplace", "cde", "ode"])
+def test_ode_classification_fit_predict(source: Any, backend: str) -> None:
     static, temporal, observation_times, outcome = unpack_dataset(source)  # pylint: disable=unused-variable
     static_fake, temporal_fake = np.random.randn(*static.shape), np.random.randn(*temporal.shape)
 
     y = np.asarray([1] * len(static) + [0] * len(static_fake))  # type: ignore
 
-    model = NeuralCDE(
+    model = NeuralODE(
         task_type="classification",
         n_static_units_in=static.shape[-1],
         n_temporal_units_in=temporal.shape[-1],
         output_shape=[2],
         n_iter=10,
+        backend=backend,
     )
 
     static_data = np.concatenate([static, static_fake])

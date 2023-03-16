@@ -149,6 +149,8 @@ class TimeSeriesModel(nn.Module):
             self.loss = nn.MSELoss()
         elif task_type == "classification":
             self.loss = nn.CrossEntropyLoss()
+        else:
+            raise ValueError(f"Invalid task type {task_type}")
 
         self.n_iter = n_iter
         self.n_iter_print = n_iter_print
