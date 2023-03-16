@@ -1100,3 +1100,71 @@ class TestWithConcreteData:
             targets=target,
             treatments=treatment,
         )
+
+    @pytest.mark.parametrize(
+        "time_series, static, target, treatment",
+        [
+            (
+                test_dfs.df_time_series.copy(),
+                test_dfs.df_static.copy(),
+                test_dfs.df_time_series.copy(),
+                test_dfs.df_time_series.copy(),
+            ),
+            (
+                test_dfs.df_time_series.copy(),
+                None,
+                test_dfs.df_time_series.copy(),
+                test_dfs.df_time_series.copy(),
+            ),
+        ],
+    )
+    def test_init_temporal_treatment_effects_dataset(self, time_series, static, target, treatment):
+        dataset.TemporalTreatmentEffectsDataset(
+            time_series=time_series,
+            static=static,
+            targets=target,
+            treatments=treatment,
+        )
+
+    def test_set_properties(self):
+        data = dataset.TemporalTreatmentEffectsDataset(
+            time_series=test_dfs.df_time_series.copy(),
+            static=test_dfs.df_static.copy(),
+            targets=test_dfs.df_time_series.copy(),
+            treatments=test_dfs.df_time_series.copy(),
+        )
+
+        df_s = pd.DataFrame(
+            {
+                "sample_idx": ["sample_1", "sample_2", "sample_3"],
+                "feat_new": [101, 201, 301],
+            }
+        )
+        df_s.set_index("sample_idx", drop=True, inplace=True)
+
+        df_t = pd.DataFrame(
+            {
+                "sample_idx": ["sample_1", "sample_1", "sample_1", "sample_1", "sample_2", "sample_2", "sample_3"],
+                "time_idx": [
+                    pd.to_datetime("2000-01-01"),
+                    pd.to_datetime("2000-01-02"),
+                    pd.to_datetime("2000-01-03"),
+                    pd.to_datetime("2000-01-04"),
+                    pd.to_datetime("2000-02-01"),
+                    pd.to_datetime("2000-02-02"),
+                    pd.to_datetime("2000-03-01"),
+                ],
+                "feat_new": [11, 12, 13, 14, 21, 22, 31],
+            }
+        )
+        df_t.set_index(keys=["sample_idx", "time_idx"], drop=True, inplace=True)
+
+        data.static = samples.StaticSamples(df_s)
+        data.time_series = samples.TimeSeriesSamples(df_t)
+        data.predictive.targets = samples.TimeSeriesSamples(df_t)
+        data.predictive.treatments = samples.TimeSeriesSamples(df_t)
+
+        assert data.static.dataframe().equals(df_s)
+        assert data.time_series.dataframe().equals(df_t)
+        assert data.predictive.targets.dataframe().equals(df_t)
+        assert data.predictive.treatments.dataframe().equals(df_t)
