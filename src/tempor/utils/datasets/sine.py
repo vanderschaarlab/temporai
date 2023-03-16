@@ -1,4 +1,3 @@
-# third party
 import numpy as np
 import pandas as pd
 
@@ -69,7 +68,7 @@ class SineDataloader:
             # For each feature
             seq_len = self.seq_len
 
-            for k in range(self.temporal_dim):
+            for k in range(self.temporal_dim):  # pylint: disable=unused-variable
 
                 # Randomly drawn frequency and phase
                 freq = np.random.beta(2, 2)

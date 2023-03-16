@@ -1,10 +1,10 @@
-# stdlib
+# pylint: disable=no-member
+
 from typing import Any, List
 
-# third party
 import pytest
 
-from tempor.plugins.pipeline import Pipeline, PipelineGroup
+from tempor.plugins.pipeline import Pipeline, PipelineGroup, PipelineMeta
 from tempor.utils.datasets.sine import SineDataloader
 
 
@@ -25,7 +25,7 @@ from tempor.utils.datasets.sine import SineDataloader
     ],
 )
 def test_pipeline_sanity(plugins_str: List[Any]) -> None:
-    dtype = Pipeline(plugins_str)
+    dtype: PipelineMeta = Pipeline(plugins_str)
     plugins = PipelineGroup(plugins_str)
 
     assert dtype.name() == "->".join(p for p in plugins_str)
@@ -101,7 +101,7 @@ def test_pipeline_end2end(plugins_str) -> None:
     else:
         dataset = SineDataloader(with_missing=False).load()
 
-    template = Pipeline(plugins_str)
+    template: PipelineMeta = Pipeline(plugins_str)
     pipeline = template()
 
     pipeline.fit(dataset)

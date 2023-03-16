@@ -1,12 +1,10 @@
-# stdlib
-from typing import Any, Callable, Dict, Tuple, Type
+from typing import Any, Callable, Dict, Optional, Tuple, Type
 
-# third party
 from tempor.data import dataset
 
 
 def _generate_name_impl(plugins: Tuple[Type, ...]) -> Callable:
-    def name_impl(*args: Any) -> str:
+    def name_impl(*args: Any) -> str:  # pylint: disable=unused-argument
         return "->".join(p.fqn() for p in plugins)
 
     return name_impl
@@ -33,7 +31,7 @@ def _generate_hyperparameter_space_for_layer_impl(plugins: Tuple[Type, ...]) -> 
 
 
 def _generate_sample_param_impl(plugins: Tuple[Type, ...]) -> Callable:
-    def sample_param_impl(*args: Any, **kwargs: Any) -> Dict:
+    def sample_param_impl(*args: Any, **kwargs: Any) -> Dict:  # pylint: disable=unused-argument
         sample: dict = {}
         for p in plugins:
             sample[p.name] = p.sample_hyperparameters()
@@ -55,16 +53,16 @@ def _generate_constructor() -> Callable:
         if not hasattr(plugins[-1], "predict"):
             raise RuntimeError(f"invalid output plugin in the pipeline. {plugins[-1]}")
 
-    def init_impl(self: Any, args: dict = {}) -> None:
+    def init_impl(self: Any, args: Optional[Dict] = None) -> None:
         _sanity_checks(self.plugin_types)
 
         self.stages = []
-        self.args = args
+        self.args = args if args is not None else dict()
 
         for plugin_type in self.plugin_types:
             plugin_args = {}
-            if plugin_type.name in args:
-                plugin_args = args[plugin_type.name]
+            if plugin_type.name in self.args:
+                plugin_args = self.args[plugin_type.name]
             self.stages.append(plugin_type(**plugin_args))
 
     return init_impl

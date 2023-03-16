@@ -37,6 +37,6 @@ def test_nn_regressor_plugin_predict(test_plugin: BaseRegressor) -> None:
 
 
 def test_hyperparam_sample():
-    for repeat in range(100):
-        args = plugin._cls.sample_hyperparameters()
+    for repeat in range(100):  # pylint: disable=unused-variable
+        args = plugin._cls.sample_hyperparameters()  # pylint: disable=no-member, protected-access
         plugin(**args)

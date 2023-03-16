@@ -1,10 +1,8 @@
-# stdlib
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-# third party
 import numpy as np
+import pydantic
 import torch
-from pydantic import validate_arguments
 from sklearn.model_selection import train_test_split
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset, sampler
@@ -17,14 +15,16 @@ from tsai.models.TCN import TCN
 from tsai.models.TransformerModel import TransformerModel
 from tsai.models.XceptionTime import XceptionTime
 from tsai.models.XCM import XCM
+from typing_extensions import Literal
 
 from tempor.log import logger as log
+from tempor.models import constants
 from tempor.models.constants import DEVICE
-from tempor.models.mlp import MLP, MultiActivationHead, get_nonlin
+from tempor.models.mlp import MLP, MultiActivationHead, Nonlin, get_nonlin
 from tempor.models.samplers import ImbalancedDatasetSampler
 from tempor.models.utils import enable_reproducibility
 
-modes = [
+TSModelMode = Literal[
     "LSTM",
     "GRU",
     "RNN",
@@ -39,6 +39,8 @@ modes = [
     "XCM",
 ]
 
+TSModelTaskType = Literal["classification", "regression"]
+
 
 class TimeSeriesModel(nn.Module):
     """Basic neural net for time series.
@@ -47,7 +49,7 @@ class TimeSeriesModel(nn.Module):
         task_type: str,
             The type of the problem. Available options: regression, classification
         n_static_units_in: int
-            Number of input units for the statis data.
+            Number of input units for the static data.
         n_temporal_units_in: int
             Number of units for the temporal features
         n_temporal_window: int,
@@ -93,8 +95,9 @@ class TimeSeriesModel(nn.Module):
             PyTorch device to use.
         dataloader_sampler: Optional[sampler.Sampler] = None
             Custom data sampler for training.
-        nonlin_out: Optional[List[Tuple[str, int]]] = None
-            List of activations for the output. Example [("tanh", 1), ("softmax", 3)] - means the output layer will apply "tanh" for the first unit, and softmax for the following 3 units in the output.
+        nonlin_out: Optional[List[Tuple[Nonlin, int]]] = None
+            List of activations for the output. Example [("tanh", 1), ("softmax", 3)] - means the output layer will
+            apply "tanh" for the first unit, and softmax for the following 3 units in the output.
         loss: Optional[Callable] = None
             Custom additional loss.
         dropout: float. Default = 0
@@ -113,10 +116,10 @@ class TimeSeriesModel(nn.Module):
             Whether to predict using the observation times(True) or just the covariates(False).
     """
 
-    @validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def __init__(
         self,
-        task_type: str,  # regression, classification
+        task_type: TSModelTaskType,  # regression, classification
         n_static_units_in: int,
         n_temporal_units_in: int,
         n_temporal_window: int,
@@ -126,7 +129,7 @@ class TimeSeriesModel(nn.Module):
         n_temporal_units_hidden: int = 102,
         n_temporal_layers_hidden: int = 2,
         n_iter: int = 500,
-        mode: str = "RNN",
+        mode: TSModelMode = "RNN",
         n_iter_print: int = 10,
         batch_size: int = 100,
         lr: float = 1e-3,
@@ -134,10 +137,10 @@ class TimeSeriesModel(nn.Module):
         window_size: int = 1,
         device: Any = DEVICE,
         dataloader_sampler: Optional[sampler.Sampler] = None,
-        nonlin_out: Optional[List[Tuple[str, int]]] = None,
+        nonlin_out: Optional[List[Tuple[Nonlin, int]]] = None,
         loss: Optional[Callable] = None,
         dropout: float = 0,
-        nonlin: str = "relu",
+        nonlin: Nonlin = "relu",
         random_state: int = 0,
         clipping_value: int = 1,
         patience: int = 20,
@@ -147,11 +150,6 @@ class TimeSeriesModel(nn.Module):
         super(TimeSeriesModel, self).__init__()
 
         enable_reproducibility(random_state)
-
-        if task_type not in ["classification", "regression"]:
-            raise ValueError(f"Invalid task type {task_type}")
-        if mode not in modes:
-            raise ValueError(f"Unsupported mode {mode}. Available: {modes}")
         if len(output_shape) == 0:
             raise ValueError("Invalid output shape")
 
@@ -179,7 +177,7 @@ class TimeSeriesModel(nn.Module):
         self.dataloader_sampler = dataloader_sampler
         self.lr = lr
         self.output_shape = output_shape
-        self.n_units_out = np.prod(self.output_shape)
+        self.n_units_out = int(np.prod(self.output_shape))
         self.clipping_value = clipping_value
         self.use_horizon_condition = use_horizon_condition
 
@@ -201,7 +199,6 @@ class TimeSeriesModel(nn.Module):
             device=device,
             dropout=dropout,
             nonlin=nonlin,
-            random_state=random_state,
         )
 
         self.mode = mode
@@ -218,7 +215,8 @@ class TimeSeriesModel(nn.Module):
 
             if self.n_units_out % self.n_act_out != 0:
                 raise RuntimeError(
-                    f"Shape mismatch for the output layer. Expected length {self.n_units_out}, but got {nonlin_out} with length {self.n_act_out}"
+                    f"Shape mismatch for the output layer. Expected length {self.n_units_out}, but got "
+                    f"{nonlin_out} with length {self.n_act_out}"
                 )
             self.out_activation = MultiActivationHead(activations, device=device)
         elif self.task_type == "classification":
@@ -231,7 +229,7 @@ class TimeSeriesModel(nn.Module):
             weight_decay=weight_decay,
         )  # optimize all rnn parameters
 
-    @validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def forward(
         self,
         static_data: torch.Tensor,
@@ -266,7 +264,7 @@ class TimeSeriesModel(nn.Module):
 
         return pred
 
-    @validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def predict(
         self,
         static_data: Union[List, np.ndarray],
@@ -298,7 +296,7 @@ class TimeSeriesModel(nn.Module):
             else:
                 return yt.cpu().numpy()
 
-    @validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def predict_proba(
         self,
         static_data: Union[List, np.ndarray],
@@ -342,7 +340,7 @@ class TimeSeriesModel(nn.Module):
         else:
             return np.mean(np.inner(outcome - y_pred, outcome - y_pred) / 2.0)
 
-    @validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def fit(
         self,
         static_data: Union[List, np.ndarray],
@@ -360,7 +358,7 @@ class TimeSeriesModel(nn.Module):
 
         return self._train(static_data_t, temporal_data_t, observation_times_t, outcome_t)
 
-    @validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def _train(
         self,
         static_data: List[torch.Tensor],
@@ -404,33 +402,38 @@ class TimeSeriesModel(nn.Module):
 
         losses = []
         for loader in loaders:
-            for step, (static_mb, temporal_mb, horizons_mb, y_mb) in enumerate(loader):
+            for step, (static_mb, temporal_mb, horizons_mb, y_mb) in enumerate(  # pylint: disable=unused-variable
+                loader
+            ):
                 self.optimizer.zero_grad()  # clear gradients for this training step
 
                 pred = self(static_mb, temporal_mb, horizons_mb)  # rnn output
-                loss = self.loss(pred, y_mb)
+
+                loss = self.loss(pred.squeeze(), y_mb.squeeze())
 
                 loss.backward()  # backpropagation, compute gradients
                 if self.clipping_value > 0:
-                    torch.nn.utils.clip_grad_norm_(self.parameters(), self.clipping_value)
+                    torch.nn.utils.clip_grad_norm_(self.parameters(), self.clipping_value)  # pyright: ignore
                 self.optimizer.step()  # apply gradients
 
                 losses.append(loss.detach().cpu())
 
-        return np.mean(losses)
+        return float(np.mean(losses))
 
     def _test_epoch(self, loaders: List[DataLoader]) -> float:
         self.eval()
 
         losses = []
         for loader in loaders:
-            for step, (static_mb, temporal_mb, horizons_mb, y_mb) in enumerate(loader):
+            for step, (static_mb, temporal_mb, horizons_mb, y_mb) in enumerate(  # pylint: disable=unused-variable
+                loader
+            ):
                 pred = self(static_mb, temporal_mb, horizons_mb)  # rnn output
                 loss = self.loss(pred.squeeze(), y_mb.squeeze())
 
                 losses.append(loss.detach().cpu())
 
-        return np.mean(losses)
+        return float(np.mean(losses))
 
     def dataloader(
         self,
@@ -438,12 +441,21 @@ class TimeSeriesModel(nn.Module):
         temporal_data: torch.Tensor,
         observation_times: torch.Tensor,
         outcome: torch.Tensor,
-    ) -> DataLoader:
+    ) -> Tuple[DataLoader, DataLoader]:
         stratify = None
         _, out_counts = torch.unique(outcome, return_counts=True)
         if out_counts.min() > 1:
             stratify = outcome.cpu()
 
+        split: Tuple[torch.Tensor, ...] = train_test_split(  # type: ignore
+            static_data.cpu(),
+            temporal_data.cpu(),
+            observation_times.cpu(),
+            outcome.cpu(),
+            train_size=self.train_ratio,
+            random_state=self.random_state,
+            stratify=stratify,
+        )
         (
             static_data_train,
             static_data_test,
@@ -453,15 +465,7 @@ class TimeSeriesModel(nn.Module):
             observation_times_test,
             outcome_train,
             outcome_test,
-        ) = train_test_split(
-            static_data.cpu(),
-            temporal_data.cpu(),
-            observation_times.cpu(),
-            outcome.cpu(),
-            train_size=self.train_ratio,
-            random_state=self.random_state,
-            stratify=stratify,
-        )
+        ) = split
         train_dataset = TensorDataset(
             static_data_train.to(self.device),
             temporal_data_train.to(self.device),
@@ -475,15 +479,15 @@ class TimeSeriesModel(nn.Module):
             outcome_test.to(self.device),
         )
 
-        sampler = self.dataloader_sampler
-        if sampler is None and self.task_type == "classification":
-            sampler = ImbalancedDatasetSampler(outcome_train.squeeze().cpu().numpy().tolist())
+        sampler_ = self.dataloader_sampler
+        if sampler_ is None and self.task_type == "classification":
+            sampler_ = ImbalancedDatasetSampler(outcome_train.squeeze().cpu().numpy().tolist())
 
         return (
             DataLoader(
                 train_dataset,
                 batch_size=self.batch_size,
-                sampler=sampler,
+                sampler=sampler_,
                 pin_memory=False,
             ),
             DataLoader(
@@ -493,7 +497,7 @@ class TimeSeriesModel(nn.Module):
             ),
         )
 
-    def _check_tensor(self, X: torch.Tensor) -> torch.Tensor:
+    def _check_tensor(self, X: Union[torch.Tensor, np.ndarray]) -> torch.Tensor:
         if isinstance(X, torch.Tensor):
             return X.to(self.device)
         else:
@@ -559,7 +563,7 @@ class TimeSeriesLayer(nn.Module):
         self,
         n_static_units_in: int,
         n_temporal_units_in: int,
-        n_temporal_window: int,
+        n_temporal_window: int,  # pylint: disable=unused-argument
         n_units_out: int,
         n_static_units_hidden: int = 100,
         n_static_layers_hidden: int = 2,
@@ -567,10 +571,9 @@ class TimeSeriesLayer(nn.Module):
         n_temporal_layers_hidden: int = 2,
         mode: str = "RNN",
         window_size: int = 1,
-        device: Any = DEVICE,
+        device: Any = constants.DEVICE,
         dropout: float = 0,
-        nonlin: str = "relu",
-        random_state: int = 0,
+        nonlin: Nonlin = "relu",
     ) -> None:
         super(TimeSeriesLayer, self).__init__()
         temporal_params = {
@@ -698,7 +701,7 @@ class TimeSeriesLayer(nn.Module):
 
 
 class WindowLinearLayer(nn.Module):
-    @validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def __init__(
         self,
         n_static_units_in: int,
@@ -708,13 +711,14 @@ class WindowLinearLayer(nn.Module):
         n_units_hidden: int = 100,
         n_layers: int = 1,
         dropout: float = 0,
-        nonlin: str = "relu",
-        device: Any = DEVICE,
+        nonlin: Nonlin = "relu",
+        device: Any = constants.DEVICE,
     ) -> None:
         super(WindowLinearLayer, self).__init__()
 
         self.device = device
         self.window_size = window_size
+        self.n_static_units_in = n_static_units_in
         self.model = MLP(
             task_type="regression",
             n_units_in=n_static_units_in + n_temporal_units_in * window_size,
@@ -726,15 +730,15 @@ class WindowLinearLayer(nn.Module):
             device=device,
         )
 
-    @validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def forward(self, static_data: torch.Tensor, temporal_data: torch.Tensor) -> torch.Tensor:
-        if len(static_data) != len(temporal_data):
+        if self.n_static_units_in > 0 and len(static_data) != len(temporal_data):
             raise ValueError("Length mismatch between static and temporal data")
 
         batch_size, seq_len, n_feats = temporal_data.shape
         temporal_batch = temporal_data[:, seq_len - self.window_size :, :].reshape(
             batch_size, n_feats * self.window_size
         )
-        batch = torch.cat([static_data, temporal_batch], axis=1)
+        batch = torch.cat([static_data, temporal_batch], dim=1)
 
         return self.model(batch).to(self.device)

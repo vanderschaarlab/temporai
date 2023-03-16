@@ -1,6 +1,7 @@
 from typing import Any, List
 
 from hyperimpute.plugins.imputers import Imputers as StaticImputers
+from typing_extensions import Self
 
 import tempor.plugins.core as plugins
 from tempor.data import dataset
@@ -28,7 +29,7 @@ class BFillImputer(BaseImputer):
         self.static_imputer = StaticImputers().get(static_imputer, random_state=random_state)
         self.random_state = random_state
 
-    def _fit(self, data: dataset.Dataset, *args, **kwargs) -> "BFillImputer":
+    def _fit(self, data: dataset.Dataset, *args, **kwargs) -> Self:
         if data.static is not None:
             self.static_imputer.fit(data.static.dataframe())
 
@@ -48,9 +49,9 @@ class BFillImputer(BaseImputer):
         sample_ts_index = data.time_series.sample_index()
         imputed_ts = data.time_series.dataframe()
         for idx in sample_ts_index:
-            imputed_ts.loc[(idx,)].bfill(inplace=True)
-            imputed_ts.loc[(idx,)].ffill(inplace=True)
-            imputed_ts.loc[(idx,)].fillna(0, inplace=True)
+            imputed_ts.loc[(idx, slice(None)), :] = imputed_ts.loc[(idx, slice(None)), :].bfill()  # pyright: ignore
+            imputed_ts.loc[(idx, slice(None)), :] = imputed_ts.loc[(idx, slice(None)), :].ffill()  # pyright: ignore
+            imputed_ts.loc[(idx, slice(None)), :] = imputed_ts.loc[(idx, slice(None)), :].fillna(0.0)  # pyright: ignore
 
         data.time_series = TimeSeriesSamples.from_dataframe(imputed_ts)
         return data

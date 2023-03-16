@@ -1,10 +1,17 @@
-# third party
+from typing import TYPE_CHECKING
+
 import numpy as np
 import pytest
 import torch
 from sklearn.datasets import load_diabetes, load_digits
 
-from tempor.models.mlp import MLP, LinearLayer, MultiActivationHead, ResidualLayer
+from tempor.models.mlp import (
+    MLP,
+    LinearLayer,
+    MultiActivationHead,
+    Nonlin,
+    ResidualLayer,
+)
 
 
 def test_network_config() -> None:
@@ -41,7 +48,7 @@ def test_network_config() -> None:
 @pytest.mark.parametrize("residual", [True, False])
 def test_basic_network(
     task_type: str,
-    nonlin: str,
+    nonlin: Nonlin,
     n_iter: int,
     dropout: float,
     batch_norm: bool,
@@ -79,7 +86,7 @@ def test_custom_layers(layer: torch.nn.Module) -> None:
 @pytest.mark.parametrize(
     "activations",
     [
-        [(torch.nn.ReLU(), 10), (torch.nn.Softmax(), 30), (torch.nn.Tanh(), 24)],
+        [(torch.nn.ReLU(), 10), (torch.nn.Softmax(dim=-1), 30), (torch.nn.Tanh(), 24)],
         [(torch.nn.ReLU(), 64)],
         [(torch.nn.ReLU(), 1) for i in range(64)],
     ],
@@ -95,7 +102,7 @@ def test_multiactivation_heads(activations: list) -> None:
 @pytest.mark.parametrize(
     "activations",
     [
-        [(torch.nn.ReLU(), 10), (torch.nn.Softmax(), 30), (torch.nn.Tanh(), 2)],
+        [(torch.nn.ReLU(), 10), (torch.nn.Softmax(dim=-1), 30), (torch.nn.Tanh(), 2)],
         [(torch.nn.ReLU(), 1)],
         [(torch.nn.ReLU(), 1) for i in range(65)],
     ],
@@ -111,6 +118,10 @@ def test_multiactivation_heads_failure(activations: list) -> None:
 @pytest.mark.parametrize("residual", [True, False])
 def test_mlp_classification(residual: bool) -> None:
     X, y = load_digits(return_X_y=True)
+    if TYPE_CHECKING:  # pragma: no cover
+        assert isinstance(X, np.ndarray)  # nosec B101
+        assert isinstance(y, np.ndarray)  # nosec B101
+
     model = MLP(
         task_type="classification",
         n_units_in=X.shape[1],
@@ -128,6 +139,10 @@ def test_mlp_classification(residual: bool) -> None:
 @pytest.mark.parametrize("residual", [True, False])
 def test_mlp_regression(residual: bool) -> None:
     X, y = load_diabetes(return_X_y=True)
+    if TYPE_CHECKING:  # pragma: no cover
+        assert isinstance(X, np.ndarray)  # nosec B101
+        assert isinstance(y, np.ndarray)  # nosec B101
+
     model = MLP(
         task_type="regression",
         n_units_in=X.shape[1],

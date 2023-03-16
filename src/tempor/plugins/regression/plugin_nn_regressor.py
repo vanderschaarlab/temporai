@@ -1,11 +1,11 @@
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, Optional, Tuple, get_args
 
 from torch.utils.data import sampler
 
 import tempor.plugins.core as plugins
 from tempor.data import dataset, samples
 from tempor.models.constants import DEVICE
-from tempor.models.ts_model import TimeSeriesModel, modes
+from tempor.models.ts_model import Nonlin, TimeSeriesModel, TSModelMode
 from tempor.plugins.core._params import CategoricalParams, FloatParams, IntegerParams
 from tempor.plugins.regression import BaseRegressor
 
@@ -77,7 +77,7 @@ class NeuralNetRegressor(BaseRegressor):
         n_temporal_units_hidden: int = 102,
         n_temporal_layers_hidden: int = 2,
         n_iter: int = 500,
-        mode: str = "RNN",
+        mode: TSModelMode = "RNN",
         n_iter_print: int = 10,
         batch_size: int = 100,
         lr: float = 1e-3,
@@ -85,9 +85,9 @@ class NeuralNetRegressor(BaseRegressor):
         window_size: int = 1,
         device: Any = DEVICE,
         dataloader_sampler: Optional[sampler.Sampler] = None,
-        nonlin_out: Optional[List[Tuple[str, int]]] = None,
+        nonlin_out: Optional[List[Tuple[Nonlin, int]]] = None,
         dropout: float = 0,
-        nonlin: str = "relu",
+        nonlin: Nonlin = "relu",
         random_state: int = 0,
         clipping_value: int = 1,
         patience: int = 20,
@@ -99,7 +99,7 @@ class NeuralNetRegressor(BaseRegressor):
         self.n_temporal_units_hidden = n_temporal_units_hidden
         self.n_temporal_layers_hidden = n_temporal_layers_hidden
         self.n_iter = n_iter
-        self.mode = mode
+        self.mode: TSModelMode = mode
         self.n_iter_print = n_iter_print
         self.batch_size = batch_size
         self.lr = lr
@@ -109,7 +109,7 @@ class NeuralNetRegressor(BaseRegressor):
         self.dataloader_sampler = dataloader_sampler
         self.nonlin_out = nonlin_out
         self.dropout = dropout
-        self.nonlin = nonlin
+        self.nonlin: Nonlin = nonlin
         self.random_state = random_state
         self.clipping_value = clipping_value
         self.patience = patience
@@ -179,7 +179,7 @@ class NeuralNetRegressor(BaseRegressor):
             IntegerParams(name="n_static_layers_hidden", low=1, high=5),
             IntegerParams(name="n_temporal_units_hidden", low=100, high=1000),
             IntegerParams(name="n_temporal_layers_hidden", low=1, high=5),
-            CategoricalParams(name="mode", choices=modes),
+            CategoricalParams(name="mode", choices=list(get_args(TSModelMode))),
             CategoricalParams(name="batch_size", choices=[64, 128, 256, 512]),
             CategoricalParams(name="lr", choices=[1e-3, 1e-4, 2e-4]),
             FloatParams(name="dropout", low=0, high=0.2),

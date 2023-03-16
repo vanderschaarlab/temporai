@@ -1,11 +1,9 @@
-# stdlib
 from typing import Any, Generator, List, Optional, Tuple
 
-# third party
 import numpy as np
 import pandas as pd
 import torch
-import torch.utils.data
+import torch.utils.data.sampler
 from pydantic import validate_arguments
 from sklearn.model_selection import train_test_split
 
@@ -13,15 +11,17 @@ from sklearn.model_selection import train_test_split
 class BaseSampler(torch.utils.data.sampler.Sampler):
     """DataSampler samples the conditional vector and corresponding data."""
 
-    def get_dataset_conditionals(self) -> np.ndarray:
+    def get_dataset_conditionals(self) -> Optional[np.ndarray]:
         return None
 
     @validate_arguments(config=dict(arbitrary_types_allowed=True))
-    def sample_conditional(self, batch: int, **kwargs: Any) -> Optional[Tuple]:
+    def sample_conditional(self, batch: int, **kwargs: Any) -> Optional[Tuple]:  # pylint: disable=unused-argument
         return None
 
     @validate_arguments(config=dict(arbitrary_types_allowed=True))
-    def sample_conditional_for_class(self, batch: int, c: int) -> Optional[np.ndarray]:
+    def sample_conditional_for_class(
+        self, batch: int, c: int  # pylint: disable=unused-argument
+    ) -> Optional[np.ndarray]:
         return None
 
     def conditional_dimension(self) -> int:
@@ -41,6 +41,8 @@ class ImbalancedDatasetSampler(BaseSampler):
 
     @validate_arguments(config=dict(arbitrary_types_allowed=True))
     def __init__(self, labels: List, train_size: float = 0.8) -> None:
+        super().__init__(None)
+
         # if indices is not provided, all elements in the dataset will be considered
         indices = list(range(len(labels)))
         self.train_idx, self.test_idx = train_test_split(indices, train_size=train_size)
@@ -52,7 +54,7 @@ class ImbalancedDatasetSampler(BaseSampler):
         # distribution of classes in the dataset
         df = pd.DataFrame()
         df["label"] = labels
-        df.index = indices
+        df.index = indices  # pyright: ignore
 
         df = df.loc[self.train_idx]
 

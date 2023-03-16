@@ -1,11 +1,9 @@
-# stdlib
-from typing import Any
+from typing import Any, get_args
 
-# third party
 import numpy as np
 import pytest
 
-from tempor.models.ts_model import TimeSeriesModel, modes
+from tempor.models.ts_model import TimeSeriesModel, TSModelMode, TSModelTaskType
 from tempor.utils.datasets.google_stocks import GoogleStocksDataloader
 from tempor.utils.datasets.sine import SineDataloader
 
@@ -24,9 +22,9 @@ def unpack_dataset(source):
     return static, temporal, observation_times, outcome
 
 
-@pytest.mark.parametrize("mode", modes)
-@pytest.mark.parametrize("task_type", ["classification", "regression"])
-def test_rnn_sanity(mode: str, task_type: str) -> None:
+@pytest.mark.parametrize("mode", get_args(TSModelMode))
+@pytest.mark.parametrize("task_type", get_args(TSModelTaskType))
+def test_rnn_sanity(mode: TSModelMode, task_type: TSModelTaskType) -> None:
     model = TimeSeriesModel(
         task_type=task_type,
         n_static_units_in=3,
@@ -59,15 +57,15 @@ def test_rnn_sanity(mode: str, task_type: str) -> None:
     assert model.batch_size == 123
 
 
-@pytest.mark.parametrize("mode", modes)
+@pytest.mark.parametrize("mode", get_args(TSModelMode))
 @pytest.mark.parametrize("source", [GoogleStocksDataloader, SineDataloader])
 @pytest.mark.parametrize("use_horizon_condition", [True, False])
-def test_rnn_regression_fit_predict(mode: str, source: Any, use_horizon_condition: bool) -> None:
+def test_rnn_regression_fit_predict(mode: TSModelMode, source: Any, use_horizon_condition: bool) -> None:
     static, temporal, observation_times, outcome = unpack_dataset(source)
 
     outcome = outcome.reshape(-1, 1)
 
-    outlen = len(outcome.reshape(-1)) / len(outcome)
+    outlen = int(len(outcome.reshape(-1)) / len(outcome))
 
     model = TimeSeriesModel(
         task_type="regression",
@@ -90,13 +88,13 @@ def test_rnn_regression_fit_predict(mode: str, source: Any, use_horizon_conditio
     assert model.score(static, temporal, observation_times, outcome) < 2
 
 
-@pytest.mark.parametrize("mode", modes)
+@pytest.mark.parametrize("mode", get_args(TSModelMode))
 @pytest.mark.parametrize("source", [SineDataloader, GoogleStocksDataloader])
-def test_rnn_classification_fit_predict(mode: str, source: Any) -> None:
-    static, temporal, observation_times, outcome = unpack_dataset(source)
+def test_rnn_classification_fit_predict(mode: TSModelMode, source: Any) -> None:
+    static, temporal, observation_times, outcome = unpack_dataset(source)  # pylint: disable=unused-variable
     static_fake, temporal_fake = np.random.randn(*static.shape), np.random.randn(*temporal.shape)
 
-    y = np.asarray([1] * len(static) + [0] * len(static_fake))
+    y = np.asarray([1] * len(static) + [0] * len(static_fake))  # type: ignore
 
     model = TimeSeriesModel(
         task_type="classification",

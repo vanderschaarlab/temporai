@@ -1,8 +1,6 @@
-# stdlib
 import io
 from pathlib import Path
 
-# third party
 import numpy as np
 import pandas as pd
 import requests
@@ -31,14 +29,14 @@ class GoogleStocksDataloader:
             s = requests.get(URL, timeout=5).content
             df = pd.read_csv(io.StringIO(s.decode("utf-8")))
 
-            df.to_csv(self.df_path, index=None)
+            df.to_csv(self.df_path, index=False)
         else:
             df = pd.read_csv(self.df_path)
 
         # Flip the data to make chronological data
         df = pd.DataFrame(df.values[::-1], columns=df.columns)
         T = pd.to_datetime(df["Date"], infer_datetime_format=True).astype(np.int64).astype(np.float64) / 10**9
-        T = pd.Series(MinMaxScaler().fit_transform(T.values.reshape(-1, 1)).squeeze())
+        T = pd.Series(MinMaxScaler().fit_transform(T.values.reshape(-1, 1)).squeeze())  # pyright: ignore
 
         df = df.drop(columns=["Date"])
 
@@ -65,7 +63,7 @@ class GoogleStocksDataloader:
         time_series_df.set_index(keys=["sample_idx", "time_idx"], drop=True, inplace=True)
 
         outcome_df = pd.DataFrame(outcome)
-        outcome_df.index = sample_idxs
+        outcome_df.index = sample_idxs  # pyright: ignore
         outcome_df.columns = ["out"]
 
         return OneOffPredictionDataset(

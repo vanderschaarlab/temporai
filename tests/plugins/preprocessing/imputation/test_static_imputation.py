@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 import pytest
 
 from tempor.plugins import plugin_loader
@@ -26,6 +28,9 @@ def test_static_imputation_plugin_sanity(test_plugin: BaseImputer) -> None:
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
 def test_static_imputation_plugin_fit(test_plugin: BaseImputer) -> None:
     dataset = SineDataloader(with_missing=True).load()
+    if TYPE_CHECKING:  # pragma: no cover
+        assert dataset.static is not None  # nosec B101
+
     assert dataset.static.dataframe().isna().sum().sum() != 0
 
     test_plugin.fit(dataset)
@@ -34,6 +39,9 @@ def test_static_imputation_plugin_fit(test_plugin: BaseImputer) -> None:
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
 def test_static_imputation_plugin_transform(test_plugin: BaseImputer) -> None:
     dataset = SineDataloader(with_missing=True).load()
+    if TYPE_CHECKING:  # pragma: no cover
+        assert dataset.static is not None  # nosec B101
+
     assert dataset.static.dataframe().isna().sum().sum() != 0
 
     output = test_plugin.fit(dataset).transform(dataset)
@@ -43,6 +51,6 @@ def test_static_imputation_plugin_transform(test_plugin: BaseImputer) -> None:
 
 
 def test_hyperparam_sample():
-    for repeat in range(100):
-        args = plugin._cls.sample_hyperparameters()
+    for repeat in range(100):  # pylint: disable=unused-variable
+        args = plugin._cls.sample_hyperparameters()  # pylint: disable=no-member, protected-access
         plugin(**args)

@@ -1,6 +1,7 @@
 from typing import Any, List
 
 from hyperimpute.plugins.imputers import Imputers as StaticImputers
+from typing_extensions import Self
 
 import tempor.plugins.core as plugins
 from tempor.data import dataset
@@ -29,7 +30,7 @@ class StaticOnlyImputer(BaseImputer):
         self.temporal_imputer = StaticImputers().get(temporal_imputer, random_state=random_state)
         self.random_state = random_state
 
-    def _fit(self, data: dataset.Dataset, *args, **kwargs) -> "StaticOnlyImputer":
+    def _fit(self, data: dataset.Dataset, *args, **kwargs) -> Self:
         if data.static is not None:
             self.static_imputer.fit(data.static.dataframe())
 

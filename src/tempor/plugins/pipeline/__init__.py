@@ -1,7 +1,5 @@
-# stdlib
 from typing import Any, Dict, List, Tuple, Type
 
-# third party
 from tempor.data import dataset
 from tempor.plugins import plugin_loader
 
@@ -50,19 +48,19 @@ class PipelineMeta(type):
     def hyperparameter_space_for_layer(name: str, *args: Any, **kwargs: Any) -> Dict:
         raise NotImplementedError("not implemented")
 
-    def sample_params(*args: Any, **kwargs: Any) -> Dict:
+    def sample_params(*args: Any, **kwargs: Any) -> Dict:  # pylint: disable=no-method-argument
         raise NotImplementedError("not implemented")
 
-    def get_args(*args: Any, **kwargs: Any) -> Dict:
+    def get_args(*args: Any, **kwargs: Any) -> Dict:  # pylint: disable=no-method-argument
         raise NotImplementedError("not implemented")
 
     def fit(self: Any, X: dataset.Dataset, *args: Any, **kwargs: Any) -> Any:
         raise NotImplementedError("not implemented")
 
-    def predict(*args: Any, **kwargs: Any) -> dataset.Dataset:
+    def predict(*args: Any, **kwargs: Any) -> dataset.Dataset:  # pylint: disable=no-method-argument
         raise NotImplementedError("not implemented")
 
-    def predict_proba(*args: Any, **kwargs: Any) -> dataset.Dataset:
+    def predict_proba(*args: Any, **kwargs: Any) -> dataset.Dataset:  # pylint: disable=no-method-argument
         raise NotImplementedError("not implemented")
 
 

@@ -1,29 +1,30 @@
-# stdlib
-from typing import Any, Callable, List, Optional, Tuple
+from typing import Any, Callable, List, Optional, Tuple, Type, Union
 
-# third party
 import numpy as np
+import pydantic
 import torch
-from pydantic import validate_arguments
+import torch.utils.data
 from torch import nn
-from torch.utils.data import DataLoader, TensorDataset
+from typing_extensions import Literal
 
-from tempor.log import logger as log
-from tempor.models.constants import DEVICE
-from tempor.models.utils import enable_reproducibility
+from tempor.log import logger
+from tempor.models import constants, utils
 
 
 class GumbelSoftmax(nn.Module):
-    def __init__(self, tau: float = 0.2, hard: bool = False, eps: float = 1e-10, dim: int = -1) -> None:
+    def __init__(self, tau: float = 0.2, hard: bool = False, dim: int = -1) -> None:
         super(GumbelSoftmax, self).__init__()
 
         self.tau = tau
         self.hard = hard
-        self.eps = eps
         self.dim = dim
 
     def forward(self, logits: torch.Tensor) -> torch.Tensor:
-        return nn.functional.gumbel_softmax(logits, tau=self.tau, hard=self.hard, eps=self.eps, dim=self.dim)
+        # NOTE: nn.functional.gumbel_softmax eps parameter is deprecated.
+        return nn.functional.gumbel_softmax(logits, tau=self.tau, hard=self.hard, dim=self.dim)
+
+
+Nonlin = Literal["none", "elu", "relu", "leaky_relu", "selu", "tanh", "sigmoid", "softmax"]
 
 
 def get_nonlin(name: str) -> nn.Module:
@@ -42,13 +43,13 @@ def get_nonlin(name: str) -> nn.Module:
     elif name == "sigmoid":
         return nn.Sigmoid()
     elif name == "softmax":
-        return GumbelSoftmax()
+        return GumbelSoftmax(dim=-1)
     else:
         raise ValueError(f"Unknown nonlinearity {name}")
 
 
 class LinearLayer(nn.Module):
-    @validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def __init__(
         self,
         n_units_in: int,
@@ -56,12 +57,12 @@ class LinearLayer(nn.Module):
         dropout: float = 0,
         batch_norm: bool = False,
         nonlin: Optional[str] = "relu",
-        device: Any = DEVICE,
+        device: Any = constants.DEVICE,
     ) -> None:
         super(LinearLayer, self).__init__()
 
         self.device = device
-        layers = []
+        layers: List[nn.Module] = []
         if dropout > 0:
             layers.append(nn.Dropout(dropout))
 
@@ -75,13 +76,13 @@ class LinearLayer(nn.Module):
 
         self.model = nn.Sequential(*layers).to(self.device)
 
-    @validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def forward(self, X: torch.Tensor) -> torch.Tensor:
-        return self.model(X.float()).to(self.device)
+        return self.model(X.float()).to(self.device)  # pylint: disable=not-callable
 
 
 class ResidualLayer(LinearLayer):
-    @validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def __init__(
         self,
         n_units_in: int,
@@ -89,7 +90,7 @@ class ResidualLayer(LinearLayer):
         dropout: float = 0,
         batch_norm: bool = False,
         nonlin: Optional[str] = "relu",
-        device: Any = DEVICE,
+        device: Any = constants.DEVICE,
     ) -> None:
         super(ResidualLayer, self).__init__(
             n_units_in,
@@ -102,12 +103,12 @@ class ResidualLayer(LinearLayer):
         self.device = device
         self.n_units_out = n_units_out
 
-    @validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def forward(self, X: torch.Tensor) -> torch.Tensor:
         if X.shape[-1] == 0:
             return torch.zeros((*X.shape[:-1], self.n_units_out)).to(self.device)
 
-        out = self.model(X.float())
+        out = self.model(X.float())  # pylint: disable=not-callable
         return torch.cat([out, X], dim=-1).to(self.device)
 
 
@@ -117,7 +118,7 @@ class MultiActivationHead(nn.Module):
     def __init__(
         self,
         activations: List[Tuple[nn.Module, int]],
-        device: Any = DEVICE,
+        device: Any = constants.DEVICE,
     ) -> None:
         super(MultiActivationHead, self).__init__()
         self.activations = []
@@ -128,7 +129,7 @@ class MultiActivationHead(nn.Module):
             self.activations.append(activation)
             self.activation_lengths.append(length)
 
-    @validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def forward(self, X: torch.Tensor) -> torch.Tensor:
         if X.shape[-1] != np.sum(self.activation_lengths):
             raise RuntimeError(
@@ -194,7 +195,7 @@ class MLP(nn.Module):
         Optional Custom loss function. If None, the loss is CrossEntropy for classification tasks, or RMSE for regression.
     """
 
-    @validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def __init__(
         self,
         task_type: str,  # classification/regression
@@ -202,11 +203,11 @@ class MLP(nn.Module):
         n_units_out: int,
         n_layers_hidden: int = 1,
         n_units_hidden: int = 100,
-        nonlin: str = "relu",
-        nonlin_out: Optional[List[Tuple[str, int]]] = None,
+        nonlin: Nonlin = "relu",
+        nonlin_out: Optional[List[Tuple[Nonlin, int]]] = None,
         lr: float = 1e-3,
         weight_decay: float = 1e-3,
-        opt_betas: tuple = (0.9, 0.999),
+        opt_betas: Tuple[float, float] = (0.9, 0.999),
         n_iter: int = 1000,
         batch_size: int = 500,
         n_iter_print: int = 100,
@@ -219,7 +220,7 @@ class MLP(nn.Module):
         early_stopping: bool = True,
         residual: bool = False,
         loss: Optional[Callable] = None,
-        device: Any = DEVICE,
+        device: Any = constants.DEVICE,
     ) -> None:
         super(MLP, self).__init__()
 
@@ -228,18 +229,19 @@ class MLP(nn.Module):
         if n_units_out < 0:
             raise ValueError("n_units_out must be >= 0")
 
-        enable_reproducibility(random_state)
+        utils.enable_reproducibility(random_state)
         self.device = device
         self.task_type = task_type
         self.random_state = random_state
 
+        block: Type[LinearLayer]
         if residual:
             block = ResidualLayer
         else:
             block = LinearLayer
 
         # network
-        layers = []
+        layers: List[nn.Module] = []
 
         if n_layers_hidden > 0:
             layers.append(
@@ -254,7 +256,7 @@ class MLP(nn.Module):
             n_units_hidden += int(residual) * n_units_in
 
             # add required number of layers
-            for i in range(n_layers_hidden - 1):
+            for i in range(n_layers_hidden - 1):  # pylint: disable=unused-variable
                 layers.append(
                     block(
                         n_units_hidden,
@@ -281,7 +283,8 @@ class MLP(nn.Module):
 
             if total_nonlin_len != n_units_out:
                 raise RuntimeError(
-                    f"Shape mismatch for the output layer. Expected length {n_units_out}, but got {nonlin_out} with length {total_nonlin_len}"
+                    f"Shape mismatch for the output layer. Expected length {n_units_out}, but got {nonlin_out} "
+                    f"with length {total_nonlin_len}"
                 )
             layers.append(MultiActivationHead(activations, device=device))
         elif self.task_type == "classification":
@@ -324,7 +327,7 @@ class MLP(nn.Module):
 
         return self
 
-    @validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
         if self.task_type != "classification":
             raise ValueError(f"Invalid task type for predict_proba {self.task_type}")
@@ -336,7 +339,7 @@ class MLP(nn.Module):
 
             return yt.cpu().numpy().squeeze()
 
-    @validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def predict(self, X: np.ndarray) -> np.ndarray:
         with torch.no_grad():
             Xt = self._check_tensor(X)
@@ -355,14 +358,14 @@ class MLP(nn.Module):
         else:
             return np.mean(np.inner(y - y_pred, y - y_pred) / 2.0)
 
-    @validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def forward(self, X: torch.Tensor) -> torch.Tensor:
-        return self.model(X.float())
+        return self.model(X.float())  # pylint: disable=not-callable
 
-    def _train_epoch(self, loader: DataLoader) -> float:
+    def _train_epoch(self, loader: torch.utils.data.DataLoader) -> float:
         train_loss = []
 
-        for batch_ndx, sample in enumerate(loader):
+        for batch_ndx, sample in enumerate(loader):  # pylint: disable=unused-variable
             self.optimizer.zero_grad()
 
             X_next, y_next = sample
@@ -371,18 +374,21 @@ class MLP(nn.Module):
 
             preds = self.forward(X_next).squeeze()
 
-            batch_loss = self.loss(preds, y_next)
+            batch_loss = self.loss(preds.squeeze(), y_next.squeeze())
 
             batch_loss.backward()
 
             if self.clipping_value > 0:
-                torch.nn.utils.clip_grad_norm_(self.parameters(), self.clipping_value)
+                torch.nn.utils.clip_grad_norm_(  # pyright: ignore [reportPrivateImportUsage]
+                    self.parameters(),
+                    self.clipping_value,
+                )
 
             self.optimizer.step()
 
             train_loss.append(batch_loss.detach())
 
-        return torch.mean(torch.Tensor(train_loss))
+        return torch.mean(torch.Tensor(train_loss)).item()
 
     def _train(self, X: torch.Tensor, y: torch.Tensor) -> "MLP":
         X = self._check_tensor(X).float()
@@ -391,16 +397,16 @@ class MLP(nn.Module):
             y = y.long()
 
         # Load Dataset
-        dataset = TensorDataset(X, y)
+        dataset = torch.utils.data.TensorDataset(X, y)
 
         train_size = int(0.8 * len(dataset))
         test_size = len(dataset) - train_size
         train_dataset, test_dataset = torch.utils.data.random_split(dataset, [train_size, test_size])
-        loader = DataLoader(train_dataset, batch_size=self.batch_size, pin_memory=False)
+        loader = torch.utils.data.DataLoader(train_dataset, batch_size=self.batch_size, pin_memory=False)
 
         # Setup the network and optimizer
 
-        val_loss_best = 999999
+        val_loss_best = np.inf
         patience = 0
 
         # do training
@@ -409,10 +415,10 @@ class MLP(nn.Module):
 
             if self.early_stopping or i % self.n_iter_print == 0:
                 with torch.no_grad():
-                    X_val, y_val = test_dataset.dataset.tensors
+                    X_val, y_val = test_dataset.dataset.tensors  # type: ignore
 
                     preds = self.forward(X_val).squeeze()
-                    val_loss = self.loss(preds, y_val)
+                    val_loss = self.loss(preds.squeeze(), y_val.squeeze())
 
                     if self.early_stopping:
                         if val_loss_best > val_loss:
@@ -425,11 +431,11 @@ class MLP(nn.Module):
                             break
 
                     if i % self.n_iter_print == 0:
-                        log.debug(f"Epoch: {i}, loss: {val_loss}, train_loss: {train_loss}")
+                        logger.debug(f"Epoch: {i}, loss: {val_loss}, train_loss: {train_loss}")
 
         return self
 
-    def _check_tensor(self, X: torch.Tensor) -> torch.Tensor:
+    def _check_tensor(self, X: Union[torch.Tensor, np.ndarray]) -> torch.Tensor:
         if isinstance(X, torch.Tensor):
             return X.to(self.device)
         else:
