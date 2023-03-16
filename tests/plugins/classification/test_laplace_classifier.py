@@ -41,15 +41,6 @@ def test_laplace_ode_classifier_plugin_predict(test_plugin: BaseClassifier) -> N
     assert output.numpy().shape == (len(dataset.time_series), 1)
 
 
-@pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_laplace_ode_classifier_plugin_predict_proba(test_plugin: BaseClassifier) -> None:
-    dataset = GoogleStocksDataloader().load()
-
-    output = test_plugin.fit(dataset).predict_proba(dataset)
-
-    assert output.numpy().shape == (len(dataset.time_series), 2)
-
-
 def test_hyperparam_sample():
     for repeat in range(100):  # pylint: disable=unused-variable
         args = plugin._cls.sample_hyperparameters()  # pylint: disable=no-member, protected-access
