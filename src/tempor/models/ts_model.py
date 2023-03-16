@@ -19,10 +19,10 @@ from typing_extensions import Literal
 
 from tempor.log import logger as log
 from tempor.models import constants
-from tempor.models.constants import DEVICE
-from tempor.models.mlp import MLP, MultiActivationHead, Nonlin, get_nonlin
+from tempor.models.constants import DEVICE, ModelTaskType, Nonlin
+from tempor.models.mlp import MLP, MultiActivationHead
 from tempor.models.samplers import ImbalancedDatasetSampler
-from tempor.models.utils import enable_reproducibility
+from tempor.models.utils import enable_reproducibility, get_nonlin
 
 TSModelMode = Literal[
     "LSTM",
@@ -39,87 +39,12 @@ TSModelMode = Literal[
     "XCM",
 ]
 
-TSModelTaskType = Literal["classification", "regression"]
-
 
 class TimeSeriesModel(nn.Module):
-    """Basic neural net for time series.
-
-    Args
-        task_type: str,
-            The type of the problem. Available options: regression, classification
-        n_static_units_in: int
-            Number of input units for the static data.
-        n_temporal_units_in: int
-            Number of units for the temporal features
-        n_temporal_window: int,
-            Number of temporal observations for each subject
-        output_shape: List[int],
-            Shape of the output tensor
-        n_static_units_hidden: int. Default = 102
-            Number of hidden units for the static features
-        n_static_layers_hidden: int. Default = 2
-            Number of hidden layers for the static features
-        n_temporal_units_hidden: int. Default = 100
-            Number of hidden units for the temporal features
-        n_temporal_layers_hidden: int. Default = 2
-            Number of hidden layers for the temporal features
-        n_iter: int. Default = 500
-            Number of epochs
-        mode: str. Default = "RNN"
-            Core neural net architecture.
-            Available models:
-                - "LSTM"
-                - "GRU"
-                - "RNN"
-                - "Transformer"
-                - "MLSTM_FCN"
-                - "TCN"
-                - "InceptionTime"
-                - "InceptionTimePlus"
-                - "XceptionTime"
-                - "ResCNN"
-                - "OmniScaleCNN"
-                - "XCM"
-        n_iter_print: int. Default = 10
-            Number of epochs to print the loss.
-        batch_size: int. Default = 100
-            Batch size
-        lr: float. Default = 1e-3
-            Learning rate
-        weight_decay: float. Default = 1e-3
-            l2 (ridge) penalty for the weights.
-        window_size: int = 1
-            How many hidden states to use for the outcome.
-        device: Any = DEVICE
-            PyTorch device to use.
-        dataloader_sampler: Optional[sampler.Sampler] = None
-            Custom data sampler for training.
-        nonlin_out: Optional[List[Tuple[Nonlin, int]]] = None
-            List of activations for the output. Example [("tanh", 1), ("softmax", 3)] - means the output layer will
-            apply "tanh" for the first unit, and softmax for the following 3 units in the output.
-        loss: Optional[Callable] = None
-            Custom additional loss.
-        dropout: float. Default = 0
-            Dropout value.
-        nonlin: Optional[str]. Default = "relu"
-            Activation for hidden layers.
-        random_state: int = 0
-            Random seed
-        clipping_value: int. Default = 1,
-            Gradients clipping value. Zero disables the feature
-        patience: int. Default = 20
-            How many epoch * n_iter_print to wait without loss improvement.
-        train_ratio: float = 0.8
-            Train/test split ratio
-        use_horizon_condition: bool = True
-            Whether to predict using the observation times(True) or just the covariates(False).
-    """
-
     @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def __init__(
         self,
-        task_type: TSModelTaskType,  # regression, classification
+        task_type: ModelTaskType,
         n_static_units_in: int,
         n_temporal_units_in: int,
         n_temporal_window: int,
@@ -139,7 +64,7 @@ class TimeSeriesModel(nn.Module):
         dataloader_sampler: Optional[sampler.Sampler] = None,
         nonlin_out: Optional[List[Tuple[Nonlin, int]]] = None,
         loss: Optional[Callable] = None,
-        dropout: float = 0,
+        dropout: float = 0.0,
         nonlin: Nonlin = "relu",
         random_state: int = 0,
         clipping_value: int = 1,
@@ -147,6 +72,69 @@ class TimeSeriesModel(nn.Module):
         train_ratio: float = 0.8,
         use_horizon_condition: bool = True,
     ) -> None:
+        """Basic neural net for time series.
+
+        Args:
+            task_type (ModelTaskType):
+                The type of the problem. Available options: :obj:`~tempor.models.constants.ModelTaskType`.
+            n_static_units_in (int):
+                Number of input units for the static data.
+            n_temporal_units_in (int):
+                Number of units for the temporal features.
+            n_temporal_window (int):
+                Number of temporal observations for each subject.
+            output_shape (List[int]):
+                Shape of the output tensor.
+            n_static_units_hidden (int, optional):
+                Number of hidden units for the static features. Defaults to ``102``.
+            n_static_layers_hidden (int, optional):
+                Number of hidden layers for the static features. Defaults to ``2``.
+            n_temporal_units_hidden (int, optional):
+                Number of hidden units for the temporal features. Defaults to ``102``.
+            n_temporal_layers_hidden (int, optional):
+                Number of hidden layers for the temporal features. Defaults to ``2``.
+            n_iter (int, optional):
+                Number of epochs. Defaults to ``500``.
+            mode (TSModelMode, optional):
+                Core neural net architecture. Available options: :obj:`~tempor.models.ts_model.TSModelMode`.
+                Defaults to ``"RNN"``.
+            n_iter_print (int, optional):
+                Number of epochs to print the loss. Defaults to ``10``.
+            batch_size (int, optional):
+                Batch size. Defaults to ``100``.
+            lr (float, optional):
+                Learning rate. Defaults to ``1e-3``.
+            weight_decay (float, optional):
+                 l2 (ridge) penalty for the weights. Defaults to ``1e-3``.
+            window_size (int, optional):
+                How many hidden states to use for the outcome. Defaults to ``1``.
+            device (Any, optional):
+                PyTorch device to use. Defaults to :obj:`~tempor.models.constants.DEVICE`.
+            dataloader_sampler (Optional[sampler.Sampler], optional):
+                Custom data sampler for training. Defaults to None.
+            nonlin_out (Optional[List[Tuple[Nonlin, int]]], optional):
+                List of activations for the output. Example ``[("tanh", 1), ("softmax", 3)]`` - means the output layer
+                will apply ``"tanh"`` for the first unit, and ``"softmax"`` for the following 3 units in the output.
+                Defaults to `None`.
+            loss (Optional[Callable], optional):
+                Custom additional loss. Defaults to `None`.
+            dropout (float, optional):
+                Dropout value. Defaults to ``0.0``.
+            nonlin (Nonlin, optional):
+                Activation for hidden layers. Available options: :obj:`~tempor.models.constants.Nonlin`.
+                Defaults to ``"relu"``.
+            random_state (int, optional):
+                Random seed. Defaults to ``0``.
+            clipping_value (int, optional):
+                Gradients clipping value. Zero disables the feature. Defaults to ``1``.
+            patience (int, optional):
+                How many ``epoch * n_iter_print`` to wait without loss improvement. Defaults to ``20``.
+            train_ratio (float, optional):
+                Train/test split ratio. Defaults to ``0.8``.
+            use_horizon_condition (bool, optional):
+                Whether to predict using the observation times (`True`) or just the covariates (`False`).
+                Defaults to `True`.
+        """
         super(TimeSeriesModel, self).__init__()
 
         enable_reproducibility(random_state)

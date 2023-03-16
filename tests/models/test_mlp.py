@@ -5,13 +5,8 @@ import pytest
 import torch
 from sklearn.datasets import load_diabetes, load_digits
 
-from tempor.models.mlp import (
-    MLP,
-    LinearLayer,
-    MultiActivationHead,
-    Nonlin,
-    ResidualLayer,
-)
+from tempor.models.constants import ModelTaskType, Nonlin
+from tempor.models.mlp import MLP, LinearLayer, MultiActivationHead, ResidualLayer
 
 
 def test_network_config() -> None:
@@ -47,7 +42,7 @@ def test_network_config() -> None:
 @pytest.mark.parametrize("lr", [1e-3, 3e-4])
 @pytest.mark.parametrize("residual", [True, False])
 def test_basic_network(
-    task_type: str,
+    task_type: ModelTaskType,
     nonlin: Nonlin,
     n_iter: int,
     dropout: float,

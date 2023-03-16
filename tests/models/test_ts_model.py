@@ -1,9 +1,10 @@
-from typing import Any, get_args
+from typing import Any
 
 import numpy as np
 import pytest
+from typing_extensions import get_args
 
-from tempor.models.ts_model import TimeSeriesModel, TSModelMode, TSModelTaskType
+from tempor.models.ts_model import ModelTaskType, TimeSeriesModel, TSModelMode
 from tempor.utils.datasets.google_stocks import GoogleStocksDataloader
 from tempor.utils.datasets.sine import SineDataloader
 
@@ -23,8 +24,8 @@ def unpack_dataset(source):
 
 
 @pytest.mark.parametrize("mode", get_args(TSModelMode))
-@pytest.mark.parametrize("task_type", get_args(TSModelTaskType))
-def test_rnn_sanity(mode: TSModelMode, task_type: TSModelTaskType) -> None:
+@pytest.mark.parametrize("task_type", get_args(ModelTaskType))
+def test_rnn_sanity(mode: TSModelMode, task_type: ModelTaskType) -> None:
     model = TimeSeriesModel(
         task_type=task_type,
         n_static_units_in=3,

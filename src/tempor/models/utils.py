@@ -6,6 +6,7 @@ import numpy as np
 import torch
 import torch.backends.cudnn
 import torch.version
+from torch import nn
 
 
 def enable_reproducibility(
@@ -76,3 +77,37 @@ def enable_reproducibility(
     # If enabled, disable CuDNN benchmarking process to avoid possible non-determinism:
     if torch_disable_cudnn_benchmark:
         torch.backends.cudnn.benchmark = False
+
+
+class GumbelSoftmax(nn.Module):
+    def __init__(self, tau: float = 0.2, hard: bool = False, dim: int = -1) -> None:
+        super(GumbelSoftmax, self).__init__()
+
+        self.tau = tau
+        self.hard = hard
+        self.dim = dim
+
+    def forward(self, logits: torch.Tensor) -> torch.Tensor:
+        # NOTE: nn.functional.gumbel_softmax eps parameter is deprecated.
+        return nn.functional.gumbel_softmax(logits, tau=self.tau, hard=self.hard, dim=self.dim)
+
+
+def get_nonlin(name: str) -> nn.Module:
+    if name == "none":
+        return nn.Identity()
+    elif name == "elu":
+        return nn.ELU()
+    elif name == "relu":
+        return nn.ReLU()
+    elif name == "leaky_relu":
+        return nn.LeakyReLU()
+    elif name == "selu":
+        return nn.SELU()
+    elif name == "tanh":
+        return nn.Tanh()
+    elif name == "sigmoid":
+        return nn.Sigmoid()
+    elif name == "softmax":
+        return GumbelSoftmax(dim=-1)
+    else:
+        raise ValueError(f"Unknown nonlinearity {name}")

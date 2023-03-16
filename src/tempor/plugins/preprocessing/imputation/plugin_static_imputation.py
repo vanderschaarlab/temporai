@@ -12,19 +12,19 @@ from tempor.plugins.preprocessing.imputation import BaseImputer
 
 @plugins.register_plugin(name="static_imputation", category="preprocessing.imputation")
 class StaticOnlyImputer(BaseImputer):
-    """
-    Impute the time-series using a static imputer.
-
-    Args:
-        static_imputer: str
-            Which imputer to use for the static data(if any)
-        random_state: int
-            Random seed
-    """
-
     def __init__(
         self, static_imputer: str = "ice", temporal_imputer: str = "ice", random_state: int = 0, **params
     ) -> None:  # pylint: disable=useless-super-delegation
+        """Impute the time-series using a static imputer.
+
+        Args:
+            static_imputer (str, optional):
+                Which imputer to use for the static data (if any). Defaults to ``"ice"``.
+            temporal_imputer (str, optional):
+                Which imputer to use for the temporal data (if any). Defaults to ``"ice"``.
+            random_state (int, optional):
+                Random seed. Defaults to ``0``.
+        """
         super().__init__(**params)
         self.static_imputer = StaticImputers().get(static_imputer, random_state=random_state)
         self.temporal_imputer = StaticImputers().get(temporal_imputer, random_state=random_state)

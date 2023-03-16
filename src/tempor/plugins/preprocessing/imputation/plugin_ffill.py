@@ -12,19 +12,17 @@ from tempor.plugins.preprocessing.imputation import BaseImputer
 
 @plugins.register_plugin(name="ffill", category="preprocessing.imputation")
 class FFillImputer(BaseImputer):
-    """
-    Forward-first Time-Series Imputation
-
-    Args:
-        static_imputer: str
-            Which imputer to use for the static data(if any)
-        random_state: int
-            Random seed
-    """
-
     def __init__(
         self, static_imputer: str = "mean", random_state: int = 0, **params
     ) -> None:  # pylint: disable=useless-super-delegation
+        """Forward-first Time-Series Imputation.
+
+        Args:
+            static_imputer (str, optional):
+                Which imputer to use for the static data (if any). Defaults to ``"mean"``.
+            random_state (int, optional):
+                Random seed. Defaults to ``0``.
+        """
         super().__init__(**params)
         self.static_imputer = StaticImputers().get(static_imputer, random_state=random_state)
         self.random_state = random_state

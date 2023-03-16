@@ -37,7 +37,7 @@ class BaseSampler(torch.utils.data.sampler.Sampler):
 
 
 class ImbalancedDatasetSampler(BaseSampler):
-    """Samples elements randomly from a given list of indices for imbalanced dataset"""
+    """Samples elements randomly from a given list of indices for imbalanced dataset."""
 
     @validate_arguments(config=dict(arbitrary_types_allowed=True))
     def __init__(self, labels: List, train_size: float = 0.8) -> None:

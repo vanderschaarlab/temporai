@@ -5,47 +5,12 @@ import pydantic
 import torch
 import torch.utils.data
 from torch import nn
-from typing_extensions import Literal
 
 from tempor.log import logger
 from tempor.models import constants, utils
 
-
-class GumbelSoftmax(nn.Module):
-    def __init__(self, tau: float = 0.2, hard: bool = False, dim: int = -1) -> None:
-        super(GumbelSoftmax, self).__init__()
-
-        self.tau = tau
-        self.hard = hard
-        self.dim = dim
-
-    def forward(self, logits: torch.Tensor) -> torch.Tensor:
-        # NOTE: nn.functional.gumbel_softmax eps parameter is deprecated.
-        return nn.functional.gumbel_softmax(logits, tau=self.tau, hard=self.hard, dim=self.dim)
-
-
-Nonlin = Literal["none", "elu", "relu", "leaky_relu", "selu", "tanh", "sigmoid", "softmax"]
-
-
-def get_nonlin(name: str) -> nn.Module:
-    if name == "none":
-        return nn.Identity()
-    elif name == "elu":
-        return nn.ELU()
-    elif name == "relu":
-        return nn.ReLU()
-    elif name == "leaky_relu":
-        return nn.LeakyReLU()
-    elif name == "selu":
-        return nn.SELU()
-    elif name == "tanh":
-        return nn.Tanh()
-    elif name == "sigmoid":
-        return nn.Sigmoid()
-    elif name == "softmax":
-        return GumbelSoftmax(dim=-1)
-    else:
-        raise ValueError(f"Unknown nonlinearity {name}")
+from .constants import Nonlin
+from .utils import GumbelSoftmax, get_nonlin
 
 
 class LinearLayer(nn.Module):
@@ -148,57 +113,10 @@ class MultiActivationHead(nn.Module):
 
 
 class MLP(nn.Module):
-    """
-    Fully connected or residual neural nets for classification and regression.
-
-    Parameters
-    ----------
-    task_type: str
-        classification or regression
-    n_units_int: int
-        Number of features
-    n_units_out: int
-        Number of outputs
-    n_layers_hidden: int
-        Number of hidden layers
-    n_units_hidden: int
-        Number of hidden units in each layer
-    nonlin: string, default 'elu'
-        Nonlinearity to use in NN. Can be 'elu', 'relu', 'selu', 'tanh' or 'leaky_relu'.
-    lr: float
-        learning rate for optimizer.
-    weight_decay: float
-        l2 (ridge) penalty for the weights.
-    n_iter: int
-        Maximum number of iterations.
-    batch_size: int
-        Batch size
-    n_iter_print: int
-        Number of iterations after which to print updates and check the validation loss.
-    random_state: int
-        random_state used
-    patience: int
-        Number of iterations to wait before early stopping after decrease in validation loss
-    n_iter_min: int
-        Minimum number of iterations to go through before starting early stopping
-    dropout: float
-        Dropout value. If 0, the dropout is not used.
-    clipping_value: int, default 1
-        Gradients clipping value
-    batch_norm: bool
-        Enable/disable batch norm
-    early_stopping: bool
-        Enable/disable early stopping
-    residual: bool
-        Add residuals.
-    loss: Callable
-        Optional Custom loss function. If None, the loss is CrossEntropy for classification tasks, or RMSE for regression.
-    """
-
     @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def __init__(
         self,
-        task_type: str,  # classification/regression
+        task_type: constants.ModelTaskType,
         n_units_in: int,
         n_units_out: int,
         n_layers_hidden: int = 1,
@@ -222,6 +140,61 @@ class MLP(nn.Module):
         loss: Optional[Callable] = None,
         device: Any = constants.DEVICE,
     ) -> None:
+        """Fully connected or residual neural nets for classification and regression.
+
+        Args:
+            task_type (constants.ModelTaskType):
+                The type of the problem. Available options: :obj:`~tempor.models.constants.ModelTaskType`.
+            n_units_in (int):
+                Number of features.
+            n_units_out (int):
+                Number of outputs.
+            n_layers_hidden (int, optional):
+                Number of hidden layers. Defaults to ``1``.
+            n_units_hidden (int, optional):
+                Number of hidden units in each layer. Defaults to ``100``.
+            nonlin (Nonlin, optional):
+                Nonlinearity to use in NN.  Available options: :obj:`~tempor.models.constants.Nonlin`.
+                Defaults to ``"relu"``.
+            nonlin_out (Optional[List[Tuple[Nonlin, int]]], optional):
+                List of activations for the output. Example ``[("tanh", 1), ("softmax", 3)]`` - means the output layer
+                will apply ``"tanh"`` for the first unit, and ``"softmax"`` for the following 3 units in the output.
+                Defaults to `None`.
+            lr (float, optional):
+                Learning rate. Defaults to ``1e-3``.
+            weight_decay (float, optional):
+                l2 (ridge) penalty for the weights. Defaults to ``1e-3``.
+            opt_betas (Tuple[float, float], optional):
+                Optimizer betas. Defaults to ``(0.9, 0.999)``.
+            n_iter (int, optional):
+                Maximum number of iterations. Defaults to ``1000``.
+            batch_size (int, optional):
+                Batch size. Defaults to ``500``.
+            n_iter_print (int, optional):
+                Number of iterations after which to print updates and check the validation loss. Defaults to ``100``.
+            random_state (int, optional):
+                Random seed. Defaults to ``0``.
+            patience (int, optional):
+                Number of iterations to wait before early stopping after decrease in validation loss.
+                Defaults to ``10``.
+            n_iter_min (int, optional):
+                Minimum number of iterations to go through before starting early stopping. Defaults to ``100``.
+            dropout (float, optional):
+                Dropout value. If ``0``, the dropout is not used. Defaults to ``0.1``.
+            clipping_value (int, optional):
+                Gradients clipping value. Defaults to ``1``.
+            batch_norm (bool, optional):
+                Enable/disable batch normalization. Defaults to `False`.
+            early_stopping (bool, optional):
+                Enable/disable early stopping. Defaults to `True`.
+            residual (bool, optional):
+                Add residuals. Defaults to `False`.
+            loss (Optional[Callable], optional):
+                Optional custom loss function. If `None`, the loss is `torch.nn.CrossEntropyLoss` for classification
+                tasks, or `torch.nn.MSELoss` for regression. Defaults to `None`.
+            device (Any, optional):
+                PyTorch device to use. Defaults to `~tempor.models.constants.DEVICE`.
+        """
         super(MLP, self).__init__()
 
         if n_units_in < 0:
