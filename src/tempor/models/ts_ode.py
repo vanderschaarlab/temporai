@@ -252,6 +252,7 @@ class NeuralODE(torch.nn.Module):
         interpolation: str = "cubic",
         # Laplace specific
         ilt_reconstruction_terms: int = 33,
+        ilt_algorithm: str = "fourier",
         # training
         lr: float = 1e-3,
         weight_decay: float = 1e-3,
@@ -359,6 +360,7 @@ class NeuralODE(torch.nn.Module):
         self.rtol = rtol
         self.interpolation = interpolation
         self.ilt_reconstruction_terms = ilt_reconstruction_terms
+        self.ilt_algorithm = ilt_algorithm
 
         # training
         self.n_iter = n_iter
@@ -439,7 +441,7 @@ class NeuralODE(torch.nn.Module):
                 t=observation_times,
                 recon_dim=self.n_units_hidden,
                 ilt_reconstruction_terms=self.ilt_reconstruction_terms,
-                ilt_algorithm="fourier",
+                ilt_algorithm=self.ilt_algorithm,
             )
             z_T = z_T[:, -1, :]
         else:
