@@ -47,8 +47,8 @@ EXCEPTION_MESSAGES = _ExceptionMessages()
 
 
 class Dataset(abc.ABC):
-    time_series: samples.TimeSeriesSamples
-    static: Optional[samples.StaticSamples]
+    _time_series: samples.TimeSeriesSamples
+    _static: Optional[samples.StaticSamples]
     predictive: Optional[pred.PredictiveTaskData]
 
     def __init__(
@@ -82,8 +82,8 @@ class Dataset(abc.ABC):
                 ``{TimeSeries,Static,Event}Samples`` depending on problem setting in the derived class.
                 Defaults to `None`.
         """
-        self.time_series = samples.TimeSeriesSamples(time_series)
-        self.static = samples.StaticSamples(static) if static is not None else None
+        self._time_series = samples.TimeSeriesSamples(time_series)
+        self._static = samples.StaticSamples(static) if static is not None else None
 
         if targets is not None:
             self._init_predictive(targets=targets, treatments=treatments, **kwargs)
@@ -139,6 +139,24 @@ class Dataset(abc.ABC):
     def _validate(self) -> None:  # pragma: no cover
         ...
 
+    @property
+    def time_series(self) -> samples.TimeSeriesSamples:
+        return self._time_series
+
+    @time_series.setter
+    def time_series(self, value: samples.TimeSeriesSamples) -> None:
+        self._time_series = value
+        self.validate()
+
+    @property
+    def static(self) -> Optional[samples.StaticSamples]:
+        return self._static
+
+    @static.setter
+    def static(self, value: Optional[samples.StaticSamples]) -> None:
+        self._static = value
+        self.validate()
+
 
 # `Dataset`s corresponding to different tasks follow. More can be added to handle new Tasks.
 
@@ -169,7 +187,7 @@ class OneOffPredictionDataset(Dataset):
     ) -> None:
         if targets is None:
             raise ValueError("One-off prediction task requires `targets`")
-        self.predictive = pred.OneOffPredictionTaskData(targets=targets, **kwargs)
+        self.predictive = pred.OneOffPredictionTaskData(parent_dataset=self, targets=targets, **kwargs)
 
     def _validate(self) -> None:
         if self.predictive.targets.sample_index() != self.time_series.sample_index():
@@ -202,7 +220,7 @@ class TemporalPredictionDataset(Dataset):
     ) -> None:
         if targets is None:
             raise ValueError("Temporal prediction task requires `targets`")
-        self.predictive = pred.TemporalPredictionTaskData(targets=targets, **kwargs)
+        self.predictive = pred.TemporalPredictionTaskData(parent_dataset=self, targets=targets, **kwargs)
 
     def _validate(self) -> None:
         if self.predictive.targets.sample_index() != self.time_series.sample_index():
@@ -237,7 +255,7 @@ class TimeToEventAnalysisDataset(Dataset):
     ) -> None:
         if targets is None:
             raise ValueError("Time-to-event analysis task requires `targets`")
-        self.predictive = pred.TimeToEventAnalysisTaskData(targets=targets, **kwargs)
+        self.predictive = pred.TimeToEventAnalysisTaskData(parent_dataset=self, targets=targets, **kwargs)
 
     def _validate(self) -> None:
         if self.predictive.targets.sample_index() != self.time_series.sample_index():
@@ -275,7 +293,9 @@ class OneOffTreatmentEffectsDataset(Dataset):
             raise ValueError("On-off treatment effects task requires `targets`")
         if treatments is None:
             raise ValueError("On-off treatment effects task requires `treatments`")
-        self.predictive = pred.OneOffTreatmentEffectsTaskData(targets=targets, treatments=treatments, **kwargs)
+        self.predictive = pred.OneOffTreatmentEffectsTaskData(
+            parent_dataset=self, targets=targets, treatments=treatments, **kwargs
+        )
 
     def _validate(self) -> None:
         if self.predictive.targets.sample_index() != self.time_series.sample_index():
@@ -317,7 +337,9 @@ class TemporalTreatmentEffectsDataset(Dataset):
             raise ValueError("Temporal treatment effects task requires `targets`")
         if treatments is None:
             raise ValueError("Temporal treatment effects task requires `treatments`")
-        self.predictive = pred.TemporalTreatmentEffectsTaskData(targets=targets, treatments=treatments, **kwargs)
+        self.predictive = pred.TemporalTreatmentEffectsTaskData(
+            parent_dataset=self, targets=targets, treatments=treatments, **kwargs
+        )
 
     def _validate(self) -> None:
         if self.predictive.targets.sample_index() != self.time_series.sample_index():

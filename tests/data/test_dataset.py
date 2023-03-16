@@ -288,7 +288,9 @@ class TestOneOffPredictionDataset:
 
         mocked_depends.TimeSeriesSamples.assert_called_once_with(data_time_series)
         mocked_depends.StaticSamples.assert_called_once_with(data_static)
-        mocked_depends.OneOffPredictionTaskData.assert_called_once_with(targets=data_targets, dummy="kwarg")
+        mocked_depends.OneOffPredictionTaskData.assert_called_once_with(
+            parent_dataset=dummy_dataset, targets=data_targets, dummy="kwarg"
+        )
         dummy_dataset.mock_validate_call.assert_called_once()
 
     def test_validate_passes(
@@ -385,7 +387,9 @@ class TestTemporalPredictionDataset:
 
         mocked_depends.TimeSeriesSamples.assert_called_once_with(data_time_series)
         mocked_depends.StaticSamples.assert_called_once_with(data_static)
-        mocked_depends.TemporalPredictionTaskData.assert_called_once_with(targets=data_targets, dummy="kwarg")
+        mocked_depends.TemporalPredictionTaskData.assert_called_once_with(
+            parent_dataset=dummy_dataset, targets=data_targets, dummy="kwarg"
+        )
         dummy_dataset.mock_validate_call.assert_called_once()
 
     def test_validate_passes(
@@ -519,7 +523,9 @@ class TestTimeToEventAnalysisDataset:
 
         mocked_depends.TimeSeriesSamples.assert_called_once_with(data_time_series)
         mocked_depends.StaticSamples.assert_called_once_with(data_static)
-        mocked_depends.TimeToEventAnalysisTaskData.assert_called_once_with(targets=data_targets, dummy="kwarg")
+        mocked_depends.TimeToEventAnalysisTaskData.assert_called_once_with(
+            parent_dataset=dummy_dataset, targets=data_targets, dummy="kwarg"
+        )
         dummy_dataset.mock_validate_call.assert_called_once()
 
     def test_validate_passes(
@@ -621,7 +627,7 @@ class TestOneOffTreatmentEffectsDataset:
         mocked_depends.TimeSeriesSamples.assert_called_once_with(data_time_series)
         mocked_depends.StaticSamples.assert_called_once_with(data_static)
         mocked_depends.OneOffTreatmentEffectsTaskData.assert_called_once_with(
-            targets=data_targets, treatments=data_treatments, dummy="kwarg"
+            parent_dataset=dummy_dataset, targets=data_targets, treatments=data_treatments, dummy="kwarg"
         )
         dummy_dataset.mock_validate_call.assert_called_once()
 
@@ -800,7 +806,7 @@ class TestTemporalTreatmentEffectsDataset:
         mocked_depends.TimeSeriesSamples.assert_called_once_with(data_time_series)
         mocked_depends.StaticSamples.assert_called_once_with(data_static)
         mocked_depends.TemporalTreatmentEffectsTaskData.assert_called_once_with(
-            targets=data_targets, treatments=data_treatments, dummy="kwarg"
+            parent_dataset=dummy_dataset, targets=data_targets, treatments=data_treatments, dummy="kwarg"
         )
         dummy_dataset.mock_validate_call.assert_called_once()
 
