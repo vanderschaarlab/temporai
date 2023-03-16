@@ -22,7 +22,7 @@ def from_module() -> BaseRegressor:
 def test_laplace_ode_regressor_plugin_sanity(test_plugin: BaseRegressor) -> None:
     assert test_plugin is not None
     assert test_plugin.name == "laplace_ode_regressor"
-    assert len(test_plugin.hyperparameter_space()) == 9
+    assert len(test_plugin.hyperparameter_space()) == 7
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
