@@ -127,7 +127,7 @@ class ReverseGRUEncoder(nn.Module):
         trajs_to_encode = observed_data  # (batch_size, t_observed_dim, observed_dim)
         reversed_trajs_to_encode = torch.flip(trajs_to_encode, (1,))
         out, _ = self.gru(reversed_trajs_to_encode)
-        return self.linear_out(out[:, -1, :])
+        return nn.Tanh()(self.linear_out(out[:, -1, :]))
 
 
 class LaplaceFunc(nn.Module):
@@ -250,6 +250,8 @@ class NeuralODE(torch.nn.Module):
         atol: float = 1e-2,
         rtol: float = 1e-2,
         interpolation: str = "cubic",
+        # Laplace specific
+        ilt_reconstruction_terms: int = 33,
         # training
         lr: float = 1e-3,
         weight_decay: float = 1e-3,
@@ -292,9 +294,8 @@ class NeuralODE(torch.nn.Module):
                 device=device,
             )
         elif self.backend == "laplace":
-            s_recon_terms = 33
             self.func = LaplaceFunc(
-                s_recon_terms,
+                ilt_reconstruction_terms,
                 n_units_out=n_units_hidden,
                 n_units_latent=n_units_hidden,
                 device=device,
@@ -357,6 +358,7 @@ class NeuralODE(torch.nn.Module):
         self.atol = atol
         self.rtol = rtol
         self.interpolation = interpolation
+        self.ilt_reconstruction_terms = ilt_reconstruction_terms
 
         # training
         self.n_iter = n_iter
@@ -432,7 +434,12 @@ class NeuralODE(torch.nn.Module):
         elif self.backend == "laplace":
             X_emb = self.initial_temporal(temporal_data_ext)
             z_T = torchlaplace.laplace_reconstruct(
-                laplace_rep_func=self.func, p=X_emb, t=spline.interval, recon_dim=self.n_units_hidden
+                laplace_rep_func=self.func,
+                p=X_emb,
+                t=observation_times,
+                recon_dim=self.n_units_hidden,
+                ilt_reconstruction_terms=self.ilt_reconstruction_terms,
+                ilt_algorithm="fourier",
             )
             z_T = z_T[:, -1, :]
         else:
@@ -566,7 +573,7 @@ class NeuralODE(torch.nn.Module):
         # training and testing
         for it in range(self.n_iter):
             train_loss = self._train_epoch(train_dataloaders)
-            if it % self.n_iter_print == 0:
+            if (it + 1) % self.n_iter_print == 0:
                 val_loss = self._test_epoch(test_dataloaders)
                 log.info(f"Epoch:{it}| train loss: {train_loss}, validation loss: {val_loss}")
 
@@ -600,6 +607,9 @@ class NeuralODE(torch.nn.Module):
                 if self.clipping_value > 0:
                     torch.nn.utils.clip_grad_norm_(self.parameters(), self.clipping_value)  # pyright: ignore
                 self.optimizer.step()  # apply gradients
+
+                if torch.isnan(loss):
+                    raise RuntimeError("NaNs in the loss")
 
                 losses.append(loss.detach().cpu())
 
