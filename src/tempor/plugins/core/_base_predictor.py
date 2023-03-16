@@ -24,6 +24,17 @@ class BasePredictor(estimator.BaseEstimator):
 
         return prediction
 
+    def predict_proba(
+        self,
+        data: dataset.Dataset,
+        *args,
+        **kwargs,
+    ) -> Any:  # TODO: Narrow down output formats later.
+        logger.debug(f"Calling _predict_proba() implementation on {self.__class__.__name__}")
+        prediction = self._predict_proba(data, *args, **kwargs)
+
+        return prediction
+
     @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def fit_predict(
         self,
@@ -37,3 +48,6 @@ class BasePredictor(estimator.BaseEstimator):
     @abc.abstractmethod
     def _predict(self, data: dataset.Dataset, *args, **kwargs) -> Any:  # pragma: no cover
         ...
+
+    def _predict_proba(self, data: dataset.Dataset, *args, **kwargs) -> Any:  # pragma: no cover
+        raise NotImplementedError("`predict_proba` is supported only for classification tasks")

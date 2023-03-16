@@ -1,3 +1,4 @@
+import sys
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Tuple
 
 import pandas as pd
@@ -119,12 +120,20 @@ def get_pa_dtypes(dtypes: Iterable[data_typing.Dtype]) -> List[pa.DataType]:
     for dt in dtypes:
         if isinstance(dt, pa.DataType):
             # If item in `dtypes` already a `pandera.Dtype`, pass it through.
-            pa_dtypes.append(dt)
+            dt_add = dt
         else:
             try:
-                pa_dtypes.append(PA_DTYPE_MAP[dt])
+                dt_add = PA_DTYPE_MAP[dt]
             except KeyError as ex:
                 raise KeyError(f"Mapping from `{dt}` to a pandera DataType not found") from ex
+        pa_dtypes.append(dt_add)
+        if sys.platform == "win32":
+            # Pandera .Int()/.Float() do not appear to correctly validate on Windows, unless one specifically
+            # provides the bytes.
+            if dt_add == pa.Int():
+                pa_dtypes.extend([pa.Int8(), pa.Int16(), pa.Int32(), pa.Int64()])
+            if dt_add == pa.Float():
+                pa_dtypes.extend([pa.Float16(), pa.Float32(), pa.Float64()])
     return list(set(pa_dtypes))
 
 

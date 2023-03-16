@@ -102,13 +102,13 @@ class BaseEstimator(Plugin, abc.ABC):
         ...  # pylint: disable=unnecessary-ellipsis
 
     @classmethod
-    def sample_hyperparameters(cls, trial: Any, *args: Any, **kwargs: Any) -> Dict[str, Any]:
+    def sample_hyperparameters(cls, *args: Any, **kwargs: Any) -> Dict[str, Any]:
         """Sample hyperparameters."""
         param_space = cls.hyperparameter_space(*args, **kwargs)
 
         results = {}
 
         for hp in param_space:
-            results[hp.name] = hp.sample(trial)
+            results[hp.name] = hp.sample()
 
         return results

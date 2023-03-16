@@ -6,15 +6,15 @@ import numpy as np
 import torch
 import torch.backends.cudnn
 import torch.version
+from torch import nn
 
 
 def enable_reproducibility(
     random_seed: int = 0,
-    ignore_python_hash_seed_warning: bool = False,
-    torch_use_deterministic_algorithms: bool = True,
-    torch_set_cudnn_deterministic: bool = True,
-    torch_disable_cudnn_benchmark: bool = True,
-    torch_handle_rnn_cuda_randomness: bool = True,
+    torch_use_deterministic_algorithms: bool = False,
+    torch_set_cudnn_deterministic: bool = False,
+    torch_disable_cudnn_benchmark: bool = False,
+    warn_cuda_env_vars: bool = True,
 ) -> None:
     """Attempt to enable reproducibility of results by removing sources of non-determinism (randomness) wherever
     possible. This function does not guarantee reproducible results, as there could be many other sources of
@@ -26,29 +26,18 @@ def enable_reproducibility(
     Args:
         random_seed (int, optional):
             The random seed to set. Defaults to 0.
-        ignore_python_hash_seed_warning (bool, optional):
-            Unless this is set to True, will raise a ``UserWarning`` if ``"PYTHONHASHSEED"`` environment variable is
-            not set. Defaults to False.
         torch_use_deterministic_algorithms (bool, optional):
-            Whether to set ``torch.use_deterministic_algorithms(True)``. Defaults to True.
+            Whether to set ``torch.use_deterministic_algorithms(True)``. Defaults to `False`.
         torch_set_cudnn_deterministic (bool, optional):
-            Whether to set ``torch.backends.cudnn.deterministic = True``. Defaults to True.
+            Whether to set ``torch.backends.cudnn.deterministic = True``. Defaults to `False`.
         torch_disable_cudnn_benchmark (bool, optional):
-            Whether to set ``torch.backends.cudnn.benchmark = False``. Defaults to True.
-        torch_handle_rnn_cuda_randomness (bool, optional):
-            Handle the additional source of CUDA randomness in the RNN/LSTM implementations. See
-            https://pytorch.org/docs/stable/generated/torch.nn.LSTM.html#torch.nn.LSTM. Note that this may overwrite
-            the environment variables ``"CUDA_LAUNCH_BLOCKING"`` or ``"CUBLAS_WORKSPACE_CONFIG"``. Defaults to True.
+            Whether to set ``torch.backends.cudnn.benchmark = False``. Defaults to `False`.
+        warn_cuda_env_vars (bool, optional):
+            Whether to raise a `UserWarning` in case `torch` deterministic algorithms are enabled but the
+            ``"CUDA_LAUNCH_BLOCKING"``/``"CUBLAS_WORKSPACE_CONFIG"`` environment variable has not been set.
+            More details at https://pytorch.org/docs/stable/generated/torch.nn.LSTM.html#torch.nn.LSTM.
+            Defaults to `True`.
     """
-    # Python hash seed (only raise warning).
-    if not ignore_python_hash_seed_warning:
-        if not os.getenv("PYTHONHASHSEED"):
-            warnings.warn(
-                "PYTHONHASHSEED environmental variable has not been set in your environment, "
-                "this could lead to randomness in certain situations",
-                UserWarning,
-            )
-
     # Built-in random module.
     random.seed(random_seed)
 
@@ -63,17 +52,62 @@ def enable_reproducibility(
     # If enabled, force deterministic algorithms:
     if torch_use_deterministic_algorithms:
         torch.use_deterministic_algorithms(True)
+        if warn_cuda_env_vars and torch.version.cuda not in ("", None):
+            major, minor = [int(x) for x in torch.version.cuda.split(".")]
+            if (major, minor) == (10, 1) and os.environ.get("CUDA_LAUNCH_BLOCKING", None) != "1":
+                warnings.warn(
+                    "When setting torch.use_deterministic_algorithms and using CUDA 10.1, the environment variable "
+                    "CUDA_LAUNCH_BLOCKING must be set to 1, else RNN/LSTM algorithms will not be deterministic.",
+                    UserWarning,
+                )
+            if (
+                major > 10
+                or (major == 10 and minor >= 2)
+                and os.environ.get("CUBLAS_WORKSPACE_CONFIG", None) not in (":4096:2", ":16:8")
+            ):
+                warnings.warn(
+                    "When setting torch.use_deterministic_algorithms and using CUDA 10.2 or later, the environment "
+                    "variable CUBLAS_WORKSPACE_CONFIG must be set to :4096:2 or :16:8, else RNN/LSTM algorithms will "
+                    "not be deterministic.",
+                    UserWarning,
+                )
     # If enabled, set the CuDNN deterministic option.
     if torch_set_cudnn_deterministic:
         torch.backends.cudnn.deterministic = True
     # If enabled, disable CuDNN benchmarking process to avoid possible non-determinism:
     if torch_disable_cudnn_benchmark:
         torch.backends.cudnn.benchmark = False
-    # Deal with RNN/LSTM-specific source of randomness on CUDA:
-    if torch_handle_rnn_cuda_randomness:
-        if torch.version.cuda not in ("", None):
-            major, minor = [int(x) for x in torch.version.cuda.split(".")]
-            if (major, minor) == (10, 1):
-                os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
-            if major > 10 or (major == 10 and minor >= 2):
-                os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:2"
+
+
+class GumbelSoftmax(nn.Module):
+    def __init__(self, tau: float = 0.2, hard: bool = False, dim: int = -1) -> None:
+        super(GumbelSoftmax, self).__init__()
+
+        self.tau = tau
+        self.hard = hard
+        self.dim = dim
+
+    def forward(self, logits: torch.Tensor) -> torch.Tensor:
+        # NOTE: nn.functional.gumbel_softmax eps parameter is deprecated.
+        return nn.functional.gumbel_softmax(logits, tau=self.tau, hard=self.hard, dim=self.dim)
+
+
+def get_nonlin(name: str) -> nn.Module:
+    if name == "none":
+        return nn.Identity()
+    elif name == "elu":
+        return nn.ELU()
+    elif name == "relu":
+        return nn.ReLU()
+    elif name == "leaky_relu":
+        return nn.LeakyReLU()
+    elif name == "selu":
+        return nn.SELU()
+    elif name == "tanh":
+        return nn.Tanh()
+    elif name == "sigmoid":
+        return nn.Sigmoid()
+    elif name == "softmax":
+        return GumbelSoftmax(dim=-1)
+    else:
+        raise ValueError(f"Unknown nonlinearity {name}")
