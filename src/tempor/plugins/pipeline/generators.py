@@ -48,6 +48,13 @@ def _generate_constructor() -> Callable:
         if len(plugins) == 0:
             raise RuntimeError("invalid empty pipeline.")
 
+        for plugin in plugins[:-1]:
+            if not hasattr(plugin, "transform"):
+                raise RuntimeError(f"invalid preprocessing plugin in the pipeline. {plugin}")
+
+        if not hasattr(plugins[-1], "predict"):
+            raise RuntimeError(f"invalid output plugin in the pipeline. {plugins[-1]}")
+
     def init_impl(self: Any, args: dict = {}) -> None:
         _sanity_checks(self.plugin_types)
 

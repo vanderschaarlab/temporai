@@ -39,11 +39,51 @@ def test_pipeline_sanity(plugins_str: List[Any]) -> None:
     "plugins_str",
     [
         [
+            "classification.nn_classifier",
+            "preprocessing.imputation.bfill",
+        ],
+        [
+            "preprocessing.imputation.bfill",
+            "preprocessing.imputation.bfill",
+            "preprocessing.imputation.bfill",
+            "preprocessing.imputation.bfill",
+        ],
+        [
+            "regression.nn_regressor",
+            "regression.nn_regressor",
+        ],
+        [
+            "regression.nn_regressor",
+            "regression.nn_regressor",
+            "preprocessing.imputation.bfill",
+        ],
+        [
+            "regression.nn_regressor",
+            "preprocessing.imputation.bfill",
+            "preprocessing.imputation.bfill",
+            "preprocessing.imputation.bfill",
+            "preprocessing.imputation.bfill",
+        ],
+        [],
+    ],
+)
+def test_pipeline_fails(plugins_str: List[Any]) -> None:
+    with pytest.raises(RuntimeError):
+        Pipeline(plugins_str)()
+
+
+@pytest.mark.parametrize(
+    "plugins_str",
+    [
+        [
             "preprocessing.imputation.static_imputation",
+            "preprocessing.imputation.nop_imputer",
+            "preprocessing.imputation.bfill",
             "classification.nn_classifier",
         ],
         [
             "preprocessing.imputation.bfill",
+            "preprocessing.scaling.nop_scaler",
             "regression.nn_regressor",
         ],
         [
