@@ -75,6 +75,10 @@ class NeuralCDE(torch.nn.Module):
         Number of hidden units in each layer
     nonlin: string, default 'relu'
         Nonlinearity to use in NN. Can be 'elu', 'relu', 'selu', 'tanh' or 'leaky_relu'.
+    nonlin_out (Optional[List[Tuple[Nonlin, int]]], optional):
+        List of activations for the output. Example ``[("tanh", 1), ("softmax", 3)]`` - means the output layer
+        will apply ``"tanh"`` for the first unit, and ``"softmax"`` for the following 3 units in the output.
+        Defaults to `None`.
     # CDE specific
     atol: float
         absolute tolerance for solution
@@ -118,6 +122,7 @@ class NeuralCDE(torch.nn.Module):
         n_units_hidden: int = 100,
         n_layers_hidden: int = 1,
         nonlin: Nonlin = "relu",
+        nonlin_out: Optional[List[Tuple[Nonlin, int]]] = None,
         dropout: float = 0,
         # CDE specific
         atol: float = 1e-2,
@@ -129,7 +134,7 @@ class NeuralCDE(torch.nn.Module):
         opt_betas: tuple = (0.9, 0.999),
         n_iter: int = 1000,
         batch_size: int = 500,
-        n_iter_print: int = 10,
+        n_iter_print: int = 100,
         random_state: int = 0,
         patience: int = 10,
         n_iter_min: int = 100,
@@ -193,6 +198,7 @@ class NeuralCDE(torch.nn.Module):
             dropout=dropout,
             nonlin=nonlin,
             device=device,
+            nonlin_out=nonlin_out,
         )
 
         # CDE specific
