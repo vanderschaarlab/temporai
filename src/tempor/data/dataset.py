@@ -2,7 +2,7 @@
 
 import abc
 import dataclasses
-from typing import ClassVar, Generator, Optional, Union
+from typing import ClassVar, Optional, Union
 
 import rich.pretty
 
@@ -122,9 +122,6 @@ class Dataset(abc.ABC):
     @abc.abstractmethod
     def _validate(self) -> None:  # pragma: no cover
         ...
-
-    def kfold(self, n_folds: int) -> Generator:
-        raise NotImplementedError()
 
 
 # `Dataset`s corresponding to different tasks follow. More can be added to handle new Tasks.
