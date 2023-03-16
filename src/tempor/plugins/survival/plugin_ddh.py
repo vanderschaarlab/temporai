@@ -152,9 +152,9 @@ class DynamicDeepHitSurvivalAnalysis(BaseSurvivalAnalysis):
 
         self.model.fit(processed_data, event_times, event_values)
 
-        # TODO: Continue
-
-        return self
+        # TODO: WIP
+        raise NotImplementedError
+        # return self
 
     def _predict(
         self,
