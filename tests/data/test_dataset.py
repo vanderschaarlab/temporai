@@ -4,9 +4,13 @@ import dataclasses
 from typing import Type
 from unittest.mock import Mock
 
+import numpy as np
+import pandas as pd
 import pytest
 
 from tempor.data import dataset, predictive, samples
+
+# --- Heavily mocked unit tests. ---
 
 
 @dataclasses.dataclass(frozen=True)
@@ -56,19 +60,33 @@ def mocked_depends(monkeypatch) -> MockedDepends:
     )
 
 
-def mock_sample_index(monkeypatch, cls_name, sample_index):
+def mock_indexes(monkeypatch, cls_name, sample_index, time_indexes):
     instance = Mock()
     instance.sample_index = Mock(return_value=sample_index)
+    instance.time_indexes = Mock(return_value=time_indexes)
     monkeypatch.setattr(samples, cls_name, Mock(return_value=instance))
 
 
-def mock_predictive_data_sample_index(monkeypatch, cls_name, targets_sample_index, treatments_sample_index):
+def mock_predictive_data_indexes(
+    monkeypatch,
+    cls_name,
+    targets_sample_index,
+    treatments_sample_index,
+    targets_time_indexes=None,
+    treatments_time_indexes=None,
+):
     targets_instance = Mock()
     targets_instance.sample_index = Mock(return_value=targets_sample_index)
+    if targets_time_indexes is not None:
+        targets_instance.time_indexes = Mock(return_value=targets_time_indexes)
+
     treatments_instance = Mock()
     treatments_instance.sample_index = Mock(return_value=treatments_sample_index)
-    MockOneOffPredictionTaskData = Mock(return_value=Mock(targets=targets_instance, treatments=treatments_instance))
-    monkeypatch.setattr(predictive, cls_name, MockOneOffPredictionTaskData)
+    if treatments_time_indexes is not None:
+        treatments_instance.time_indexes = Mock(return_value=treatments_time_indexes)
+
+    MockPredictionTaskData = Mock(return_value=Mock(targets=targets_instance, treatments=treatments_instance))
+    monkeypatch.setattr(predictive, cls_name, MockPredictionTaskData)
 
 
 # --- Dataset base class. ---
@@ -185,8 +203,18 @@ class TestDataset:
     @pytest.mark.parametrize("static", [Mock(), None])
     def test_validate_passes(self, static, mock_dataset_cls: Type[MockedDataset], monkeypatch):
         data_time_series = Mock()
-        mock_sample_index(monkeypatch, cls_name="StaticSamples", sample_index=["s1", "s2"])
-        mock_sample_index(monkeypatch, cls_name="TimeSeriesSamples", sample_index=["s1", "s2"])
+        mock_indexes(
+            monkeypatch,
+            cls_name="StaticSamples",
+            sample_index=["s1", "s2"],
+            time_indexes=[[1, 2, 3], [1, 2]],
+        )
+        mock_indexes(
+            monkeypatch,
+            cls_name="TimeSeriesSamples",
+            sample_index=["s1", "s2"],
+            time_indexes=[[1, 2, 3], [1, 2]],
+        )
 
         mock_dataset_cls.validate = dataset.Dataset.validate  # type: ignore  # Enable validation code.
 
@@ -201,8 +229,18 @@ class TestDataset:
     def test_validate_fails_sample_index_mismatch(self, mock_dataset_cls: Type[MockedDataset], monkeypatch):
         data_time_series = Mock()
         data_static = Mock()
-        mock_sample_index(monkeypatch, cls_name="StaticSamples", sample_index=["s1", "s2"])
-        mock_sample_index(monkeypatch, cls_name="TimeSeriesSamples", sample_index=["s1", "s2", "s3"])
+        mock_indexes(
+            monkeypatch,
+            cls_name="StaticSamples",
+            sample_index=["s1", "s2"],
+            time_indexes=[[1, 2, 3], [1, 2]],
+        )
+        mock_indexes(
+            monkeypatch,
+            cls_name="TimeSeriesSamples",
+            sample_index=["s1", "s2", "s3"],
+            time_indexes=[[1, 2, 3], [1, 2]],
+        )
 
         mock_dataset_cls.validate = dataset.Dataset.validate  # type: ignore  # Enable validation code.
 
@@ -259,8 +297,13 @@ class TestOneOffPredictionDataset:
         data_time_series = Mock()
         data_static = None
         data_targets = Mock()
-        mock_sample_index(monkeypatch, cls_name="TimeSeriesSamples", sample_index=["s1", "s2"])
-        mock_predictive_data_sample_index(
+        mock_indexes(
+            monkeypatch,
+            cls_name="TimeSeriesSamples",
+            sample_index=["s1", "s2"],
+            time_indexes=[[1, 2, 3], [1, 2]],
+        )
+        mock_predictive_data_indexes(
             monkeypatch,
             cls_name="OneOffPredictionTaskData",
             targets_sample_index=["s1", "s2"],
@@ -282,8 +325,13 @@ class TestOneOffPredictionDataset:
         data_time_series = Mock()
         data_static = None
         data_targets = Mock()
-        mock_sample_index(monkeypatch, cls_name="TimeSeriesSamples", sample_index=["s1", "s2"])
-        mock_predictive_data_sample_index(
+        mock_indexes(
+            monkeypatch,
+            cls_name="TimeSeriesSamples",
+            sample_index=["s1", "s2"],
+            time_indexes=[[1, 2, 3], [1, 2]],
+        )
+        mock_predictive_data_indexes(
             monkeypatch,
             cls_name="OneOffPredictionTaskData",
             targets_sample_index=["s1", "s2", "s3"],
@@ -346,12 +394,19 @@ class TestTemporalPredictionDataset:
         data_time_series = Mock()
         data_static = None
         data_targets = Mock()
-        mock_sample_index(monkeypatch, cls_name="TimeSeriesSamples", sample_index=["s1", "s2"])
-        mock_predictive_data_sample_index(
+        mock_indexes(
+            monkeypatch,
+            cls_name="TimeSeriesSamples",
+            sample_index=["s1", "s2"],
+            time_indexes=[[1, 2, 3], [1, 2]],
+        )
+        mock_predictive_data_indexes(
             monkeypatch,
             cls_name="TemporalPredictionTaskData",
             targets_sample_index=["s1", "s2"],
             treatments_sample_index=None,
+            targets_time_indexes=[[1, 2, 3], [1, 2]],
+            treatments_time_indexes=None,
         )
 
         mock_temporal_prediction_dataset_cls._validate = dataset.TemporalPredictionDataset._validate  # type: ignore
@@ -369,18 +424,56 @@ class TestTemporalPredictionDataset:
         data_time_series = Mock()
         data_static = None
         data_targets = Mock()
-        mock_sample_index(monkeypatch, cls_name="TimeSeriesSamples", sample_index=["s1", "s2"])
-        mock_predictive_data_sample_index(
+        mock_indexes(
+            monkeypatch,
+            cls_name="TimeSeriesSamples",
+            sample_index=["s1", "s2"],
+            time_indexes=[[1, 2, 3], [1, 2]],
+        )
+        mock_predictive_data_indexes(
             monkeypatch,
             cls_name="TemporalPredictionTaskData",
             targets_sample_index=["s1", "s2", "s3"],
             treatments_sample_index=None,
+            targets_time_indexes=[[1, 2, 3], [1, 2]],
+            treatments_time_indexes=None,
         )
 
         mock_temporal_prediction_dataset_cls._validate = dataset.TemporalPredictionDataset._validate  # type: ignore
         # ^ Enable validation code.
 
         with pytest.raises(ValueError, match=".*sample_index.*targets.*time series.*"):
+            mock_temporal_prediction_dataset_cls(
+                time_series=data_time_series,
+                static=data_static,
+                targets=data_targets,
+            )
+
+    def test_validate_fails_time_indexes_mismatch(
+        self, mock_temporal_prediction_dataset_cls: Type[MockedTemporalPredictionDataset], monkeypatch
+    ):
+        data_time_series = Mock()
+        data_static = None
+        data_targets = Mock()
+        mock_indexes(
+            monkeypatch,
+            cls_name="TimeSeriesSamples",
+            sample_index=["s1", "s2"],
+            time_indexes=[[1, 2, 3], [1, 2]],
+        )
+        mock_predictive_data_indexes(
+            monkeypatch,
+            cls_name="TemporalPredictionTaskData",
+            targets_sample_index=["s1", "s2"],
+            treatments_sample_index=None,
+            targets_time_indexes=[[0, 5, 8], [123]],
+            treatments_time_indexes=None,
+        )
+
+        mock_temporal_prediction_dataset_cls._validate = dataset.TemporalPredictionDataset._validate  # type: ignore
+        # ^ Enable validation code.
+
+        with pytest.raises(ValueError, match=".*time_indexes.*targets.*time series.*"):
             mock_temporal_prediction_dataset_cls(
                 time_series=data_time_series,
                 static=data_static,
@@ -435,8 +528,13 @@ class TestTimeToEventAnalysisDataset:
         data_time_series = Mock()
         data_static = None
         data_targets = Mock()
-        mock_sample_index(monkeypatch, cls_name="TimeSeriesSamples", sample_index=["s1", "s2"])
-        mock_predictive_data_sample_index(
+        mock_indexes(
+            monkeypatch,
+            cls_name="TimeSeriesSamples",
+            sample_index=["s1", "s2"],
+            time_indexes=[[1, 2, 3], [1, 2]],
+        )
+        mock_predictive_data_indexes(
             monkeypatch,
             cls_name="TimeToEventAnalysisTaskData",
             targets_sample_index=["s1", "s2"],
@@ -458,8 +556,13 @@ class TestTimeToEventAnalysisDataset:
         data_time_series = Mock()
         data_static = None
         data_targets = Mock()
-        mock_sample_index(monkeypatch, cls_name="TimeSeriesSamples", sample_index=["s1", "s2"])
-        mock_predictive_data_sample_index(
+        mock_indexes(
+            monkeypatch,
+            cls_name="TimeSeriesSamples",
+            sample_index=["s1", "s2"],
+            time_indexes=[[1, 2, 3], [1, 2]],
+        )
+        mock_predictive_data_indexes(
             monkeypatch,
             cls_name="TimeToEventAnalysisTaskData",
             targets_sample_index=["s1", "s2", "s3"],
@@ -536,7 +639,7 @@ class TestOneOffTreatmentEffectsDataset:
                 time_series=data_time_series,
                 static=data_static,
                 targets=data_targets,
-                treatments=None,
+                treatments=None,  # pyright: ignore
             )
 
     def test_validate_passes(
@@ -546,15 +649,24 @@ class TestOneOffTreatmentEffectsDataset:
         data_static = None
         data_targets = Mock()
         data_treatments = Mock()
-        mock_sample_index(monkeypatch, cls_name="TimeSeriesSamples", sample_index=["s1", "s2"])
-        mock_predictive_data_sample_index(
+        mock_indexes(
+            monkeypatch,
+            cls_name="TimeSeriesSamples",
+            sample_index=["s1", "s2"],
+            time_indexes=[[1, 2, 3], [1, 2]],
+        )
+        mock_predictive_data_indexes(
             monkeypatch,
             cls_name="OneOffTreatmentEffectsTaskData",
             targets_sample_index=["s1", "s2"],
             treatments_sample_index=["s1", "s2"],
+            targets_time_indexes=[[1, 2, 3], [1, 2]],
+            treatments_time_indexes=None,
         )
 
-        mock_one_off_treatment_effects_dataset_cls._validate = dataset.OneOffTreatmentEffectsDataset._validate  # type: ignore
+        mock_one_off_treatment_effects_dataset_cls._validate = (  # type: ignore
+            dataset.OneOffTreatmentEffectsDataset._validate
+        )
         # ^ Enable validation code.
 
         mock_one_off_treatment_effects_dataset_cls(
@@ -583,18 +695,62 @@ class TestOneOffTreatmentEffectsDataset:
         data_static = None
         data_targets = Mock()
         data_treatments = Mock()
-        mock_sample_index(monkeypatch, cls_name="TimeSeriesSamples", sample_index=["s1", "s2"])
-        mock_predictive_data_sample_index(
+        mock_indexes(
+            monkeypatch,
+            cls_name="TimeSeriesSamples",
+            sample_index=["s1", "s2"],
+            time_indexes=[[1, 2, 3], [1, 2]],
+        )
+        mock_predictive_data_indexes(
             monkeypatch,
             cls_name="OneOffTreatmentEffectsTaskData",
             targets_sample_index=targets_sample_index,
             treatments_sample_index=treatments_sample_index,
+            targets_time_indexes=[[1, 2, 3], [1, 2]],
+            treatments_time_indexes=None,
         )
 
-        mock_one_off_treatment_effects_dataset_cls._validate = dataset.OneOffTreatmentEffectsDataset._validate  # type: ignore
+        mock_one_off_treatment_effects_dataset_cls._validate = (  # type: ignore
+            dataset.OneOffTreatmentEffectsDataset._validate
+        )
         # ^ Enable validation code.
 
         with pytest.raises(ValueError, match=match_exc):
+            mock_one_off_treatment_effects_dataset_cls(
+                time_series=data_time_series,
+                static=data_static,
+                targets=data_targets,
+                treatments=data_treatments,
+            )
+
+    def test_validate_fails_time_series_and_targets_time_indexes_mismatch(
+        self, mock_one_off_treatment_effects_dataset_cls: Type[MockedOneOffTreatmentEffectsDataset], monkeypatch
+    ):
+        data_time_series = Mock()
+        data_static = None
+        data_targets = Mock()
+        data_treatments = Mock()
+        mock_indexes(
+            monkeypatch,
+            cls_name="TimeSeriesSamples",
+            sample_index=["s1", "s2"],
+            time_indexes=[[1, 2, 3], [1, 2]],
+        )
+        mock_predictive_data_indexes(
+            monkeypatch,
+            cls_name="OneOffTreatmentEffectsTaskData",
+            targets_sample_index=["s1", "s2"],
+            treatments_sample_index=["s1", "s2"],
+            targets_time_indexes=[[0, 5, 8], [123]],
+            treatments_time_indexes=None,
+        )
+
+        mock_one_off_treatment_effects_dataset_cls._validate = (  # type: ignore
+            dataset.OneOffTreatmentEffectsDataset._validate
+        )
+        # ^ Enable validation code.
+
+        with pytest.raises(ValueError, match=".*time_indexes.*targets.*time series.*"):
             mock_one_off_treatment_effects_dataset_cls(
                 time_series=data_time_series,
                 static=data_static,
@@ -662,7 +818,7 @@ class TestTemporalTreatmentEffectsDataset:
                 time_series=data_time_series,
                 static=data_static,
                 targets=data_targets,
-                treatments=None,
+                treatments=None,  # pyright: ignore
             )
 
     def test_validate_passes(
@@ -672,15 +828,24 @@ class TestTemporalTreatmentEffectsDataset:
         data_static = None
         data_targets = Mock()
         data_treatments = Mock()
-        mock_sample_index(monkeypatch, cls_name="TimeSeriesSamples", sample_index=["s1", "s2"])
-        mock_predictive_data_sample_index(
+        mock_indexes(
+            monkeypatch,
+            cls_name="TimeSeriesSamples",
+            sample_index=["s1", "s2"],
+            time_indexes=[[1, 2, 3], [1, 2]],
+        )
+        mock_predictive_data_indexes(
             monkeypatch,
             cls_name="TemporalTreatmentEffectsTaskData",
             targets_sample_index=["s1", "s2"],
             treatments_sample_index=["s1", "s2"],
+            targets_time_indexes=[[1, 2, 3], [1, 2]],
+            treatments_time_indexes=[[1, 2, 3], [1, 2]],
         )
 
-        mock_temporal_treatment_effects_dataset_cls._validate = dataset.TemporalTreatmentEffectsDataset._validate  # type: ignore
+        mock_temporal_treatment_effects_dataset_cls._validate = (  # type: ignore
+            dataset.TemporalTreatmentEffectsDataset._validate
+        )
         # ^ Enable validation code.
 
         mock_temporal_treatment_effects_dataset_cls(
@@ -709,15 +874,71 @@ class TestTemporalTreatmentEffectsDataset:
         data_static = None
         data_targets = Mock()
         data_treatments = Mock()
-        mock_sample_index(monkeypatch, cls_name="TimeSeriesSamples", sample_index=["s1", "s2"])
-        mock_predictive_data_sample_index(
+        mock_indexes(
+            monkeypatch,
+            cls_name="TimeSeriesSamples",
+            sample_index=["s1", "s2"],
+            time_indexes=[[1, 2, 3], [1, 2]],
+        )
+        mock_predictive_data_indexes(
             monkeypatch,
             cls_name="TemporalTreatmentEffectsTaskData",
             targets_sample_index=targets_sample_index,
             treatments_sample_index=treatments_sample_index,
+            targets_time_indexes=[[1, 2, 3], [1, 2]],
+            treatments_time_indexes=[[1, 2, 3], [1, 2]],
         )
 
-        mock_temporal_treatment_effects_dataset_cls._validate = dataset.TemporalTreatmentEffectsDataset._validate  # type: ignore
+        mock_temporal_treatment_effects_dataset_cls._validate = (  # type: ignore
+            dataset.TemporalTreatmentEffectsDataset._validate
+        )
+        # ^ Enable validation code.
+
+        with pytest.raises(ValueError, match=match_exc):
+            mock_temporal_treatment_effects_dataset_cls(
+                time_series=data_time_series,
+                static=data_static,
+                targets=data_targets,
+                treatments=data_treatments,
+            )
+
+    @pytest.mark.parametrize(
+        "targets_time_indexes, treatments_time_indexes, match_exc",
+        [
+            ([[0, 5, 8], [123]], [[1, 2, 3], [1, 2]], ".*time_indexes.*targets.*time series.*"),
+            ([[1, 2, 3], [1, 2]], [[0, 5, 8], [123]], ".*time_indexes.*treatments.*time series.*"),
+        ],
+    )
+    def test_validate_fails_time_indexes_mismatch(
+        self,
+        mock_temporal_treatment_effects_dataset_cls: Type[MockedTemporalTreatmentEffectsDataset],
+        monkeypatch,
+        targets_time_indexes,
+        treatments_time_indexes,
+        match_exc,
+    ):
+        data_time_series = Mock()
+        data_static = None
+        data_targets = Mock()
+        data_treatments = Mock()
+        mock_indexes(
+            monkeypatch,
+            cls_name="TimeSeriesSamples",
+            sample_index=["s1", "s2"],
+            time_indexes=[[1, 2, 3], [1, 2]],
+        )
+        mock_predictive_data_indexes(
+            monkeypatch,
+            cls_name="TemporalTreatmentEffectsTaskData",
+            targets_sample_index=["s1", "s2"],
+            treatments_sample_index=["s1", "s2"],
+            targets_time_indexes=targets_time_indexes,
+            treatments_time_indexes=treatments_time_indexes,
+        )
+
+        mock_temporal_treatment_effects_dataset_cls._validate = (  # type: ignore
+            dataset.TemporalTreatmentEffectsDataset._validate
+        )
         # ^ Enable validation code.
 
         with pytest.raises(ValueError, match=match_exc):
@@ -729,4 +950,147 @@ class TestTemporalTreatmentEffectsDataset:
             )
 
 
-# TODO: May want to add some tests with actual data frame / numpy array inputs.
+# --- Test DataSet with concrete data (closer to integration tests). ---
+
+
+@dataclasses.dataclass
+class DfsUnderTest:
+    df_static: pd.DataFrame
+    df_time_series: pd.DataFrame
+    df_event: pd.DataFrame
+
+
+def define_test_dfs() -> DfsUnderTest:
+    df_s = pd.DataFrame(
+        {
+            "sample_idx": ["sample_1", "sample_2", "sample_3"],
+            "feat_s_1": [101, 201, 301],
+            "feat_s_2": [np.nan, 20.1, 30.1],
+            "feat_s_3": ["p", "q", "p"],
+        }
+    )
+    df_s.set_index("sample_idx", drop=True, inplace=True)
+    df_s["feat_s_3"] = pd.Categorical(df_s["feat_s_3"])
+
+    df_t = pd.DataFrame(
+        {
+            "sample_idx": ["sample_1", "sample_1", "sample_1", "sample_1", "sample_2", "sample_2", "sample_3"],
+            "time_idx": [
+                pd.to_datetime("2000-01-01"),
+                pd.to_datetime("2000-01-02"),
+                pd.to_datetime("2000-01-03"),
+                pd.to_datetime("2000-01-04"),
+                pd.to_datetime("2000-02-01"),
+                pd.to_datetime("2000-02-02"),
+                pd.to_datetime("2000-03-01"),
+            ],
+            "feat_t_1": [11, 12, 13, 14, 21, 22, 31],
+            "feat_t_2": [1.1, np.nan, 1.3, 1.4, np.nan, 2.2, 3.1],
+            "feat_t_3": ["a", "a", "b", "a", "a", "b", "b"],
+        }
+    )
+    df_t.set_index(keys=["sample_idx", "time_idx"], drop=True, inplace=True)
+    df_t["feat_t_3"] = pd.Categorical(df_t["feat_t_3"])
+
+    df_e = pd.DataFrame(
+        {
+            "sample_idx": ["sample_1", "sample_2", "sample_3"],
+            "feat_e_1": [(5.9, True), (6.1, False), (3.8, True)],
+            "feat_e_3": [
+                (pd.to_datetime("2000-01-02"), False),
+                (pd.to_datetime("2000-01-03"), True),
+                (pd.to_datetime("2000-01-01"), True),
+            ],
+        },
+    )
+    df_e.set_index("sample_idx", drop=True, inplace=True)
+
+    return DfsUnderTest(df_s, df_t, df_e)
+
+
+test_dfs = define_test_dfs()
+
+
+class TestWithConcreteData:
+    @pytest.mark.parametrize(
+        "time_series, static, target",
+        [
+            (test_dfs.df_time_series, test_dfs.df_static, test_dfs.df_static.copy()),
+            (test_dfs.df_time_series, None, test_dfs.df_static.copy()),
+        ],
+    )
+    def test_init_one_off_prediction_dataset(self, time_series, static, target):
+        dataset.OneOffPredictionDataset(
+            time_series=time_series,
+            static=static,
+            targets=target,
+        )
+
+    @pytest.mark.parametrize(
+        "time_series, static, target",
+        [
+            (
+                test_dfs.df_time_series.copy(),
+                test_dfs.df_static.copy(),
+                test_dfs.df_time_series.copy(),
+            ),
+            (
+                test_dfs.df_time_series.copy(),
+                None,
+                test_dfs.df_time_series.copy(),
+            ),
+        ],
+    )
+    def test_init_temporal_prediction_dataset(self, time_series, static, target):
+        dataset.TemporalPredictionDataset(
+            time_series=time_series,
+            static=static,
+            targets=target,
+        )
+
+    @pytest.mark.parametrize(
+        "time_series, static, target",
+        [
+            (
+                test_dfs.df_time_series.copy(),
+                test_dfs.df_static.copy(),
+                test_dfs.df_event.copy(),
+            ),
+            (
+                test_dfs.df_time_series.copy(),
+                None,
+                test_dfs.df_event.copy(),
+            ),
+        ],
+    )
+    def test_init_time_to_event_analysis_dataset(self, time_series, static, target):
+        dataset.TimeToEventAnalysisDataset(
+            time_series=time_series,
+            static=static,
+            targets=target,
+        )
+
+    @pytest.mark.parametrize(
+        "time_series, static, target, treatment",
+        [
+            (
+                test_dfs.df_time_series.copy(),
+                test_dfs.df_static.copy(),
+                test_dfs.df_time_series.copy(),
+                test_dfs.df_event.copy(),
+            ),
+            (
+                test_dfs.df_time_series.copy(),
+                None,
+                test_dfs.df_time_series.copy(),
+                test_dfs.df_event.copy(),
+            ),
+        ],
+    )
+    def test_init_one_off_treatment_effects_dataset(self, time_series, static, target, treatment):
+        dataset.OneOffTreatmentEffectsDataset(
+            time_series=time_series,
+            static=static,
+            targets=target,
+            treatments=treatment,
+        )

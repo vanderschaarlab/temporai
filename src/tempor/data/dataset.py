@@ -16,14 +16,30 @@ from . import samples
 
 @dataclasses.dataclass(frozen=True)
 class _SampleIndexMismatchMsg:
-    static: ClassVar[str] = "`sample_index` of static samples did not match `sample_index` of time series samples"
-    targets: ClassVar[str] = "`sample_index` of targets did not match `sample_index` of time series samples"
-    treatments: ClassVar[str] = "`sample_index` of treatments did not match `sample_index` of time series samples"
+    static: ClassVar[str] = (
+        "`sample_index` of static samples did not match `sample_index` of time series samples. "
+        "Note that the samples need to be in the same order."
+    )
+    targets: ClassVar[str] = (
+        "`sample_index` of targets did not match `sample_index` of time series samples. "
+        "Note that the samples need to be in the same order."
+    )
+    treatments: ClassVar[str] = (
+        "`sample_index` of treatments did not match `sample_index` of time series samples. "
+        "Note that the samples need to be in the same order."
+    )
+
+
+@dataclasses.dataclass(frozen=True)
+class _TimeIndexesMismatchMsg:
+    targets: ClassVar[str] = "`time_indexes` of targets did not match `time_indexes` of time series covariates."
+    treatments: ClassVar[str] = "`time_indexes` of treatments did not match `time_indexes` of time series covariates."
 
 
 @dataclasses.dataclass(frozen=True)
 class _ExceptionMessages:
     sample_index_mismatch: ClassVar[_SampleIndexMismatchMsg] = _SampleIndexMismatchMsg()
+    time_indexes_mismatch: ClassVar[_TimeIndexesMismatchMsg] = _TimeIndexesMismatchMsg()
 
 
 EXCEPTION_MESSAGES = _ExceptionMessages()
@@ -115,7 +131,7 @@ class Dataset(abc.ABC):
         """Validate integrity of the dataset."""
         with log_helpers.exc_to_log("Dataset validation failed"):
             if self.static is not None:
-                if sorted(self.static.sample_index()) != sorted(self.time_series.sample_index()):
+                if self.static.sample_index() != self.time_series.sample_index():
                     raise ValueError(EXCEPTION_MESSAGES.sample_index_mismatch.static)
             self._validate()
 
@@ -156,7 +172,7 @@ class OneOffPredictionDataset(Dataset):
         self.predictive = pred.OneOffPredictionTaskData(targets=targets, **kwargs)
 
     def _validate(self) -> None:
-        if sorted(self.predictive.targets.sample_index()) != sorted(self.time_series.sample_index()):
+        if self.predictive.targets.sample_index() != self.time_series.sample_index():
             raise ValueError(EXCEPTION_MESSAGES.sample_index_mismatch.targets)
 
 
@@ -191,7 +207,8 @@ class TemporalPredictionDataset(Dataset):
     def _validate(self) -> None:
         if self.predictive.targets.sample_index() != self.time_series.sample_index():
             raise ValueError(EXCEPTION_MESSAGES.sample_index_mismatch.targets)
-        # TODO: Possible check - check that .time_series and .predictive.targets have the same time_indexes.
+        if self.time_series.time_indexes() != self.predictive.targets.time_indexes():
+            raise ValueError(EXCEPTION_MESSAGES.time_indexes_mismatch.targets)
 
 
 class TimeToEventAnalysisDataset(Dataset):
@@ -265,7 +282,8 @@ class OneOffTreatmentEffectsDataset(Dataset):
             raise ValueError(EXCEPTION_MESSAGES.sample_index_mismatch.targets)
         if self.predictive.treatments.sample_index() != self.time_series.sample_index():
             raise ValueError(EXCEPTION_MESSAGES.sample_index_mismatch.treatments)
-        # TODO: Possible check - check that .time_series and .predictive.targets have the same time_indexes.
+        if self.time_series.time_indexes() != self.predictive.targets.time_indexes():
+            raise ValueError(EXCEPTION_MESSAGES.time_indexes_mismatch.targets)
         # TODO: Possible checks - some checks on .time_series and .predictive.treatments in terms of
         # their relative position in time?
 
@@ -306,4 +324,7 @@ class TemporalTreatmentEffectsDataset(Dataset):
             raise ValueError(EXCEPTION_MESSAGES.sample_index_mismatch.targets)
         if self.predictive.treatments.sample_index() != self.time_series.sample_index():
             raise ValueError(EXCEPTION_MESSAGES.sample_index_mismatch.treatments)
-        # TODO: Possible check - check that .time_series and .predictive.treatments/targets have the same time_indexes.
+        if self.time_series.time_indexes() != self.predictive.targets.time_indexes():
+            raise ValueError(EXCEPTION_MESSAGES.time_indexes_mismatch.targets)
+        if self.time_series.time_indexes() != self.predictive.treatments.time_indexes():
+            raise ValueError(EXCEPTION_MESSAGES.time_indexes_mismatch.treatments)
