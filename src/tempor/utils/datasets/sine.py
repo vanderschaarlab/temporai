@@ -49,7 +49,7 @@ class SineDataloader:
         static_data.columns = static_data.columns.astype(str)
         if self.with_missing:
             for col in static_data.columns:
-                static_data.loc[static_data.sample(frac=self.miss_ratio).index, col] = pd.np.nan
+                static_data.loc[static_data.sample(frac=self.miss_ratio).index, col] = np.nan
 
         temporal_data = []
 
@@ -87,7 +87,7 @@ class SineDataloader:
 
             if self.with_missing:
                 for col in local_data.columns:
-                    local_data.loc[local_data.sample(frac=self.miss_ratio).index, col] = pd.np.nan
+                    local_data.loc[local_data.sample(frac=self.miss_ratio).index, col] = np.nan
 
             # Stack the generated data
             local_data["sample_idx"] = str(i)
