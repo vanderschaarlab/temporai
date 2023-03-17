@@ -20,3 +20,12 @@ class RichReprStrPassthrough:
 
     def __repr__(self) -> str:
         return self.string
+
+
+def is_iterable(o: object) -> bool:
+    is_iterable_ = True
+    try:
+        iter(o)  # type: ignore[call-overload]
+    except TypeError:
+        is_iterable_ = False
+    return is_iterable_
