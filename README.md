@@ -78,7 +78,7 @@ assert imputed.static.dataframe().isna().sum().sum() == 0
 assert imputed.time_series.dataframe().isna().sum().sum() == 0
 ```
 
-* Train a classifier
+* Use a classifier
 ```python
 from tempor.utils.datasets.sine import SineDataloader
 from tempor.plugins import plugin_loader
@@ -95,7 +95,7 @@ model.fit(dataset)
 assert model.predict(dataset).numpy().shape == (len(dataset), 1)
 ```
 
-* Train a regressor
+* Use a regressor
 ```python
 from tempor.utils.datasets.sine import SineDataloader
 from tempor.plugins import plugin_loader
