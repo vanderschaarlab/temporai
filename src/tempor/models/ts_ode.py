@@ -19,19 +19,6 @@ from tempor.models.utils import enable_reproducibility
 
 
 class CDEFunc(torch.nn.Module):
-    """CDEFunc computes f_\\theta for the CDE model : z_t = z_0 + \\int_0^t f_\\theta(z_s) dX_s
-
-    Args:
-        input_din: int
-            Number of input units
-        n_units_hidden: int
-            Number of hidden units
-        n_layers_hidden: int
-            Number of hidden layers
-        dropout: float
-            Dropout value. If 0, the dropout is not used.
-    """
-
     def __init__(
         self,
         n_units_in: int,
@@ -41,6 +28,23 @@ class CDEFunc(torch.nn.Module):
         dropout: float = 0,
         device: Any = DEVICE,
     ):
+        r"""CDEFunc computes :math:`f_\theta for the CDE model : z_t = z_0 + \int_0^t f_\theta(z_s) dX_s`.
+
+        Args:
+            n_units_in (int):
+                Number of input units.
+            n_units_hidden (int):
+                Number of hidden units.
+            n_layers_hidden (int, optional):
+                Number of hidden layers. Defaults to ``1``.
+            nonlin (Nonlin, optional):
+                Nonlinearity to use in NN. Available options: :obj:`~tempor.models.constants.Nonlin`.
+                Defaults to ``"relu"``.
+            dropout (float, optional):
+                Dropout value. If ``0``, the dropout is not used. Defaults to ``0``.
+            device (Any, optional):
+                PyTorch device to use. Defaults to :obj:`~tempor.models.constants.DEVICE`.
+        """
         super(CDEFunc, self).__init__()
         self.n_units_in = n_units_in
         self.n_units_hidden = n_units_hidden
@@ -66,19 +70,6 @@ class CDEFunc(torch.nn.Module):
 
 
 class ODEFunc(torch.nn.Module):
-    """ODEFunc computes f_\\theta for the ODE model : z_t = z_0 + \\int_0^t f_\\theta(z_s) dX_s
-
-    Args:
-        input_din: int
-            Number of input units
-        n_units_hidden: int
-            Number of hidden units
-        n_layers_hidden: int
-            Number of hidden layers
-        dropout: float
-            Dropout value. If 0, the dropout is not used.
-    """
-
     def __init__(
         self,
         n_units_hidden: int,
@@ -87,6 +78,21 @@ class ODEFunc(torch.nn.Module):
         dropout: float = 0,
         device: Any = DEVICE,
     ):
+        r"""ODEFunc computes :math:`f_\theta for the ODE model : z_t = z_0 + \int_0^t f_\theta(z_s) dX_s`.
+
+        Args:
+            n_units_hidden (int):
+                Number of hidden units.
+            n_layers_hidden (int, optional):
+                Number of hidden layers. Defaults to ``1``.
+            nonlin (Nonlin, optional):
+                Nonlinearity to use in NN. Available options: :obj:`~tempor.models.constants.Nonlin`.
+                Defaults to ``"relu"``.
+            dropout (float, optional):
+                Dropout value. If ``0``, the dropout is not used. Defaults to ``0``.
+            device (Any, optional):
+                PyTorch device to use. Defaults to :obj:`~tempor.models.constants.DEVICE`.
+        """
         super(ODEFunc, self).__init__()
         self.n_units_hidden = n_units_hidden
 
@@ -107,10 +113,7 @@ class ODEFunc(torch.nn.Module):
 
 
 class ReverseGRUEncoder(nn.Module):
-    """
-    Model (encoder and Laplace representation func)
-    Encodes observed trajectory into latent vector
-    """
+    """Model (encoder and Laplace representation func). Encodes observed trajectory into latent vector."""
 
     def __init__(
         self,
@@ -128,13 +131,12 @@ class ReverseGRUEncoder(nn.Module):
         trajs_to_encode = observed_data  # (batch_size, t_observed_dim, observed_dim)
         reversed_trajs_to_encode = torch.flip(trajs_to_encode, (1,))
         out, _ = self.gru(reversed_trajs_to_encode)
-        return nn.Tanh()(self.linear_out(out[:, -1, :]))
+        return nn.Tanh()(self.linear_out(out[:, -1, :]))  # pylint: disable=not-callable
 
 
 class LaplaceFunc(nn.Module):
-    """
-    SphereSurfaceModel : C^{b+k} -> C^{bxd} -
-    In Riemann Sphere Coords : b dim s reconstruction terms, k is latent encoding dimension, d is output dimension
+    """SphereSurfaceModel : ``C^{b+k} -> C^{bxd}`` - in Riemann Sphere Coords : ``b dim s`` reconstruction terms,
+    `k` is latent encoding dimension, `d` is output dimension.
     """
 
     def __init__(
@@ -178,65 +180,6 @@ class LaplaceFunc(nn.Module):
 
 
 class NeuralODE(torch.nn.Module):
-    """The model that computes the integral in : z_t = z_0 + \\int_0^t f_\\theta(z_s) dX_s
-
-        Neural ODEs are a new family of deep neural network models. Instead of specifying a discrete sequence of
-    hidden layers, we parameterize the derivative of the hidden state using a neural network. The output of the network is computed using a blackbox differential equation solver.These are continuous-depth models that have constant memory cost, adapt their evaluation strategy to each input, and can explicitly trade numerical precision for speed.
-
-        Parameters
-        ----------
-        task_type: str
-            classification or regression
-        backend: ODEBackend
-            Which solver to use: cde, ode, laplace
-        n_static_units_in: int
-            Number of features in the static tensor
-        n_temporal_units_in: int
-            Number of features in the temporal tensor
-        output_shape (List[int]):
-            Shape of the output tensor.
-        n_layers_hidden: int
-            Number of hidden layers
-        n_units_hidden: int
-            Number of hidden units in each layer
-        nonlin: string, default 'relu'
-            Nonlinearity to use in NN. Can be 'elu', 'relu', 'selu', 'tanh' or 'leaky_relu'.
-        nonlin_out (Optional[List[Tuple[Nonlin, int]]], optional):
-            List of activations for the output. Example ``[("tanh", 1), ("softmax", 3)]`` - means the output layer
-            will apply ``"tanh"`` for the first unit, and ``"softmax"`` for the following 3 units in the output.
-            Defaults to `None`.
-        # ODE specific
-        atol: float
-            absolute tolerance for solution
-        rtol: float
-            relative tolerance for solution
-        interpolation: str
-            cubic or linear
-        # training
-        lr: float
-            learning rate for optimizer.
-        weight_decay: float
-            l2 (ridge) penalty for the weights.
-        n_iter: int
-            Maximum number of iterations.
-        batch_size: int
-            Batch size
-        n_iter_print: int
-            Number of iterations after which to print updates and check the validation loss.
-        random_state: int
-            random_state used
-        patience: int
-            Number of iterations to wait before early stopping after decrease in validation loss
-        n_iter_min: int
-            Minimum number of iterations to go through before starting early stopping
-        dropout: float
-            Dropout value. If 0, the dropout is not used.
-        clipping_value: int, default 1
-            Gradients clipping value
-        dataloader_sampler (Optional[sampler.Sampler], optional):
-            Custom data sampler for training. Defaults to None.
-    """
-
     def __init__(
         self,
         task_type: ModelTaskType,
@@ -249,17 +192,16 @@ class NeuralODE(torch.nn.Module):
         nonlin_out: Optional[List[Tuple[Nonlin, int]]] = None,
         dropout: float = 0,
         backend: ODEBackend = "cde",
-        # CDE/ODE specific
+        # CDE/ODE specific:
         atol: float = 1e-2,
         rtol: float = 1e-2,
         interpolation: str = "cubic",
-        # Laplace specific
+        # Laplace specific:
         ilt_reconstruction_terms: int = 33,
         ilt_algorithm: str = "fourier",
-        # training
+        # Training:
         lr: float = 1e-3,
         weight_decay: float = 1e-3,
-        opt_betas: tuple = (0.9, 0.999),
         n_iter: int = 1000,
         batch_size: int = 500,
         n_iter_print: int = 100,
@@ -271,6 +213,76 @@ class NeuralODE(torch.nn.Module):
         device: Any = DEVICE,
         dataloader_sampler: Optional[sampler.Sampler] = None,
     ):
+        r"""The model that computes the integral in: :math`:z_t = z_0 + \int_0^t f_\theta(z_s) dX_s`.
+
+        Neural ODEs are a new family of deep neural network models. Instead of specifying a discrete sequence of
+        hidden layers, we parameterize the derivative of the hidden state using a neural network.
+        The output of the network is computed using a blackbox differential equation solver.
+        These are continuous-depth models that have constant memory cost, adapt their evaluation strategy to each input,
+        and can explicitly trade numerical precision for speed.
+
+        Args:
+            task_type (ModelTaskType):
+                The type of the problem. Available options: :obj:`~tempor.models.constants.ModelTaskType`.
+            n_static_units_in (int):
+                Number of features in the static tensor.
+            n_temporal_units_in (int):
+                Number of features in the temporal tensor.
+            output_shape (List[int]):
+                Shape of the output tensor.
+            n_units_hidden (int, optional):
+                Number of hidden units in each layer. Defaults to ``100``.
+            n_layers_hidden (int, optional):
+                Number of hidden layers. Defaults to ``1``.
+            nonlin (Nonlin, optional):
+                Nonlinearity to use in NN. Available options: :obj:`~tempor.models.constants.Nonlin`.
+                Defaults to ``"relu"``.
+            nonlin_out (Optional[List[Tuple[Nonlin, int]]], optional):
+                List of activations for the output. Example ``[("tanh", 1), ("softmax", 3)]`` - means the output layer
+                will apply ``"tanh"`` for the first unit, and ``"softmax"`` for the following 3 units in the output.
+                Defaults to `None`.
+            dropout (float, optional):
+                Dropout value. If ``0``, the dropout is not used. Defaults to ``0``.
+            backend (ODEBackend, optional):
+                Which solver to use: ``"cde"``, ``"ode"``, ``"laplace"``. Defaults to ``"cde"``.
+            atol (float, optional):
+                Specific to ``"ode"`` and ``"cde"`` backends. Absolute tolerance for solution. Defaults to ``1e-2``.
+            rtol (float, optional):
+                Specific to ``"ode"`` and ``"cde"`` backends. Relative tolerance for solution. Defaults to ``1e-2``.
+            interpolation (str, optional):
+                Specific to ``"ode"`` and ``"cde"`` backends. ``"cubic"`` or ``"linear"``. Defaults to ``"cubic"``.
+            ilt_reconstruction_terms (int, optional):
+                Specific to ``"laplace"`` backend. Number of ILT reconstruction terms, i.e. the number of complex
+                :math:`s` points in ``laplace_rep_func`` to reconstruct a single time point. Defaults to ``33``.
+            ilt_algorithm (str, optional):
+                Specific to ``"laplace"`` backend. Inverse Laplace transform algorithm to use. Available are
+                {``fourier``, ``dehoog``, ``cme``, ``fixed_tablot``, ``stehfest``}. Defaults to ``"fourier"``.
+            lr (float, optional):
+                Learning rate for optimizer. Defaults to ``1e-3``.
+            weight_decay (float, optional):
+                l2 (ridge) penalty for the weights. Defaults to ``1e-3``.
+            n_iter (int, optional):
+                Maximum number of iterations. Defaults to ``1000``.
+            batch_size (int, optional):
+                Batch size. Defaults to ``500``.
+            n_iter_print (int, optional):
+                Number of iterations after which to print updates and check the validation loss. Defaults to ``100``.
+            random_state (int, optional):
+                Random_state used. Defaults to ``0``.
+            patience (int, optional):
+                Number of iterations to wait before early stopping after decrease in validation loss.
+                Defaults to ``10``.
+            n_iter_min (int, optional):
+                Minimum number of iterations to go through before starting early stopping. Defaults to ``100``.
+            clipping_value (int, optional):
+                Gradients clipping value. Defaults to ``1``.
+            train_ratio (float, optional):
+                Train/test split ratio. Defaults to ``0.8``.
+            device (Any, optional):
+                PyTorch device to use. Defaults to `~tempor.models.constants.DEVICE`.
+            dataloader_sampler (Optional[sampler.Sampler], optional):
+                Custom data sampler for training. Defaults to `None`.
+        """
         super(NeuralODE, self).__init__()
 
         enable_reproducibility(random_state)
@@ -280,6 +292,7 @@ class NeuralODE(torch.nn.Module):
         self.task_type = task_type
         self.backend = backend
 
+        self.func: Union[CDEFunc, ODEFunc, LaplaceFunc]
         if self.backend == "cde":
             self.func = CDEFunc(
                 n_temporal_units_in + 1,  # we add the observation times
@@ -308,6 +321,7 @@ class NeuralODE(torch.nn.Module):
         else:
             raise RuntimeError(f"Invalid ODE backend {self.backend}")
 
+        self.initial_temporal: Union[MLP, ReverseGRUEncoder]
         if self.backend in ["ode", "cde"]:
             self.initial_temporal = MLP(
                 task_type="regression",
@@ -383,6 +397,7 @@ class NeuralODE(torch.nn.Module):
             # remove this kludge and update accordingly.
             torchlaplace.inverse_laplace.device = str(self.device)
 
+        self.loss: nn.Module
         if task_type == "classification":
             self.loss = nn.CrossEntropyLoss()
         else:
@@ -429,7 +444,7 @@ class NeuralODE(torch.nn.Module):
             z0 = self.initial_temporal(X0)
 
             z_T = torchcde.cdeint(X=spline, func=self.func, z0=z0, t=spline.interval, atol=self.atol, rtol=self.rtol)
-            z_T = z_T[:, 1]
+            z_T = z_T[:, 1]  # pyright: ignore
         elif self.backend == "ode":
             X_emb = self.initial_temporal(temporal_data_ext)
 
@@ -441,7 +456,7 @@ class NeuralODE(torch.nn.Module):
                 rtol=self.rtol,
             )
             z_T = z_T[1]
-            z_T = z_T[:, -1, :]  # last time point
+            z_T = z_T[:, -1, :]  # pyright: ignore  # Last time point.
         elif self.backend == "laplace":
             X_emb = self.initial_temporal(temporal_data_ext)
             z_T = torchlaplace.laplace_reconstruct(
