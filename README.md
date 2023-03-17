@@ -62,7 +62,7 @@ print(plugin_loader.list())
 from tempor.utils.datasets.sine import SineDataloader
 from tempor.plugins import plugin_loader
 
-dataset = SineDataloader(with_missing = True).load()
+dataset = SineDataloader(with_missing=True).load()
 assert dataset.static.dataframe().isna().sum().sum() != 0
 assert dataset.time_series.dataframe().isna().sum().sum() != 0
 
@@ -142,7 +142,7 @@ TODO
 | --- | --- | --- |
 | `regression.nn_regressor` | Neural-net based regressor. Supports multiple recurrent models, like RNN, LSTM, Transformer etc.  | --- |
 | `regression.ode_regressor` | Regressor based on ordinary differential equation (ODE) solvers.  | --- |
-| `regression.cde_regressor` | Regressor based Neural Controlled Differential Equations for Irregular Time Series.  | [Paper](https://arxiv.org/abs/2005.08926) 
+| `regression.cde_regressor` | Regressor based Neural Controlled Differential Equations for Irregular Time Series.  | [Paper](https://arxiv.org/abs/2005.08926)
 | `regression.laplace_ode_regressor` | Regressor based Inverse Laplace Transform (ILT) algorithms implemented in PyTorch.  | [Paper](https://arxiv.org/abs/2206.04843) |
 
 <!--
