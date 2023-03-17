@@ -1,10 +1,13 @@
 # stdlib
 import copy
-from typing import Any, Dict, Union
+from time import time
+from typing import Any, Dict, List, Union
 
 # third party
 import numpy as np
-from pydantic import validate_arguments
+import pandas as pd
+import pydantic
+from scipy.stats import iqr
 from sklearn.metrics import (
     accuracy_score,
     cohen_kappa_score,
@@ -18,11 +21,12 @@ from sklearn.metrics import (
 )
 from sklearn.model_selection import KFold, StratifiedKFold
 
+from tempor.benchmarks.utils import generate_score, print_score
 from tempor.data import dataset
 from tempor.log import logger as log
 from tempor.models.utils import enable_reproducibility
 
-from .utils import evaluate_auc_multiclass, generate_score, print_score
+from .utils import evaluate_auc_multiclass
 
 classifier_supported_metrics = [
     "aucroc",
@@ -42,6 +46,66 @@ classifier_supported_metrics = [
     "mcc",
 ]
 regression_supported_metrics = ["mse", "mae", "r2"]
+output_metrics = [
+    "min",
+    "max",
+    "mean",
+    "stddev",
+    "median",
+    "iqr",
+    "rounds",
+    "errors",
+    "durations",
+]
+
+
+class _InternalScores(pydantic.BaseModel):
+    metrics: Dict[str, List[float]] = {}
+    errors: List[int] = []
+    durations: List[float] = []
+
+
+@pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+def _postprocess_results(results: _InternalScores) -> pd.DataFrame:
+    output = pd.DataFrame([], columns=output_metrics)
+
+    for metric in results.metrics:
+        values = results.metrics[metric]
+        errors = np.sum(results.errors)
+        durations = print_score(generate_score(results.durations))
+
+        score_min = np.min(values)
+        score_max = np.max(values)
+        score_mean = np.mean(values)
+        score_median = np.median(values)
+        score_stddev = np.std(values)
+        score_iqr = iqr(values)
+        score_rounds = len(values)
+
+        output = pd.concat(
+            [
+                output,
+                pd.DataFrame(
+                    [
+                        [
+                            score_min,
+                            score_max,
+                            score_mean,
+                            score_stddev,
+                            score_median,
+                            score_iqr,
+                            score_rounds,
+                            errors,
+                            durations,
+                        ]
+                    ],
+                    columns=output_metrics,
+                    index=[metric],
+                ),
+            ],
+        )
+
+    return output
 
 
 class classifier_metrics:
@@ -127,15 +191,15 @@ class classifier_metrics:
         return evaluate_auc_multiclass(y_test, y_pred_proba)[1]
 
 
-@validate_arguments(config=dict(arbitrary_types_allowed=True))
+@pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
 def evaluate_classifier(
     estimator: Any,
     data: dataset.Dataset,
     n_splits: int = 3,
-    seed: int = 0,
+    random_state: int = 0,
     *args: Any,
     **kwargs: Any,
-) -> Dict:
+) -> pd.DataFrame:
     """Helper for evaluating classifiers.
 
     Args:
@@ -145,12 +209,24 @@ def evaluate_classifier(
             The dataset
         n_splits: int
             cross-validation folds
-        seed: int
-            Random seed
+        random_state: int
+            Random random_state
 
     Returns:
-        Dict containing "raw" and "str" nodes. The "str" node contains prettified metrics, while the raw metrics includes tuples of form (`mean`, `std`) for each metric.
-        Both "raw" and "str" nodes contain the following metrics:
+        DataFrame containing the results.
+
+        The columns of the dataframe includes details about the cross-validation repeats:
+            - "min" : the mix score of the metric
+            - "max" : the max score of the metric
+            - "mean" : the mean score of the metric
+            - "stddev" : the stddev score of the metric
+            - "median" : the median score of the metric
+            - "iqr" : the interquartile range of the metric
+            - "rounds" : number of folds
+            - "errors" : number of errors encountered
+            - "durations": average duration for the fold evaluation.
+
+        The index of the dataframe includes all the metrics evaluated:
             - "aucroc" : the Area Under the Receiver Operating Characteristic Curve (ROC AUC) from prediction scores.
             - "aucprc" : The average precision summarizes a precision-recall curve as the weighted mean of precisions achieved at each threshold, with the increase in recall from the previous threshold used as the weight.
             - "accuracy" : Accuracy classification score.
@@ -167,17 +243,16 @@ def evaluate_classifier(
             - "mcc": The Matthews correlation coefficient is used in machine learning as a measure of the quality of binary and multiclass classifications. It takes into account true and false positives and negatives and is generally regarded as a balanced measure which can be used even if the classes are of very different sizes.
 
     """
-    if n_splits < 2:
-        raise ValueError("n_splits must be >= 2")
-    enable_reproducibility(seed)
+    if n_splits < 2 or not isinstance(n_splits, int):
+        raise ValueError("n_splits must be an integer >= 2")
+    enable_reproducibility(random_state)
 
-    results = {}
-
+    results = _InternalScores()
     evaluator = classifier_metrics()
     for metric in classifier_supported_metrics:
-        results[metric] = np.zeros(n_splits)
+        results.metrics[metric] = np.zeros(n_splits)
 
-    splitter = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=seed)
+    splitter = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_state)
     if data.predictive is None:
         raise ValueError("No targets to use for train/test")
 
@@ -188,40 +263,36 @@ def evaluate_classifier(
     indx = 0
     for train_data, test_data in data.split(splitter=splitter, y=labels):
         model = copy.deepcopy(estimator)
-        model.fit(train_data)
+        start = time()
+        try:
+            model.fit(train_data)
 
-        if test_data.predictive is None:
-            raise ValueError("No targets to use for testing")
+            if test_data.predictive is None:
+                raise ValueError("No targets to use for testing")
 
-        test_labels = test_data.predictive.targets.numpy()
-        preds = model.predict_proba(test_data).numpy()
+            test_labels = test_data.predictive.targets.numpy()
+            preds = model.predict_proba(test_data).numpy()
 
-        scores = evaluator.score_proba(test_labels, preds)
-        for metric in scores:
-            results[metric][indx] = scores[metric]
+            scores = evaluator.score_proba(test_labels, preds)
+            for metric in scores:
+                results.metrics[metric][indx] = scores[metric]
+            results.errors.append(0)
+        except BaseException as e:
+            log.error(f"Evaluation failed: {e}")
+            results.errors.append(1)
 
+        results.durations.append(time() - start)
         indx += 1
 
-    output_clf = {}
-    output_clf_str = {}
-
-    for key in results:
-        key_out = generate_score(results[key])
-        output_clf[key] = key_out
-        output_clf_str[key] = print_score(key_out)
-
-    return {
-        "raw": output_clf,
-        "str": output_clf_str,
-    }
+    return _postprocess_results(results)
 
 
-@validate_arguments(config=dict(arbitrary_types_allowed=True))
-def evaluate_regression(
+@pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+def evaluate_regressor(
     estimator: Any,
     data: dataset.Dataset,
     n_splits: int = 3,
-    seed: int = 0,
+    random_state: int = 0,
     *args: Any,
     **kwargs: Any,
 ) -> Dict:
@@ -229,66 +300,68 @@ def evaluate_regression(
 
     Args:
         estimator:
-            Baseline model to evaluate. Must not be fitted.
-        X: pd.DataFrame or np.ndarray
-            covariates
-        Y: pd.Series or np.ndarray or list
-            outcomes
+            Baseline regressor to evaluate - must be unfitted.
+        data: Dataset:
+            The dataset
         n_splits: int
-            Number of cross-validation folds
-        seed: int
-            Random seed
+            cross-validation folds
+        random_state: int
+            Random random_state
 
     Returns:
-        Dict containing "raw" and "str" nodes. The "str" node contains prettified metrics, while the raw metrics includes tuples of form (`mean`, `std`) for each metric.
-        Both "raw" and "str" nodes contain the following metrics:
+        DataFrame containing the results.
+
+        The columns of the dataframe includes details about the cross-validation repeats:
+            - "min" : the mix score of the metric
+            - "max" : the max score of the metric
+            - "mean" : the mean score of the metric
+            - "stddev" : the stddev score of the metric
+            - "median" : the median score of the metric
+            - "iqr" : the interquartile range of the metric
+            - "rounds" : number of folds
+            - "errors" : number of errors encountered
+            - "durations": average duration for the fold evaluation.
+
+        The index of the dataframe includes all the metrics evaluated:
             - "r2": R^2(coefficient of determination) regression score function.
             - "mse": Mean squared error regression loss.
             - "mae": Mean absolute error regression loss.
     """
-    if n_splits < 2:
-        raise ValueError("n_splits must be >= 2")
+    if n_splits < 2 or not isinstance(n_splits, int):
+        raise ValueError("n_splits must be an integer >= 2")
 
-    enable_reproducibility(seed)
+    enable_reproducibility(random_state)
     metrics = regression_supported_metrics
 
-    metrics_ = {}
+    results = _InternalScores()
     for metric in metrics:
-        metrics_[metric] = np.zeros(n_splits)
+        results.metrics[metric] = np.zeros(n_splits)
 
     indx = 0
 
-    splitter = KFold(n_splits=n_splits, shuffle=True, random_state=seed)
+    splitter = KFold(n_splits=n_splits, shuffle=True, random_state=random_state)
 
     for train_data, test_data in data.split(splitter=splitter):
         model = copy.deepcopy(estimator)
-        model.fit(train_data)
+        start = time()
+        try:
+            model.fit(train_data)
 
-        if test_data.predictive is None:
-            raise ValueError("Missing targets for evaluation")
+            if test_data.predictive is None:
+                raise ValueError("Missing targets for evaluation")
 
-        targets = test_data.predictive.targets.numpy().squeeze()
-        preds = model.predict(test_data).numpy().squeeze()
+            targets = test_data.predictive.targets.numpy().squeeze()
+            preds = model.predict(test_data).numpy().squeeze()
 
-        metrics_["mse"][indx] = mean_squared_error(targets, preds)
-        metrics_["mae"][indx] = mean_absolute_error(targets, preds)
-        metrics_["r2"][indx] = r2_score(targets, preds)
+            results.metrics["mse"][indx] = mean_squared_error(targets, preds)
+            results.metrics["mae"][indx] = mean_absolute_error(targets, preds)
+            results.metrics["r2"][indx] = r2_score(targets, preds)
+            results.errors.append(0)
+        except BaseException as e:
+            log.error(f"Regression evaluation failed: {e}")
+            results.errors.append(1)
 
+        results.durations.append(time() - start)
         indx += 1
 
-    output_mse = generate_score(metrics_["mse"])
-    output_mae = generate_score(metrics_["mae"])
-    output_r2 = generate_score(metrics_["r2"])
-
-    return {
-        "raw": {
-            "mse": output_mse,
-            "mae": output_mae,
-            "r2": output_r2,
-        },
-        "str": {
-            "mse": print_score(output_mse),
-            "mae": print_score(output_mae),
-            "r2": print_score(output_r2),
-        },
-    }
+    return _postprocess_results(results)
