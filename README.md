@@ -39,7 +39,7 @@ include_docs_end -->
 
 </div>
 
-## :rocket: Installation
+## 🚀 Installation
 
 ```bash
 $ pip install temporai
@@ -49,7 +49,7 @@ or from source, using
 $ pip install .
 ```
 
-## :boom: Sample Usage
+## 💥 Sample Usage
 * List the available plugins
 ```python
 from tempor.plugins import plugin_loader
@@ -118,7 +118,7 @@ TODO
 ```
 
 
-## :key: Methods
+## 🔑 Methods
 * Imputation
 
 | Name | Description| Reference |
@@ -127,11 +127,11 @@ TODO
 | `preprocessing.imputation.bfill` | Use next valid observation to fill gap | --- |
 | `preprocessing.imputation.static_imputation` | Use HyperImpute to impute both the static and temporal data | [Paper](https://arxiv.org/abs/2206.07769) |
 
-* Classsification
+* Classification
 
 | Name | Description| Reference |
 | --- | --- | --- |
-| `classification.nn_classifier` | Neural-net based classfier. Supports multiple recurrent models, like RNN, LSTM, Transformer etc.  | --- |
+| `classification.nn_classifier` | Neural-net based classifier. Supports multiple recurrent models, like RNN, LSTM, Transformer etc.  | --- |
 | `classification.ode_classifier` | Classifier based on ordinary differential equation (ODE) solvers.  | --- |
 | `classification.cde_classifier` | Classifier based Neural Controlled Differential Equations for Irregular Time Series.  | [Paper](https://arxiv.org/abs/2005.08926) |
 | `classification.laplace_ode_classifier` | Classifier based Inverse Laplace Transform (ILT) algorithms implemented in PyTorch.  | [Paper](https://arxiv.org/abs/2206.04843) |
@@ -220,7 +220,7 @@ See [User Guide][docs/user_guide] for tutorials/examples.
   [docs/user_guide]:       https://temporai.readthedocs.io/en/latest/user_guide/index.html
 <!-- exclude_docs_end -->
 
-## :hammer: Tests
+## 🔨 Tests
 
 Install the testing dependencies using
 ```bash

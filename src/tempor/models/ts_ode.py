@@ -217,7 +217,7 @@ class NeuralODE(torch.nn.Module):
         device: Any = DEVICE,
         dataloader_sampler: Optional[sampler.Sampler] = None,
     ):
-        r"""The model that computes the integral in: :math`:z_t = z_0 + \int_0^t f_\theta(z_s) dX_s`.
+        r"""The model that computes the integral in: :math:`z_t = z_0 + \int_0^t f_\theta(z_s) dX_s`.
 
         Neural ODEs are a new family of deep neural network models. Instead of specifying a discrete sequence of
         hidden layers, we parameterize the derivative of the hidden state using a neural network.
