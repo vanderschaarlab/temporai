@@ -6,6 +6,7 @@ import torch
 import torchcde
 import torchdiffeq
 import torchlaplace
+import torchlaplace.inverse_laplace
 from sklearn.model_selection import train_test_split
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset, sampler
@@ -162,6 +163,8 @@ class LaplaceFunc(nn.Module):
 
         phi_max = torch.pi / 2.0
         self.phi_scale = phi_max - -torch.pi / 2.0
+
+        self.to(device)
 
     def forward(self, i):
         out = self.linear_tanh_stack(i.view(-1, self.s_dim * 2 + self.n_units_latent)).view(
@@ -373,6 +376,12 @@ class NeuralODE(torch.nn.Module):
         self.train_ratio = train_ratio
         self.random_state = random_state
         self.dataloader_sampler = dataloader_sampler
+
+        if self.backend == "laplace":
+            # Kludge to make sure `torchlaplace` uses the correct device.
+            # TODO: If `torchlaplace` is updated to allow passing `device` argument to `laplace_reconstruct`,
+            # remove this kludge and update accordingly.
+            torchlaplace.inverse_laplace.device = str(self.device)
 
         if task_type == "classification":
             self.loss = nn.CrossEntropyLoss()
