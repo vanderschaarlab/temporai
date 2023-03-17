@@ -81,6 +81,22 @@ class ODERegressor(BaseRegressor):
                 How many epoch * n_iter_print to wait without loss improvement. Defaults to ``20``.
             train_ratio (float, optional):
                 Train/test split ratio. Defaults to ``0.8``.
+
+            Example:
+            >>> from tempor.utils.datasets.sine import SineDataloader
+            >>> from tempor.plugins import plugin_loader
+            >>>
+            >>> dataset = SineDataloader().load()
+            >>>
+            >>> # load the model
+            >>> model = plugin_loader.get("regression.ode_regressor", n_iter=50)
+            >>>
+            >>> # train
+            >>> model.fit(dataset)
+            >>>
+            >>> # predict
+            >>> assert model.predict(dataset).numpy().shape == (len(dataset), 1)
+
         """
         super().__init__()
         self.n_units_hidden = n_units_hidden
