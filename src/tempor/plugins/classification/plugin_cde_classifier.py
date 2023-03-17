@@ -20,85 +20,84 @@ class CDEClassifier(BaseClassifier):
         n_layers_hidden: int = 1,
         nonlin: Nonlin = "relu",
         dropout: float = 0,
-        # CDE specific
+        # CDE specific:
         atol: float = 1e-2,
         rtol: float = 1e-2,
         interpolation: str = "cubic",
-        # training
+        # Training:
         lr: float = 1e-3,
         weight_decay: float = 1e-3,
-        opt_betas: tuple = (0.9, 0.999),
         n_iter: int = 1000,
         batch_size: int = 500,
         n_iter_print: int = 100,
         random_state: int = 0,
         patience: int = 10,
-        n_iter_min: int = 100,
         clipping_value: int = 1,
         train_ratio: float = 0.8,
         device: Any = DEVICE,
         dataloader_sampler: Optional[sampler.Sampler] = None,
     ) -> None:
-        """Neural Controlled Differential Equations for Irregular Time Series
+        """Neural Controlled Differential Equations for Irregular Time Series.
 
-        Paper: "Neural Controlled Differential Equations for Irregular Time Series", Patrick Kidger, James Morrill, James Foster, Terry Lyons
+        Paper:
+            "Neural Controlled Differential Equations for Irregular Time Series", Patrick Kidger, James Morrill,
+            James Foster, Terry Lyons.
 
         Args:
             n_units_hidden (int, optional):
                 Number of hidden units. Defaults to ``100``.
             n_layers_hidden (int, optional):
                 Number of hidden layers. Defaults to ``2``.
-            # CDE specific
-            atol: float
-                absolute tolerance for solution
-            rtol: float
-                relative tolerance for solution
-            interpolation: str
-                cubic or linear
-            # training
-            n_iter (int, optional):
-                Number of epochs. Defaults to ``500``.
-            n_iter_print (int, optional):
-                Number of epochs to print the loss. Defaults to ``10``.
-            batch_size (int, optional):
-                Batch size. Defaults to ``100``.
+            nonlin (Nonlin, optional):
+                Activation for hidden layers. Available options: :obj:`~tempor.models.constants.Nonlin`.
+                Defaults to ``"relu"``.
+            dropout (float, optional):
+                Dropout value. Defaults to ``0``.
+            atol (float, optional):
+                Absolute tolerance for solution. Defaults to ``1e-2``.
+            rtol (float, optional):
+                Relative tolerance for solution. Defaults to ``1e-2``.
+            interpolation (str, optional):
+                ``"cubic"`` or ``"linear"``. Defaults to ``"cubic"``.
             lr (float, optional):
-                Learning rate. Defaults to ``1e-3``.
+                Learning rate for optimizer. Defaults to ``1e-3``.
             weight_decay (float, optional):
                 l2 (ridge) penalty for the weights. Defaults to ``1e-3``.
+            n_iter (int, optional):
+                Maximum number of iterations. Defaults to ``1000``.
+            batch_size (int, optional):
+                Batch size. Defaults to ``500``.
+            n_iter_print (int, optional):
+                Number of iterations after which to print updates and check the validation loss. Defaults to ``100``.
+            random_state (int, optional):
+                Random_state used. Defaults to ``0``.
+            patience (int, optional):
+                Number of iterations to wait before early stopping after decrease in validation loss.
+                Defaults to ``10``.
+            clipping_value (int, optional):
+                Gradients clipping value. Defaults to ``1``.
+            train_ratio (float, optional):
+                Train/test split ratio. Defaults to ``0.8``.
             device (Any, optional):
                 PyTorch device to use. Defaults to `~tempor.models.constants.DEVICE`.
             dataloader_sampler (Optional[sampler.Sampler], optional):
                 Custom data sampler for training. Defaults to `None`.
-            dropout (float, optional):
-                Dropout value. Defaults to ``0``.
-            nonlin (Nonlin, optional):
-                Activation for hidden layers. Available options: :obj:`~tempor.models.constants.Nonlin`.
-                Defaults to ``"relu"``.
-            random_state (int, optional):
-                Random seed. Defaults to ``0``.
-            clipping_value (int, optional):
-                Gradients clipping value. Zero disables the feature. Defaults to ``1``.
-            patience (int, optional):
-                How many epoch * n_iter_print to wait without loss improvement. Defaults to ``20``.
-            train_ratio (float, optional):
-                Train/test split ratio. Defaults to ``0.8``.
 
-            Example:
+        Example:
             >>> from tempor.utils.datasets.sine import SineDataloader
             >>> from tempor.plugins import plugin_loader
             >>>
             >>> dataset = SineDataloader().load()
             >>>
-            >>> # load the model
+            >>> # Load the model:
             >>> model = plugin_loader.get("classification.cde_classifier", n_iter=50)
             >>>
-            >>> # train
+            >>> # Train:
             >>> model.fit(dataset)
+            CDEClassifier(...)
             >>>
-            >>> # predict
+            >>> # Predict:
             >>> assert model.predict(dataset).numpy().shape == (len(dataset), 1)
-
         """
         super().__init__()
         self.n_units_hidden = n_units_hidden

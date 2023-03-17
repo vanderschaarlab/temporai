@@ -84,21 +84,21 @@ class NeuralNetRegressor(BaseRegressor):
             train_ratio (float, optional):
                 Train/test split ratio. Defaults to ``0.8``.
 
-            Example:
+        Example:
             >>> from tempor.utils.datasets.sine import SineDataloader
             >>> from tempor.plugins import plugin_loader
             >>>
             >>> dataset = SineDataloader().load()
             >>>
-            >>> # load the model
+            >>> # Load the model:
             >>> model = plugin_loader.get("regression.nn_regressor", n_iter=50)
             >>>
-            >>> # train
+            >>> # Train:
             >>> model.fit(dataset)
+            NeuralNetRegressor(...)
             >>>
-            >>> # predict
+            >>> # Predict:
             >>> assert model.predict(dataset).numpy().shape == (len(dataset), 1)
-
         """
         super().__init__()
         self.n_static_units_hidden = n_static_units_hidden

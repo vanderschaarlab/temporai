@@ -21,24 +21,24 @@ class FFillImputer(BaseImputer):
             Random seed. Defaults to ``0``.
 
     Example:
-    >>> from tempor.utils.datasets.sine import SineDataloader
-    >>> from tempor.plugins import plugin_loader
-    >>>
-    >>> dataset = SineDataloader(with_missing = True).load()
-    >>> assert dataset.static.dataframe().isna().sum().sum() != 0
-    >>> assert dataset.time_series.dataframe().isna().sum().sum() != 0
-    >>>
-    >>> # load the model
-    >>> model = plugin_loader.get("preprocessing.imputation.ffill")
-    >>>
-    >>> # train
-    >>> model.fit(dataset)
-    >>>
-    >>> # impute
-    >>> imputed = model.transform(dataset)
-    >>> assert imputed.static.dataframe().isna().sum().sum() == 0
-    >>> assert imputed.time_series.dataframe().isna().sum().sum() == 0
-
+        >>> from tempor.utils.datasets.sine import SineDataloader
+        >>> from tempor.plugins import plugin_loader
+        >>>
+        >>> dataset = SineDataloader(with_missing = True).load()
+        >>> assert dataset.static.dataframe().isna().sum().sum() != 0
+        >>> assert dataset.time_series.dataframe().isna().sum().sum() != 0
+        >>>
+        >>> # Load the model:
+        >>> model = plugin_loader.get("preprocessing.imputation.ffill")
+        >>>
+        >>> # Train:
+        >>> model.fit(dataset)
+        FFillImputer(...)
+        >>>
+        >>> # Impute:
+        >>> imputed = model.transform(dataset)
+        >>> assert imputed.static.dataframe().isna().sum().sum() == 0
+        >>> assert imputed.time_series.dataframe().isna().sum().sum() == 0
     """
 
     def __init__(

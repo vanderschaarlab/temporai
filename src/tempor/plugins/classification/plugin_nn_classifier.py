@@ -87,13 +87,14 @@ class NeuralNetClassifier(BaseClassifier):
             >>>
             >>> dataset = SineDataloader().load()
             >>>
-            >>> # load the model
+            >>> # Load the model:
             >>> model = plugin_loader.get("classification.nn_classifier", n_iter=50)
             >>>
-            >>> # train
+            >>> # Train:
             >>> model.fit(dataset)
+            NeuralNetClassifier(...)
             >>>
-            >>> # predict
+            >>> # Predict:
             >>> assert model.predict(dataset).numpy().shape == (len(dataset), 1)
         """
         super().__init__()

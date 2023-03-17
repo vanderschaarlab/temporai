@@ -62,7 +62,7 @@ class CDEFunc(torch.nn.Module):
             nonlin_out=[("tanh", n_units_out)],
         )
 
-    def forward(self, t, z):
+    def forward(self, t, z):  # pylint: disable=unused-argument
         z = self.model(z)
 
         z = z.view(*z.shape[:-1], self.n_units_hidden, self.n_units_in)
@@ -108,7 +108,7 @@ class ODEFunc(torch.nn.Module):
             nonlin_out=[("tanh", n_units_hidden)],
         )
 
-    def forward(self, t, z):
+    def forward(self, t, z):  # pylint: disable=unused-argument
         return self.model(z)
 
 

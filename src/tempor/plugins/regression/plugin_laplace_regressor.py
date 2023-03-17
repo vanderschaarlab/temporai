@@ -19,84 +19,88 @@ class LaplaceODERegressor(BaseRegressor):
         n_layers_hidden: int = 1,
         nonlin: Nonlin = "relu",
         dropout: float = 0,
-        # Laplace specific
+        # Laplace specific:
         ilt_reconstruction_terms: int = 33,
         ilt_algorithm: str = "fourier",
-        # training
+        # Training:
         lr: float = 1e-3,
         weight_decay: float = 1e-3,
-        opt_betas: tuple = (0.9, 0.999),
         n_iter: int = 1000,
         batch_size: int = 500,
         n_iter_print: int = 100,
         random_state: int = 0,
         patience: int = 10,
-        n_iter_min: int = 100,
         clipping_value: int = 1,
         train_ratio: float = 0.8,
         device: Any = DEVICE,
         dataloader_sampler: Optional[sampler.Sampler] = None,
     ) -> None:
-        """Inverse Laplace Transform (ILT) algorithms implemented in PyTorch. Backpropagation through differential equation (DE) solutions in the Laplace domain is supported using the Riemann stereographic projection for better global representation of the complex Laplace domain.
+        """Inverse Laplace Transform (ILT) algorithms implemented in PyTorch.
+        Backpropagation through differential equation (DE) solutions in the Laplace domain is supported using the
+        Riemann stereographic projection for better global representation of the complex Laplace domain.
 
-        Paper: "Neural Laplace: Learning diverse classes of differential equations in the Laplace domain", Holt, Samuel I and Qian, Zhaozhi and van der Schaar, Mihaela
-
+        Paper:
+            "Neural Laplace: Learning diverse classes of differential equations in the Laplace domain",
+            Holt, Samuel I and Qian, Zhaozhi and van der Schaar, Mihaela.
 
         Args:
             n_units_hidden (int, optional):
                 Number of hidden units. Defaults to ``100``.
             n_layers_hidden (int, optional):
                 Number of hidden layers. Defaults to ``2``.
-            # Laplace specific
-            ilt_reconstruction_terms: int
-                number of ILT reconstruction terms, i.e. the number of complex :math:`s` points in `laplace_rep_func` to reconstruct a single time point.
-            ilt_algorithm: str
-                inverse Laplace transform algorithm to use. Default: ``fourier``. Available are {``fourier``, ``dehoog``, ``cme``, ``fixed_tablot``, ``stehfest``}.
-            # training
-            n_iter (int, optional):
-                Number of epochs. Defaults to ``500``.
-            n_iter_print (int, optional):
-                Number of epochs to print the loss. Defaults to ``10``.
-            batch_size (int, optional):
-                Batch size. Defaults to ``100``.
+            nonlin (Nonlin, optional):
+                Activation for hidden layers. Available options: :obj:`~tempor.models.constants.Nonlin`.
+                Defaults to ``"relu"``.
+            dropout (float, optional):
+                Dropout value. Defaults to ``0``.
+            ilt_reconstruction_terms (int, optional):
+                Specific to ``"laplace"`` backend. Number of ILT reconstruction terms, i.e. the number of complex
+                :math:`s` points in ``laplace_rep_func`` to reconstruct a single time point. Defaults to ``33``.
+            ilt_algorithm (str, optional):
+                Specific to ``"laplace"`` backend. Inverse Laplace transform algorithm to use. Available are
+                {``fourier``, ``dehoog``, ``cme``, ``fixed_tablot``, ``stehfest``}. Defaults to ``"fourier"``.
             lr (float, optional):
-                Learning rate. Defaults to ``1e-3``.
+                Learning rate for optimizer. Defaults to ``1e-3``.
             weight_decay (float, optional):
                 l2 (ridge) penalty for the weights. Defaults to ``1e-3``.
+            n_iter (int, optional):
+                Maximum number of iterations. Defaults to ``1000``.
+            batch_size (int, optional):
+                Batch size. Defaults to ``500``.
+            n_iter_print (int, optional):
+                Number of iterations after which to print updates and check the validation loss. Defaults to ``100``.
+            random_state (int, optional):
+                Random_state used. Defaults to ``0``.
+            patience (int, optional):
+                Number of iterations to wait before early stopping after decrease in validation loss.
+                Defaults to ``10``.
+            clipping_value (int, optional):
+                Gradients clipping value. Defaults to ``1``.
+            train_ratio (float, optional):
+                Train/test split ratio. Defaults to ``0.8``.
             device (Any, optional):
                 PyTorch device to use. Defaults to `~tempor.models.constants.DEVICE`.
             dataloader_sampler (Optional[sampler.Sampler], optional):
                 Custom data sampler for training. Defaults to `None`.
-            dropout (float, optional):
-                Dropout value. Defaults to ``0``.
-            nonlin (Nonlin, optional):
-                Activation for hidden layers. Available options: :obj:`~tempor.models.constants.Nonlin`.
-                Defaults to ``"relu"``.
-            random_state (int, optional):
-                Random seed. Defaults to ``0``.
-            clipping_value (int, optional):
-                Gradients clipping value. Zero disables the feature. Defaults to ``1``.
-            patience (int, optional):
-                How many epoch * n_iter_print to wait without loss improvement. Defaults to ``20``.
-            train_ratio (float, optional):
-                Train/test split ratio. Defaults to ``0.8``.
 
-            Example:
+        Example:
             >>> from tempor.utils.datasets.sine import SineDataloader
             >>> from tempor.plugins import plugin_loader
             >>>
-            >>> dataset = SineDataloader().load()
+            >>> # dataset = SineDataloader().load()
             >>>
-            >>> # load the model
+            >>> # Load the model:
             >>> model = plugin_loader.get("regression.laplace_ode_regressor", n_iter=50)
             >>>
-            >>> # train
-            >>> model.fit(dataset)
+            >>> # Train:
+            >>> # model.fit(dataset)
+            >>> # LaplaceODERegressor(...)
             >>>
-            >>> # predict
-            >>> assert model.predict(dataset).numpy().shape == (len(dataset), 1)
-
+            >>> # Predict:
+            >>> # assert model.predict(dataset).numpy().shape == (len(dataset), 1)
         """
+        # TODO: Model currently fails to run with SineDataLoader data. Investigate and resolve.
+
         super().__init__()
         self.n_units_hidden = n_units_hidden
         self.n_layers_hidden = n_layers_hidden
