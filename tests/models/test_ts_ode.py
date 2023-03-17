@@ -45,6 +45,8 @@ def test_ode_sanity(backend: ODEBackend):
 @pytest.mark.parametrize("backend", ["laplace", "cde", "ode"])
 def test_ode_regression_fit_predict(source: Any, backend: ODEBackend) -> None:
     if source == SineDataloader and backend == "laplace":
+        # NOTE: Test with this setup fails, laplace implementation is not yet stable,
+        # this needs to be debugged with the author.
         return
 
     static, temporal, observation_times, outcome = unpack_dataset(source)
@@ -76,6 +78,8 @@ def test_ode_regression_fit_predict(source: Any, backend: ODEBackend) -> None:
 @pytest.mark.parametrize("backend", ["laplace", "cde", "ode"])
 def test_ode_classification_fit_predict(source: Any, backend: ODEBackend) -> None:
     if source == SineDataloader and backend == "laplace":
+        # NOTE: Test with this setup fails, laplace implementation is not yet stable,
+        # this needs to be debugged with the author.
         return
 
     static, temporal, observation_times, outcome = unpack_dataset(source)  # pylint: disable=unused-variable
