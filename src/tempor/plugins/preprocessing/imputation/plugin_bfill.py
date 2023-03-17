@@ -20,6 +20,26 @@ class BFillImputer(BaseImputer):
             Which imputer to use for the static data(if any)
         random_state: int
             Random seed
+
+    Example:
+    >>> from tempor.utils.datasets.sine import SineDataloader
+    >>> from tempor.plugins import plugin_loader
+    >>>
+    >>> dataset = SineDataloader(with_missing = True).load()
+    >>> assert dataset.static.dataframe().isna().sum().sum() != 0
+    >>> assert dataset.time_series.dataframe().isna().sum().sum() != 0
+    >>>
+    >>> # load the model
+    >>> model = plugin_loader.get("preprocessing.imputation.bfill")
+    >>>
+    >>> # train
+    >>> model.fit(dataset)
+    >>>
+    >>> # impute
+    >>> imputed = model.transform(dataset)
+    >>> assert imputed.static.dataframe().isna().sum().sum() == 0
+    >>> assert imputed.time_series.dataframe().isna().sum().sum() == 0
+
     """
 
     def __init__(
