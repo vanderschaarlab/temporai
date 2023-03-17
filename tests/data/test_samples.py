@@ -295,6 +295,22 @@ class TestStaticSamples:
         s = samples.StaticSamples.from_dataframe(df_static)
         assert s.short_repr() == "StaticSamples([10, 4])"
 
+    @pytest.mark.parametrize(
+        "key, expected_sample_index",
+        [
+            (0, ["sample_1"]),
+            (9, ["sample_10"]),
+            ([1, 5, 7], ["sample_2", "sample_6", "sample_8"]),
+            (slice(3, 6), ["sample_4", "sample_5", "sample_6"]),
+            (slice(7, None), ["sample_8", "sample_9", "sample_10"]),
+        ],
+    )
+    def test_getitem(self, df_static: pd.DataFrame, key, expected_sample_index):
+        s = samples.StaticSamples.from_dataframe(df_static)
+        s = s[key]
+        assert isinstance(s, samples.StaticSamples)
+        assert s.sample_index() == expected_sample_index
+
 
 class TestTimeSeriesSamples:
     def test_modality(self, df_time_series: pd.DataFrame):
@@ -597,6 +613,32 @@ class TestTimeSeriesSamples:
         s = samples.TimeSeriesSamples.from_dataframe(df_time_series)
         assert s.short_repr() == "TimeSeriesSamples([3, *, 2])"
 
+    @pytest.mark.parametrize(
+        "key, expected_sample_index",
+        [
+            (0, ["sample_1"]),
+            (4, ["sample_5"]),
+            ([0, 2, 4], ["sample_1", "sample_3", "sample_5"]),
+            (slice(1, 3), ["sample_2", "sample_3"]),
+            (slice(3, None), ["sample_4", "sample_5"]),
+        ],
+    )
+    def test_getitem(self, key, expected_sample_index):
+        sample_idxs = [["sample_1"] * 4, ["sample_2"] * 3, ["sample_3"] * 1, ["sample_4"] * 2, ["sample_5"] * 3]
+        df = pd.DataFrame(
+            {
+                "sample_idx": [item for sublist in sample_idxs for item in sublist],  # Flatten.
+                "time_idx": list(range(13)),
+                "feat_1": [x * 0.5 for x in list(range(13))],
+            }
+        )
+        df.set_index(keys=["sample_idx", "time_idx"], drop=True, inplace=True)
+
+        s = samples.TimeSeriesSamples.from_dataframe(df)
+        s = s[key]
+        assert isinstance(s, samples.TimeSeriesSamples)
+        assert s.sample_index() == expected_sample_index
+
 
 class TestEventSamples:
     def test_modality(self, df_event: pd.DataFrame):
@@ -698,3 +740,27 @@ class TestEventSamples:
     def test_short_repr(self, df_event: pd.DataFrame):
         s = samples.EventSamples.from_dataframe(df_event)
         assert s.short_repr() == "EventSamples([3, 3])"
+
+    @pytest.mark.parametrize(
+        "key, expected_sample_index",
+        [
+            (0, ["sample_1"]),
+            (9, ["sample_10"]),
+            ([1, 5, 7], ["sample_2", "sample_6", "sample_8"]),
+            (slice(3, 6), ["sample_4", "sample_5", "sample_6"]),
+            (slice(7, None), ["sample_8", "sample_9", "sample_10"]),
+        ],
+    )
+    def test_getitem(self, key, expected_sample_index):
+        df = pd.DataFrame(
+            {
+                "sample_idx": [f"sample_{x}" for x in range(1, 10 + 1)],
+                "feat_1": [(x, True) for x in range(1, 10 + 1)],
+                "feat_2": [(x + 0.5, False) for x in range(1, 10 + 1)],
+            },
+        )
+        df.set_index("sample_idx", drop=True, inplace=True)
+        s = samples.EventSamples.from_dataframe(df)
+        s = s[key]
+        assert isinstance(s, samples.EventSamples)
+        assert s.sample_index() == expected_sample_index

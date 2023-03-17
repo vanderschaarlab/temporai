@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import pandera as pa
 import pydantic
+from typing_extensions import Self
 
 import tempor.exc
 from tempor.log import log_helpers, logger
@@ -121,6 +122,10 @@ class DataSamples(abc.ABC):
 
     @abc.abstractmethod
     def short_repr(self) -> str:  # pragma: no cover
+        ...
+
+    @abc.abstractmethod
+    def __getitem__(self, key: data_typing.GetItemKey) -> Self:
         ...
 
 
@@ -266,6 +271,10 @@ class StaticSamples(DataSamples):
 
     def short_repr(self) -> str:
         return f"{self.__class__.__name__}([{self.num_samples}, {self.num_features}])"
+
+    def __getitem__(self, key: data_typing.GetItemKey) -> Self:
+        key_ = utils.ensure_pd_iloc_key_returns_df(key)
+        return StaticSamples(self._data.iloc[key_, :])  # type: ignore[return-value]  # pyright: ignore
 
 
 class TimeSeriesSamples(DataSamples):
@@ -510,6 +519,14 @@ class TimeSeriesSamples(DataSamples):
     def short_repr(self) -> str:
         return f"{self.__class__.__name__}([{self.num_samples}, *, {self.num_features}])"
 
+    def __getitem__(self, key: data_typing.GetItemKey) -> Self:
+        key_ = utils.ensure_pd_iloc_key_returns_df(key)
+        sample_index = self._data.index.get_level_values(0).unique()
+        selected = list(sample_index[key_])  # pyright: ignore
+        return TimeSeriesSamples(  # type: ignore[return-value]
+            self._data.loc[(selected, slice(None)), :]  # pyright: ignore
+        )
+
 
 class EventSamples(DataSamples):
     _data: pd.DataFrame
@@ -686,3 +703,7 @@ class EventSamples(DataSamples):
 
     def short_repr(self) -> str:
         return f"{self.__class__.__name__}([{self.num_samples}, {self.num_features}])"
+
+    def __getitem__(self, key: data_typing.GetItemKey) -> Self:
+        key_ = utils.ensure_pd_iloc_key_returns_df(key)
+        return EventSamples(self._data.iloc[key_, :])  # type: ignore[return-value]  # pyright: ignore

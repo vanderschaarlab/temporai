@@ -1,7 +1,7 @@
 """Types (and related code) for TemporAI data handling."""
 
 import enum
-from typing import Dict, List, Tuple, Type, Union
+from typing import Dict, Iterable, List, Tuple, Type, Union
 
 import numpy as np
 import pandas as pd
@@ -56,6 +56,9 @@ SampleTimeIndexTuples = List[
     ]
 ]
 TimeIndexList = List[TimeIndex]
+
+
+GetItemKey = Union[int, Iterable[int], slice]
 
 
 class PredictiveTask(enum.Enum):
