@@ -5,7 +5,7 @@ from torch.utils.data import sampler
 import tempor.plugins.core as plugins
 from tempor.data import dataset, samples
 from tempor.models.constants import DEVICE
-from tempor.models.ts_ode import NeuralODE, Nonlin
+from tempor.models.ts_ode import Interpolation, NeuralODE, Nonlin
 from tempor.plugins.core._params import CategoricalParams, FloatParams, IntegerParams
 from tempor.plugins.regression import BaseRegressor
 
@@ -22,7 +22,7 @@ class ODERegressor(BaseRegressor):
         # ODE specific:
         atol: float = 1e-2,
         rtol: float = 1e-2,
-        interpolation: str = "cubic",
+        interpolation: Interpolation = "cubic",
         # Training:
         lr: float = 1e-3,
         weight_decay: float = 1e-3,
@@ -52,7 +52,7 @@ class ODERegressor(BaseRegressor):
                 Absolute tolerance for solution. Defaults to ``1e-2``.
             rtol (float, optional):
                 Relative tolerance for solution. Defaults to ``1e-2``.
-            interpolation (str, optional):
+            interpolation (Interpolation, optional):
                 ``"cubic"`` or ``"linear"``. Defaults to ``"cubic"``.
             lr (float, optional):
                 Learning rate for optimizer. Defaults to ``1e-3``.
@@ -114,7 +114,7 @@ class ODERegressor(BaseRegressor):
         # ODE
         self.atol = atol
         self.rtol = rtol
-        self.interpolation = interpolation
+        self.interpolation: Interpolation = interpolation
 
         self.model: Optional[NeuralODE] = None
 

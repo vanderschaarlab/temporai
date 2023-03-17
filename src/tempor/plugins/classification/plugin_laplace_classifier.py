@@ -6,7 +6,7 @@ from torch.utils.data import sampler
 import tempor.plugins.core as plugins
 from tempor.data import dataset, samples
 from tempor.models.constants import DEVICE
-from tempor.models.ts_ode import NeuralODE, Nonlin
+from tempor.models.ts_ode import ILTAlgorithm, NeuralODE, Nonlin
 from tempor.plugins.classification import BaseClassifier
 from tempor.plugins.core._params import CategoricalParams, FloatParams, IntegerParams
 
@@ -22,7 +22,7 @@ class LaplaceODEClassifier(BaseClassifier):
         dropout: float = 0,
         # Laplace specific:
         ilt_reconstruction_terms: int = 33,
-        ilt_algorithm: str = "fourier",
+        ilt_algorithm: ILTAlgorithm = "fourier",
         # Training:
         lr: float = 1e-3,
         weight_decay: float = 1e-3,
@@ -57,7 +57,7 @@ class LaplaceODEClassifier(BaseClassifier):
             ilt_reconstruction_terms (int, optional):
                 Specific to ``"laplace"`` backend. Number of ILT reconstruction terms, i.e. the number of complex
                 :math:`s` points in ``laplace_rep_func`` to reconstruct a single time point. Defaults to ``33``.
-            ilt_algorithm (str, optional):
+            ilt_algorithm (ILTAlgorithm, optional):
                 Specific to ``"laplace"`` backend. Inverse Laplace transform algorithm to use. Available are
                 {``fourier``, ``dehoog``, ``cme``, ``fixed_tablot``, ``stehfest``}. Defaults to ``"fourier"``.
             lr (float, optional):
@@ -120,7 +120,7 @@ class LaplaceODEClassifier(BaseClassifier):
         self.train_ratio = train_ratio
 
         # Laplace
-        self.ilt_algorithm = ilt_algorithm
+        self.ilt_algorithm: ILTAlgorithm = ilt_algorithm
         self.ilt_reconstruction_terms = ilt_reconstruction_terms
 
         self.model: Optional[NeuralODE] = None

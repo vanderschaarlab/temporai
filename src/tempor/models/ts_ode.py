@@ -10,12 +10,16 @@ import torchlaplace.inverse_laplace
 from sklearn.model_selection import train_test_split
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset, sampler
+from typing_extensions import Literal
 
 from tempor.log import logger as log
 from tempor.models.constants import DEVICE, ModelTaskType, Nonlin, ODEBackend
 from tempor.models.mlp import MLP
 from tempor.models.samplers import ImbalancedDatasetSampler
 from tempor.models.utils import enable_reproducibility
+
+Interpolation = Literal["cubic", "linear"]
+ILTAlgorithm = Literal["fourier", "dehoog", "cme", "fixed_tablot", "stehfest"]
 
 
 class CDEFunc(torch.nn.Module):
@@ -195,10 +199,10 @@ class NeuralODE(torch.nn.Module):
         # CDE/ODE specific:
         atol: float = 1e-2,
         rtol: float = 1e-2,
-        interpolation: str = "cubic",
+        interpolation: Interpolation = "cubic",
         # Laplace specific:
         ilt_reconstruction_terms: int = 33,
-        ilt_algorithm: str = "fourier",
+        ilt_algorithm: ILTAlgorithm = "fourier",
         # Training:
         lr: float = 1e-3,
         weight_decay: float = 1e-3,
@@ -249,12 +253,12 @@ class NeuralODE(torch.nn.Module):
                 Specific to ``"ode"`` and ``"cde"`` backends. Absolute tolerance for solution. Defaults to ``1e-2``.
             rtol (float, optional):
                 Specific to ``"ode"`` and ``"cde"`` backends. Relative tolerance for solution. Defaults to ``1e-2``.
-            interpolation (str, optional):
+            interpolation (Interpolation, optional):
                 Specific to ``"ode"`` and ``"cde"`` backends. ``"cubic"`` or ``"linear"``. Defaults to ``"cubic"``.
             ilt_reconstruction_terms (int, optional):
                 Specific to ``"laplace"`` backend. Number of ILT reconstruction terms, i.e. the number of complex
                 :math:`s` points in ``laplace_rep_func`` to reconstruct a single time point. Defaults to ``33``.
-            ilt_algorithm (str, optional):
+            ilt_algorithm (ILTAlgorithm, optional):
                 Specific to ``"laplace"`` backend. Inverse Laplace transform algorithm to use. Available are
                 {``fourier``, ``dehoog``, ``cme``, ``fixed_tablot``, ``stehfest``}. Defaults to ``"fourier"``.
             lr (float, optional):
