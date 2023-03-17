@@ -2,16 +2,24 @@
 
 import abc
 import dataclasses
-from typing import ClassVar, Optional, Union
+from typing import ClassVar, Generator, Optional, Tuple, Union
 
 import rich.pretty
+import sklearn.model_selection
+from typing_extensions import Self
 
 from tempor.core.utils import RichReprStrPassthrough
 from tempor.log import log_helpers
 
 from . import data_typing
 from . import predictive as pred
-from . import samples
+from . import samples, utils
+
+# NOTE: Can probably add other splitters:
+Splitter = Union[
+    sklearn.model_selection.KFold,
+    sklearn.model_selection.StratifiedKFold,
+]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -156,6 +164,81 @@ class Dataset(abc.ABC):
     def static(self, value: Optional[samples.StaticSamples]) -> None:
         self._static = value
         self.validate()
+
+    def __len__(self) -> int:
+        return len(self.time_series)
+
+    def __getitem__(self, key: data_typing.GetItemKey) -> Self:
+        key_ = utils.ensure_pd_iloc_key_returns_df(key)
+        new_dataset = self.__class__(
+            time_series=self.time_series[key_].dataframe(),  # pyright: ignore
+            static=self.static[key_].dataframe() if self.has_static else None,  # type: ignore[union-attr,index]
+            targets=(
+                self.predictive.targets[key_].dataframe()  # type: ignore[union-attr]
+                if (self.has_predictive_data and self.predictive.targets is not None)  # type: ignore[union-attr]
+                else None
+            ),
+            treatments=(
+                self.predictive.treatments[key_].dataframe()  # type: ignore[union-attr]
+                if (self.has_predictive_data and self.predictive.treatments is not None)  # type: ignore[union-attr]
+                else None
+            ),
+        )
+        return new_dataset
+
+    def train_test_split(
+        self,
+        *,
+        test_size=None,
+        train_size=None,
+        random_state=None,
+        shuffle=True,
+        stratify=None,
+    ) -> Tuple[Self, Self]:
+        """Split `Dataset` into train and test sets.
+
+        The arguments ``test_size`` ... ``stratify`` are passed to `sklearn.model_selection.train_test_split` to
+        generate the split.
+
+        Returns:
+            Tuple[Self, Self]: The split tuple ``(dataset_train, dataset_test)``.
+        """
+        sample_ilocs = list(range(len(self)))
+        sample_ilocs_train, sample_ilocs_test = sklearn.model_selection.train_test_split(
+            sample_ilocs,
+            test_size=test_size,
+            train_size=train_size,
+            random_state=random_state,
+            shuffle=shuffle,
+            stratify=stratify,
+        )
+        return self[sample_ilocs_train], self[sample_ilocs_test]
+
+    def split(
+        self,
+        splitter: Splitter,
+        **kwargs,
+    ) -> Generator[Tuple[Self, Self], None, None]:
+        """Generate dataset splits according to the scikit-learn ``splitter`` (`~tempor.data.dataset.Splitter`).
+        The ``kwargs`` are passed to the underlying splitter's ``split`` method.
+
+        Example:
+            >>> from sklearn.model_selection import KFold
+            >>> from tempor.utils.datasets.sine import SineDataloader
+            >>> data = SineDataloader().load()
+            >>> kfold = KFold(n_splits=5)
+            >>> len([(data_train, data_test) for (data_train, data_test) in data.split(splitter=kfold)])
+            5
+
+        Args:
+            splitter (Splitter): A `sklearn` splitter.
+
+        Yields:
+            Generator[Tuple[Self, Self], None, None]: ``(dataset_train, dataset_test)`` for each split.
+        """
+        sample_ilocs = list(range(len(self)))
+        for sample_ilocs_train, sample_ilocs_test in splitter.split(X=sample_ilocs, **kwargs):
+            yield self[sample_ilocs_train], self[sample_ilocs_test]
 
 
 # `Dataset`s corresponding to different tasks follow. More can be added to handle new Tasks.

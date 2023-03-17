@@ -1,12 +1,13 @@
 # pylint: disable=redefined-outer-name, unused-argument, protected-access
 
 import dataclasses
-from typing import Type
+from typing import Tuple, Type
 from unittest.mock import Mock
 
 import numpy as np
 import pandas as pd
 import pytest
+import sklearn.model_selection
 
 from tempor.data import dataset, predictive, samples
 
@@ -1017,6 +1018,41 @@ def define_test_dfs() -> DfsUnderTest:
 test_dfs = define_test_dfs()
 
 
+@pytest.fixture
+def dummy_dfs_for_split_tests() -> Tuple[pd.DataFrame, ...]:
+    size = 100
+
+    df_s = pd.DataFrame(
+        {
+            "sample_idx": [f"sample_{x}" for x in range(size)],
+            "feat_s_1": [x * 0.5 for x in range(size)],
+            "feat_s_2": [x * 1.5 for x in range(size)],
+        }
+    )
+    df_s.set_index("sample_idx", drop=True, inplace=True)
+
+    sample_idxs = [[f"sample_{x}"] * 2 for x in range(size)]
+    df_t = pd.DataFrame(
+        {
+            "sample_idx": [item for sublist in sample_idxs for item in sublist],  # Flatten.
+            "time_idx": [x * 0.1 for x in range(size * 2)],
+            "feat_t_1": [0 for _ in range(size * 2)],
+            "feat_t_2": [x * 2.0 + 1.5 for x in range(size * 2)],
+        }
+    )
+    df_t.set_index(keys=["sample_idx", "time_idx"], drop=True, inplace=True)
+
+    df_s_target = pd.DataFrame(
+        {
+            "sample_idx": [f"sample_{x}" for x in range(size)],
+            "target": [0] * int(size / 2) + [1] * int(size / 2),
+        }
+    )
+    df_s_target.set_index("sample_idx", drop=True, inplace=True)
+
+    return df_t, df_s, df_s_target
+
+
 class TestWithConcreteData:
     @pytest.mark.parametrize(
         "time_series, static, target",
@@ -1168,3 +1204,30 @@ class TestWithConcreteData:
         assert data.time_series.dataframe().equals(df_t)
         assert data.predictive.targets.dataframe().equals(df_t)
         assert data.predictive.treatments.dataframe().equals(df_t)
+
+    def test_train_test_split(self, dummy_dfs_for_split_tests):
+        df_t, df_s, df_s_target = dummy_dfs_for_split_tests
+        data = dataset.OneOffPredictionDataset(time_series=df_t, static=df_s, targets=df_s_target)
+
+        data_train, data_test = data.train_test_split(test_size=0.4, random_state=1234)
+
+        assert isinstance(data_train, dataset.OneOffPredictionDataset)
+        assert isinstance(data_test, dataset.OneOffPredictionDataset)
+        assert len(data_train) + len(data_test) == 100
+        assert len(data_test) / 100 == pytest.approx(0.4)
+
+    def test_stratified_kfold_split(self, dummy_dfs_for_split_tests):
+        df_t, df_s, df_s_target = dummy_dfs_for_split_tests
+        data = dataset.OneOffPredictionDataset(time_series=df_t, static=df_s, targets=df_s_target)
+        strat = data.predictive.targets.numpy().reshape((-1,))
+
+        kfold = sklearn.model_selection.StratifiedKFold(n_splits=5, shuffle=True, random_state=12345)
+
+        n = 0
+        for data_train, data_test in data.split(splitter=kfold, y=strat):
+            assert isinstance(data_train, dataset.OneOffPredictionDataset)
+            assert isinstance(data_test, dataset.OneOffPredictionDataset)
+            assert len(data_train) + len(data_test) == 100
+            n += 1
+
+        assert n == 5
