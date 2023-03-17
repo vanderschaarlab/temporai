@@ -117,5 +117,4 @@ def test_rnn_classification_fit_predict(mode: TSModelMode, source: Any) -> None:
 
     assert y_pred.shape == y.shape
 
-    print(mode, model.score(static_data, temporal_data, observation_times, y))
     assert model.score(static_data, temporal_data, observation_times, y) <= 1
