@@ -151,4 +151,3 @@ def test_mlp_regression(residual: bool) -> None:
     assert model.predict(X).shape == y.shape
     with pytest.raises(ValueError):
         model.predict_proba(X)
-    print(model.score(X, y))

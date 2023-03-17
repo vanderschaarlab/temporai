@@ -2,28 +2,52 @@
 
 import abc
 import dataclasses
-from typing import ClassVar, Optional, Union
+from typing import ClassVar, Generator, Optional, Tuple, Union
 
 import rich.pretty
+import sklearn.model_selection
+from typing_extensions import Self
 
 from tempor.core.utils import RichReprStrPassthrough
 from tempor.log import log_helpers
 
 from . import data_typing
 from . import predictive as pred
-from . import samples
+from . import samples, utils
+
+# NOTE: Can probably add other splitters:
+Splitter = Union[
+    sklearn.model_selection.KFold,
+    sklearn.model_selection.StratifiedKFold,
+]
 
 
 @dataclasses.dataclass(frozen=True)
 class _SampleIndexMismatchMsg:
-    static: ClassVar[str] = "`sample_index` of static samples did not match `sample_index` of time series samples"
-    targets: ClassVar[str] = "`sample_index` of targets did not match `sample_index` of time series samples"
-    treatments: ClassVar[str] = "`sample_index` of treatments did not match `sample_index` of time series samples"
+    static: ClassVar[str] = (
+        "`sample_index` of static samples did not match `sample_index` of time series samples. "
+        "Note that the samples need to be in the same order."
+    )
+    targets: ClassVar[str] = (
+        "`sample_index` of targets did not match `sample_index` of time series samples. "
+        "Note that the samples need to be in the same order."
+    )
+    treatments: ClassVar[str] = (
+        "`sample_index` of treatments did not match `sample_index` of time series samples. "
+        "Note that the samples need to be in the same order."
+    )
+
+
+@dataclasses.dataclass(frozen=True)
+class _TimeIndexesMismatchMsg:
+    targets: ClassVar[str] = "`time_indexes` of targets did not match `time_indexes` of time series covariates."
+    treatments: ClassVar[str] = "`time_indexes` of treatments did not match `time_indexes` of time series covariates."
 
 
 @dataclasses.dataclass(frozen=True)
 class _ExceptionMessages:
     sample_index_mismatch: ClassVar[_SampleIndexMismatchMsg] = _SampleIndexMismatchMsg()
+    time_indexes_mismatch: ClassVar[_TimeIndexesMismatchMsg] = _TimeIndexesMismatchMsg()
 
 
 EXCEPTION_MESSAGES = _ExceptionMessages()
@@ -31,8 +55,8 @@ EXCEPTION_MESSAGES = _ExceptionMessages()
 
 
 class Dataset(abc.ABC):
-    time_series: samples.TimeSeriesSamples
-    static: Optional[samples.StaticSamples]
+    _time_series: samples.TimeSeriesSamples
+    _static: Optional[samples.StaticSamples]
     predictive: Optional[pred.PredictiveTaskData]
 
     def __init__(
@@ -66,8 +90,8 @@ class Dataset(abc.ABC):
                 ``{TimeSeries,Static,Event}Samples`` depending on problem setting in the derived class.
                 Defaults to `None`.
         """
-        self.time_series = samples.TimeSeriesSamples(time_series)
-        self.static = samples.StaticSamples(static) if static is not None else None
+        self._time_series = samples.TimeSeriesSamples(time_series)
+        self._static = samples.StaticSamples(static) if static is not None else None
 
         if targets is not None:
             self._init_predictive(targets=targets, treatments=treatments, **kwargs)
@@ -115,13 +139,106 @@ class Dataset(abc.ABC):
         """Validate integrity of the dataset."""
         with log_helpers.exc_to_log("Dataset validation failed"):
             if self.static is not None:
-                if sorted(self.static.sample_index()) != sorted(self.time_series.sample_index()):
+                if self.static.sample_index() != self.time_series.sample_index():
                     raise ValueError(EXCEPTION_MESSAGES.sample_index_mismatch.static)
             self._validate()
 
     @abc.abstractmethod
     def _validate(self) -> None:  # pragma: no cover
         ...
+
+    @property
+    def time_series(self) -> samples.TimeSeriesSamples:
+        return self._time_series
+
+    @time_series.setter
+    def time_series(self, value: samples.TimeSeriesSamples) -> None:
+        self._time_series = value
+        self.validate()
+
+    @property
+    def static(self) -> Optional[samples.StaticSamples]:
+        return self._static
+
+    @static.setter
+    def static(self, value: Optional[samples.StaticSamples]) -> None:
+        self._static = value
+        self.validate()
+
+    def __len__(self) -> int:
+        return len(self.time_series)
+
+    def __getitem__(self, key: data_typing.GetItemKey) -> Self:
+        key_ = utils.ensure_pd_iloc_key_returns_df(key)
+        new_dataset = self.__class__(
+            time_series=self.time_series[key_].dataframe(),  # pyright: ignore
+            static=self.static[key_].dataframe() if self.has_static else None,  # type: ignore[union-attr,index]
+            targets=(
+                self.predictive.targets[key_].dataframe()  # type: ignore[union-attr]
+                if (self.has_predictive_data and self.predictive.targets is not None)  # type: ignore[union-attr]
+                else None
+            ),
+            treatments=(
+                self.predictive.treatments[key_].dataframe()  # type: ignore[union-attr]
+                if (self.has_predictive_data and self.predictive.treatments is not None)  # type: ignore[union-attr]
+                else None
+            ),
+        )
+        return new_dataset
+
+    def train_test_split(
+        self,
+        *,
+        test_size=None,
+        train_size=None,
+        random_state=None,
+        shuffle=True,
+        stratify=None,
+    ) -> Tuple[Self, Self]:
+        """Split `Dataset` into train and test sets.
+
+        The arguments ``test_size`` ... ``stratify`` are passed to `sklearn.model_selection.train_test_split` to
+        generate the split.
+
+        Returns:
+            Tuple[Self, Self]: The split tuple ``(dataset_train, dataset_test)``.
+        """
+        sample_ilocs = list(range(len(self)))
+        sample_ilocs_train, sample_ilocs_test = sklearn.model_selection.train_test_split(
+            sample_ilocs,
+            test_size=test_size,
+            train_size=train_size,
+            random_state=random_state,
+            shuffle=shuffle,
+            stratify=stratify,
+        )
+        return self[sample_ilocs_train], self[sample_ilocs_test]
+
+    def split(
+        self,
+        splitter: Splitter,
+        **kwargs,
+    ) -> Generator[Tuple[Self, Self], None, None]:
+        """Generate dataset splits according to the scikit-learn ``splitter`` (`~tempor.data.dataset.Splitter`).
+        The ``kwargs`` are passed to the underlying splitter's ``split`` method.
+
+        Example:
+            >>> from sklearn.model_selection import KFold
+            >>> from tempor.utils.datasets.sine import SineDataloader
+            >>> data = SineDataloader().load()
+            >>> kfold = KFold(n_splits=5)
+            >>> len([(data_train, data_test) for (data_train, data_test) in data.split(splitter=kfold)])
+            5
+
+        Args:
+            splitter (Splitter): A `sklearn` splitter.
+
+        Yields:
+            Generator[Tuple[Self, Self], None, None]: ``(dataset_train, dataset_test)`` for each split.
+        """
+        sample_ilocs = list(range(len(self)))
+        for sample_ilocs_train, sample_ilocs_test in splitter.split(X=sample_ilocs, **kwargs):
+            yield self[sample_ilocs_train], self[sample_ilocs_test]
 
 
 # `Dataset`s corresponding to different tasks follow. More can be added to handle new Tasks.
@@ -153,10 +270,10 @@ class OneOffPredictionDataset(Dataset):
     ) -> None:
         if targets is None:
             raise ValueError("One-off prediction task requires `targets`")
-        self.predictive = pred.OneOffPredictionTaskData(targets=targets, **kwargs)
+        self.predictive = pred.OneOffPredictionTaskData(parent_dataset=self, targets=targets, **kwargs)
 
     def _validate(self) -> None:
-        if sorted(self.predictive.targets.sample_index()) != sorted(self.time_series.sample_index()):
+        if self.predictive.targets.sample_index() != self.time_series.sample_index():
             raise ValueError(EXCEPTION_MESSAGES.sample_index_mismatch.targets)
 
 
@@ -186,12 +303,13 @@ class TemporalPredictionDataset(Dataset):
     ) -> None:
         if targets is None:
             raise ValueError("Temporal prediction task requires `targets`")
-        self.predictive = pred.TemporalPredictionTaskData(targets=targets, **kwargs)
+        self.predictive = pred.TemporalPredictionTaskData(parent_dataset=self, targets=targets, **kwargs)
 
     def _validate(self) -> None:
         if self.predictive.targets.sample_index() != self.time_series.sample_index():
             raise ValueError(EXCEPTION_MESSAGES.sample_index_mismatch.targets)
-        # TODO: Possible check - check that .time_series and .predictive.targets have the same time_indexes.
+        if self.time_series.time_indexes() != self.predictive.targets.time_indexes():
+            raise ValueError(EXCEPTION_MESSAGES.time_indexes_mismatch.targets)
 
 
 class TimeToEventAnalysisDataset(Dataset):
@@ -220,7 +338,7 @@ class TimeToEventAnalysisDataset(Dataset):
     ) -> None:
         if targets is None:
             raise ValueError("Time-to-event analysis task requires `targets`")
-        self.predictive = pred.TimeToEventAnalysisTaskData(targets=targets, **kwargs)
+        self.predictive = pred.TimeToEventAnalysisTaskData(parent_dataset=self, targets=targets, **kwargs)
 
     def _validate(self) -> None:
         if self.predictive.targets.sample_index() != self.time_series.sample_index():
@@ -258,14 +376,17 @@ class OneOffTreatmentEffectsDataset(Dataset):
             raise ValueError("On-off treatment effects task requires `targets`")
         if treatments is None:
             raise ValueError("On-off treatment effects task requires `treatments`")
-        self.predictive = pred.OneOffTreatmentEffectsTaskData(targets=targets, treatments=treatments, **kwargs)
+        self.predictive = pred.OneOffTreatmentEffectsTaskData(
+            parent_dataset=self, targets=targets, treatments=treatments, **kwargs
+        )
 
     def _validate(self) -> None:
         if self.predictive.targets.sample_index() != self.time_series.sample_index():
             raise ValueError(EXCEPTION_MESSAGES.sample_index_mismatch.targets)
         if self.predictive.treatments.sample_index() != self.time_series.sample_index():
             raise ValueError(EXCEPTION_MESSAGES.sample_index_mismatch.treatments)
-        # TODO: Possible check - check that .time_series and .predictive.targets have the same time_indexes.
+        if self.time_series.time_indexes() != self.predictive.targets.time_indexes():
+            raise ValueError(EXCEPTION_MESSAGES.time_indexes_mismatch.targets)
         # TODO: Possible checks - some checks on .time_series and .predictive.treatments in terms of
         # their relative position in time?
 
@@ -299,11 +420,16 @@ class TemporalTreatmentEffectsDataset(Dataset):
             raise ValueError("Temporal treatment effects task requires `targets`")
         if treatments is None:
             raise ValueError("Temporal treatment effects task requires `treatments`")
-        self.predictive = pred.TemporalTreatmentEffectsTaskData(targets=targets, treatments=treatments, **kwargs)
+        self.predictive = pred.TemporalTreatmentEffectsTaskData(
+            parent_dataset=self, targets=targets, treatments=treatments, **kwargs
+        )
 
     def _validate(self) -> None:
         if self.predictive.targets.sample_index() != self.time_series.sample_index():
             raise ValueError(EXCEPTION_MESSAGES.sample_index_mismatch.targets)
         if self.predictive.treatments.sample_index() != self.time_series.sample_index():
             raise ValueError(EXCEPTION_MESSAGES.sample_index_mismatch.treatments)
-        # TODO: Possible check - check that .time_series and .predictive.treatments/targets have the same time_indexes.
+        if self.time_series.time_indexes() != self.predictive.targets.time_indexes():
+            raise ValueError(EXCEPTION_MESSAGES.time_indexes_mismatch.targets)
+        if self.time_series.time_indexes() != self.predictive.treatments.time_indexes():
+            raise ValueError(EXCEPTION_MESSAGES.time_indexes_mismatch.treatments)

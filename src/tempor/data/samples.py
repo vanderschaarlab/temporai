@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import pandera as pa
 import pydantic
+from typing_extensions import Self
 
 import tempor.exc
 from tempor.log import log_helpers, logger
@@ -30,7 +31,10 @@ class DataSamples(abc.ABC):
         data: data_typing.DataContainer,  # pylint: disable=unused-argument
         **kwargs,  # pylint: disable=unused-argument
     ) -> None:  # pragma: no cover
-        self.validate()
+        if "_skip_validate" not in kwargs:
+            # For efficiency, pass `_skip_validate` internally (e.g. in `__getitem__`)
+            # when there is no need to validate.
+            self.validate()
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__} with data:\n{self.dataframe()}"
@@ -121,6 +125,10 @@ class DataSamples(abc.ABC):
 
     @abc.abstractmethod
     def short_repr(self) -> str:  # pragma: no cover
+        ...
+
+    @abc.abstractmethod
+    def __getitem__(self, key: data_typing.GetItemKey) -> Self:
         ...
 
 
@@ -266,6 +274,13 @@ class StaticSamples(DataSamples):
 
     def short_repr(self) -> str:
         return f"{self.__class__.__name__}([{self.num_samples}, {self.num_features}])"
+
+    def __getitem__(self, key: data_typing.GetItemKey) -> Self:
+        key_ = utils.ensure_pd_iloc_key_returns_df(key)
+        return StaticSamples(  # type: ignore[return-value]
+            self._data.iloc[key_, :],  # pyright: ignore
+            _skip_validate=True,
+        )
 
 
 class TimeSeriesSamples(DataSamples):
@@ -442,7 +457,7 @@ class TimeSeriesSamples(DataSamples):
         return self._data
 
     def sample_index(self) -> data_typing.SampleIndex:
-        return list(self._data.index.levels[0])  # pyright: ignore
+        return list(self._data.index.get_level_values(0).unique())  # pyright: ignore
 
     def time_indexes(self) -> data_typing.TimeIndexList:
         """Get a list containing time indexes for each sample. Each time index is represented as a list of time step
@@ -463,12 +478,12 @@ class TimeSeriesSamples(DataSamples):
         multiindex = self._data.index
         if TYPE_CHECKING:  # pragma: no cover
             assert isinstance(multiindex, pd.MultiIndex)  # nosec B101
-        sample_index = list(self._data.index.levels[0])  # pyright: ignore
+        sample_index = self.sample_index()
         d = dict()
         for s in sample_index:
             time_index_locs = multiindex.get_locs([s, slice(None)])
             d[s] = list(multiindex.get_level_values(1)[time_index_locs])
-        return d
+        return d  # type: ignore[return-value]
 
     # TODO: time indexes sensibly converted to floats would be useful.
 
@@ -494,7 +509,6 @@ class TimeSeriesSamples(DataSamples):
         Returns:
             bool: whether all samples share the same number of timesteps.
         """
-        print(self)
         timesteps = self.num_timesteps()
         return True if len(timesteps) == 0 else all([x == timesteps[0] for x in timesteps])
 
@@ -509,6 +523,15 @@ class TimeSeriesSamples(DataSamples):
 
     def short_repr(self) -> str:
         return f"{self.__class__.__name__}([{self.num_samples}, *, {self.num_features}])"
+
+    def __getitem__(self, key: data_typing.GetItemKey) -> Self:
+        key_ = utils.ensure_pd_iloc_key_returns_df(key)
+        sample_index = self._data.index.get_level_values(0).unique()
+        selected = list(sample_index[key_])  # pyright: ignore
+        return TimeSeriesSamples(  # type: ignore[return-value]
+            self._data.loc[(selected, slice(None)), :],  # pyright: ignore
+            _skip_validate=True,
+        )
 
 
 class EventSamples(DataSamples):
@@ -686,3 +709,10 @@ class EventSamples(DataSamples):
 
     def short_repr(self) -> str:
         return f"{self.__class__.__name__}([{self.num_samples}, {self.num_features}])"
+
+    def __getitem__(self, key: data_typing.GetItemKey) -> Self:
+        key_ = utils.ensure_pd_iloc_key_returns_df(key)
+        return EventSamples(  # type: ignore[return-value]
+            self._data.iloc[key_, :],  # pyright: ignore
+            _skip_validate=True,
+        )
