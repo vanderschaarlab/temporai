@@ -3,6 +3,7 @@ from typing import Any
 import numpy as np
 import pytest
 
+from tempor.models.constants import ODEBackend
 from tempor.models.ts_ode import NeuralODE
 from tempor.utils.datasets.google_stocks import GoogleStocksDataloader
 from tempor.utils.datasets.sine import SineDataloader
@@ -23,7 +24,7 @@ def unpack_dataset(source):
 
 
 @pytest.mark.parametrize("backend", ["laplace", "ode", "cde"])
-def test_ode_sanity(backend: str):
+def test_ode_sanity(backend: ODEBackend):
     model = NeuralODE(
         task_type="classification",
         n_static_units_in=23,
@@ -42,7 +43,7 @@ def test_ode_sanity(backend: str):
 
 @pytest.mark.parametrize("source", [GoogleStocksDataloader, SineDataloader])
 @pytest.mark.parametrize("backend", ["laplace", "cde", "ode"])
-def test_ode_regression_fit_predict(source: Any, backend: str) -> None:
+def test_ode_regression_fit_predict(source: Any, backend: ODEBackend) -> None:
     if source == SineDataloader and backend == "laplace":
         return
 
@@ -73,7 +74,7 @@ def test_ode_regression_fit_predict(source: Any, backend: str) -> None:
 
 @pytest.mark.parametrize("source", [SineDataloader, GoogleStocksDataloader])
 @pytest.mark.parametrize("backend", ["laplace", "cde", "ode"])
-def test_ode_classification_fit_predict(source: Any, backend: str) -> None:
+def test_ode_classification_fit_predict(source: Any, backend: ODEBackend) -> None:
     if source == SineDataloader and backend == "laplace":
         return
 
