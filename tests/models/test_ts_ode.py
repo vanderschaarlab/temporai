@@ -106,5 +106,4 @@ def test_ode_classification_fit_predict(source: Any, backend: ODEBackend) -> Non
 
     assert y_pred.shape == y.shape
 
-    print(model.score(static_data, temporal_data, observation_times, y))
     assert model.score(static_data, temporal_data, observation_times, y) <= 1
