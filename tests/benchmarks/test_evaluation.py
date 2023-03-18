@@ -37,7 +37,6 @@ def test_classifier_evaluation(model_template: Any, n_splits: int) -> None:
     dataset = SineDataloader().load()
 
     scores = evaluate_classifier(model_template, dataset, n_splits=n_splits, seed=0)
-    print(scores)
 
     for out_metric in output_metrics:
         assert out_metric in scores

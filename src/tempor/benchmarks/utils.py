@@ -1,7 +1,5 @@
-# stdlib
 from typing import Tuple
 
-# third party
 import numpy as np
 from sklearn.metrics import (
     auc,
@@ -43,8 +41,7 @@ def evaluate_auc_multiclass(
     n_classes = len(set(np.ravel(y_test)))
     classes = sorted(set(np.ravel(y_test)))
     log.debug(
-        "warning: classes is none and more than two "
-        " (#{}), classes assumed to be an ordered set:{}".format(n_classes, classes)
+        "Warning: classes is none and more than two " f"(#{n_classes}), classes assumed to be an ordered set:{classes}"
     )
 
     y_pred_proba_tmp = get_y_pred_proba_hlpr(y_pred_proba, n_classes)
@@ -60,7 +57,7 @@ def evaluate_auc_multiclass(
         average_precision = dict()
         roc_auc: dict = dict()
 
-        y_test = label_binarize(y_test, classes=classes)
+        y_test = label_binarize(y_test, classes=classes)  # type: ignore
 
         fpr["micro"], tpr["micro"], _ = roc_curve(y_test.ravel(), y_pred_proba_tmp.ravel())
         roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
@@ -76,12 +73,12 @@ def evaluate_auc_multiclass(
         aucroc = roc_auc_score(np.ravel(y_test), y_pred_proba_tmp, multi_class="ovr")
         aucprc = average_precision_score(np.ravel(y_test), y_pred_proba_tmp)
 
-    return aucroc, aucprc
+    return float(aucroc), float(aucprc)
 
 
 def generate_score(metric: np.ndarray) -> Tuple[float, float]:
     percentile_val = 1.96
-    return (np.mean(metric), percentile_val * np.std(metric) / np.sqrt(len(metric)))
+    return (float(np.mean(metric)), percentile_val * np.std(metric) / np.sqrt(len(metric)))
 
 
 def print_score(score: Tuple[float, float]) -> str:

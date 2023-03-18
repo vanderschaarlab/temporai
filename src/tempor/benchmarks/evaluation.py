@@ -1,9 +1,7 @@
-# stdlib
 import copy
 from time import time
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Sequence, Union, cast
 
-# third party
 import numpy as np
 import pandas as pd
 import pydantic
@@ -20,6 +18,7 @@ from sklearn.metrics import (
     recall_score,
 )
 from sklearn.model_selection import KFold, StratifiedKFold
+from typing_extensions import Literal, get_args
 
 from tempor.benchmarks.utils import generate_score, print_score
 from tempor.data import dataset
@@ -28,7 +27,7 @@ from tempor.models.utils import enable_reproducibility
 
 from .utils import evaluate_auc_multiclass
 
-classifier_supported_metrics = [
+ClassifierSupportedMetric = Literal[
     "aucroc",
     "aucprc",
     "accuracy",
@@ -45,8 +44,72 @@ classifier_supported_metrics = [
     "recall_weighted",
     "mcc",
 ]
-regression_supported_metrics = ["mse", "mae", "r2"]
-output_metrics = [
+"""Evaluation metrics supported in the classification task setting.
+
+Possible values:
+    - ``"aucroc"``:
+        The Area Under the Receiver Operating Characteristic Curve (ROC AUC) from prediction scores.
+    - ``"aucprc"``:
+        The average precision summarizes a precision-recall curve as the weighted mean of precisions achieved at each
+        threshold, with the increase in recall from the previous threshold used as the weight.
+    - ``"accuracy"``:
+        Accuracy classification score.
+    - ``"f1_score_micro"``:
+        F1 score is a harmonic mean of the precision and recall. This version uses the ``"micro"`` average:
+        calculate metrics globally by counting the total true positives, false negatives and false positives.
+    - ``"f1_score_macro"``:
+        F1 score is a harmonic mean of the precision and recall. This version uses the ``"macro"`` average:
+        calculate metrics for each label, and find their unweighted mean. This does not take label imbalance into
+        account.
+    - ``"f1_score_weighted"``:
+        F1 score is a harmonic mean of the precision and recall. This version uses the "weighted" average:
+        Calculate metrics for each label, and find their average weighted by support
+        (the number of true instances for each label).
+    - ``"kappa"``, ``"kappa_quadratic"``:
+        Computes Cohen's kappa, a score that expresses the level of agreement between two annotators on a
+        classification problem.
+    - ``"precision_micro"``:
+        Precision is defined as the number of true positives over the number of true positives plus the number of false
+        positives. This version(micro) calculates metrics globally by counting the total true positives.
+    - ``"precision_macro"``:
+        Precision is defined as the number of true positives over the number of true positives plus the number of
+        false positives. This version (macro) calculates metrics for each label, and finds their unweighted mean.
+    - ``"precision_weighted"``:
+        Precision is defined as the number of true positives over the number of true positives plus the number of
+        false positives. This version (weighted) calculates metrics for each label, and find their average weighted
+        by support.
+    - ``"recall_micro"``:
+        Recall is defined as the number of true positives over the number of true positives plus the number of false
+        negatives. This version (micro) calculates metrics globally by counting the total true positives.
+    - ``"recall_macro"``:
+        Recall is defined as the number of true positives over the number of true positives plus the number of false
+        negatives. This version (macro) calculates metrics for each label, and finds their unweighted mean.
+    - ``"recall_weighted"``:
+        Recall is defined as the number of true positives over the number of true positives plus the number of false
+        negatives. This version(weighted) calculates metrics for each label, and find their average weighted by support.
+    - ``"mcc"``:
+        The Matthews Correlation Coefficient is used in machine learning as a measure of the quality of binary and
+        multiclass classifications. It takes into account true and false positives and negatives and is generally
+        regarded as a balanced measure which can be used even if the classes are of very different sizes.
+"""
+
+RegressionSupportedMetric = Literal[
+    "mse",
+    "mae",
+    "r2",
+]
+"""Evaluation metrics supported in the regression task setting.
+
+Possible values:
+    - ``"r2"``:
+        R^2 (coefficient of determination) regression score function.
+    - ``"mse"``:
+        Mean squared error regression loss.
+    - ``"mae"``:
+        Mean absolute error regression loss.
+"""
+
+OutputMetric = Literal[
     "min",
     "max",
     "mean",
@@ -57,12 +120,46 @@ output_metrics = [
     "errors",
     "durations",
 ]
+"""The metric evaluation output statistics / other information about the evaluation cross-validation runs.
+
+Possible values:
+    - ``"min"``:
+        The mix score of the metric
+    - ``"max"``:
+        The max score of the metric
+    - ``"mean"``:
+        The mean score of the metric
+    - ``"stddev"``:
+        The stddev score of the metric
+    - ``"median"``:
+        The median score of the metric
+    - ``"iqr"``:
+        The interquartile range of the metric
+    - ``"rounds"``:
+        Number of folds
+    - ``"errors"``:
+        Number of errors encountered
+    - ``"durations"``:
+        Average duration for the fold evaluation.
+"""
+
+classifier_supported_metrics = get_args(ClassifierSupportedMetric)
+"""A tuple of all possible values of :obj:`~tempor.benchmarks.evaluation.ClassifierSupportedMetric`."""
+
+regression_supported_metrics = get_args(RegressionSupportedMetric)
+"""A tuple of all possible values of :obj:`~tempor.benchmarks.evaluation.RegressionSupportedMetric`."""
+
+output_metrics = get_args(OutputMetric)
+"""A tuple of all possible values of :obj:`~tempor.benchmarks.evaluation.OutputMetric`."""
 
 
 class _InternalScores(pydantic.BaseModel):
-    metrics: Dict[str, List[float]] = {}
+    metrics: Dict[str, np.ndarray] = {}  # np.ndarray expected to be 1D, contain floats.
     errors: List[int] = []
     durations: List[float] = []
+
+    class Config:
+        arbitrary_types_allowed = True
 
 
 @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
@@ -72,7 +169,7 @@ def _postprocess_results(results: _InternalScores) -> pd.DataFrame:
     for metric in results.metrics:
         values = results.metrics[metric]
         errors = np.sum(results.errors)
-        durations = print_score(generate_score(results.durations))
+        durations = print_score(generate_score(np.asarray(results.durations)))
 
         score_min = np.min(values)
         score_max = np.max(values)
@@ -108,36 +205,27 @@ def _postprocess_results(results: _InternalScores) -> pd.DataFrame:
     return output
 
 
-class classifier_metrics:
-    """Helper class for evaluating the performance of the classifier.
+class ClassifierMetrics:
+    @pydantic.validate_arguments
+    def __init__(
+        self,
+        metric: Union[ClassifierSupportedMetric, Sequence[ClassifierSupportedMetric]] = classifier_supported_metrics,
+    ) -> None:
+        """Helper class for evaluating the performance of the classifier.
 
-    Args:
-        metric: list, default=["aucroc", "aucprc", "accuracy", "f1_score_micro", "f1_score_macro", "f1_score_weighted",  "kappa", "precision_micro", "precision_macro", "precision_weighted", "recall_micro", "recall_macro", "recall_weighted",  "mcc",]
-            The type of metric to use for evaluation.
-            Potential values:
-                - "aucroc" : the Area Under the Receiver Operating Characteristic Curve (ROC AUC) from prediction scores.
-                - "aucprc" : The average precision summarizes a precision-recall curve as the weighted mean of precisions achieved at each threshold, with the increase in recall from the previous threshold used as the weight.
-                - "accuracy" : Accuracy classification score.
-                - "f1_score_micro": F1 score is a harmonic mean of the precision and recall. This version uses the "micro" average: calculate metrics globally by counting the total true positives, false negatives and false positives.
-                - "f1_score_macro": F1 score is a harmonic mean of the precision and recall. This version uses the "macro" average: calculate metrics for each label, and find their unweighted mean. This does not take label imbalance into account.
-                - "f1_score_weighted": F1 score is a harmonic mean of the precision and recall. This version uses the "weighted" average: Calculate metrics for each label, and find their average weighted by support (the number of true instances for each label).
-                - "kappa", "kappa_quadratic":  computes Cohen’s kappa, a score that expresses the level of agreement between two annotators on a classification problem.
-                - "precision_micro": Precision is defined as the number of true positives over the number of true positives plus the number of false positives. This version(micro) calculates metrics globally by counting the total true positives.
-                - "precision_macro": Precision is defined as the number of true positives over the number of true positives plus the number of false positives. This version(macro) calculates metrics for each label, and finds their unweighted mean.
-                - "precision_weighted": Precision is defined as the number of true positives over the number of true positives plus the number of false positives. This version(weighted) calculates metrics for each label, and find their average weighted by support.
-                - "recall_micro": Recall is defined as the number of true positives over the number of true positives plus the number of false negatives. This version(micro) calculates metrics globally by counting the total true positives.
-                - "recall_macro": Recall is defined as the number of true positives over the number of true positives plus the number of false negatives. This version(macro) calculates metrics for each label, and finds their unweighted mean.
-                - "recall_weighted": Recall is defined as the number of true positives over the number of true positives plus the number of false negatives. This version(weighted) calculates metrics for each label, and find their average weighted by support.
-                - "mcc": The Matthews correlation coefficient is used in machine learning as a measure of the quality of binary and multiclass classifications. It takes into account true and false positives and negatives and is generally regarded as a balanced measure which can be used even if the classes are of very different sizes.
-    """
-
-    def __init__(self, metric: Union[str, list] = classifier_supported_metrics) -> None:
+        Args:
+            metric (Union[ClassifierSupportedMetric, Sequence[ClassifierSupportedMetric]], optional):
+                The type of metric(s) to use for evaluation.
+                A string (one of :obj:`~tempor.benchmarks.evaluation.ClassifierSupportedMetric`) or a sequence of such.
+                Defaults to :obj:`~tempor.benchmarks.evaluation.classifier_supported_metrics`.
+        """
+        self.metrics: Union[ClassifierSupportedMetric, Sequence[ClassifierSupportedMetric]]
         if isinstance(metric, str):
-            self.metrics = [metric]
+            self.metrics = [cast(ClassifierSupportedMetric, metric)]
         else:
             self.metrics = metric
 
-    def get_metric(self) -> Union[str, list]:
+    def get_metric(self) -> Union[ClassifierSupportedMetric, Sequence[ClassifierSupportedMetric]]:
         return self.metrics
 
     def score_proba(self, y_test: np.ndarray, y_pred_proba: np.ndarray) -> Dict[str, float]:
@@ -154,27 +242,72 @@ class classifier_metrics:
             elif metric == "accuracy":
                 results[metric] = accuracy_score(y_test, y_pred)
             elif metric == "f1_score_micro":
-                results[metric] = f1_score(y_test, y_pred, average="micro", zero_division=0)
+                results[metric] = f1_score(
+                    y_test,
+                    y_pred,
+                    average="micro",
+                    zero_division=0,  # pyright: ignore
+                )
             elif metric == "f1_score_macro":
-                results[metric] = f1_score(y_test, y_pred, average="macro", zero_division=0)
+                results[metric] = f1_score(
+                    y_test,
+                    y_pred,
+                    average="macro",
+                    zero_division=0,  # pyright: ignore
+                )
             elif metric == "f1_score_weighted":
-                results[metric] = f1_score(y_test, y_pred, average="weighted", zero_division=0)
+                results[metric] = f1_score(
+                    y_test,
+                    y_pred,
+                    average="weighted",
+                    zero_division=0,  # pyright: ignore
+                )
             elif metric == "kappa":
                 results[metric] = cohen_kappa_score(y_test, y_pred)
             elif metric == "kappa_quadratic":
                 results[metric] = cohen_kappa_score(y_test, y_pred, weights="quadratic")
             elif metric == "recall_micro":
-                results[metric] = recall_score(y_test, y_pred, average="micro", zero_division=0)
+                results[metric] = recall_score(
+                    y_test,
+                    y_pred,
+                    average="micro",
+                    zero_division=0,  # pyright: ignore
+                )
             elif metric == "recall_macro":
-                results[metric] = recall_score(y_test, y_pred, average="macro", zero_division=0)
+                results[metric] = recall_score(
+                    y_test,
+                    y_pred,
+                    average="macro",
+                    zero_division=0,  # pyright: ignore
+                )
             elif metric == "recall_weighted":
-                results[metric] = recall_score(y_test, y_pred, average="weighted", zero_division=0)
+                results[metric] = recall_score(
+                    y_test,
+                    y_pred,
+                    average="weighted",
+                    zero_division=0,  # pyright: ignore
+                )
             elif metric == "precision_micro":
-                results[metric] = precision_score(y_test, y_pred, average="micro", zero_division=0)
+                results[metric] = precision_score(
+                    y_test,
+                    y_pred,
+                    average="micro",
+                    zero_division=0,  # pyright: ignore
+                )
             elif metric == "precision_macro":
-                results[metric] = precision_score(y_test, y_pred, average="macro", zero_division=0)
+                results[metric] = precision_score(
+                    y_test,
+                    y_pred,
+                    average="macro",
+                    zero_division=0,  # pyright: ignore
+                )
             elif metric == "precision_weighted":
-                results[metric] = precision_score(y_test, y_pred, average="weighted", zero_division=0)
+                results[metric] = precision_score(
+                    y_test,
+                    y_pred,
+                    average="weighted",
+                    zero_division=0,  # pyright: ignore
+                )
             elif metric == "mcc":
                 results[metric] = matthews_corrcoef(y_test, y_pred)
             else:
@@ -192,63 +325,43 @@ class classifier_metrics:
 
 
 @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
-def evaluate_classifier(
+def evaluate_classifier(  # pylint: disable=unused-argument
     estimator: Any,
     data: dataset.Dataset,
+    *args: Any,
     n_splits: int = 3,
     random_state: int = 0,
-    *args: Any,
     **kwargs: Any,
 ) -> pd.DataFrame:
     """Helper for evaluating classifiers.
 
     Args:
-        estimator:
+        estimator (Any):
             Baseline model to evaluate - must be unfitted.
-        data: Dataset:
-            The dataset
-        n_splits: int
-            cross-validation folds
-        random_state: int
-            Random random_state
+        data (dataset.Dataset):
+            The dataset.
+        n_splits (int, optional):
+            Cross-validation folds. Defaults to ``3``.
+        random_state (int, optional):
+            Random state. Defaults to ``0``.
 
     Returns:
-        DataFrame containing the results.
+        pd.DataFrame:
+            DataFrame containing the results.
 
-        The columns of the dataframe includes details about the cross-validation repeats:
-            - "min" : the mix score of the metric
-            - "max" : the max score of the metric
-            - "mean" : the mean score of the metric
-            - "stddev" : the stddev score of the metric
-            - "median" : the median score of the metric
-            - "iqr" : the interquartile range of the metric
-            - "rounds" : number of folds
-            - "errors" : number of errors encountered
-            - "durations": average duration for the fold evaluation.
+            The columns of the dataframe contain details about the cross-validation repeats: one column for each
+            :obj:`~tempor.benchmarks.evaluation.OutputMetric`.
 
-        The index of the dataframe includes all the metrics evaluated:
-            - "aucroc" : the Area Under the Receiver Operating Characteristic Curve (ROC AUC) from prediction scores.
-            - "aucprc" : The average precision summarizes a precision-recall curve as the weighted mean of precisions achieved at each threshold, with the increase in recall from the previous threshold used as the weight.
-            - "accuracy" : Accuracy classification score.
-            - "f1_score_micro": F1 score is a harmonic mean of the precision and recall. This version uses the "micro" average: calculate metrics globally by counting the total true positives, false negatives and false positives.
-            - "f1_score_macro": F1 score is a harmonic mean of the precision and recall. This version uses the "macro" average: calculate metrics for each label, and find their unweighted mean. This does not take label imbalance into account.
-            - "f1_score_weighted": F1 score is a harmonic mean of the precision and recall. This version uses the "weighted" average: Calculate metrics for each label, and find their average weighted by support (the number of true instances for each label).
-            - "kappa":  computes Cohen’s kappa, a score that expresses the level of agreement between two annotators on a classification problem.
-            - "precision_micro": Precision is defined as the number of true positives over the number of true positives plus the number of false positives. This version(micro) calculates metrics globally by counting the total true positives.
-            - "precision_macro": Precision is defined as the number of true positives over the number of true positives plus the number of false positives. This version(macro) calculates metrics for each label, and finds their unweighted mean.
-            - "precision_weighted": Precision is defined as the number of true positives over the number of true positives plus the number of false positives. This version(weighted) calculates metrics for each label, and find their average weighted by support.
-            - "recall_micro": Recall is defined as the number of true positives over the number of true positives plus the number of false negatives. This version(micro) calculates metrics globally by counting the total true positives.
-            - "recall_macro": Recall is defined as the number of true positives over the number of true positives plus the number of false negatives. This version(macro) calculates metrics for each label, and finds their unweighted mean.
-            - "recall_weighted": Recall is defined as the number of true positives over the number of true positives plus the number of false negatives. This version(weighted) calculates metrics for each label, and find their average weighted by support.
-            - "mcc": The Matthews correlation coefficient is used in machine learning as a measure of the quality of binary and multiclass classifications. It takes into account true and false positives and negatives and is generally regarded as a balanced measure which can be used even if the classes are of very different sizes.
-
+            The index of the dataframe contains all the metrics evaluated: all of
+            :obj:`~tempor.benchmarks.evaluation.ClassifierSupportedMetric`.
     """
+
     if n_splits < 2 or not isinstance(n_splits, int):
         raise ValueError("n_splits must be an integer >= 2")
     enable_reproducibility(random_state)
 
     results = _InternalScores()
-    evaluator = classifier_metrics()
+    evaluator = ClassifierMetrics()
     for metric in classifier_supported_metrics:
         results.metrics[metric] = np.zeros(n_splits)
 
@@ -277,7 +390,7 @@ def evaluate_classifier(
             for metric in scores:
                 results.metrics[metric][indx] = scores[metric]
             results.errors.append(0)
-        except BaseException as e:
+        except BaseException as e:  # pylint: disable=broad-except
             log.error(f"Evaluation failed: {e}")
             results.errors.append(1)
 
@@ -288,44 +401,35 @@ def evaluate_classifier(
 
 
 @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
-def evaluate_regressor(
+def evaluate_regressor(  # pylint: disable=unused-argument
     estimator: Any,
     data: dataset.Dataset,
+    *args: Any,
     n_splits: int = 3,
     random_state: int = 0,
-    *args: Any,
     **kwargs: Any,
-) -> Dict:
+) -> pd.DataFrame:
     """Helper for evaluating regression tasks.
 
     Args:
-        estimator:
-            Baseline regressor to evaluate - must be unfitted.
-        data: Dataset:
-            The dataset
-        n_splits: int
-            cross-validation folds
-        random_state: int
-            Random random_state
+        estimator (Any):
+            Baseline model to evaluate - must be unfitted.
+        data (dataset.Dataset):
+            The dataset.
+        n_splits (int, optional):
+            Cross-validation folds. Defaults to ``3``.
+        random_state (int, optional):
+            Random state. Defaults to ``0``.
 
     Returns:
-        DataFrame containing the results.
+        pd.DataFrame:
+            DataFrame containing the results.
 
-        The columns of the dataframe includes details about the cross-validation repeats:
-            - "min" : the mix score of the metric
-            - "max" : the max score of the metric
-            - "mean" : the mean score of the metric
-            - "stddev" : the stddev score of the metric
-            - "median" : the median score of the metric
-            - "iqr" : the interquartile range of the metric
-            - "rounds" : number of folds
-            - "errors" : number of errors encountered
-            - "durations": average duration for the fold evaluation.
+            The columns of the dataframe contain details about the cross-validation repeats: one column for each
+            :obj:`~tempor.benchmarks.evaluation.OutputMetric`.
 
-        The index of the dataframe includes all the metrics evaluated:
-            - "r2": R^2(coefficient of determination) regression score function.
-            - "mse": Mean squared error regression loss.
-            - "mae": Mean absolute error regression loss.
+            The index of the dataframe contains all the metrics evaluated: all of
+            :obj:`~tempor.benchmarks.evaluation.RegressionSupportedMetric`.
     """
     if n_splits < 2 or not isinstance(n_splits, int):
         raise ValueError("n_splits must be an integer >= 2")
@@ -357,7 +461,7 @@ def evaluate_regressor(
             results.metrics["mae"][indx] = mean_absolute_error(targets, preds)
             results.metrics["r2"][indx] = r2_score(targets, preds)
             results.errors.append(0)
-        except BaseException as e:
+        except BaseException as e:  # pylint: disable=broad-except
             log.error(f"Regression evaluation failed: {e}")
             results.errors.append(1)
 
