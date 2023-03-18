@@ -96,6 +96,10 @@ class SineDataloader:
         time_series_df = pd.concat(temporal_data, ignore_index=True)
         time_series_df.set_index(keys=["sample_idx", "time_idx"], drop=True, inplace=True)
 
+        time_series_df.sort_index(level=[0, 1], inplace=True)
+        static_data.sort_index(inplace=True)
+        outcome.sort_index(inplace=True)
+
         return OneOffPredictionDataset(
             time_series=time_series_df,
             targets=outcome,

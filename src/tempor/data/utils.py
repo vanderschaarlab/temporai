@@ -6,6 +6,8 @@ import numpy as np
 import pandas as pd
 import pydantic
 
+import tempor.core.utils
+
 from . import data_typing, settings
 
 
@@ -331,3 +333,16 @@ def list_of_dataframes_to_multiindex_timeseries_dataframe(
     )
 
     return df_concat
+
+
+# --- Miscellaneous. ---
+
+
+def ensure_pd_iloc_key_returns_df(key):
+    if isinstance(key, slice):
+        key_: Any = key
+    elif tempor.core.utils.is_iterable(key):
+        key_ = key
+    else:
+        key_ = [key]
+    return key_

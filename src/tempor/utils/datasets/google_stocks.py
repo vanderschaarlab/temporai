@@ -66,6 +66,9 @@ class GoogleStocksDataloader:
         outcome_df.index = sample_idxs  # pyright: ignore
         outcome_df.columns = ["out"]
 
+        time_series_df.sort_index(level=[0, 1], inplace=True)
+        outcome_df.sort_index(inplace=True)
+
         return OneOffPredictionDataset(
             time_series=time_series_df,
             targets=outcome_df,

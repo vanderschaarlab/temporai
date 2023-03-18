@@ -72,7 +72,6 @@ def test_change_config_via_hydra(tmp_path_factory, mock_updated_on_configure):
     # https://hydra.cc/docs/advanced/compose_api/
     with initialize_config_dir(version_base=None, config_dir=str(user_config_dir)):
         user_config = compose(config_name=user_config_name)
-        print(OmegaConf.to_yaml(user_config))
         lib_config = tempor.configure(user_config.tempor)
         assert isinstance(lib_config, TemporConfig)
         assert lib_config.logging.level == "VALUE_SET_VIA_HYDRA"

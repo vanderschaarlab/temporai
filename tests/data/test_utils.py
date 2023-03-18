@@ -823,8 +823,6 @@ class TestArray3dToMultiindexTimeseriesDataframe:
         )
 
         mock_validate_timeseries_array3d.assert_called()
-        print(df)
-        print(expected)
         assert df.equals(expected)
 
     @pytest.mark.parametrize(
