@@ -12,17 +12,38 @@ from tempor.plugins.preprocessing.imputation import BaseImputer
 
 @plugins.register_plugin(name="ffill", category="preprocessing.imputation")
 class FFillImputer(BaseImputer):
+    """Forward-first Time-Series Imputation.
+
+    Args:
+        static_imputer (str, optional):
+            Which imputer to use for the static data (if any). Defaults to ``"mean"``.
+        random_state (int, optional):
+            Random seed. Defaults to ``0``.
+
+    Example:
+        >>> from tempor.utils.datasets.sine import SineDataloader
+        >>> from tempor.plugins import plugin_loader
+        >>>
+        >>> dataset = SineDataloader(with_missing = True).load()
+        >>> assert dataset.static.dataframe().isna().sum().sum() != 0
+        >>> assert dataset.time_series.dataframe().isna().sum().sum() != 0
+        >>>
+        >>> # Load the model:
+        >>> model = plugin_loader.get("preprocessing.imputation.ffill")
+        >>>
+        >>> # Train:
+        >>> model.fit(dataset)
+        FFillImputer(...)
+        >>>
+        >>> # Impute:
+        >>> imputed = model.transform(dataset)
+        >>> assert imputed.static.dataframe().isna().sum().sum() == 0
+        >>> assert imputed.time_series.dataframe().isna().sum().sum() == 0
+    """
+
     def __init__(
         self, static_imputer: str = "mean", random_state: int = 0, **params
     ) -> None:  # pylint: disable=useless-super-delegation
-        """Forward-first Time-Series Imputation.
-
-        Args:
-            static_imputer (str, optional):
-                Which imputer to use for the static data (if any). Defaults to ``"mean"``.
-            random_state (int, optional):
-                Random seed. Defaults to ``0``.
-        """
         super().__init__(**params)
         self.static_imputer = StaticImputers().get(static_imputer, random_state=random_state)
         self.random_state = random_state

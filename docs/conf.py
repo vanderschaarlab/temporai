@@ -212,6 +212,8 @@ def setup(app):
     app.add_autodocumenter(TemporPluginDocumenter)
 
 
+# autodoc_mock_imports = ["sklearn"]  # Update as needed.
+
 # -- Configure autodoc (end) ---------------------------------------
 
 

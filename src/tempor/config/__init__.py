@@ -9,6 +9,8 @@ import hydra.core.config_store
 import omegaconf
 from omegaconf import OmegaConf
 
+import tempor
+
 # NOTE: This config module is loaded before everything else, as other modules may use the config.
 
 DEFAULT_CONFIG_DIR = "conf/tempor"
@@ -62,7 +64,7 @@ updated_on_configure: Set[Callable[[TemporConfig], None]] = set()
 
 # Register dataclass with Hydra config store for Hydra type checking.
 _cs = hydra.core.config_store.ConfigStore.instance()
-_cs.store(name="tempor", node=TemporConfig)
+_cs.store(name=tempor.import_name, node=TemporConfig)
 
 # Initialize OmegaConf schema.
 _tempor_config_schema = OmegaConf.structured(TemporConfig)

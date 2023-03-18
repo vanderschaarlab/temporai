@@ -18,22 +18,119 @@
 
 Key concepts:
 
+<div align="center">
+
 
 <img src="assets/Conceptual.png" width="750" alt="key concepts">
 
 
+</div>
 
-## Installation
+## 🚀 Installation
 
-[PiPy](https://pypi.org/) release is coming soon, for now install directly from the repository as follows:
-
+```bash
+$ pip install temporai
 ```
-pip install git+https://github.com/vanderschaarlab/temporai.git
+or from source, using
+```bash
+$ pip install .
 ```
 
-To view the list of dependencies, see [here](https://github.com/vanderschaarlab/temporai/setup.cfg#L50).
+## 💥 Sample Usage
+* List the available plugins
+```python
+from tempor.plugins import plugin_loader
+
+print(plugin_loader.list())
+```
+
+* Use an imputer
+```python
+from tempor.utils.datasets.sine import SineDataloader
+from tempor.plugins import plugin_loader
+
+dataset = SineDataloader(with_missing=True).load()
+assert dataset.static.dataframe().isna().sum().sum() != 0
+assert dataset.time_series.dataframe().isna().sum().sum() != 0
+
+# load the model
+model = plugin_loader.get("preprocessing.imputation.bfill")
+
+# train
+model.fit(dataset)
+
+# impute
+imputed = model.transform(dataset)
+assert imputed.static.dataframe().isna().sum().sum() == 0
+assert imputed.time_series.dataframe().isna().sum().sum() == 0
+```
+
+* Use a classifier
+```python
+from tempor.utils.datasets.sine import SineDataloader
+from tempor.plugins import plugin_loader
+
+dataset = SineDataloader().load()
+
+# load the model
+model = plugin_loader.get("classification.nn_classifier", n_iter=50)
+
+# train
+model.fit(dataset)
+
+# predict
+assert model.predict(dataset).numpy().shape == (len(dataset), 1)
+```
+
+* Use a regressor
+```python
+from tempor.utils.datasets.sine import SineDataloader
+from tempor.plugins import plugin_loader
+
+dataset = SineDataloader().load()
+
+# load the model
+model = plugin_loader.get("regression.nn_regressor", n_iter=50)
+
+# train
+model.fit(dataset)
+
+# predict
+assert model.predict(dataset).numpy().shape == (len(dataset), 1)
+```
+
+* Benchmark models
+```python
+TODO
+```
 
 
+## 🔑 Methods
+* Imputation
+
+| Name | Description| Reference |
+| --- | --- | --- |
+| `preprocessing.imputation.ffill` | Propagate last valid observation forward to next valid  | --- |
+| `preprocessing.imputation.bfill` | Use next valid observation to fill gap | --- |
+| `preprocessing.imputation.static_imputation` | Use HyperImpute to impute both the static and temporal data | [Paper](https://arxiv.org/abs/2206.07769) |
+
+* Classification
+
+| Name | Description| Reference |
+| --- | --- | --- |
+| `classification.nn_classifier` | Neural-net based classifier. Supports multiple recurrent models, like RNN, LSTM, Transformer etc.  | --- |
+| `classification.ode_classifier` | Classifier based on ordinary differential equation (ODE) solvers.  | --- |
+| `classification.cde_classifier` | Classifier based Neural Controlled Differential Equations for Irregular Time Series.  | [Paper](https://arxiv.org/abs/2005.08926) |
+| `classification.laplace_ode_classifier` | Classifier based Inverse Laplace Transform (ILT) algorithms implemented in PyTorch.  | [Paper](https://arxiv.org/abs/2206.04843) |
+
+* Regression
+
+| Name | Description| Reference |
+| --- | --- | --- |
+| `regression.nn_regressor` | Neural-net based regressor. Supports multiple recurrent models, like RNN, LSTM, Transformer etc.  | --- |
+| `regression.ode_regressor` | Regressor based on ordinary differential equation (ODE) solvers.  | --- |
+| `regression.cde_regressor` | Regressor based Neural Controlled Differential Equations for Irregular Time Series.  | [Paper](https://arxiv.org/abs/2005.08926)
+| `regression.laplace_ode_regressor` | Regressor based Inverse Laplace Transform (ILT) algorithms implemented in PyTorch.  | [Paper](https://arxiv.org/abs/2206.04843) |
 
 <!--
 ## Models
@@ -99,3 +196,21 @@ See [User Guide](user_guide/index) for tutorials/examples.
 <!--- Reusable --->
   [van der Schaar Lab]:    https://www.vanderschaar-lab.com/
   [docs]:                  https://temporai.readthedocs.io/en/latest/
+
+## 🔨 Tests
+
+Install the testing dependencies using
+```bash
+pip install .[dev]
+```
+The tests can be executed using
+```bash
+pytest -vsx
+```
+
+## Citing
+
+If you use this code, please cite the associated paper:
+```
+TODO
+```

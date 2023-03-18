@@ -154,7 +154,7 @@ class MLP(nn.Module):
             n_units_hidden (int, optional):
                 Number of hidden units in each layer. Defaults to ``100``.
             nonlin (Nonlin, optional):
-                Nonlinearity to use in NN.  Available options: :obj:`~tempor.models.constants.Nonlin`.
+                Nonlinearity to use in NN. Available options: :obj:`~tempor.models.constants.Nonlin`.
                 Defaults to ``"relu"``.
             nonlin_out (Optional[List[Tuple[Nonlin, int]]], optional):
                 List of activations for the output. Example ``[("tanh", 1), ("softmax", 3)]`` - means the output layer
