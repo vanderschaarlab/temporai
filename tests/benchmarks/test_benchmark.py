@@ -20,7 +20,10 @@ def test_classifier_benchmark() -> None:
                 ]
             )({"nn_classifier": {"n_iter": 10}}),
         ),
-        ("plugin1", plugin_loader.get("classification.nn_classifier", n_iter=10)),
+        (
+            "plugin1",
+            plugin_loader.get("classification.nn_classifier", n_iter=10),
+        ),
     ]
     dataset = SineDataloader().load()
 
@@ -50,7 +53,10 @@ def test_regressor_benchmark() -> None:
                 ]
             )({"nn_regressor": {"n_iter": 10}}),
         ),
-        ("plugin1", plugin_loader.get("regression.nn_regressor", n_iter=10)),
+        (
+            "plugin1",
+            plugin_loader.get("regression.nn_regressor", n_iter=10),
+        ),
     ]
     dataset = GoogleStocksDataloader().load()
 

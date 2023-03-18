@@ -1,11 +1,8 @@
-# stdlib
 from typing import Any, Dict, List, Tuple
 
-# third party
 import pandas as pd
-from pydantic import validate_arguments
+import pydantic
 
-# synthcity absolute
 from tempor.data import dataset
 from tempor.log import logger as log
 
@@ -13,21 +10,20 @@ from .evaluation import evaluate_classifier, evaluate_regressor
 
 
 def print_score(mean: pd.Series, std: pd.Series) -> pd.Series:
-    pd.options.mode.chained_assignment = None
+    with pd.option_context("mode.chained_assignment", None):
+        mean.loc[(mean < 1e-3) & (mean != 0)] = 1e-3
+        std.loc[(std < 1e-3) & (std != 0)] = 1e-3
 
-    mean.loc[(mean < 1e-3) & (mean != 0)] = 1e-3
-    std.loc[(std < 1e-3) & (std != 0)] = 1e-3
-
-    mean = mean.round(3).astype(str)
-    std = std.round(3).astype(str)
+        mean = mean.round(3).astype(str)
+        std = std.round(3).astype(str)
 
     return mean + " +/- " + std
 
 
-@validate_arguments(config=dict(arbitrary_types_allowed=True))
+@pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
 def benchmark_models(
     task_type: str,
-    tests: List[Tuple[str, Any]],  # test name, model to evaluate(unfitted)
+    tests: List[Tuple[str, Any]],  # [ ( Test name, Model to evaluate (unfitted) ), ... ]
     data: dataset.Dataset,
     n_splits: int = 3,
     random_state: int = 0,
@@ -35,17 +31,29 @@ def benchmark_models(
     """Benchmark the performance of several algorithms.
 
     Args:
-        task_type: str
-            The type of problem. Relevant for evaluating the downstream models with the correct metrics. Valid tasks are:  "classification", "regression".
-        tests: List[Tuple[str, Any model]]
-            Tuples of form (testname: str, plugin: BasePredictor/Pipeline)
-        data: Dataset
+        task_type (str):
+            The type of problem. Relevant for evaluating the downstream models with the correct metrics.
+            Valid tasks are:  ``"classification"``, ``"regression"``.
+        tests (List[Tuple[str, Any]]):
+            Tuples of form ``(test_name: str, plugin: BasePredictor/Pipeline)``
+        data (dataset.Dataset):
             The evaluation dataset to use for cross-validation.
-        n_splits: int
-            Number of splits used for cross-validation.
-        random_state: int
-            Random seed.
+        n_splits (int, optional):
+            Number of splits used for cross-validation. Defaults to ``3``.
+        random_state (int, optional):
+            Random seed. Defaults to ``0``.
+
+    Returns:
+        Tuple[pd.DataFrame, Dict[str, pd.DataFrame]]:
+            The benchmarking results given as ``(readable_dataframe: pd.DataFrame, results: Dict[str, pd.DataFrame]])``
+            where:
+                * ``readable_dataframe``: a dataframe with metric name as index and test names as columns, where the
+                values are readable string representations of the evaluation metric, like: ``MEAN +/- STDDEV``.
+                * ``results``: a dictionary mapping the test name to a dataframe with metric names as index and
+                ``["mean", "stddev"]`` columns, where the values are the ``float`` mean and standard deviation for
+                each metric.
     """
+
     results = {}
 
     if task_type == "classification":
