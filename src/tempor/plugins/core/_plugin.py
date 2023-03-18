@@ -1,12 +1,17 @@
 import functools
 import glob
+import importlib
 import importlib.abc
 import importlib.util
+import inspect
+import os
 import os.path
+import sys
 from typing import TYPE_CHECKING, Any, Callable, ClassVar, Dict, List, Type, TypeVar
 
 from typing_extensions import ParamSpec
 
+import tempor
 from tempor.log import logger
 
 from . import utils
@@ -156,7 +161,12 @@ def _glob_plugin_paths(package_dir: str) -> List[str]:
 
 
 def _module_name_from_path(path: str) -> str:
-    return os.path.basename(path)[:-3]
+    path = os.path.normpath(path)
+    split = path[path.rfind(tempor.import_name) :].split(os.sep)
+    if split[-1][-3:] != ".py":
+        raise ValueError(f"Path `{path}` is not a python file.")
+    split[-1] = split[-1].replace(".py", "")
+    return ".".join(split)
 
 
 class importing:  # Functions as namespace, for clarity.
@@ -172,8 +182,17 @@ class importing:  # Functions as namespace, for clarity.
             spec = importlib.util.spec_from_file_location(module_name, f)
             if spec is None or not isinstance(spec.loader, importlib.abc.Loader):
                 raise RuntimeError(f"Import failed for {module_name}")
-            mod = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(mod)
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[module_name] = module
+            spec.loader.exec_module(module)
+
+            # Ensure doctests of plugins are included.
+            # See: https://docs.python.org/3.8/library/doctest.html#which-docstrings-are-examined
+            for name, obj in inspect.getmembers(module):
+                if hasattr(obj, "_tempor_plugin_"):
+                    test_dict = getattr(module, "__test__", dict())
+                    test_dict[name] = getattr(obj, "_cls")
+                    setattr(module, "__test__", test_dict)
 
     @staticmethod
     def gather_modules_names(package_init_file: str) -> List[str]:

@@ -149,6 +149,8 @@ class TimeSeriesModel(nn.Module):
             self.loss = nn.MSELoss()
         elif task_type == "classification":
             self.loss = nn.CrossEntropyLoss()
+        else:
+            raise ValueError(f"Invalid task type {task_type}")
 
         self.n_iter = n_iter
         self.n_iter_print = n_iter_print
@@ -324,7 +326,7 @@ class TimeSeriesModel(nn.Module):
     ) -> float:
         y_pred = self.predict(static_data, temporal_data, observation_times)
         if self.task_type == "classification":
-            return np.mean(y_pred == outcome)
+            return np.mean(y_pred.astype(int) == outcome.astype(int))
         else:
             return np.mean(np.inner(outcome - y_pred, outcome - y_pred) / 2.0)
 
