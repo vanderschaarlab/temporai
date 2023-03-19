@@ -8,6 +8,8 @@ import torch.backends.cudnn
 import torch.version
 from torch import nn
 
+import tempor.core.utils
+
 
 def enable_reproducibility(
     random_seed: int = 0,
@@ -53,7 +55,7 @@ def enable_reproducibility(
     if torch_use_deterministic_algorithms:
         torch.use_deterministic_algorithms(True)
         if warn_cuda_env_vars and torch.version.cuda not in ("", None):
-            major, minor = [int(x) for x in torch.version.cuda.split(".")]
+            major, minor = tempor.core.utils.get_version(torch.version.cuda)
             if (major, minor) == (10, 1) and os.environ.get("CUDA_LAUNCH_BLOCKING", None) != "1":
                 warnings.warn(
                     "When setting torch.use_deterministic_algorithms and using CUDA 10.1, the environment variable "

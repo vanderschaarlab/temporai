@@ -1,4 +1,5 @@
 import enum
+from typing import Tuple
 
 
 def get_class_full_name(o: object):
@@ -29,3 +30,19 @@ def is_iterable(o: object) -> bool:
     except TypeError:
         is_iterable_ = False
     return is_iterable_
+
+
+def get_version(version: str) -> Tuple[int, ...]:
+    """Get the semantic ``version`` as a tuple of ``int`` s.
+
+    Note:
+        Assumes that the ``version`` string is specified as ``.``-separated ``ints``; will throw exceptions in
+        case of more complex version semantics.
+
+    Args:
+        module (ModuleType): The module to get the version of.
+
+    Returns:
+        Tuple[int, ...]: Tuple of integers representing ``(major, minor, patch[, ...])``.
+    """
+    return tuple(int(v) for v in version.split("."))

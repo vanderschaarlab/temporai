@@ -24,12 +24,21 @@ EXCEPTION_MESSAGES = _ExceptionMessages()
 """Reusable error messages for the module."""
 
 
-# --- Multiindex timeseries dataframe --> 3D numpy array. ---
-
-
 def value_in_df(df: pd.DataFrame, *, value: Any) -> bool:
     """Check if ``value`` exists in dataframe ``df``, accounting for the case where ``value`` is `numpy.nan`."""
     return (pd.isnull(value) and df.isna().any().any()) or (df == value).any().any()
+
+
+def set_df_column_names_inplace(df: pd.DataFrame, names: Sequence) -> pd.DataFrame:
+    pd_major, pd_minor, *_ = tempor.core.utils.get_version(pd.__version__)
+    if pd_major <= 1 and pd_minor < 5:
+        df.set_axis(names, axis="columns", inplace=True)  # pyright: ignore
+        return df
+    else:
+        return df.set_axis(names, axis="columns", copy=False)
+
+
+# --- Multiindex timeseries dataframe --> 3D numpy array. ---
 
 
 @pydantic.validate_arguments(config={"arbitrary_types_allowed": True, "smart_union": True})
@@ -333,7 +342,7 @@ def list_of_dataframes_to_multiindex_timeseries_dataframe(
         [settings.DATA_SETTINGS.sample_index_name, settings.DATA_SETTINGS.time_index_name], inplace=True
     )
     if feature_index is not None:
-        df_concat = df_concat.set_axis(feature_index, axis="columns", copy=False)
+        df_concat = set_df_column_names_inplace(df_concat, feature_index)
 
     return df_concat
 
@@ -378,7 +387,7 @@ def event_time_value_pairs_to_event_dataframe(
     data_input = pd.DataFrame(data=series_list).T.to_numpy()
     df = pd.DataFrame(data=data_input, index=sample_index)
     if feature_index is not None:
-        df = df.set_axis(feature_index, axis="columns", copy=False)
+        df = set_df_column_names_inplace(df, feature_index)
     return df
 
 

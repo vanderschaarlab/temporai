@@ -4,11 +4,12 @@ from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Tuple
 import pandas as pd
 import pandera as pa
 
+import tempor.core.utils
 from tempor.log import logger
 
 from . import data_typing
 
-pa_major, pa_minor, *_ = [int(v) for v in pa.__version__.split(".")]
+pa_major, pa_minor, *_ = tempor.core.utils.get_version(pa.__version__)
 
 
 _PA_DF_SCHEMA_INIT_PARAMETERS = [
