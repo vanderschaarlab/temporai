@@ -15,7 +15,7 @@ def check_data_class(data):
         )
 
 
-class BaseSurvivalAnalysis(plugins.BasePredictor):
+class BaseTimeToEventAnalysis(plugins.BasePredictor):
     def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
         super().__init__(**params)
 
@@ -39,11 +39,11 @@ class BaseSurvivalAnalysis(plugins.BasePredictor):
         ...
 
 
-plugins.register_plugin_category("survival", BaseSurvivalAnalysis)
+plugins.register_plugin_category("time_to_event", BaseTimeToEventAnalysis)
 
 plugins.importing.import_plugins(__file__)
 
 __all__ = [  # pyright: ignore
     *plugins.importing.gather_modules_names(__file__),
-    "BaseSurvivalAnalysis",
+    "BaseTimeToEventAnalysis",
 ]

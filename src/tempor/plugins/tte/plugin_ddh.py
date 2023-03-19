@@ -8,7 +8,7 @@ import tempor.exc
 import tempor.plugins.core as plugins
 from tempor.data import dataset, samples
 from tempor.models.ddh import DynamicDeepHitModel
-from tempor.plugins.survival import BaseSurvivalAnalysis
+from tempor.plugins.tte import BaseTimeToEventAnalysis
 
 RnnModes = Literal[
     "GRU",
@@ -50,8 +50,8 @@ class DynamicDeepHitSurvivalAnalysisParams:
     random_state: int = 0
 
 
-@plugins.register_plugin(name="dynamic_deephit", category="survival")
-class DynamicDeepHitSurvivalAnalysis(BaseSurvivalAnalysis):
+@plugins.register_plugin(name="dynamic_deephit", category="time_to_event")
+class DynamicDeepHitSurvivalAnalysis(BaseTimeToEventAnalysis):
     """Class docstring"""
 
     ParamsDefinition = DynamicDeepHitSurvivalAnalysisParams

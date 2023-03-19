@@ -7,12 +7,12 @@ def test_tempor_plugin_loader_contents():
     # Do some checks that expected plugins have been registered.
     # Update as plugins get added / reorganized.
     assert "preprocessing" in all_plugins
-    assert "survival" in all_plugins
+    assert "time_to_event" in all_plugins
     assert "imputation" in all_plugins["preprocessing"]
     assert "scaling" in all_plugins["preprocessing"]
     assert "nop_imputer" in all_plugins["preprocessing"]["imputation"]
     assert "nop_scaler" in all_plugins["preprocessing"]["scaling"]
-    assert "dynamic_deephit" in all_plugins["survival"]
+    assert "dynamic_deephit" in all_plugins["time_to_event"]
 
 
 def test_tempor_plugins_all_init_success():
