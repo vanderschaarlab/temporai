@@ -82,10 +82,10 @@ class NeuralNetClassifier(BaseClassifier):
                 Train/test split ratio. Defaults to ``0.8``.
 
         Example:
-            >>> from tempor.utils.datasets.sine import SineDataloader
+            >>> from tempor.utils.datasets.sine import SineDataLoader
             >>> from tempor.plugins import plugin_loader
             >>>
-            >>> dataset = SineDataloader().load()
+            >>> dataset = SineDataLoader().load()
             >>>
             >>> # Load the model:
             >>> model = plugin_loader.get("classification.nn_classifier", n_iter=50)

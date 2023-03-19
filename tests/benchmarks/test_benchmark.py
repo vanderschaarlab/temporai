@@ -5,8 +5,8 @@ from tempor.benchmarks import (
 )
 from tempor.plugins import plugin_loader
 from tempor.plugins.pipeline import Pipeline
-from tempor.utils.datasets.google_stocks import GoogleStocksDataloader
-from tempor.utils.datasets.sine import SineDataloader
+from tempor.utils.datasets.google_stocks import GoogleStocksDataLoader
+from tempor.utils.datasets.sine import SineDataLoader
 
 
 def test_classifier_benchmark() -> None:
@@ -25,7 +25,7 @@ def test_classifier_benchmark() -> None:
             plugin_loader.get("classification.nn_classifier", n_iter=10),
         ),
     ]
-    dataset = SineDataloader().load()
+    dataset = SineDataLoader().load()
 
     aggr_score, per_test_score = benchmark_models(
         task_type="classification", tests=testcases, data=dataset, n_splits=2, random_state=0
@@ -58,7 +58,7 @@ def test_regressor_benchmark() -> None:
             plugin_loader.get("regression.nn_regressor", n_iter=10),
         ),
     ]
-    dataset = GoogleStocksDataloader().load()
+    dataset = GoogleStocksDataLoader().load()
 
     aggr_score, per_test_score = benchmark_models(
         task_type="regression", tests=testcases, data=dataset, n_splits=2, random_state=0

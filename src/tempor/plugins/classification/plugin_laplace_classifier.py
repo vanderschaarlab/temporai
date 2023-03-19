@@ -85,10 +85,10 @@ class LaplaceODEClassifier(BaseClassifier):
                 Custom data sampler for training. Defaults to `None`.
 
         Example:
-            >>> from tempor.utils.datasets.sine import SineDataloader
+            >>> from tempor.utils.datasets.sine import SineDataLoader
             >>> from tempor.plugins import plugin_loader
             >>>
-            >>> # dataset = SineDataloader().load()
+            >>> # dataset = SineDataLoader().load()
             >>>
             >>> # Load the model:
             >>> model = plugin_loader.get("classification.laplace_ode_classifier", n_iter=50)

@@ -83,10 +83,10 @@ class CDERegressor(BaseRegressor):
                 Custom data sampler for training. Defaults to `None`.
 
         Example:
-            >>> from tempor.utils.datasets.sine import SineDataloader
+            >>> from tempor.utils.datasets.sine import SineDataLoader
             >>> from tempor.plugins import plugin_loader
             >>>
-            >>> dataset = SineDataloader().load()
+            >>> dataset = SineDataLoader().load()
             >>>
             >>> # Load the model:
             >>> model = plugin_loader.get("regression.cde_regressor", n_iter=50)

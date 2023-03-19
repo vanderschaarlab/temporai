@@ -3,7 +3,7 @@ import pytest
 from tempor.plugins import plugin_loader
 from tempor.plugins.regression import BaseRegressor
 from tempor.plugins.regression.plugin_nn_regressor import NeuralNetRegressor as plugin
-from tempor.utils.datasets.sine import SineDataloader
+from tempor.utils.datasets.sine import SineDataLoader
 
 
 def from_api() -> BaseRegressor:
@@ -23,14 +23,14 @@ def test_nn_regressor_plugin_sanity(test_plugin: BaseRegressor) -> None:
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
 def test_nn_regressor_plugin_fit(test_plugin: BaseRegressor) -> None:
-    dataset = SineDataloader().load()
+    dataset = SineDataLoader().load()
 
     test_plugin.fit(dataset)
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
 def test_nn_regressor_plugin_predict(test_plugin: BaseRegressor) -> None:
-    dataset = SineDataloader().load()
+    dataset = SineDataLoader().load()
 
     output = test_plugin.fit(dataset).predict(dataset)
     assert output.numpy().shape == (len(dataset.time_series), 1)

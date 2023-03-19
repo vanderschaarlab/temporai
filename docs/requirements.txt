@@ -10,7 +10,9 @@ pandas >=1
 pandera >=0.13
 pydantic >=1, <2
 rich
+scikit-learn
 scikit-learn >= 1.0
+scipy
 torch
 torchcde
 torchdiffeq

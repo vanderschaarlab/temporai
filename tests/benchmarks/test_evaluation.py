@@ -11,8 +11,8 @@ from tempor.benchmarks import (
 )
 from tempor.plugins import plugin_loader
 from tempor.plugins.pipeline import Pipeline
-from tempor.utils.datasets.google_stocks import GoogleStocksDataloader
-from tempor.utils.datasets.sine import SineDataloader
+from tempor.utils.datasets.google_stocks import GoogleStocksDataLoader
+from tempor.utils.datasets.sine import SineDataLoader
 
 
 @pytest.mark.parametrize(
@@ -34,7 +34,7 @@ from tempor.utils.datasets.sine import SineDataloader
 )
 @pytest.mark.parametrize("n_splits", [2])
 def test_classifier_evaluation(model_template: Any, n_splits: int) -> None:
-    dataset = SineDataloader().load()
+    dataset = SineDataLoader().load()
 
     scores = evaluate_classifier(model_template, dataset, n_splits=n_splits, seed=0)
 
@@ -47,7 +47,7 @@ def test_classifier_evaluation(model_template: Any, n_splits: int) -> None:
 
 @pytest.mark.parametrize("n_splits", [-1, 0, 1])
 def test_classifier_evaluation_fail(n_splits: int) -> None:
-    dataset = SineDataloader().load()
+    dataset = SineDataLoader().load()
 
     with pytest.raises(ValueError):
         evaluate_classifier(
@@ -74,7 +74,7 @@ def test_classifier_evaluation_fail(n_splits: int) -> None:
 )
 @pytest.mark.parametrize("n_splits", [2])
 def test_regressor_evaluation(model_template: Any, n_splits: int) -> None:
-    dataset = GoogleStocksDataloader().load()
+    dataset = GoogleStocksDataLoader().load()
 
     scores = evaluate_regressor(model_template, dataset, n_splits=n_splits, seed=0)
 
@@ -87,7 +87,7 @@ def test_regressor_evaluation(model_template: Any, n_splits: int) -> None:
 
 @pytest.mark.parametrize("n_splits", [-1, 0, 1])
 def test_regressor_evaluation_fail(n_splits: int) -> None:
-    dataset = SineDataloader().load()
+    dataset = SineDataLoader().load()
 
     with pytest.raises(ValueError):
         evaluate_regressor(plugin_loader.get("regression.nn_regressor", n_iter=50), dataset, n_splits=n_splits, seed=0)

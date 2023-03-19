@@ -47,11 +47,11 @@ def benchmark_models(
         Tuple[pd.DataFrame, Dict[str, pd.DataFrame]]:
             The benchmarking results given as ``(readable_dataframe: pd.DataFrame, results: Dict[str, pd.DataFrame]])``
             where:
-                * ``readable_dataframe``: a dataframe with metric name as index and test names as columns, where the
-                values are readable string representations of the evaluation metric, like: ``MEAN +/- STDDEV``.
-                * ``results``: a dictionary mapping the test name to a dataframe with metric names as index and
-                ``["mean", "stddev"]`` columns, where the values are the ``float`` mean and standard deviation for
-                each metric.
+            * ``readable_dataframe``: a dataframe with metric name as index and test names as columns, where the values
+            are readable string representations of the evaluation metric, like: ``MEAN +/- STDDEV``.
+            * ``results``: a dictionary mapping the test name to a dataframe with metric names as index and
+            ``["mean", "stddev"]`` columns, where the values are the ``float`` mean and standard deviation
+            for each metric.
     """
 
     results = {}

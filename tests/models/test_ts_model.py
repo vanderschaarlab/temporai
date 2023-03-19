@@ -5,8 +5,8 @@ import pytest
 from typing_extensions import get_args
 
 from tempor.models.ts_model import ModelTaskType, TimeSeriesModel, TSModelMode
-from tempor.utils.datasets.google_stocks import GoogleStocksDataloader
-from tempor.utils.datasets.sine import SineDataloader
+from tempor.utils.datasets.google_stocks import GoogleStocksDataLoader
+from tempor.utils.datasets.sine import SineDataLoader
 
 
 def unpack_dataset(source):
@@ -59,7 +59,7 @@ def test_rnn_sanity(mode: TSModelMode, task_type: ModelTaskType) -> None:
 
 
 @pytest.mark.parametrize("mode", get_args(TSModelMode))
-@pytest.mark.parametrize("source", [GoogleStocksDataloader, SineDataloader])
+@pytest.mark.parametrize("source", [GoogleStocksDataLoader, SineDataLoader])
 @pytest.mark.parametrize("use_horizon_condition", [True, False])
 def test_rnn_regression_fit_predict(mode: TSModelMode, source: Any, use_horizon_condition: bool) -> None:
     static, temporal, observation_times, outcome = unpack_dataset(source)
@@ -90,7 +90,7 @@ def test_rnn_regression_fit_predict(mode: TSModelMode, source: Any, use_horizon_
 
 
 @pytest.mark.parametrize("mode", get_args(TSModelMode))
-@pytest.mark.parametrize("source", [SineDataloader, GoogleStocksDataloader])
+@pytest.mark.parametrize("source", [SineDataLoader, GoogleStocksDataLoader])
 def test_rnn_classification_fit_predict(mode: TSModelMode, source: Any) -> None:
     static, temporal, observation_times, outcome = unpack_dataset(source)  # pylint: disable=unused-variable
     static_fake, temporal_fake = np.random.randn(*static.shape), np.random.randn(*temporal.shape)

@@ -1,4 +1,3 @@
-import abc
 import io
 import os
 
@@ -8,52 +7,33 @@ import requests
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 
-import tempor
+from tempor.data import dataset
 
-from . import dataset
-
-# from tempor.data import samples
+from . import dataloader
 
 
-DATA_DIR = "data"
-
-
-class DataSource(abc.ABC):
-    data_root_dir: str
-    dataset_dir: str
-    url: str
-
-    def __init__(self, *args, **kwargs) -> None:  # pylint: disable=unused-argument
-        self.data_root_dir = os.path.join(tempor.get_config().get_working_dir(), DATA_DIR)
-        os.makedirs(self.data_root_dir, exist_ok=True)
-
-    @abc.abstractmethod
-    def load_dataset(self, **kwargs) -> dataset.Dataset:
-        ...
-
-
-class TimeToEventAnalysisDataSource(DataSource):
-    @abc.abstractmethod
-    def load_dataset(self, **kwargs) -> dataset.TimeToEventAnalysisDataset:
-        ...
-
-
-class PBCDataSource(TimeToEventAnalysisDataSource):
+# TODO: Docstring to explain the dataset.
+class PBCDataLoader(dataloader.TimeToEventAnalysisDataLoader):
     def __init__(self, *args, **kwargs) -> None:
+        self.datafile_path = os.path.join(self.dataset_dir(), "pbc2.csv")
         super().__init__(*args, **kwargs)
-        self.url = (
+
+    @staticmethod
+    def dataset_dir() -> str:
+        return os.path.join(PBCDataLoader.data_root_dir, "pbc/")
+
+    @staticmethod
+    def url() -> str:
+        return (
             "https://raw.githubusercontent.com/autonlab/auton-survival/"
             "cf583e598ec9ab92fa5d510a0ca72d46dfe0706f/dsm/datasets/pbc2.csv"
         )
-        self.dataset_dir = os.path.join(self.data_root_dir, "pbc/")
-        os.makedirs(self.dataset_dir, exist_ok=True)
-        self.datafile_path = os.path.join(self.dataset_dir, "pbc2.csv")
 
-    def load_dataset(self, **kwargs) -> dataset.TimeToEventAnalysisDataset:
+    def load(self, **kwargs) -> dataset.TimeToEventAnalysisDataset:
         if os.path.exists(self.datafile_path):
             data = pd.read_csv(self.datafile_path)
         else:
-            request = requests.get(self.url, timeout=5).content
+            request = requests.get(self.url(), timeout=5).content
             data = pd.read_csv(io.StringIO(request.decode("utf-8")))
             data.to_csv(self.datafile_path, index=False)
 

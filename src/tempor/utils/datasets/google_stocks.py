@@ -6,27 +6,31 @@ import pandas as pd
 import requests
 from sklearn.preprocessing import MinMaxScaler
 
-from tempor.data.dataset import OneOffPredictionDataset
+from tempor.data import dataset
 
-URL = "https://raw.githubusercontent.com/PacktPublishing/Learning-Pandas-Second-Edition/master/data/goog.csv"
+from . import dataloader
 
 
-class GoogleStocksDataloader:
-    def __init__(self, seq_len: int = 10) -> None:
+# TODO: Docstring to explain the dataset.
+class GoogleStocksDataLoader(dataloader.OneOffPredictionDataLoader):
+    def __init__(self, *args, seq_len: int = 10, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
         self.seq_len = seq_len
+        self.df_path = Path(self.dataset_dir()) / "goog.csv"
 
-        df_folder = Path(__file__).parent / "data"
-        df_folder.mkdir(parents=True, exist_ok=True)
-        df_path = "goog.csv"
+    @staticmethod
+    def url() -> str:
+        return "https://raw.githubusercontent.com/PacktPublishing/Learning-Pandas-Second-Edition/master/data/goog.csv"
 
-        self.df_path = df_folder / df_path
+    @staticmethod
+    def dataset_dir() -> str:
+        return str(Path(GoogleStocksDataLoader.data_root_dir) / "google_stocks")
 
-    def load(
-        self,
-    ) -> OneOffPredictionDataset:
+    def load(self, **kwargs) -> dataset.OneOffPredictionDataset:
         # Load Google Data
         if not self.df_path.exists():
-            s = requests.get(URL, timeout=5).content
+            s = requests.get(self.url(), timeout=5).content
             df = pd.read_csv(io.StringIO(s.decode("utf-8")))
 
             df.to_csv(self.df_path, index=False)
@@ -69,7 +73,7 @@ class GoogleStocksDataloader:
         time_series_df.sort_index(level=[0, 1], inplace=True)
         outcome_df.sort_index(inplace=True)
 
-        return OneOffPredictionDataset(
+        return dataset.OneOffPredictionDataset(
             time_series=time_series_df,
             targets=outcome_df,
             sample_index="sample_idx",
