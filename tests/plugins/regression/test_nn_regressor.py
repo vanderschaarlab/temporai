@@ -3,7 +3,7 @@ import pytest
 from tempor.plugins import plugin_loader
 from tempor.plugins.regression import BaseRegressor
 from tempor.plugins.regression.plugin_nn_regressor import NeuralNetRegressor as plugin
-from tempor.utils.datasets.sine import SineDataLoader
+from tempor.utils.dataloaders.sine import SineDataLoader
 
 
 def from_api() -> BaseRegressor:

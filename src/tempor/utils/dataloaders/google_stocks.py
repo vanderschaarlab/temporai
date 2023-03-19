@@ -6,9 +6,7 @@ import pandas as pd
 import requests
 from sklearn.preprocessing import MinMaxScaler
 
-from tempor.data import dataset
-
-from . import dataloader
+from tempor.data import dataloader, dataset
 
 
 # TODO: Docstring to explain the dataset.

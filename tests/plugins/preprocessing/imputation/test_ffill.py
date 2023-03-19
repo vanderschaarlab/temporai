@@ -5,7 +5,7 @@ import pytest
 from tempor.plugins import plugin_loader
 from tempor.plugins.preprocessing.imputation import BaseImputer
 from tempor.plugins.preprocessing.imputation.plugin_ffill import FFillImputer as plugin
-from tempor.utils.datasets.sine import SineDataLoader
+from tempor.utils.dataloaders.sine import SineDataLoader
 
 
 def from_api() -> BaseImputer:

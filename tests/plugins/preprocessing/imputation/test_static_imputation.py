@@ -7,7 +7,7 @@ from tempor.plugins.preprocessing.imputation import BaseImputer
 from tempor.plugins.preprocessing.imputation.plugin_static_imputation import (
     StaticOnlyImputer as plugin,
 )
-from tempor.utils.datasets.sine import SineDataLoader
+from tempor.utils.dataloaders.sine import SineDataLoader
 
 
 def from_api() -> BaseImputer:

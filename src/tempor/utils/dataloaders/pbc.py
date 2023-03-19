@@ -7,9 +7,7 @@ import requests
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 
-from tempor.data import dataset
-
-from . import dataloader
+from tempor.data import dataloader, dataset, utils
 
 
 # TODO: Docstring to explain the dataset.
@@ -66,7 +64,7 @@ class PBCDataLoader(dataloader.TimeToEventAnalysisDataLoader):
         )
 
         x_static, x_temporal, t, e = [], [], [], []
-        t_all, e_all = [], []
+        time_indexes, event_feat_full = [], []
 
         temporal_cols = [
             "drug",
@@ -85,8 +83,10 @@ class PBCDataLoader(dataloader.TimeToEventAnalysisDataLoader):
             "age",
         ]
         static_cols = ["sex"]
+        sample_index = []
 
         for id_ in sorted(list(set(data["id"]))):
+            sample_index.append(id_)
             patient = x_scaled[data["id"] == id_]
 
             patient_static = patient[static_cols]
@@ -111,25 +111,24 @@ class PBCDataLoader(dataloader.TimeToEventAnalysisDataLoader):
                 pos = np.min(np.where(events == evt))  # First event
 
             t.append(times[pos])
-            e.append(evt)
+            e.append({0: False, 1: True}[evt])
 
-            t_all.append(times)
-            e_all.append(events)
+            time_indexes.append(list(times))
+            event_feat_full.append(events)
 
-        x_static = pd.DataFrame(x_static, columns=static_cols)
-        t = pd.Series(t, name="time_to_event")
-        e = pd.Series(e, name="event")
+        df_static = pd.DataFrame(x_static, columns=static_cols, index=sample_index)
+        df_time_series = utils.list_of_dataframes_to_multiindex_timeseries_dataframe(
+            x_temporal,
+            sample_index=sample_index,
+            time_indexes=time_indexes,
+            feature_index=temporal_cols,
+        )
+        df_event = utils.event_time_value_pairs_to_event_dataframe(
+            [(t, e)], sample_index=sample_index, feature_index=["status"]
+        )
 
-        # TODO: WIP
-        raise NotImplementedError
-        # samples_static = samples.StaticSamples(data=x_static, sample_index=list(range(len(x_static))))
-        # samples_temporal = samples.Tem
-
-        # return (
-        #     x_static,
-        #     x_temporal,
-        #     t,
-        #     e,
-        #     t_ext,
-        #     e_ext,
-        # )
+        return dataset.TimeToEventAnalysisDataset(
+            time_series=df_time_series,
+            static=df_static,
+            targets=df_event,
+        )

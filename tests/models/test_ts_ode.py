@@ -5,8 +5,8 @@ import pytest
 
 from tempor.models.constants import ODEBackend
 from tempor.models.ts_ode import NeuralODE
-from tempor.utils.datasets.google_stocks import GoogleStocksDataLoader
-from tempor.utils.datasets.sine import SineDataLoader
+from tempor.utils.dataloaders.google_stocks import GoogleStocksDataLoader
+from tempor.utils.dataloaders.sine import SineDataLoader
 
 
 def unpack_dataset(source):

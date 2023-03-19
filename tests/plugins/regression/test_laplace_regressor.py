@@ -5,7 +5,7 @@ from tempor.plugins.regression import BaseRegressor
 from tempor.plugins.regression.plugin_laplace_regressor import (
     LaplaceODERegressor as plugin,
 )
-from tempor.utils.datasets.google_stocks import GoogleStocksDataLoader
+from tempor.utils.dataloaders.google_stocks import GoogleStocksDataLoader
 
 train_kwargs = {"random_state": 123, "n_iter": 50}
 

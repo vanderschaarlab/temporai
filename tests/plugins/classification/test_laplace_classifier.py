@@ -5,7 +5,7 @@ from tempor.plugins.classification import BaseClassifier
 from tempor.plugins.classification.plugin_laplace_classifier import (
     LaplaceODEClassifier as plugin,
 )
-from tempor.utils.datasets.google_stocks import GoogleStocksDataLoader
+from tempor.utils.dataloaders.google_stocks import GoogleStocksDataLoader
 
 train_kwargs = {"random_state": 123, "n_iter": 50}
 

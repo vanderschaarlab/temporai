@@ -1,9 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from tempor.data import dataset
-
-from . import dataloader
+from tempor.data import dataloader, dataset
 
 
 class SineDataLoader(dataloader.OneOffPredictionDataLoader):

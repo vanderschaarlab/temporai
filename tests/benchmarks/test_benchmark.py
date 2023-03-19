@@ -5,8 +5,8 @@ from tempor.benchmarks import (
 )
 from tempor.plugins import plugin_loader
 from tempor.plugins.pipeline import Pipeline
-from tempor.utils.datasets.google_stocks import GoogleStocksDataLoader
-from tempor.utils.datasets.sine import SineDataLoader
+from tempor.utils.dataloaders.google_stocks import GoogleStocksDataLoader
+from tempor.utils.dataloaders.sine import SineDataLoader
 
 
 def test_classifier_benchmark() -> None:

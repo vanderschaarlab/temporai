@@ -5,7 +5,7 @@ from tempor.plugins.classification import BaseClassifier
 from tempor.plugins.classification.plugin_nn_classifier import (
     NeuralNetClassifier as plugin,
 )
-from tempor.utils.datasets.sine import SineDataLoader
+from tempor.utils.dataloaders.sine import SineDataLoader
 
 
 def from_api() -> BaseClassifier:

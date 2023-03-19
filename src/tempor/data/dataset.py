@@ -224,7 +224,7 @@ class Dataset(abc.ABC):
 
         Example:
             >>> from sklearn.model_selection import KFold
-            >>> from tempor.utils.datasets.sine import SineDataLoader
+            >>> from tempor.utils.dataloaders.sine import SineDataLoader
             >>> data = SineDataLoader().load()
             >>> kfold = KFold(n_splits=5)
             >>> len([(data_train, data_test) for (data_train, data_test) in data.split(splitter=kfold)])

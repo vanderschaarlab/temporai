@@ -3,7 +3,7 @@ import pytest
 from tempor.plugins import plugin_loader
 from tempor.plugins.classification import BaseClassifier
 from tempor.plugins.classification.plugin_ode_classifier import ODEClassifier as plugin
-from tempor.utils.datasets.sine import SineDataLoader
+from tempor.utils.dataloaders.sine import SineDataLoader
 
 train_kwargs = {"random_state": 123, "n_iter": 50}
 

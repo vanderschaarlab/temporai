@@ -4,7 +4,7 @@ from typing import ClassVar, Optional, Type  # pylint: disable=unused-import
 
 import tempor
 
-from ...data import data_typing, dataset
+from . import data_typing, dataset
 
 DATA_DIR = "data"
 """The subdirectory on the user's system where all data source files will be stored.

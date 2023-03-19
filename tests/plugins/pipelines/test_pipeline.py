@@ -5,7 +5,7 @@ from typing import Any, List
 import pytest
 
 from tempor.plugins.pipeline import Pipeline, PipelineGroup, PipelineMeta
-from tempor.utils.datasets.sine import SineDataLoader
+from tempor.utils.dataloaders.sine import SineDataLoader
 
 
 @pytest.mark.parametrize(
