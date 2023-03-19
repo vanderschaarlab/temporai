@@ -59,7 +59,7 @@ print(plugin_loader.list())
 
 * Use an imputer
 ```python
-from tempor.utils.datasets.sine import SineDataLoader
+from tempor.utils.datasets import SineDataLoader
 from tempor.plugins import plugin_loader
 
 dataset = SineDataLoader(with_missing=True).load()
@@ -80,7 +80,7 @@ assert imputed.time_series.dataframe().isna().sum().sum() == 0
 
 * Use a classifier
 ```python
-from tempor.utils.datasets.sine import SineDataLoader
+from tempor.utils.datasets import SineDataLoader
 from tempor.plugins import plugin_loader
 
 dataset = SineDataLoader().load()
@@ -97,7 +97,7 @@ assert model.predict(dataset).numpy().shape == (len(dataset), 1)
 
 * Use a regressor
 ```python
-from tempor.utils.datasets.sine import SineDataLoader
+from tempor.utils.datasets import SineDataLoader
 from tempor.plugins import plugin_loader
 
 dataset = SineDataLoader().load()
@@ -114,7 +114,7 @@ assert model.predict(dataset).numpy().shape == (len(dataset), 1)
 
 * Benchmark models
 ```python
-TODO
+# TODO
 ```
 
 
