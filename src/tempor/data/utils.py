@@ -1,6 +1,6 @@
 import dataclasses
 import itertools
-from typing import Any, ClassVar, List, Optional
+from typing import Any, ClassVar, List, Optional, Sequence, Tuple
 
 import numpy as np
 import pandas as pd
@@ -300,6 +300,7 @@ def list_of_dataframes_to_multiindex_timeseries_dataframe(
     *,
     sample_index: data_typing.SampleIndex,
     time_indexes: Optional[data_typing.TimeIndexList] = None,
+    feature_index: Optional[data_typing.FeatureIndex] = None,
 ) -> pd.DataFrame:
     dfs: List[pd.DataFrame] = list_of_dataframes
 
@@ -331,8 +332,54 @@ def list_of_dataframes_to_multiindex_timeseries_dataframe(
     df_concat.index.set_names(
         [settings.DATA_SETTINGS.sample_index_name, settings.DATA_SETTINGS.time_index_name], inplace=True
     )
+    if feature_index is not None:
+        df_concat = df_concat.set_axis(feature_index, axis="columns", copy=False)
 
     return df_concat
+
+
+# --- [(event_times, event_values), ...] --> DataFrame compatible with EventSamples. ---
+
+
+@pydantic.validate_arguments(config={"arbitrary_types_allowed": False, "smart_union": True})
+def event_time_value_pairs_to_event_dataframe(
+    event_time_value_pairs: Sequence[Tuple[data_typing.TimeIndex, List[bool]]],
+    sample_index: data_typing.SampleIndex,
+    feature_index: Optional[data_typing.FeatureIndex] = None,
+) -> pd.DataFrame:
+    """Convert a sequence like ``[(event_times, event_values), ...]`` to a `pandas.DataFrame` whose columns contain
+    elements like tuples ``(event_time, event_value)``.
+
+    Args:
+        event_time_value_pairs (Sequence[Tuple[data_typing.TimeIndex, List[bool]]]):
+            A sequence where each item corresponds to an event feature and is a tuple of form
+            ``(event_times, event_values)`` (e.g. ``([1.1, 1.2, 1.3], [True, True, False])``).
+        sample_index (data_typing.SampleIndex):
+            List of sample IDs, to be set as dataframe row index.
+        feature_index (Optional[data_typing.FeatureIndex]):
+            List of feature names, to be set as dataframe column names.
+
+    Example:
+        >>> sample_index = ["s1", "s2", "s3"]
+        >>> feature_names = ["feature_1", "feature_2"]
+        >>> event_feature_1 = ([1.1, 1.2, 1.3], [True, True, False])
+        >>> event_feature_2 = ([2.1, 2.2, 2.3], [False, True, False])
+        >>> event_time_value_pairs = [event_feature_1, event_feature_2]
+        >>> df = event_time_value_pairs_to_event_dataframe(
+        ...     event_time_value_pairs, sample_index=sample_index, feature_index=feature_names
+        ... )
+        >>> df.shape
+        (3, 2)
+
+    Returns:
+        pd.DataFrame: `pandas.DataFrame` compatible with `EventSamples`.
+    """
+    series_list = [pd.Series(zip(t, v)) for t, v in event_time_value_pairs]
+    data_input = pd.DataFrame(data=series_list).T.to_numpy()
+    df = pd.DataFrame(data=data_input, index=sample_index)
+    if feature_index is not None:
+        df = df.set_axis(feature_index, axis="columns", copy=False)
+    return df
 
 
 # --- Miscellaneous. ---
