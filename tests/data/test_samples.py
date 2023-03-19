@@ -576,6 +576,21 @@ class TestTimeSeriesSamples:
         s = samples.TimeSeriesSamples.from_dataframe(df_time_series)
         assert s.time_indexes_as_dict() == {"a": [1, 2, 3, 4], "b": [2, 4], "c": [9]}
 
+    def test_time_indexes_float(self):
+        df = pd.DataFrame(
+            {
+                "sample_idx": ["s1", "s1", "s2"],
+                "time_idx": pd.to_datetime(["2000-01-02 15:31", "2000-02-03 23:11", "2020-01-01 00:15"]),
+                "feat_1": [11, 12, 21],
+            }
+        )
+        df.set_index(keys=["sample_idx", "time_idx"], drop=True, inplace=True)
+        s = samples.TimeSeriesSamples.from_dataframe(df)
+        float_time_index = s.time_indexes_float()
+        assert len(float_time_index) == 2
+        assert all(issubclass(type(x), float) for x in float_time_index[0])
+        assert all(issubclass(type(x), float) for x in float_time_index[1])
+
     def test_num_timesteps(self, df_time_series: pd.DataFrame):
         s = samples.TimeSeriesSamples.from_dataframe(df_time_series)
         assert s.num_timesteps() == [4, 2, 1]

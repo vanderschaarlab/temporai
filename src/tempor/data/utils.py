@@ -1,6 +1,6 @@
 import dataclasses
 import itertools
-from typing import Any, ClassVar, List, Optional, Sequence, Tuple
+from typing import Any, ClassVar, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -389,6 +389,29 @@ def event_time_value_pairs_to_event_dataframe(
     if feature_index is not None:
         df = set_df_column_names_inplace(df, feature_index)
     return df
+
+
+# --- Date-time time index -related ---
+
+
+@pydantic.validate_arguments(config={"arbitrary_types_allowed": True, "smart_union": True})
+def datetime_time_index_to_float(time_index: Union[data_typing.TimeIndex, pd.Index, pd.Series]) -> np.ndarray:
+    """Convert a date-time ``time_index`` to floats. The conversion is done by calling
+    ``<time_index as a numpy array>.astype(float)``.
+
+    Args:
+        time_index (Union[data_typing.TimeIndex, pd.Index, pd.Series]):
+            The input time index.
+
+    Returns:
+        np.ndarray:
+            NumPy array containing the time index converted to `float` s.
+    """
+    if isinstance(time_index, (pd.Index, pd.Series)):
+        time_index_pd_type = time_index
+    else:
+        time_index_pd_type = pd.Series(time_index)
+    return time_index_pd_type.to_numpy().astype(float)
 
 
 # --- Miscellaneous. ---

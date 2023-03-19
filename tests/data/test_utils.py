@@ -1099,3 +1099,33 @@ class TestEventTimeValuePairsToEventDataframe:
             utils.event_time_value_pairs_to_event_dataframe(
                 event_time_value_pairs, sample_index=sample_index, feature_index=feature_index
             )
+
+
+time_index_under_test = pd.to_datetime(["2000-01-02 15:31", "2000-02-03 23:11", "2000-07-11 00:15"]).to_list()
+
+
+class TestDatetimeTimeIndexToFloat:
+    @pytest.mark.parametrize(
+        "time_index",
+        [
+            time_index_under_test,
+            pd.Series(time_index_under_test),
+            pd.Index(time_index_under_test),
+        ],
+    )
+    def test_convert(self, time_index):
+        as_float = utils.datetime_time_index_to_float(time_index=time_index)
+        assert all(issubclass(type(x), float) for x in as_float)
+        assert np.isclose(as_float, np.asarray([9.4682706e17, 9.4961946e17, 9.6327450e17], dtype=float)).all()
+
+    @pytest.mark.parametrize(
+        "time_index",
+        [
+            [1.4, 1.7, 1.9],
+            [1, 2, 3],
+        ],
+    )
+    def test_numeric_case(self, time_index):
+        as_float = utils.datetime_time_index_to_float(time_index=time_index)
+        assert all(issubclass(type(x), float) for x in as_float)
+        assert np.isclose(as_float, np.asarray(time_index, dtype=float)).all()

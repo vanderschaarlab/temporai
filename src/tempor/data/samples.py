@@ -466,7 +466,7 @@ class TimeSeriesSamples(DataSamples):
         Returns:
             List[List[<timestep element>]]: A list containing time indexes for each sample.
         """
-        return list(self.time_indexes_as_dict().values())
+        return list(self.time_indexes_as_dict().values())  # pyright: ignore
 
     def time_indexes_as_dict(self) -> data_typing.SampleToTimeIndexDict:
         """Get a dictionary mapping each sample index to its time index. Time index is represented as a list of time
@@ -485,7 +485,15 @@ class TimeSeriesSamples(DataSamples):
             d[s] = list(multiindex.get_level_values(1)[time_index_locs])
         return d  # type: ignore[return-value]
 
-    # TODO: time indexes sensibly converted to floats would be useful.
+    def time_indexes_float(self) -> List[np.ndarray]:
+        """Return time indexes but converting their elements to `float` values.
+
+        Date-time time index will be converted using :obj:`~tempor.data.utils.datetime_time_index_to_float`.
+
+        Returns:
+            List[np.ndarray]: List of 1D `numpy.ndarray` s of `float` values, corresponding to the time index.
+        """
+        return [utils.datetime_time_index_to_float(ti) for ti in self.time_indexes()]
 
     def num_timesteps(self) -> List[int]:
         """Get the number of timesteps for each sample.
