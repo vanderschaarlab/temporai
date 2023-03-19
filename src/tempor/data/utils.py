@@ -38,6 +38,10 @@ def set_df_column_names_inplace(df: pd.DataFrame, names: Sequence) -> pd.DataFra
         return df.set_axis(names, axis="columns", copy=False)
 
 
+def get_df_index_level0_unique(df: pd.DataFrame) -> pd.Index:
+    return df.index.get_level_values(level=0).unique()
+
+
 # --- Multiindex timeseries dataframe --> 3D numpy array. ---
 
 
@@ -66,7 +70,7 @@ def multiindex_timeseries_dataframe_to_array3d(
     """
     if value_in_df(df, value=padding_indicator):
         raise ValueError(f"Value `{padding_indicator}` found in data frame, choose a different padding indicator")
-    samples = df.index.get_level_values(level=0).unique()
+    samples = get_df_index_level0_unique(df)
     num_samples = len(samples)
     num_features = len(df.columns)
     num_timesteps_per_sample = df.groupby(level=0).size()
@@ -75,6 +79,8 @@ def multiindex_timeseries_dataframe_to_array3d(
     array = np.full(shape=(num_samples, max_timesteps, num_features), fill_value=padding_indicator)
     for i_sample, idx_sample in enumerate(samples):
         set_vals = df.loc[idx_sample, :, :].to_numpy()[:max_timesteps, :]  # pyright: ignore
+        if i_sample == 0:
+            array = array.astype(set_vals.dtype)  # Need to cast to the type matching source data.
         array[i_sample, : num_timesteps_per_sample[idx_sample], :] = set_vals  # pyright: ignore
     return array
 
@@ -345,6 +351,20 @@ def list_of_dataframes_to_multiindex_timeseries_dataframe(
         df_concat = set_df_column_names_inplace(df_concat, feature_index)
 
     return df_concat
+
+
+def multiindex_timeseries_dataframe_to_list_of_dataframes(df: pd.DataFrame) -> List[pd.DataFrame]:
+    """Returns a list of dataframes where each dataframe has the data for each sample. That is, each of the dataframes
+    has a unique level ``0`` index value.
+
+    Args:
+        df (pd.DataFrame): Input multiindex dataframe.
+
+    Returns:
+        List[pd.DataFrame]: Output list of dataframes.
+    """
+    sample_index = get_df_index_level0_unique(df)
+    return [df.loc[(si, slice(None)), :] for si in sample_index]
 
 
 # --- [(event_times, event_values), ...] --> DataFrame compatible with EventSamples. ---

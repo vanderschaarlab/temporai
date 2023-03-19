@@ -457,7 +457,7 @@ class TimeSeriesSamples(DataSamples):
         return self._data
 
     def sample_index(self) -> data_typing.SampleIndex:
-        return list(self._data.index.get_level_values(0).unique())  # pyright: ignore
+        return list(utils.get_df_index_level0_unique(self._data))  # pyright: ignore
 
     def time_indexes(self) -> data_typing.TimeIndexList:
         """Get a list containing time indexes for each sample. Each time index is represented as a list of time step
@@ -520,6 +520,14 @@ class TimeSeriesSamples(DataSamples):
         timesteps = self.num_timesteps()
         return True if len(timesteps) == 0 else all([x == timesteps[0] for x in timesteps])
 
+    def list_of_dataframes(self) -> List[pd.DataFrame]:
+        """Returns a list of dataframes where each dataframe has the data for each sample.
+
+        Returns:
+            List[pd.DataFrame]: List of dataframes for each sample.
+        """
+        return utils.multiindex_timeseries_dataframe_to_list_of_dataframes(self._data)
+
     @property
     def num_samples(self) -> int:
         sample_ids = self._data.index.levels[0]  # pyright: ignore
@@ -534,7 +542,7 @@ class TimeSeriesSamples(DataSamples):
 
     def __getitem__(self, key: data_typing.GetItemKey) -> Self:
         key_ = utils.ensure_pd_iloc_key_returns_df(key)
-        sample_index = self._data.index.get_level_values(0).unique()
+        sample_index = utils.get_df_index_level0_unique(self._data)
         selected = list(sample_index[key_])  # pyright: ignore
         return TimeSeriesSamples(  # type: ignore[return-value]
             self._data.loc[(selected, slice(None)), :],  # pyright: ignore
