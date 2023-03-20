@@ -4,19 +4,21 @@ from typing import Any, List, Optional, Tuple, Union
 import numpy as np
 import torch
 import torch.nn as nn
+from typing_extensions import Literal, get_args
 
 from tempor.models import constants
 
 from .mlp import MLP
+from .transformer import TransformerModel
 from .ts_model import TimeSeriesLayer
 
-rnn_modes = [
+RnnMode = Literal[
     "GRU",
     "LSTM",
     "RNN",
     "Transformer",
 ]
-output_modes = [
+OutputMode = Literal[
     "MLP",
     "LSTM",
     "GRU",
@@ -28,6 +30,9 @@ output_modes = [
     "ResCNN",
     "XCM",
 ]
+
+rnn_modes = get_args(RnnMode)
+output_modes = get_args(OutputMode)
 
 
 def get_padded_features(
@@ -48,156 +53,6 @@ def get_padded_features(
             x_padded.append(x[i][:pad_size].astype(float))
 
     return np.asarray(x_padded)
-
-
-# TODO: Adapt to TemporAI.
-# import pandas as pd
-# import pydantic
-# class DynamicDeephitTimeSeriesSurvival:
-#     def __init__(
-#         self,
-#         n_iter: int = 1000,
-#         batch_size: int = 100,
-#         lr: float = 1e-3,
-#         n_layers_hidden: int = 1,
-#         n_units_hidden: int = 40,
-#         split: int = 100,
-#         rnn_type: str = "GRU",
-#         alpha: float = 0.34,
-#         beta: float = 0.27,
-#         sigma: float = 0.21,
-#         random_state: int = 0,
-#         dropout: float = 0.06,
-#         device: Any = constants.DEVICE,
-#         patience: int = 20,
-#         output_type: str = "MLP",
-#     ) -> None:
-#         super().__init__()
-#         utils.enable_reproducibility(random_state)
-#         if rnn_type not in rnn_modes:
-#             raise ValueError(f"Supported modes: {rnn_modes}")
-#         if output_type not in output_modes:
-#             raise ValueError(f"Supported output modes: {output_modes}")
-
-#         self.model = DynamicDeepHitModel(
-#             split=split,
-#             n_layers_hidden=n_layers_hidden,
-#             n_units_hidden=n_units_hidden,
-#             rnn_mode=rnn_type,
-#             alpha=alpha,
-#             beta=beta,
-#             sigma=sigma,
-#             dropout=dropout,
-#             patience=patience,
-#             lr=lr,
-#             batch_size=batch_size,
-#             n_iter=n_iter,
-#             output_mode=output_type,
-#             device=device,
-#         )
-
-#     def _merge_data(
-#         self,
-#         static: Optional[np.ndarray],
-#         temporal: np.ndarray,
-#         observation_times: np.ndarray,
-#     ) -> np.ndarray:
-#         if static is None:
-#             static = np.zeros((len(temporal), 0))
-
-#         merged = []
-#         for idx, item in enumerate(temporal):  # pylint: disable=unused-variable
-#             local_static = static[idx].reshape(1, -1)
-#             local_static = np.repeat(local_static, len(temporal[idx]), axis=0)
-#             tst = np.concatenate(
-#                 [
-#                     temporal[idx],
-#                     local_static,
-#                     np.asarray(observation_times[idx]).reshape(-1, 1),
-#                 ],
-#                 axis=1,
-#             )
-#             merged.append(tst)
-
-#         return np.array(merged, dtype=object)
-
-#     @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
-#     def fit(
-#         self,
-#         static: Optional[np.ndarray],
-#         temporal: Union[np.ndarray, List],
-#         observation_times: Union[np.ndarray, List],
-#         T: Union[np.ndarray, List],
-#         E: Union[np.ndarray, List],
-#     ):
-#         static = np.asarray(static)
-#         temporal = np.asarray(temporal)
-#         observation_times = np.asarray(observation_times)
-#         T = np.asarray(T)
-#         E = np.asarray(E)
-
-#         data = self._merge_data(static, temporal, observation_times)
-
-#         self.model.fit(
-#             data,
-#             T,
-#             E,
-#         )
-#         return self
-
-#     @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
-#     def predict(
-#         self,
-#         static: Optional[np.ndarray],
-#         temporal: Union[np.ndarray, List],
-#         observation_times: Union[np.ndarray, List],
-#         time_horizons: List,
-#     ) -> pd.DataFrame:
-#         "Predict risk"
-#         static = np.asarray(static)
-#         temporal = np.asarray(temporal)
-#         observation_times = np.asarray(observation_times)
-
-#         data = self._merge_data(static, temporal, observation_times)
-
-#         return pd.DataFrame(self.model.predict_risk(data, time_horizons), columns=time_horizons)
-
-#     @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
-#     def predict_emb(
-#         self,
-#         static: Optional[np.ndarray],
-#         temporal: Union[np.ndarray, List],
-#         observation_times: Union[np.ndarray, List],
-#     ) -> np.ndarray:
-#         "Predict embeddings"
-#         static = np.asarray(static)
-#         temporal = np.asarray(temporal)
-#         observation_times = np.asarray(observation_times)
-
-#         data = self._merge_data(static, temporal, observation_times)
-
-#         return self.model.predict_emb(data).detach().cpu().numpy()
-
-#     @staticmethod
-#     def hyperparameter_space(
-#         *args: Any, prefix: str = "", **kwargs: Any
-#     ) -> List[Distribution]:
-#         return [
-#             IntegerDistribution(
-#                 name=f"{prefix}n_units_hidden", low=10, high=100, step=10
-#             ),
-#             IntegerDistribution(name=f"{prefix}n_layers_hidden", low=1, high=4),
-#             CategoricalDistribution(
-#                 name=f"{prefix}batch_size", choices=[100, 200, 500]
-#             ),
-#             CategoricalDistribution(name=f"{prefix}lr", choices=[1e-2, 1e-3, 1e-4]),
-#             CategoricalDistribution(name=f"{prefix}rnn_type", choices=rnn_modes),
-#             CategoricalDistribution(name=f"{prefix}output_type", choices=output_modes),
-#             FloatDistribution(name=f"{prefix}alpha", low=0.0, high=0.5),
-#             FloatDistribution(name=f"{prefix}sigma", low=0.0, high=0.5),
-#             FloatDistribution(name=f"{prefix}beta", low=0.0, high=0.5),
-#             FloatDistribution(name=f"{prefix}dropout", low=0.0, high=0.2),
-#         ]
 
 
 class DynamicDeepHitModel:
@@ -239,7 +94,7 @@ class DynamicDeepHitModel:
         self.beta = beta
         self.sigma = sigma
 
-        self.device = device
+        self.device = torch.device(device) if isinstance(device, str) else device
         self.dropout = dropout
         self.lr = lr
         self.n_iter = n_iter
@@ -419,7 +274,7 @@ class DynamicDeepHitModel:
     def predict_survival(
         self,
         x: np.ndarray,
-        t: Union[np.ndarray, List[np.ndarray]],
+        t: List,
         risk: int = 1,
         all_step: bool = False,
         bs: int = 100,
@@ -432,7 +287,7 @@ class DynamicDeepHitModel:
             )
         lens = [len(x_) for x_ in x]
 
-        x_in: Union[np.ndarray, List[np.ndarray]] = x
+        x_in: Any = x
         if all_step:
             new_x = []
             for x_, l_ in zip(x, lens):
@@ -462,7 +317,7 @@ class DynamicDeepHitModel:
 
         return 1 - np.asarray(output).T
 
-    def predict_risk(self, x: np.ndarray, t: Union[np.ndarray, List[np.ndarray]], **args: Any) -> np.ndarray:
+    def predict_risk(self, x: np.ndarray, t: List, **args: Any) -> np.ndarray:
         return 1 - self.predict_survival(x, t, **args)
 
     def negative_log_likelihood(
@@ -599,11 +454,8 @@ class DynamicDeepHitLayers(nn.Module):
             )
         elif self.rnn_type == "GRU":
             self.embedding = nn.GRU(input_dim, hidden_rnn, layers_rnn, bias=False, batch_first=True)
-        # TODO: Investigate: is there a reason for using
-        # https://github.com/vanderschaarlab/synthcity/blob/main/src/synthcity/plugins/core/models/transformer.py#L16
-        # vs tsai Transformer?
-        # elif self.rnn_type == "Transformer":
-        #     self.embedding = TransformerModel(input_dim, hidden_rnn, n_layers_hidden=layers_rnn, dropout=dropout)
+        elif self.rnn_type == "Transformer":
+            self.embedding = TransformerModel(input_dim, hidden_rnn, n_layers_hidden=layers_rnn, dropout=dropout)
         else:
             raise RuntimeError(f"Unknown rnn_type {rnn_type}")
 
@@ -615,6 +467,7 @@ class DynamicDeepHitLayers(nn.Module):
             n_layers_hidden=layers_rnn,
             n_units_hidden=hidden_rnn,
             dropout=self.dropout,
+            device=device,
         )
 
         # Attention mechanism
@@ -627,6 +480,7 @@ class DynamicDeepHitLayers(nn.Module):
                 dropout=self.dropout,
                 n_layers_hidden=layers_rnn,
                 n_units_hidden=hidden_rnn,
+                device=device,
             )
         else:
             self.attention = TimeSeriesLayer(
@@ -654,12 +508,15 @@ class DynamicDeepHitLayers(nn.Module):
                     dropout=self.dropout,
                     n_layers_hidden=layers_rnn,
                     n_units_hidden=hidden_rnn,
+                    device=device,
                 )
             )
         self.cause_specific = nn.ModuleList(cause_specific)
 
         # Probability
         self.soft = nn.Softmax(dim=-1)  # On all observed output
+
+        self.to(self.device)
 
     def forward_attention(self, x: torch.Tensor, inputmask: torch.Tensor, hidden: torch.Tensor) -> torch.Tensor:
         # Attention using last observation to predict weight of all previously observed
@@ -722,6 +579,8 @@ class DynamicDeepHitLayers(nn.Module):
     def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, List]:
         """The forward function that is called when data is passed through DynamicDeepHit."""
         # RNN representation - Nan values for not observed data
+        x = x.to(self.device)
+
         longitudinal_prediction, hidden_attentive = self.forward_emb(x)
 
         outcomes = []

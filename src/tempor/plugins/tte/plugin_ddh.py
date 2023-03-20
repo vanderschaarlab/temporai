@@ -1,33 +1,21 @@
 import dataclasses
-from typing import List, Optional, cast
+from typing import TYPE_CHECKING, List, Optional, cast
 
 import numpy as np
-from typing_extensions import Literal, Self
+from typing_extensions import Self
 
 import tempor.exc
 import tempor.plugins.core as plugins
-from tempor.data import dataset, samples
-from tempor.models.ddh import DynamicDeepHitModel
+from tempor.data import data_typing, dataset, samples
+from tempor.models.ddh import (
+    DynamicDeepHitModel,
+    OutputMode,
+    RnnMode,
+    output_modes,
+    rnn_modes,
+)
+from tempor.plugins.core._params import CategoricalParams, FloatParams, IntegerParams
 from tempor.plugins.tte import BaseTimeToEventAnalysis
-
-RnnModes = Literal[
-    "GRU",
-    "LSTM",
-    "RNN",
-    # "Transformer",
-]
-OutputModes = Literal[
-    "MLP",
-    "LSTM",
-    "GRU",
-    "RNN",
-    # "Transformer",
-    # "TCN",
-    # "InceptionTime",
-    # "InceptionTimePlus",
-    # "ResCNN",
-    # "XCM",
-]
 
 
 @dataclasses.dataclass
@@ -39,26 +27,25 @@ class DynamicDeepHitSurvivalAnalysisParams:
     n_layers_hidden: int = 1
     n_units_hidden: int = 40
     split: int = 100
-    rnn_mode: RnnModes = "GRU"
+    rnn_mode: RnnMode = "GRU"
     alpha: float = 0.34
     beta: float = 0.27
     sigma: float = 0.21
     dropout: float = 0.06
     device: str = "cpu"
     patience: int = 20
-    output_mode: OutputModes = "MLP"
+    output_mode: OutputMode = "MLP"
     random_state: int = 0
 
 
+# TODO: Docstring.
 @plugins.register_plugin(name="dynamic_deephit", category="time_to_event")
 class DynamicDeepHitSurvivalAnalysis(BaseTimeToEventAnalysis):
-    """Class docstring"""
-
     ParamsDefinition = DynamicDeepHitSurvivalAnalysisParams
     params: DynamicDeepHitSurvivalAnalysisParams  # type: ignore
 
     def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
-        """:class:`DynamicDeepHit` survival analysis model.
+        """Dynamic DeepHit survival analysis model.
 
         Args:
             **params:
@@ -86,11 +73,10 @@ class DynamicDeepHitSurvivalAnalysis(BaseTimeToEventAnalysis):
     def _merge_data(
         self,
         static: Optional[np.ndarray],
-        temporal: np.ndarray,
-        observation_times: List[List],
+        temporal: List[np.ndarray],
+        observation_times: List[np.ndarray],
     ) -> np.ndarray:
         if static is None:
-            # TODO: Investigate - why add an all-zeros feature?
             static = np.zeros((len(temporal), 0))
 
         merged = []
@@ -115,16 +101,27 @@ class DynamicDeepHitSurvivalAnalysis(BaseTimeToEventAnalysis):
                 f"{self.__class__.__name__} does not currently support more than one event feature, "
                 f"but features found were: {data.predictive.targets.dataframe().columns}"
             )
-        if not data.time_series.num_timesteps_equal():
-            raise tempor.exc.UnsupportedSetupException(
-                f"{self.__class__.__name__} currently requires all samples to have the same number of timesteps, "
-                f"but found timesteps of varying lengths {np.unique(data.time_series.num_timesteps()).tolist()}"
+        # TODO: This needs investigating - likely different length sequences aren't handled properly.
+        # if not data.time_series.num_timesteps_equal():
+        #     raise tempor.exc.UnsupportedSetupException(
+        #         f"{self.__class__.__name__} currently requires all samples to have the same number of timesteps, "
+        #         f"but found timesteps of varying lengths {np.unique(data.time_series.num_timesteps()).tolist()}"
+        #     )
+
+    def _convert_data(self, data: dataset.TimeToEventAnalysisDataset):
+        if data.has_static:
+            static = data.static.numpy() if data.static is not None else None
+        else:
+            static = np.zeros((data.time_series.num_samples, 0))
+        temporal = [df.to_numpy() for df in data.time_series.list_of_dataframes()]
+        observation_times = data.time_series.time_indexes_float()
+        if data.predictive is not None:
+            event_times, event_values = (
+                df.to_numpy().reshape((-1,)) for df in data.predictive.targets.split_as_two_dataframes()
             )
-        if not isinstance(data.time_series.time_indexes()[0][0], (int, float)):
-            raise tempor.exc.UnsupportedSetupException(
-                f"{self.__class__.__name__} currently only supports `int` or `float` time indices, "
-                f"but found time index of type {type(data.time_series.time_indexes()[0][0])}"
-            )
+        else:
+            event_times, event_values = None, None
+        return (static, temporal, observation_times, event_times, event_values)
 
     def _fit(
         self,
@@ -134,36 +131,45 @@ class DynamicDeepHitSurvivalAnalysis(BaseTimeToEventAnalysis):
     ) -> Self:
         data = cast(dataset.TimeToEventAnalysisDataset, data)
         self._validate_data(data)
-
-        static = data.static.numpy() if data.static is not None else None
-        temporal = data.time_series.numpy(padding_indicator=-1)  # TODO: check, padding is messy.
-        observation_times = data.time_series.time_indexes()
-
-        event_times, event_values = (df.to_numpy() for df in data.predictive.targets.split_as_two_dataframes())
-
-        print(static)
-        print(temporal)
-        print(observation_times)
-
-        print(event_times)
-        print(event_values)
-
+        (static, temporal, observation_times, event_times, event_values) = self._convert_data(data)
         processed_data = self._merge_data(static, temporal, observation_times)
+        if TYPE_CHECKING:  # pragma: no cover
+            assert event_times is not None and event_values is not None  # nosec B101
 
         self.model.fit(processed_data, event_times, event_values)
 
-        # TODO: WIP
-        raise NotImplementedError
-        # return self
+        return self
 
-    def _predict(
+    def _predict(  # type: ignore[override]
         self,
         data: dataset.Dataset,
+        horizons: data_typing.TimeIndex,
         *args,
         **kwargs,
     ) -> samples.TimeSeriesSamples:
-        raise NotImplementedError
+        data = cast(dataset.TimeToEventAnalysisDataset, data)
+        self._validate_data(data)
+        (static, temporal, observation_times, _, _) = self._convert_data(data)
+        processed_data = self._merge_data(static, temporal, observation_times)
+        risk = self.model.predict_risk(processed_data, horizons)
+        return samples.TimeSeriesSamples(
+            risk.reshape((risk.shape[0], risk.shape[1], 1)),
+            sample_index=data.time_series.sample_index(),
+            time_indexes=[horizons] * data.time_series.num_samples,  # pyright: ignore
+            feature_index=["risk_score"],
+        )
 
     @staticmethod
     def hyperparameter_space(*args, **kwargs):
-        return []
+        return [
+            IntegerParams(name="n_units_hidden", low=10, high=100, step=10),
+            IntegerParams(name="n_layers_hidden", low=1, high=4),
+            CategoricalParams(name="batch_size", choices=[100, 200, 500]),
+            CategoricalParams(name="lr", choices=[1e-2, 1e-3, 1e-4]),
+            CategoricalParams(name="rnn_mode", choices=list(rnn_modes)),
+            CategoricalParams(name="output_mode", choices=list(output_modes)),
+            FloatParams(name="alpha", low=0.0, high=0.5),
+            FloatParams(name="sigma", low=0.0, high=0.5),
+            FloatParams(name="beta", low=0.0, high=0.5),
+            FloatParams(name="dropout", low=0.0, high=0.2),
+        ]
