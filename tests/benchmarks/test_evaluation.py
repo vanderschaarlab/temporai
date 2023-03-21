@@ -9,7 +9,7 @@ from tempor.benchmarks import (
     evaluate_time_to_event,
     output_metrics,
     regression_supported_metrics,
-    tte_supported_metrics,
+    time_to_event_supported_metrics,
 )
 from tempor.plugins import plugin_loader
 from tempor.plugins.pipeline import Pipeline
@@ -126,7 +126,7 @@ def test_time_to_event_evaluation(model_template: Any, n_splits: int, get_event0
     for out_metric in output_metrics:
         assert out_metric in scores
 
-    for metric in tte_supported_metrics:
+    for metric in time_to_event_supported_metrics:
         assert metric in scores.index
 
 

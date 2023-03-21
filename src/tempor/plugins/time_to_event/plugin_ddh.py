@@ -15,7 +15,7 @@ from tempor.models.ddh import (
     rnn_modes,
 )
 from tempor.plugins.core._params import CategoricalParams, FloatParams, IntegerParams
-from tempor.plugins.tte import BaseTimeToEventAnalysis
+from tempor.plugins.time_to_event import BaseTimeToEventAnalysis
 
 
 @dataclasses.dataclass

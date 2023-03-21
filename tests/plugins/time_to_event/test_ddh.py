@@ -3,11 +3,13 @@ from typing import TYPE_CHECKING, Callable
 import pytest
 
 from tempor.plugins import plugin_loader
-from tempor.plugins.tte.plugin_ddh import DynamicDeepHitSurvivalAnalysis as plugin
+from tempor.plugins.time_to_event.plugin_ddh import (
+    DynamicDeepHitSurvivalAnalysis as plugin,
+)
 from tempor.utils.dataloaders import PBCDataLoader
 
 if TYPE_CHECKING:  # pragma: no cover
-    from tempor.plugins.tte import BaseTimeToEventAnalysis
+    from tempor.plugins.time_to_event import BaseTimeToEventAnalysis
 
 train_kwargs = {"random_state": 123, "n_iter": 10}
 

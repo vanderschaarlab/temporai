@@ -4,7 +4,7 @@ from tempor.benchmarks import (
     benchmark_models,
     classifier_supported_metrics,
     regression_supported_metrics,
-    tte_supported_metrics,
+    time_to_event_supported_metrics,
 )
 from tempor.plugins import plugin_loader
 from tempor.plugins.pipeline import Pipeline
@@ -89,7 +89,7 @@ def test_regressor_benchmark() -> None:
             assert metric in per_test_score[testcase].index
 
 
-def test_tte_benchmark(get_event0_time_percentiles: Callable) -> None:
+def test_time_to_event_benchmark(get_event0_time_percentiles: Callable) -> None:
     testcases = [
         (
             "pipeline1",
@@ -122,7 +122,7 @@ def test_tte_benchmark(get_event0_time_percentiles: Callable) -> None:
         assert testcase in aggr_score.columns
         assert testcase in per_test_score
 
-    for metric in tte_supported_metrics:
+    for metric in time_to_event_supported_metrics:
         assert metric in aggr_score.index
 
         for testcase, _ in testcases:

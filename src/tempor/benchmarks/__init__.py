@@ -9,5 +9,5 @@ from .evaluation import (  # noqa: F401
     evaluate_time_to_event,
     output_metrics,
     regression_supported_metrics,
-    tte_supported_metrics,
+    time_to_event_supported_metrics,
 )

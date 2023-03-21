@@ -26,7 +26,7 @@ from tempor.log import logger as log
 from tempor.models.utils import enable_reproducibility
 from tempor.plugins.classification import BaseClassifier
 from tempor.plugins.regression import BaseRegressor
-from tempor.plugins.tte import BaseTimeToEventAnalysis
+from tempor.plugins.time_to_event import BaseTimeToEventAnalysis
 
 from .metrics import brier_score, concordance_index_ipcw, create_structured_array
 from .utils import evaluate_auc_multiclass
@@ -113,7 +113,7 @@ Possible values:
         Mean absolute error regression loss.
 """
 
-TTESupportedMetric = Literal[
+TimeToEventSupportedMetric = Literal[
     "c_index",
     "brier_score",
 ]
@@ -166,8 +166,8 @@ classifier_supported_metrics = get_args(ClassifierSupportedMetric)
 regression_supported_metrics = get_args(RegressionSupportedMetric)
 """A tuple of all possible values of :obj:`~tempor.benchmarks.evaluation.RegressionSupportedMetric`."""
 
-tte_supported_metrics = get_args(TTESupportedMetric)
-"""A tuple of all possible values of :obj:`~tempor.benchmarks.evaluation.TTESupportedMetric`."""
+time_to_event_supported_metrics = get_args(TimeToEventSupportedMetric)
+"""A tuple of all possible values of :obj:`~tempor.benchmarks.evaluation.TimeToEventSupportedMetric`."""
 
 output_metrics = get_args(OutputMetric)
 """A tuple of all possible values of :obj:`~tempor.benchmarks.evaluation.OutputMetric`."""
@@ -491,8 +491,8 @@ def evaluate_regressor(  # pylint: disable=unused-argument
     return _postprocess_results(results)
 
 
-TTEMetricCallable = Callable[[np.ndarray, np.ndarray, np.ndarray, List[float]], List[float]]
-"""Standardized function for TTE metric.
+TimeToEventMetricCallable = Callable[[np.ndarray, np.ndarray, np.ndarray, List[float]], List[float]]
+"""Standardized function for time-to-event metric.
 
 Inputs are:
     * ``training_array_struct`` (np.ndarray)
@@ -528,8 +528,8 @@ def compute_brier_score(
     return scores.tolist()
 
 
-def _compute_tte_metric(
-    metric_func: TTEMetricCallable,
+def _compute_time_to_event_metric(
+    metric_func: TimeToEventMetricCallable,
     train_data: dataset.TimeToEventAnalysisDataset,
     test_data: dataset.TimeToEventAnalysisDataset,
     horizons: data_typing.TimeIndex,
@@ -581,7 +581,7 @@ def evaluate_time_to_event(  # pylint: disable=unused-argument
         raise ValueError("n_splits must be an integer >= 2")
     estimator_: BaseTimeToEventAnalysis = cast(BaseTimeToEventAnalysis, estimator)
     enable_reproducibility(random_state)
-    metrics = tte_supported_metrics
+    metrics = time_to_event_supported_metrics
     metrics_map = {
         "c_index": compute_c_index,
         "brier_score": compute_brier_score,
@@ -603,9 +603,9 @@ def evaluate_time_to_event(  # pylint: disable=unused-argument
             # targets = test_data.predictive.targets.numpy().squeeze()
             preds = model.predict(test_data, horizons=horizons)
 
-            for metric_name in tte_supported_metrics:
+            for metric_name in time_to_event_supported_metrics:
                 metric_func = metrics_map[metric_name]
-                results.metrics[metric_name][indx] = _compute_tte_metric(
+                results.metrics[metric_name][indx] = _compute_time_to_event_metric(
                     metric_func,
                     train_data=train_data,
                     test_data=test_data,
