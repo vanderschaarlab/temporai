@@ -1,8 +1,24 @@
 import copy
 from types import ModuleType
-from typing import Any, List, Tuple
+from typing import TYPE_CHECKING, Any, List, Tuple
 
+if TYPE_CHECKING:
+    from tempor.data.dataset import TimeToEventAnalysisDataset
+
+import numpy as np
 import pytest
+
+# --- Reusable functions. ---
+
+
+@pytest.fixture
+def get_event0_time_percentiles():
+    def func(dataset: "TimeToEventAnalysisDataset", horizon_percentiles: List):
+        event0_times = dataset.predictive.targets.split_as_two_dataframes()[0].to_numpy().reshape((-1,))
+        return np.quantile(event0_times, horizon_percentiles).tolist()
+
+    return func
+
 
 # --- Test utilities. ---
 

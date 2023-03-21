@@ -1,12 +1,12 @@
-from typing import Any, Dict, List, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import pandas as pd
 import pydantic
 
-from tempor.data import dataset
+from tempor.data import data_typing, dataset
 from tempor.log import logger as log
 
-from .evaluation import evaluate_classifier, evaluate_regressor
+from . import evaluation
 
 
 def print_score(mean: pd.Series, std: pd.Series) -> pd.Series:
@@ -27,6 +27,7 @@ def benchmark_models(
     data: dataset.Dataset,
     n_splits: int = 3,
     random_state: int = 0,
+    horizons: Optional[data_typing.TimeIndex] = None,
 ) -> Tuple[pd.DataFrame, Dict[str, pd.DataFrame]]:
     """Benchmark the performance of several algorithms.
 
@@ -42,6 +43,8 @@ def benchmark_models(
             Number of splits used for cross-validation. Defaults to ``3``.
         random_state (int, optional):
             Random seed. Defaults to ``0``.
+        horizons (data_typing.TimeIndex, optional):
+            Time horizons for making predictions, if applicable to the task.
 
     Returns:
         Tuple[pd.DataFrame, Dict[str, pd.DataFrame]]:
@@ -57,18 +60,24 @@ def benchmark_models(
     results = {}
 
     if task_type == "classification":
-        evaluator = evaluate_classifier
+        evaluator: Callable = evaluation.evaluate_classifier
     elif task_type == "regression":
-        evaluator = evaluate_regressor
+        evaluator = evaluation.evaluate_regressor
     elif task_type == "time_to_event":
-        evaluator = evaluate_regressor
+        evaluator = evaluation.evaluate_time_to_event
     else:
         raise ValueError(f"Unsupported task type {task_type}")
 
     for testcase, plugin in tests:
         log.info(f"Testcase : {testcase}")
 
-        scores = evaluator(plugin, data=data, n_splits=n_splits, random_state=random_state)
+        scores = evaluator(
+            plugin,
+            data=data,  # pyright: ignore
+            n_splits=n_splits,
+            random_state=random_state,
+            horizons=horizons,  # pyright: ignore
+        )
 
         mean_score = scores["mean"].to_dict()
         stddev_score = scores["stddev"].to_dict()

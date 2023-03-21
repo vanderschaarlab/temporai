@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 import pytest
 
@@ -35,9 +35,12 @@ def test_dynamic_deephit_plugin_fit(test_plugin: "BaseTimeToEventAnalysis") -> N
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_dynamic_deephit_plugin_predict(test_plugin: "BaseTimeToEventAnalysis") -> None:
-    horizons = [0.1, 0.2, 0.3]
+def test_dynamic_deephit_plugin_predict(
+    test_plugin: "BaseTimeToEventAnalysis", get_event0_time_percentiles: Callable
+) -> None:
     dataset = PBCDataLoader().load()
+
+    horizons = get_event0_time_percentiles(dataset, [0.25, 0.5, 0.75])
 
     output = test_plugin.fit(dataset).predict(dataset, horizons=horizons)
 
