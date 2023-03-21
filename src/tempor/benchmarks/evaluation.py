@@ -5,31 +5,20 @@ from typing import Any, Callable, Dict, List, Sequence, Union, cast
 import numpy as np
 import pandas as pd
 import pydantic
-from scipy.stats import iqr
-from sklearn.metrics import (
-    accuracy_score,
-    cohen_kappa_score,
-    f1_score,
-    matthews_corrcoef,
-    mean_absolute_error,
-    mean_squared_error,
-    precision_score,
-    r2_score,
-    recall_score,
-)
-from sklearn.model_selection import KFold, StratifiedKFold
+import scipy.stats
+import sklearn.metrics
+import sklearn.model_selection
 from typing_extensions import Literal, get_args
 
-from tempor.benchmarks.utils import generate_score, print_score
 from tempor.data import data_typing, dataset, samples
-from tempor.log import logger as log
+from tempor.log import logger
 from tempor.models.utils import enable_reproducibility
 from tempor.plugins.classification import BaseClassifier
 from tempor.plugins.regression import BaseRegressor
 from tempor.plugins.time_to_event import BaseTimeToEventAnalysis
 
-from .metrics import brier_score, concordance_index_ipcw, create_structured_array
-from .utils import evaluate_auc_multiclass
+from . import metrics as tempor_metrics
+from . import utils
 
 ClassifierSupportedMetric = Literal[
     "aucroc",
@@ -189,14 +178,14 @@ def _postprocess_results(results: _InternalScores) -> pd.DataFrame:
     for metric in results.metrics:
         values = results.metrics[metric]
         errors = np.sum(results.errors)
-        durations = print_score(generate_score(np.asarray(results.durations)))
+        durations = utils.print_score(utils.generate_score(np.asarray(results.durations)))
 
         score_min = np.min(values)
         score_max = np.max(values)
         score_mean = np.mean(values)
         score_median = np.median(values)
         score_stddev = np.std(values)
-        score_iqr = iqr(values)
+        score_iqr = scipy.stats.iqr(values)
         score_rounds = len(values)
 
         output = pd.concat(
@@ -260,88 +249,88 @@ class ClassifierMetrics:
             elif metric == "aucroc":
                 results[metric] = self.roc_auc_score(y_test, y_pred_proba)
             elif metric == "accuracy":
-                results[metric] = accuracy_score(y_test, y_pred)
+                results[metric] = sklearn.metrics.accuracy_score(y_test, y_pred)
             elif metric == "f1_score_micro":
-                results[metric] = f1_score(
+                results[metric] = sklearn.metrics.f1_score(
                     y_test,
                     y_pred,
                     average="micro",
                     zero_division=0,  # pyright: ignore
                 )
             elif metric == "f1_score_macro":
-                results[metric] = f1_score(
+                results[metric] = sklearn.metrics.f1_score(
                     y_test,
                     y_pred,
                     average="macro",
                     zero_division=0,  # pyright: ignore
                 )
             elif metric == "f1_score_weighted":
-                results[metric] = f1_score(
+                results[metric] = sklearn.metrics.f1_score(
                     y_test,
                     y_pred,
                     average="weighted",
                     zero_division=0,  # pyright: ignore
                 )
             elif metric == "kappa":
-                results[metric] = cohen_kappa_score(y_test, y_pred)
+                results[metric] = sklearn.metrics.cohen_kappa_score(y_test, y_pred)
             elif metric == "kappa_quadratic":
-                results[metric] = cohen_kappa_score(y_test, y_pred, weights="quadratic")
+                results[metric] = sklearn.metrics.cohen_kappa_score(y_test, y_pred, weights="quadratic")
             elif metric == "recall_micro":
-                results[metric] = recall_score(
+                results[metric] = sklearn.metrics.recall_score(
                     y_test,
                     y_pred,
                     average="micro",
                     zero_division=0,  # pyright: ignore
                 )
             elif metric == "recall_macro":
-                results[metric] = recall_score(
+                results[metric] = sklearn.metrics.recall_score(
                     y_test,
                     y_pred,
                     average="macro",
                     zero_division=0,  # pyright: ignore
                 )
             elif metric == "recall_weighted":
-                results[metric] = recall_score(
+                results[metric] = sklearn.metrics.recall_score(
                     y_test,
                     y_pred,
                     average="weighted",
                     zero_division=0,  # pyright: ignore
                 )
             elif metric == "precision_micro":
-                results[metric] = precision_score(
+                results[metric] = sklearn.metrics.precision_score(
                     y_test,
                     y_pred,
                     average="micro",
                     zero_division=0,  # pyright: ignore
                 )
             elif metric == "precision_macro":
-                results[metric] = precision_score(
+                results[metric] = sklearn.metrics.precision_score(
                     y_test,
                     y_pred,
                     average="macro",
                     zero_division=0,  # pyright: ignore
                 )
             elif metric == "precision_weighted":
-                results[metric] = precision_score(
+                results[metric] = sklearn.metrics.precision_score(
                     y_test,
                     y_pred,
                     average="weighted",
                     zero_division=0,  # pyright: ignore
                 )
             elif metric == "mcc":
-                results[metric] = matthews_corrcoef(y_test, y_pred)
+                results[metric] = sklearn.metrics.matthews_corrcoef(y_test, y_pred)
             else:
                 raise ValueError(f"invalid metric {metric}")
 
-        log.debug(f"evaluate_classifier: {results}")
+        logger.debug(f"evaluate_classifier: {results}")
         return results
 
     def roc_auc_score(self, y_test: np.ndarray, y_pred_proba: np.ndarray) -> float:
-        return evaluate_auc_multiclass(y_test, y_pred_proba)[0]
+        return utils.evaluate_auc_multiclass(y_test, y_pred_proba)[0]
 
     def average_precision_score(self, y_test: np.ndarray, y_pred_proba: np.ndarray) -> float:
 
-        return evaluate_auc_multiclass(y_test, y_pred_proba)[1]
+        return utils.evaluate_auc_multiclass(y_test, y_pred_proba)[1]
 
 
 @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
@@ -386,7 +375,7 @@ def evaluate_classifier(  # pylint: disable=unused-argument
     for metric in classifier_supported_metrics:
         results.metrics[metric] = np.zeros(n_splits)
 
-    splitter = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_state)
+    splitter = sklearn.model_selection.StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_state)
     if data.predictive is None:
         raise ValueError("No targets to use for train/test")
 
@@ -412,7 +401,7 @@ def evaluate_classifier(  # pylint: disable=unused-argument
                 results.metrics[metric][indx] = scores[metric]
             results.errors.append(0)
         except BaseException as e:  # pylint: disable=broad-except
-            log.error(f"Evaluation failed: {e}")
+            logger.error(f"Evaluation failed: {e}")
             results.errors.append(1)
 
         results.durations.append(time() - start)
@@ -462,7 +451,7 @@ def evaluate_regressor(  # pylint: disable=unused-argument
     for metric in metrics:
         results.metrics[metric] = np.zeros(n_splits)
 
-    splitter = KFold(n_splits=n_splits, shuffle=True, random_state=random_state)
+    splitter = sklearn.model_selection.KFold(n_splits=n_splits, shuffle=True, random_state=random_state)
 
     indx = 0
     for train_data, test_data in data.split(splitter=splitter):
@@ -477,12 +466,12 @@ def evaluate_regressor(  # pylint: disable=unused-argument
             targets = test_data.predictive.targets.numpy().squeeze()
             preds = model.predict(test_data).numpy().squeeze()
 
-            results.metrics["mse"][indx] = mean_squared_error(targets, preds)
-            results.metrics["mae"][indx] = mean_absolute_error(targets, preds)
-            results.metrics["r2"][indx] = r2_score(targets, preds)
+            results.metrics["mse"][indx] = sklearn.metrics.mean_squared_error(targets, preds)
+            results.metrics["mae"][indx] = sklearn.metrics.mean_absolute_error(targets, preds)
+            results.metrics["r2"][indx] = sklearn.metrics.r2_score(targets, preds)
             results.errors.append(0)
         except BaseException as e:  # pylint: disable=broad-except
-            log.error(f"Regression evaluation failed: {e}")
+            logger.error(f"Regression evaluation failed: {e}")
             results.errors.append(1)
 
         results.durations.append(time() - start)
@@ -511,7 +500,7 @@ def compute_c_index(
     metrics: List[float] = []
     for horizon_idx, horizon_time in enumerate(horizons):
         predictions_at_horizon_time = predictions[:, horizon_idx, :].reshape((-1,))
-        out = concordance_index_ipcw(
+        out = tempor_metrics.concordance_index_ipcw(
             training_array_struct, testing_array_struct, predictions_at_horizon_time, float(horizon_time)
         )
         metrics.append(out[0])
@@ -522,7 +511,7 @@ def compute_brier_score(
     training_array_struct: np.ndarray, testing_array_struct: np.ndarray, predictions: np.ndarray, horizons: List[float]
 ) -> List[float]:
     predictions = predictions.reshape((predictions.shape[0], predictions.shape[1]))
-    times, scores = brier_score(  # pylint: disable=unused-variable
+    times, scores = tempor_metrics.brier_score(  # pylint: disable=unused-variable
         training_array_struct, testing_array_struct, predictions, horizons
     )
     return scores.tolist()
@@ -557,9 +546,9 @@ def _compute_time_to_event_metric(
 
     predictions_array = predictions.numpy()
     t_train, y_train = (df.to_numpy().reshape((-1,)) for df in train_data.predictive.targets.split_as_two_dataframes())
-    y_train_struct = create_structured_array(y_train, t_train)
+    y_train_struct = tempor_metrics.create_structured_array(y_train, t_train)
     t_test, y_test = (df.to_numpy().reshape((-1,)) for df in test_data.predictive.targets.split_as_two_dataframes())
-    y_test_struct = create_structured_array(y_test, t_test)
+    y_test_struct = tempor_metrics.create_structured_array(y_test, t_test)
 
     metrics: List[float] = metric_func(y_train_struct, y_test_struct, predictions_array, horizons)
     avg_metric = float(np.asarray(metrics).mean())
@@ -577,6 +566,30 @@ def evaluate_time_to_event(  # pylint: disable=unused-argument
     random_state: int = 0,
     **kwargs: Any,
 ) -> pd.DataFrame:
+    """Helper for evaluating time-to-event tasks.
+
+    Args:
+        estimator (Any):
+            Baseline model to evaluate - must be unfitted
+        data (dataset.TimeToEventAnalysisDataset):
+             The dataset.
+        horizons (data_typing.TimeIndex):
+            Time horizons for making predictions at.
+        n_splits (int, optional):
+            Cross-validation folds. Defaults to ``3``.
+        random_state (int, optional):
+            Random state. Defaults to ``0``.
+
+    Returns:
+        pd.DataFrame:
+            DataFrame containing the results.
+
+            The columns of the dataframe contain details about the cross-validation repeats: one column for each
+            :obj:`~tempor.benchmarks.evaluation.OutputMetric`.
+
+            The index of the dataframe contains all the metrics evaluated: all of
+            :obj:`~tempor.benchmarks.evaluation.TimeToEventSupportedMetric`.
+    """
     if n_splits < 2 or not isinstance(n_splits, int):
         raise ValueError("n_splits must be an integer >= 2")
     estimator_: BaseTimeToEventAnalysis = cast(BaseTimeToEventAnalysis, estimator)
@@ -591,7 +604,7 @@ def evaluate_time_to_event(  # pylint: disable=unused-argument
     for metric in metrics:
         results.metrics[metric] = np.zeros(n_splits)
 
-    splitter = KFold(n_splits=n_splits, shuffle=True, random_state=random_state)
+    splitter = sklearn.model_selection.KFold(n_splits=n_splits, shuffle=True, random_state=random_state)
 
     indx = 0
     for train_data, test_data in data.split(splitter=splitter):
@@ -616,7 +629,7 @@ def evaluate_time_to_event(  # pylint: disable=unused-argument
             results.errors.append(0)
 
         except BaseException as e:  # pylint: disable=broad-except
-            log.error(f"Regression evaluation failed: {e}")
+            logger.error(f"Regression evaluation failed: {e}")
             results.errors.append(1)
 
         results.durations.append(time() - start)
