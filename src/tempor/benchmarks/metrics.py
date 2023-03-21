@@ -454,8 +454,8 @@ class CensoringDistributionEstimator(SurvivalFunctionEstimator):
                 as first field, and time of event or time of censoring as second field.
 
         Returns:
-            ipcw : array, shape = (n_samples,)
-                Inverse probability of censoring weights.
+            np.ndarray:
+                IPCW, ``array, shape = (n_samples,)``. Inverse probability of censoring weights.
         """
         event, time = check_y_survival(y)  # pylint: disable=unbalanced-tuple-unpacking
         Ghat = self.predict_proba(time[event])
@@ -537,6 +537,56 @@ def _estimate_concordance_index(
 
     cindex = numerator / denominator
     return cindex, concordant, discordant, tied_risk, tied_time
+
+
+def create_structured_array(
+    event: Any,
+    time: Any,
+    name_event: Optional[str] = None,
+    name_time: Optional[str] = None,
+) -> np.ndarray:
+    """Create structured array.
+
+    Args:
+        event (Any):
+            Array-like. Event indicator. A boolean array or array with values 0/1.
+        time (Any):
+            Array-like. Observed time.
+        name_event (Optional[str]):
+            Name of event, optional. Defaults to "event".
+        name_time (Optional[str]):
+            Name of observed time, optional. Defaults to "time".
+
+    Returns:
+        np.ndarray:
+            Structured array with two fields.
+    """
+    name_event = name_event or "event"
+    name_time = name_time or "time"
+    if name_time == name_event:
+        raise ValueError("name_time must be different from name_event")
+
+    time = np.asanyarray(time, dtype=float)
+    y = np.empty(time.shape[0], dtype=[(name_event, bool), (name_time, float)])
+    y[name_time] = time
+
+    event = np.asanyarray(event)
+    sklearn.utils.check_consistent_length(time, event)
+
+    if np.issubdtype(event.dtype, np.bool_):
+        y[name_event] = event
+    else:
+        events = np.unique(event)
+        events.sort()
+        if len(events) != 2:
+            raise ValueError("event indicator must be binary")
+
+        if np.all(events == np.array([0, 1], dtype=events.dtype)):
+            y[name_event] = event.astype(bool)
+        else:
+            raise ValueError("non-boolean event indicator must contain 0 and 1 only")
+
+    return y
 
 
 # --- Metrics. ---

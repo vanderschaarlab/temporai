@@ -33,7 +33,7 @@ def benchmark_models(
     Args:
         task_type (str):
             The type of problem. Relevant for evaluating the downstream models with the correct metrics.
-            Valid tasks are:  ``"classification"``, ``"regression"``.
+            Valid tasks are:  ``"classification"``, ``"regression"``, ``"time_to_event"``.
         tests (List[Tuple[str, Any]]):
             Tuples of form ``(test_name: str, plugin: BasePredictor/Pipeline)``
         data (dataset.Dataset):
@@ -45,13 +45,13 @@ def benchmark_models(
 
     Returns:
         Tuple[pd.DataFrame, Dict[str, pd.DataFrame]]:
-            The benchmarking results given as ``(readable_dataframe: pd.DataFrame, results: Dict[str, pd.DataFrame]])``
-            where:
-            * ``readable_dataframe``: a dataframe with metric name as index and test names as columns, where the values
-            are readable string representations of the evaluation metric, like: ``MEAN +/- STDDEV``.
-            * ``results``: a dictionary mapping the test name to a dataframe with metric names as index and
-            ``["mean", "stddev"]`` columns, where the values are the ``float`` mean and standard deviation
-            for each metric.
+            The benchmarking results given as ``(readable_dataframe: pd.DataFrame, results: Dict[str, pd.DataFrame]])``\
+                where:
+                * ``readable_dataframe``: a dataframe with metric name as index and test names as columns, where the\
+                    values are readable string representations of the evaluation metric, like: ``MEAN +/- STDDEV``.
+                * ``results``: a dictionary mapping the test name to a dataframe with metric names as index and\
+                    ``["mean", "stddev"]`` columns, where the values are the ``float`` mean and standard deviation\
+                    for each metric.
     """
 
     results = {}
@@ -59,6 +59,8 @@ def benchmark_models(
     if task_type == "classification":
         evaluator = evaluate_classifier
     elif task_type == "regression":
+        evaluator = evaluate_regressor
+    elif task_type == "time_to_event":
         evaluator = evaluate_regressor
     else:
         raise ValueError(f"Unsupported task type {task_type}")
