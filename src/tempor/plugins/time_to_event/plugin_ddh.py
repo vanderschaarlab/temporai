@@ -19,7 +19,7 @@ from tempor.plugins.time_to_event import BaseTimeToEventAnalysis
 
 
 @dataclasses.dataclass
-class DynamicDeepHitSurvivalAnalysisParams:
+class DynamicDeepHitTimeToEventAnalysisParams:
     # TODO: Docstring.
     n_iter: int = 1000
     batch_size: int = 100
@@ -40,16 +40,16 @@ class DynamicDeepHitSurvivalAnalysisParams:
 
 # TODO: Docstring.
 @plugins.register_plugin(name="dynamic_deephit", category="time_to_event")
-class DynamicDeepHitSurvivalAnalysis(BaseTimeToEventAnalysis):
-    ParamsDefinition = DynamicDeepHitSurvivalAnalysisParams
-    params: DynamicDeepHitSurvivalAnalysisParams  # type: ignore
+class DynamicDeepHitTimeToEventAnalysis(BaseTimeToEventAnalysis):
+    ParamsDefinition = DynamicDeepHitTimeToEventAnalysisParams
+    params: DynamicDeepHitTimeToEventAnalysisParams  # type: ignore
 
     def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
         """Dynamic DeepHit survival analysis model.
 
         Args:
             **params:
-                Parameters and defaults as defined in :class:`DynamicDeepHitSurvivalAnalysisParams`.
+                Parameters and defaults as defined in :class:`DynamicDeepHitTimeToEventAnalysisParams`.
         """
         super().__init__(**params)
 

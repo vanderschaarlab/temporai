@@ -4,7 +4,7 @@ from typing import Any, List, Optional, Tuple, Union
 import numpy as np
 import torch
 import torch.nn as nn
-from typing_extensions import Literal, get_args
+from typing_extensions import Literal, Self, get_args
 
 from tempor.models import constants
 
@@ -131,7 +131,7 @@ class DynamicDeepHitModel:
         x: np.ndarray,
         t: np.ndarray,
         e: np.ndarray,
-    ) -> Any:
+    ) -> Self:
         discretized_t, self.split_time = self.discretize(t, self.split, self.split_time)
         processed_data = self._preprocess_training_data(x, discretized_t, e)
         x_train, t_train, e_train, x_val, t_val, e_val = processed_data

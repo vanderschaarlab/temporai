@@ -4,7 +4,7 @@ import pytest
 
 from tempor.plugins import plugin_loader
 from tempor.plugins.time_to_event.plugin_ddh import (
-    DynamicDeepHitSurvivalAnalysis as plugin,
+    DynamicDeepHitTimeToEventAnalysis as plugin,
 )
 from tempor.utils.dataloaders import PBCDataLoader
 
