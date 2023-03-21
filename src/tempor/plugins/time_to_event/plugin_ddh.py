@@ -147,11 +147,13 @@ class DynamicDeepHitTimeToEventAnalysis(BaseTimeToEventAnalysis):
         *args,
         **kwargs,
     ) -> samples.TimeSeriesSamples:
+        # NOTE: kwargs will be passed to DynamicDeepHitModel.predict_risk().
+        # E.g. `bs` batch size parameter can be provided this way.
         data = cast(dataset.TimeToEventAnalysisDataset, data)
         self._validate_data(data)
         (static, temporal, observation_times, _, _) = self._convert_data(data)
         processed_data = self._merge_data(static, temporal, observation_times)
-        risk = self.model.predict_risk(processed_data, horizons)
+        risk = self.model.predict_risk(processed_data, horizons, **kwargs)
         return samples.TimeSeriesSamples(
             risk.reshape((risk.shape[0], risk.shape[1], 1)),
             sample_index=data.time_series.sample_index(),

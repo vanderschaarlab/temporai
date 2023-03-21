@@ -317,8 +317,8 @@ class DynamicDeepHitModel:
 
         return 1 - np.asarray(output).T
 
-    def predict_risk(self, x: np.ndarray, t: List, **args: Any) -> np.ndarray:
-        return 1 - self.predict_survival(x, t, **args)
+    def predict_risk(self, x: np.ndarray, t: List, **kwargs: Any) -> np.ndarray:
+        return 1 - self.predict_survival(x, t, **kwargs)
 
     def negative_log_likelihood(
         self,
