@@ -38,6 +38,20 @@ class BaseTreatments(plugins.BasePredictor):
     def _predict(self, data: dataset.Dataset, *args, **kwargs) -> samples.StaticSamples:
         ...
 
+    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    def predict_counterfactuals(
+        self,
+        data: dataset.Dataset,
+        *args,
+        **kwargs,
+    ) -> samples.TimeSeriesSamples:
+        check_data_class(data)
+        return super().predict_counterfactuals(data, *args, **kwargs)
+
+    @abc.abstractmethod
+    def _predict_counterfactuals(self, data: dataset.Dataset, *args, **kwargs) -> samples.TimeSeriesSamples:
+        ...
+
 
 plugins.register_plugin_category("treatments", BaseTreatments)
 

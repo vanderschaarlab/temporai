@@ -35,6 +35,17 @@ class BasePredictor(estimator.BaseEstimator):
 
         return prediction
 
+    def predict_counterfactuals(
+        self,
+        data: dataset.Dataset,
+        *args,
+        **kwargs,
+    ) -> Any:  # TODO: Narrow down output formats later.
+        logger.debug(f"Calling _predict_counterfactuals() implementation on {self.__class__.__name__}")
+        prediction = self._predict_counterfactuals(data, *args, **kwargs)
+
+        return prediction
+
     @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def fit_predict(
         self,
@@ -51,3 +62,6 @@ class BasePredictor(estimator.BaseEstimator):
 
     def _predict_proba(self, data: dataset.Dataset, *args, **kwargs) -> Any:  # pragma: no cover
         raise NotImplementedError("`predict_proba` is supported only for classification tasks")
+
+    def _predict_counterfactuals(self, data: dataset.Dataset, *args, **kwargs) -> Any:  # pragma: no cover
+        raise NotImplementedError("`predict_proba` is supported only for treatments tasks")

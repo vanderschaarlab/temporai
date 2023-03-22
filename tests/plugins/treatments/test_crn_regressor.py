@@ -44,25 +44,36 @@ def from_module() -> BaseTreatments:
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_CRN_regressor_plugin_sanity(test_plugin: BaseTreatments) -> None:
+def test_crn_regressor_plugin_sanity(test_plugin: BaseTreatments) -> None:
     assert test_plugin is not None
     assert test_plugin.name == "crn_regressor"
     assert len(test_plugin.hyperparameter_space()) == 8
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_CRN_regressor_plugin_fit(test_plugin: BaseTreatments) -> None:
+def test_crn_regressor_plugin_fit(test_plugin: BaseTreatments) -> None:
     data = get_dummy_data()
     test_plugin.fit(data)
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_CRN_regressor_plugin_predict(test_plugin: BaseTreatments) -> None:
+def test_crn_regressor_plugin_predict(test_plugin: BaseTreatments) -> None:
     data = get_dummy_data(temporal_targets_n_features=3)
     test_plugin.fit(data)
-    output = test_plugin.predict(data, n_future_steps=10)
+    output = test_plugin.predict(data)
 
     assert output.numpy().shape == (len(data.time_series), 6, 3)
+
+
+@pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
+def test_crn_regressor_plugin_predict_counterfactuals(test_plugin: BaseTreatments) -> None:
+    data = get_dummy_data(temporal_targets_n_features=3)
+    test_plugin.fit(data)
+
+    n_counterfactuals_per_sample = 2
+    output = test_plugin.predict_counterfactuals(data, n_counterfactuals_per_sample=n_counterfactuals_per_sample)
+
+    assert len(output) == len(data)
 
 
 def test_hyperparam_sample():
