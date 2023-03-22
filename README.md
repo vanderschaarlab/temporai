@@ -119,14 +119,8 @@ assert model.predict(dataset).numpy().shape == (len(dataset), 1)
 
 
 ## 🔑 Methods
-* Imputation
 
-| Name | Description| Reference |
-| --- | --- | --- |
-| `preprocessing.imputation.ffill` | Propagate last valid observation forward to next valid  | --- |
-| `preprocessing.imputation.bfill` | Use next valid observation to fill gap | --- |
-| `preprocessing.imputation.static_imputation` | Use HyperImpute to impute both the static and temporal data | [Paper](https://arxiv.org/abs/2206.07769) |
-
+### Prediction
 * Classification
 
 | Name | Description| Reference |
@@ -144,6 +138,30 @@ assert model.predict(dataset).numpy().shape == (len(dataset), 1)
 | `regression.ode_regressor` | Regressor based on ordinary differential equation (ODE) solvers.  | --- |
 | `regression.cde_regressor` | Regressor based Neural Controlled Differential Equations for Irregular Time Series.  | [Paper](https://arxiv.org/abs/2005.08926)
 | `regression.laplace_ode_regressor` | Regressor based Inverse Laplace Transform (ILT) algorithms implemented in PyTorch.  | [Paper](https://arxiv.org/abs/2206.04843) |
+
+* Time-to-Event
+
+| Name | Description| Reference |
+| --- | --- | --- |
+| `dynamic_deephit` | Dynamic-DeepHit incorporates the available longitudinal data comprising various repeated measurements (rather than only the last available measurements) in order to issue dynamically updated survival predictions | [Paper](https://pubmed.ncbi.nlm.nih.gov/30951460/) |
+
+### Preprocessing
+* Imputation
+
+| Name | Description| Reference |
+| --- | --- | --- |
+| `preprocessing.imputation.ffill` | Propagate last valid observation forward to next valid  | --- |
+| `preprocessing.imputation.bfill` | Use next valid observation to fill gap | --- |
+| `preprocessing.imputation.static_imputation` | Use HyperImpute to impute both the static and temporal data | [Paper](https://arxiv.org/abs/2206.07769) |
+
+* Scalers
+
+| Name | Description| Reference |
+| --- | --- | --- |
+| `preprocessing.scaling.static_standard_scaler` | Scale the static features using a StandardScaler | --- |
+| `preprocessing.scaling.static_minmax_scaler` | Scale the static features using a MinMaxScaler | --- |
+| `preprocessing.scaling.ts_standard_scaler` | Scale the temporal features using a StandardScaler | --- |
+| `preprocessing.scaling.ts_minmax_scaler` | Scale the temporal features using a MinMaxScaler | --- |
 
 <!--
 ## Models
