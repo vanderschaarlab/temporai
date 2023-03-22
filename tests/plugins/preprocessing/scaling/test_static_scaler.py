@@ -5,7 +5,7 @@ import pytest
 from tempor.plugins import plugin_loader
 from tempor.plugins.preprocessing.scaling import BaseScaler
 from tempor.plugins.preprocessing.scaling.plugin_static_scaler import (
-    StaticScalerScaler as plugin,
+    StaticScaler as plugin,
 )
 from tempor.utils.dataloaders import GoogleStocksDataLoader, SineDataLoader
 

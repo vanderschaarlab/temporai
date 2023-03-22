@@ -16,6 +16,7 @@ class SineDataLoader(dataloader.OneOffPredictionDataLoader):
         with_missing: bool = False,
         miss_ratio: float = 0.1,
         static_scale: int = 1,
+        ts_scale: int = 1,
         **kwargs,
     ) -> None:
         """Sine data generation.
@@ -47,6 +48,7 @@ class SineDataLoader(dataloader.OneOffPredictionDataLoader):
         self.with_missing = with_missing
         self.miss_ratio = miss_ratio
         self.static_scale = static_scale
+        self.ts_scale = ts_scale
 
     @staticmethod
     def url() -> None:
@@ -93,7 +95,7 @@ class SineDataLoader(dataloader.OneOffPredictionDataLoader):
                 phase = np.random.normal()
 
                 # Generate sine signal based on the drawn frequency and phase:
-                temp_data = [np.sin(self.freq_scale * freq * j + phase) for j in range(seq_len)]
+                temp_data = [np.sin(self.freq_scale * freq * j + phase) * self.ts_scale for j in range(seq_len)]
 
                 local.append(temp_data)
 

@@ -1,19 +1,19 @@
 from typing import Any
 
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler
 from typing_extensions import Self
 
 import tempor.plugins.core as plugins
 from tempor.data import dataset
-from tempor.data.samples import StaticSamples
+from tempor.data.samples import TimeSeriesSamples
 from tempor.plugins.preprocessing.scaling import BaseScaler
 
 
-@plugins.register_plugin(name="static_scaler", category="preprocessing.scaling")
-class StaticScaler(BaseScaler):
+@plugins.register_plugin(name="ts_minmax_scaler", category="preprocessing.scaling")
+class TimeSeriesMinMaxScaler(BaseScaler):
     def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
-        """Standard scaling for the static data.
+        """MinMax scaling for the time-series data.
 
         Example:
             >>> from tempor.utils.datasets.sine import SineDataloader
@@ -22,7 +22,7 @@ class StaticScaler(BaseScaler):
             >>> dataset = SineDataloader().load()
             >>>
             >>> # Load the model:
-            >>> model = plugin_loader.get("preprocessing.scaling.static_scaler")
+            >>> model = plugin_loader.get("preprocessing.scaling.ts_minmax_scaler")
             >>>
             >>> # Train:
             >>> model.fit(dataset)
@@ -32,7 +32,7 @@ class StaticScaler(BaseScaler):
         """
 
         super().__init__(**params)
-        self.model = StandardScaler()
+        self.model = MinMaxScaler()
 
     def _fit(
         self,
@@ -40,22 +40,16 @@ class StaticScaler(BaseScaler):
         *args,
         **kwargs,
     ) -> Self:
-        if data.static is None:
-            return self
-
-        self.model.fit(data.static.dataframe())
+        self.model.fit(data.time_series.dataframe())
         return self
 
     def _transform(self, data: dataset.Dataset, *args, **kwargs) -> Any:
-        if data.static is None:
-            return data
+        temporal_data = data.time_series.dataframe()
+        scaled = pd.DataFrame(self.model.transform(temporal_data))
+        scaled.columns = temporal_data.columns
+        scaled.index = temporal_data.index
 
-        static_data = data.static.dataframe()
-        scaled = pd.DataFrame(self.model.transform(static_data))
-        scaled.columns = static_data.columns
-        scaled.index = static_data.index
-
-        data.static = StaticSamples.from_dataframe(scaled)
+        data.time_series = TimeSeriesSamples.from_dataframe(scaled)
 
         return data
 

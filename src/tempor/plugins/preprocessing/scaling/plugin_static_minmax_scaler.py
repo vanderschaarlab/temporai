@@ -11,7 +11,7 @@ from tempor.plugins.preprocessing.scaling import BaseScaler
 
 
 @plugins.register_plugin(name="static_minmax_scaler", category="preprocessing.scaling")
-class StaticMinMaxScalerScaler(BaseScaler):
+class StaticMinMaxScaler(BaseScaler):
     def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
         """MinMax scaling for the static data.
 
