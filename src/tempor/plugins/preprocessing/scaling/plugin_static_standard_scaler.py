@@ -10,10 +10,11 @@ from tempor.data.samples import StaticSamples
 from tempor.plugins.preprocessing.scaling import BaseScaler
 
 
-@plugins.register_plugin(name="static_scaler", category="preprocessing.scaling")
-class StaticScaler(BaseScaler):
+@plugins.register_plugin(name="static_standard_scaler", category="preprocessing.scaling")
+class StaticStandardScaler(BaseScaler):
     def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
         """Standard scaling for the static data.
+        Standardize the static features by removing the mean and scaling to unit variance.
 
         Example:
             >>> from tempor.utils.datasets.sine import SineDataloader
@@ -22,7 +23,7 @@ class StaticScaler(BaseScaler):
             >>> dataset = SineDataloader().load()
             >>>
             >>> # Load the model:
-            >>> model = plugin_loader.get("preprocessing.scaling.static_scaler")
+            >>> model = plugin_loader.get("preprocessing.scaling.static_standard_scaler")
             >>>
             >>> # Train:
             >>> model.fit(dataset)

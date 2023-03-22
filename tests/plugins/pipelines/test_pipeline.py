@@ -13,6 +13,8 @@ from tempor.utils.dataloaders.sine import SineDataLoader
     [
         [
             "preprocessing.imputation.bfill",
+            "preprocessing.scaling.static_minmax_scaler",
+            "preprocessing.scaling.ts_minmax_scaler",
             "classification.nn_classifier",
         ],
         [
@@ -62,7 +64,7 @@ def test_pipeline_sanity(plugins_str: List[Any]) -> None:
             "preprocessing.imputation.bfill",
             "preprocessing.imputation.bfill",
             "preprocessing.imputation.bfill",
-            "preprocessing.imputation.bfill",
+            "preprocessing.scaling.ts_minmax_scaler",
         ],
         [],
     ],
@@ -79,11 +81,19 @@ def test_pipeline_fails(plugins_str: List[Any]) -> None:
             "preprocessing.imputation.static_imputation",
             "preprocessing.imputation.nop_imputer",
             "preprocessing.imputation.bfill",
+            "preprocessing.scaling.static_minmax_scaler",
+            "preprocessing.scaling.ts_minmax_scaler",
             "classification.nn_classifier",
         ],
         [
             "preprocessing.imputation.bfill",
-            "preprocessing.scaling.nop_scaler",
+            "preprocessing.scaling.ts_minmax_scaler",
+            "regression.nn_regressor",
+        ],
+        [
+            "preprocessing.imputation.ffill",
+            "preprocessing.scaling.static_minmax_scaler",
+            "preprocessing.scaling.ts_minmax_scaler",
             "regression.nn_regressor",
         ],
         [

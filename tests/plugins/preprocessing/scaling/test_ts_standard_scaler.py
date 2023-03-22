@@ -4,14 +4,14 @@ import pytest
 
 from tempor.plugins import plugin_loader
 from tempor.plugins.preprocessing.scaling import BaseScaler
-from tempor.plugins.preprocessing.scaling.plugin_static_scaler import (
-    StaticScaler as plugin,
+from tempor.plugins.preprocessing.scaling.plugin_ts_standard_scaler import (
+    TimeSeriesStandardScaler as plugin,
 )
 from tempor.utils.dataloaders import GoogleStocksDataLoader, SineDataLoader
 
 
 def from_api() -> BaseScaler:
-    return plugin_loader.get("preprocessing.scaling.static_scaler", random_state=123)
+    return plugin_loader.get("preprocessing.scaling.ts_standard_scaler", random_state=123)
 
 
 def from_module() -> BaseScaler:
@@ -19,29 +19,28 @@ def from_module() -> BaseScaler:
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_static_scaler_plugin_sanity(test_plugin: BaseScaler) -> None:
+def test_ts_standard_scaler_plugin_sanity(test_plugin: BaseScaler) -> None:
     assert test_plugin is not None
-    assert test_plugin.name == "static_scaler"
+    assert test_plugin.name == "ts_standard_scaler"
     assert len(test_plugin.hyperparameter_space()) == 0
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-@pytest.mark.parametrize("dataloader", [GoogleStocksDataLoader(), SineDataLoader(static_scale=5)])
-def test_static_scaler_plugin_fit(test_plugin: BaseScaler, dataloader: Any) -> None:
+@pytest.mark.parametrize("dataloader", [GoogleStocksDataLoader(), SineDataLoader(ts_scale=5)])
+def test_ts_standard_scaler_plugin_fit(test_plugin: BaseScaler, dataloader: Any) -> None:
     dataset = dataloader.load()
     test_plugin.fit(dataset)
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_static_scaler_plugin_transform(test_plugin: BaseScaler) -> None:
-    dataset = SineDataLoader(static_scale=100).load()
-    assert dataset.static is not None  # nosec B101
-    assert (dataset.static.numpy() > 50).any()
+def test_ts_standard_scaler_plugin_transform(test_plugin: BaseScaler) -> None:
+    dataset = SineDataLoader(ts_scale=100).load()
+    assert dataset.time_series is not None  # nosec B101
+    assert (dataset.time_series.numpy() > 50).any()
 
     output = test_plugin.fit(dataset).transform(dataset)
 
-    print(output.static.numpy().min(), output.static.numpy().max())
-    assert (output.static.numpy() < 50).all()
+    assert (output.time_series.numpy() < 50).all()
 
 
 def test_hyperparam_sample():

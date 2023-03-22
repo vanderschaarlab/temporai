@@ -1,7 +1,7 @@
 from typing import Any
 
 import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import StandardScaler
 from typing_extensions import Self
 
 import tempor.plugins.core as plugins
@@ -10,13 +10,11 @@ from tempor.data.samples import TimeSeriesSamples
 from tempor.plugins.preprocessing.scaling import BaseScaler
 
 
-@plugins.register_plugin(name="ts_minmax_scaler", category="preprocessing.scaling")
-class TimeSeriesMinMaxScaler(BaseScaler):
+@plugins.register_plugin(name="ts_standard_scaler", category="preprocessing.scaling")
+class TimeSeriesStandardScaler(BaseScaler):
     def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
-        """MinMax scaling for the time-series data.
-        Transform the temporal features by scaling each feature to a given range.
-        This estimator scales and translates each feature individually such that it is in the given range on the training set, e.g. between zero and one.
-
+        """Standard scaling for the time-series data.
+        Standardize the temporal features by removing the mean and scaling to unit variance.
 
         Example:
             >>> from tempor.utils.datasets.sine import SineDataloader
@@ -25,7 +23,7 @@ class TimeSeriesMinMaxScaler(BaseScaler):
             >>> dataset = SineDataloader().load()
             >>>
             >>> # Load the model:
-            >>> model = plugin_loader.get("preprocessing.scaling.ts_minmax_scaler")
+            >>> model = plugin_loader.get("preprocessing.scaling.ts_standard_scaler")
             >>>
             >>> # Train:
             >>> model.fit(dataset)
@@ -35,7 +33,7 @@ class TimeSeriesMinMaxScaler(BaseScaler):
         """
 
         super().__init__(**params)
-        self.model = MinMaxScaler()
+        self.model = StandardScaler()
 
     def _fit(
         self,
