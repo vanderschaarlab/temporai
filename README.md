@@ -144,6 +144,8 @@ assert model.predict(dataset).numpy().shape == (len(dataset), 1)
 | Name | Description| Reference |
 | --- | --- | --- |
 | `dynamic_deephit` | Dynamic-DeepHit incorporates the available longitudinal data comprising various repeated measurements (rather than only the last available measurements) in order to issue dynamically updated survival predictions | [Paper](https://pubmed.ncbi.nlm.nih.gov/30951460/) |
+| `ts_coxph` | Create embeddings from the time series and use a CoxPH model for predicting the survival function| --- |
+| `ts_xgb` | Create embeddings from the time series and use a SurvivalXGBoost model for predicting the survival function| --- |
 
 ### Preprocessing
 * Imputation

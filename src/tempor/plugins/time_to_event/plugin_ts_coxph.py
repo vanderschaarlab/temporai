@@ -66,7 +66,7 @@ class CoxPHSurvivalAnalysis(OutputTimeToEventAnalysis):
     ) -> None:
         super().__init__()
         self.fit_options = fit_options
-        self.model = CoxPHFitter(alpha=alpha, **kwargs)
+        self.model = CoxPHFitter(alpha=alpha, penalizer=penalizer, **kwargs)
 
     def fit(self, X: pd.DataFrame, T: pd.Series, Y: pd.Series) -> "CoxPHSurvivalAnalysis":
         self.constant_cols = constant_columns(X)

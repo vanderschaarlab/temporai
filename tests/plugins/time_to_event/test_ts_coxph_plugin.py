@@ -55,6 +55,7 @@ def test_ts_coxph_plugin_benchmark(get_event0_time_percentiles: Callable) -> Non
     horizons = get_event0_time_percentiles(dataset, [0.25, 0.5, 0.75])
 
     score = evaluate_time_to_event(test_plugin, dataset, horizons)
+    print(score)
     score.loc["c_index", "mean"] > 0.5
 
 
