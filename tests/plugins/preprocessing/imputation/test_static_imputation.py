@@ -7,7 +7,7 @@ from tempor.plugins.preprocessing.imputation import BaseImputer
 from tempor.plugins.preprocessing.imputation.plugin_static_imputation import (
     StaticOnlyImputer as plugin,
 )
-from tempor.utils.datasets.sine import SineDataloader
+from tempor.utils.dataloaders.sine import SineDataLoader
 
 
 def from_api() -> BaseImputer:
@@ -27,7 +27,7 @@ def test_static_imputation_plugin_sanity(test_plugin: BaseImputer) -> None:
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
 def test_static_imputation_plugin_fit(test_plugin: BaseImputer) -> None:
-    dataset = SineDataloader(with_missing=True).load()
+    dataset = SineDataLoader(with_missing=True).load()
     if TYPE_CHECKING:  # pragma: no cover
         assert dataset.static is not None  # nosec B101
 
@@ -38,7 +38,7 @@ def test_static_imputation_plugin_fit(test_plugin: BaseImputer) -> None:
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
 def test_static_imputation_plugin_transform(test_plugin: BaseImputer) -> None:
-    dataset = SineDataloader(with_missing=True).load()
+    dataset = SineDataLoader(with_missing=True).load()
     if TYPE_CHECKING:  # pragma: no cover
         assert dataset.static is not None  # nosec B101
 

@@ -3,7 +3,7 @@ import pytest
 from tempor.plugins import plugin_loader
 from tempor.plugins.classification import BaseClassifier
 from tempor.plugins.classification.plugin_cde_classifier import CDEClassifier as plugin
-from tempor.utils.datasets.sine import SineDataloader
+from tempor.utils.dataloaders.sine import SineDataLoader
 
 train_kwargs = {"random_state": 123, "n_iter": 50}
 
@@ -26,14 +26,14 @@ def test_cde_classifier_plugin_sanity(test_plugin: BaseClassifier) -> None:
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
 def test_cde_classifier_plugin_fit(test_plugin: BaseClassifier) -> None:
-    dataset = SineDataloader().load()
+    dataset = SineDataLoader().load()
 
     test_plugin.fit(dataset)
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
 def test_cde_classifier_plugin_predict(test_plugin: BaseClassifier) -> None:
-    dataset = SineDataloader().load()
+    dataset = SineDataLoader().load()
 
     output = test_plugin.fit(dataset).predict(dataset)
     assert output.numpy().shape == (len(dataset.time_series), 1)
@@ -41,7 +41,7 @@ def test_cde_classifier_plugin_predict(test_plugin: BaseClassifier) -> None:
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
 def test_cde_classifier_plugin_predict_proba(test_plugin: BaseClassifier) -> None:
-    dataset = SineDataloader().load()
+    dataset = SineDataLoader().load()
 
     output = test_plugin.fit(dataset).predict_proba(dataset)
 

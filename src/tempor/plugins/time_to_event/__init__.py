@@ -1,10 +1,11 @@
 import abc
 
 import pydantic
-from typing_extensions import Self
+from typing_extensions import Any, Self
 
+import tempor.exc
 import tempor.plugins.core as plugins
-from tempor.data import dataset, samples
+from tempor.data import data_typing, dataset, samples
 
 
 def check_data_class(data):
@@ -15,7 +16,7 @@ def check_data_class(data):
         )
 
 
-class BaseSurvivalAnalysis(plugins.BasePredictor):
+class BaseTimeToEventAnalysis(plugins.BasePredictor):
     def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
         super().__init__(**params)
 
@@ -25,25 +26,33 @@ class BaseSurvivalAnalysis(plugins.BasePredictor):
         return self
 
     @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
-    def predict(
+    def predict(  # type: ignore[override]  # pylint: disable=arguments-differ
         self,
         data: dataset.Dataset,
+        horizons: data_typing.TimeIndex,
         *args,
         **kwargs,
     ) -> samples.TimeSeriesSamples:  # Output is risk scores at time points, hence `samples.TimeSeriesSamples`.
         check_data_class(data)
-        return super().predict(data, *args, **kwargs)
+        return super().predict(data, horizons, *args, **kwargs)
+
+    def predict_proba(self, data: dataset.Dataset, *args, **kwargs) -> Any:
+        raise tempor.exc.UnsupportedSetupException(
+            "`predict_proba` method is not supported in the time-to-event analysis setting"
+        )
 
     @abc.abstractmethod
-    def _predict(self, data: dataset.Dataset, *args, **kwargs) -> samples.TimeSeriesSamples:
+    def _predict(  # type: ignore[override]  # pylint: disable=arguments-differ
+        self, data: dataset.Dataset, horizons: data_typing.TimeIndex, *args, **kwargs
+    ) -> samples.TimeSeriesSamples:  # pragma: no cover
         ...
 
 
-plugins.register_plugin_category("survival", BaseSurvivalAnalysis)
+plugins.register_plugin_category("time_to_event", BaseTimeToEventAnalysis)
 
 plugins.importing.import_plugins(__file__)
 
 __all__ = [  # pyright: ignore
     *plugins.importing.gather_modules_names(__file__),
-    "BaseSurvivalAnalysis",
+    "BaseTimeToEventAnalysis",
 ]

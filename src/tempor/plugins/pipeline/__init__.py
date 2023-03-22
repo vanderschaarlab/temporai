@@ -25,7 +25,7 @@ class PipelineMeta(type):
         dct["name"] = _generate_name_impl(plugins)
         dct["hyperparameter_space"] = _generate_hyperparameter_space_impl(plugins)
         dct["hyperparameter_space_for_layer"] = _generate_hyperparameter_space_for_layer_impl(plugins)
-        dct["sample_params"] = _generate_sample_param_impl(plugins)
+        dct["sample_hyperparameters"] = _generate_sample_param_impl(plugins)
         dct["get_args"] = _generate_get_args()
 
         dct["plugin_types"] = list(plugins)
@@ -34,34 +34,34 @@ class PipelineMeta(type):
 
     @staticmethod
     def name(*args: Any) -> str:
-        raise NotImplementedError("not implemented")
+        raise NotImplementedError("Not implemented")
 
     @staticmethod
     def type(*args: Any) -> str:
-        raise NotImplementedError("not implemented")
+        raise NotImplementedError("Not implemented")
 
     @staticmethod
     def hyperparameter_space(*args: Any, **kwargs: Any) -> Dict:
-        raise NotImplementedError("not implemented")
+        raise NotImplementedError("Not implemented")
 
     @staticmethod
     def hyperparameter_space_for_layer(name: str, *args: Any, **kwargs: Any) -> Dict:
-        raise NotImplementedError("not implemented")
+        raise NotImplementedError("Not implemented")
 
-    def sample_params(*args: Any, **kwargs: Any) -> Dict:  # pylint: disable=no-method-argument
-        raise NotImplementedError("not implemented")
+    def sample_hyperparameters(*args: Any, **kwargs: Any) -> Dict:  # pylint: disable=no-method-argument
+        raise NotImplementedError("Not implemented")
 
     def get_args(*args: Any, **kwargs: Any) -> Dict:  # pylint: disable=no-method-argument
-        raise NotImplementedError("not implemented")
+        raise NotImplementedError("Not implemented")
 
     def fit(self: Any, X: dataset.Dataset, *args: Any, **kwargs: Any) -> Any:
-        raise NotImplementedError("not implemented")
+        raise NotImplementedError("Not implemented")
 
     def predict(*args: Any, **kwargs: Any) -> dataset.Dataset:  # pylint: disable=no-method-argument
-        raise NotImplementedError("not implemented")
+        raise NotImplementedError("Not implemented")
 
     def predict_proba(*args: Any, **kwargs: Any) -> dataset.Dataset:  # pylint: disable=no-method-argument
-        raise NotImplementedError("not implemented")
+        raise NotImplementedError("Not implemented")
 
 
 def PipelineGroup(names: List[str]) -> Tuple[Type, ...]:

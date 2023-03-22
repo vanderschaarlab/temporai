@@ -5,8 +5,8 @@ import pytest
 
 from tempor.models.constants import ODEBackend
 from tempor.models.ts_ode import NeuralODE
-from tempor.utils.datasets.google_stocks import GoogleStocksDataloader
-from tempor.utils.datasets.sine import SineDataloader
+from tempor.utils.dataloaders.google_stocks import GoogleStocksDataLoader
+from tempor.utils.dataloaders.sine import SineDataLoader
 
 
 def unpack_dataset(source):
@@ -41,10 +41,10 @@ def test_ode_sanity(backend: ODEBackend):
     assert hasattr(model, "initial_static")
 
 
-@pytest.mark.parametrize("source", [GoogleStocksDataloader, SineDataloader])
+@pytest.mark.parametrize("source", [GoogleStocksDataLoader, SineDataLoader])
 @pytest.mark.parametrize("backend", ["laplace", "cde", "ode"])
 def test_ode_regression_fit_predict(source: Any, backend: ODEBackend) -> None:
-    if source == SineDataloader and backend == "laplace":
+    if source == SineDataLoader and backend == "laplace":
         # NOTE: Test with this setup fails, laplace implementation is not yet stable,
         # this needs to be debugged with the author.
         return
@@ -74,10 +74,10 @@ def test_ode_regression_fit_predict(source: Any, backend: ODEBackend) -> None:
     assert model.score(static, temporal, observation_times, outcome) < 2
 
 
-@pytest.mark.parametrize("source", [SineDataloader, GoogleStocksDataloader])
+@pytest.mark.parametrize("source", [SineDataLoader, GoogleStocksDataLoader])
 @pytest.mark.parametrize("backend", ["laplace", "cde", "ode"])
 def test_ode_classification_fit_predict(source: Any, backend: ODEBackend) -> None:
-    if source == SineDataloader and backend == "laplace":
+    if source == SineDataLoader and backend == "laplace":
         # NOTE: Test with this setup fails, laplace implementation is not yet stable,
         # this needs to be debugged with the author.
         return

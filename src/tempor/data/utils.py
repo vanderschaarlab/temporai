@@ -1,6 +1,6 @@
 import dataclasses
 import itertools
-from typing import Any, ClassVar, List, Optional
+from typing import Any, ClassVar, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -8,7 +8,7 @@ import pydantic
 
 import tempor.core.utils
 
-from . import data_typing
+from . import data_typing, settings
 
 
 @dataclasses.dataclass(frozen=True)
@@ -24,12 +24,25 @@ EXCEPTION_MESSAGES = _ExceptionMessages()
 """Reusable error messages for the module."""
 
 
-# --- Multiindex timeseries dataframe --> 3D numpy array. ---
-
-
 def value_in_df(df: pd.DataFrame, *, value: Any) -> bool:
     """Check if ``value`` exists in dataframe ``df``, accounting for the case where ``value`` is `numpy.nan`."""
     return (pd.isnull(value) and df.isna().any().any()) or (df == value).any().any()
+
+
+def set_df_column_names_inplace(df: pd.DataFrame, names: Sequence) -> pd.DataFrame:
+    pd_major, pd_minor, *_ = tempor.core.utils.get_version(pd.__version__)
+    if pd_major <= 1 and pd_minor < 5:
+        df.set_axis(names, axis="columns", inplace=True)  # pyright: ignore
+        return df
+    else:
+        return df.set_axis(names, axis="columns", copy=False)
+
+
+def get_df_index_level0_unique(df: pd.DataFrame) -> pd.Index:
+    return df.index.get_level_values(level=0).unique()
+
+
+# --- Multiindex timeseries dataframe --> 3D numpy array. ---
 
 
 @pydantic.validate_arguments(config={"arbitrary_types_allowed": True, "smart_union": True})
@@ -57,7 +70,7 @@ def multiindex_timeseries_dataframe_to_array3d(
     """
     if value_in_df(df, value=padding_indicator):
         raise ValueError(f"Value `{padding_indicator}` found in data frame, choose a different padding indicator")
-    samples = df.index.get_level_values(level=0).unique()
+    samples = get_df_index_level0_unique(df)
     num_samples = len(samples)
     num_features = len(df.columns)
     num_timesteps_per_sample = df.groupby(level=0).size()
@@ -66,6 +79,8 @@ def multiindex_timeseries_dataframe_to_array3d(
     array = np.full(shape=(num_samples, max_timesteps, num_features), fill_value=padding_indicator)
     for i_sample, idx_sample in enumerate(samples):
         set_vals = df.loc[idx_sample, :, :].to_numpy()[:max_timesteps, :]  # pyright: ignore
+        if i_sample == 0:
+            array = array.astype(set_vals.dtype)  # Need to cast to the type matching source data.
         array[i_sample, : num_timesteps_per_sample[idx_sample], :] = set_vals  # pyright: ignore
     return array
 
@@ -239,7 +254,7 @@ def make_sample_time_index_tuples(
     """
     if len(sample_index) != len(time_indexes):
         raise ValueError("Expected the same number of elements in `sample_index` and `time_indexes`")
-    sample_indexes_copied = [[si] * len(tis) for si, tis in zip(sample_index, time_indexes)]
+    sample_indexes_copied = [[si] * len(tis) for si, tis in zip(sample_index, time_indexes)]  # type: ignore[arg-type]
     sample_indexes_flattened = list(itertools.chain.from_iterable(sample_indexes_copied))
     time_indexes_flattened = list(itertools.chain.from_iterable(time_indexes))
     pairs = [(si, ti) for si, ti in zip(sample_indexes_flattened, time_indexes_flattened)]
@@ -289,6 +304,134 @@ def array3d_to_multiindex_timeseries_dataframe(
         index=pd.MultiIndex.from_tuples(make_sample_time_index_tuples(sample_index, time_indexes)),
         columns=feature_index,
     )
+
+
+# --- List of dataframes --> Multiindex timeseries dataframe. ---
+
+
+@pydantic.validate_arguments(config={"arbitrary_types_allowed": True, "smart_union": True})
+def list_of_dataframes_to_multiindex_timeseries_dataframe(
+    list_of_dataframes: List[pd.DataFrame],
+    *,
+    sample_index: data_typing.SampleIndex,
+    time_indexes: Optional[data_typing.TimeIndexList] = None,
+    feature_index: Optional[data_typing.FeatureIndex] = None,
+) -> pd.DataFrame:
+    dfs: List[pd.DataFrame] = list_of_dataframes
+
+    if time_indexes is not None and len(list_of_dataframes) != len(time_indexes):
+        raise ValueError(
+            "Expected `list_of_dataframes` and `time_indexes` to be of same length but was "
+            f"{len(list_of_dataframes)} and {len(time_indexes)} respectively"
+        )
+
+    if time_indexes is not None:
+        for idx, df in enumerate(list_of_dataframes):
+            dfs[idx] = df.set_index(
+                keys=pd.Index(time_indexes[idx], name=df.index.name),  # pyright: ignore
+                drop=True,
+                verify_integrity=True,
+            )
+    else:
+        time_indexes = [list(df.index) for df in dfs]
+
+    df_concat = pd.concat(dfs, axis=0, ignore_index=False)
+
+    multiindex = pd.MultiIndex.from_tuples(make_sample_time_index_tuples(sample_index, time_indexes))
+    df_concat.set_index(
+        keys=multiindex,
+        drop=True,
+        verify_integrity=True,
+        inplace=True,  # pyright: ignore
+    )
+    df_concat.index.set_names(
+        [settings.DATA_SETTINGS.sample_index_name, settings.DATA_SETTINGS.time_index_name], inplace=True
+    )
+    if feature_index is not None:
+        df_concat = set_df_column_names_inplace(df_concat, feature_index)
+
+    return df_concat
+
+
+def multiindex_timeseries_dataframe_to_list_of_dataframes(df: pd.DataFrame) -> List[pd.DataFrame]:
+    """Returns a list of dataframes where each dataframe has the data for each sample. That is, each of the dataframes
+    has a unique level ``0`` index value.
+
+    Args:
+        df (pd.DataFrame): Input multiindex dataframe.
+
+    Returns:
+        List[pd.DataFrame]: Output list of dataframes.
+    """
+    sample_index = get_df_index_level0_unique(df)
+    return [df.loc[(si, slice(None)), :] for si in sample_index]
+
+
+# --- [(event_times, event_values), ...] --> DataFrame compatible with EventSamples. ---
+
+
+@pydantic.validate_arguments(config={"arbitrary_types_allowed": False, "smart_union": True})
+def event_time_value_pairs_to_event_dataframe(
+    event_time_value_pairs: Sequence[Tuple[data_typing.TimeIndex, List[bool]]],
+    sample_index: data_typing.SampleIndex,
+    feature_index: Optional[data_typing.FeatureIndex] = None,
+) -> pd.DataFrame:
+    """Convert a sequence like ``[(event_times, event_values), ...]`` to a `pandas.DataFrame` whose columns contain
+    elements like tuples ``(event_time, event_value)``.
+
+    Args:
+        event_time_value_pairs (Sequence[Tuple[data_typing.TimeIndex, List[bool]]]):
+            A sequence where each item corresponds to an event feature and is a tuple of form
+            ``(event_times, event_values)`` (e.g. ``([1.1, 1.2, 1.3], [True, True, False])``).
+        sample_index (data_typing.SampleIndex):
+            List of sample IDs, to be set as dataframe row index.
+        feature_index (Optional[data_typing.FeatureIndex]):
+            List of feature names, to be set as dataframe column names.
+
+    Example:
+        >>> sample_index = ["s1", "s2", "s3"]
+        >>> feature_names = ["feature_1", "feature_2"]
+        >>> event_feature_1 = ([1.1, 1.2, 1.3], [True, True, False])
+        >>> event_feature_2 = ([2.1, 2.2, 2.3], [False, True, False])
+        >>> event_time_value_pairs = [event_feature_1, event_feature_2]
+        >>> df = event_time_value_pairs_to_event_dataframe(
+        ...     event_time_value_pairs, sample_index=sample_index, feature_index=feature_names
+        ... )
+        >>> df.shape
+        (3, 2)
+
+    Returns:
+        pd.DataFrame: `pandas.DataFrame` compatible with `EventSamples`.
+    """
+    series_list = [pd.Series(zip(t, v)) for t, v in event_time_value_pairs]
+    data_input = pd.DataFrame(data=series_list).T.to_numpy()
+    df = pd.DataFrame(data=data_input, index=sample_index)
+    if feature_index is not None:
+        df = set_df_column_names_inplace(df, feature_index)
+    return df
+
+
+# --- Date-time time index -related ---
+
+
+@pydantic.validate_arguments(config={"arbitrary_types_allowed": True, "smart_union": True})
+def datetime_time_index_to_float(time_index: Union[data_typing.TimeIndex, pd.Index, pd.Series]) -> np.ndarray:
+    """Convert a date-time ``time_index`` to floats. The conversion is done by calling
+    ``<time_index as a numpy array>.astype(float)``.
+
+    Args:
+        time_index (Union[data_typing.TimeIndex, pd.Index, pd.Series]):
+            The input time index.
+
+    Returns:
+        np.ndarray:
+            NumPy array containing the time index converted to `float` s.
+    """
+    if isinstance(time_index, (pd.Index, pd.Series)):
+        time_index_pd_type = time_index
+    else:
+        time_index_pd_type = pd.Series(time_index)
+    return time_index_pd_type.to_numpy().astype(float)
 
 
 # --- Miscellaneous. ---

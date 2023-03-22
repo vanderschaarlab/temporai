@@ -941,3 +941,191 @@ class TestArray3dToMultiindexTimeseriesDataframe:
 
         mock_validate_timeseries_array3d.assert_called()
         assert df.equals(expected)
+
+
+@pytest.fixture
+def list_of_dfs_ts() -> Tuple[List[pd.DataFrame], List[str]]:
+    df_0 = pd.DataFrame(
+        {
+            "time_idx": [1, 2, 3],
+            "feat_1": [11, 12, 13],
+            "feat_2": [1.1, 1.2, 1.3],
+        }
+    )
+    df_0.set_index("time_idx", drop=True, inplace=True)
+    df_1 = pd.DataFrame(
+        {
+            "time_idx": [10, 20],
+            "feat_1": [21, 22],
+            "feat_2": [2.1, 2.2],
+        }
+    )
+    df_1.set_index("time_idx", drop=True, inplace=True)
+    df_2 = pd.DataFrame(
+        {
+            "time_idx": [100],
+            "feat_1": [31],
+            "feat_2": [3.1],
+        }
+    )
+    df_2.set_index("time_idx", drop=True, inplace=True)
+    dfs = [df_0, df_1, df_2]
+    sample_index = ["s1", "s2", "s3"]
+    return dfs, sample_index
+
+
+class TestListOfDataframesToMultiindexTimeseriesDataframe:
+    def test_base_case(self, list_of_dfs_ts):
+        dfs, sample_index = list_of_dfs_ts
+
+        multiindex_df = utils.list_of_dataframes_to_multiindex_timeseries_dataframe(
+            list_of_dataframes=dfs,
+            sample_index=sample_index,
+            time_indexes=None,
+            feature_index=None,
+        )
+
+        multiindex_df_expected = pd.DataFrame(
+            {
+                "sample_idx": ["s1", "s1", "s1", "s2", "s2", "s3"],
+                "time_idx": [1, 2, 3, 10, 20, 100],
+                "feat_1": [11, 12, 13, 21, 22, 31],
+                "feat_2": [1.1, 1.2, 1.3, 2.1, 2.2, 3.1],
+            }
+        )
+        multiindex_df_expected.set_index(keys=["sample_idx", "time_idx"], drop=True, inplace=True)
+
+        assert multiindex_df.equals(multiindex_df_expected)
+
+    def test_case_time_indexes_provided(self, list_of_dfs_ts):
+        dfs, sample_index = list_of_dfs_ts
+        time_indexes = [[1.5, 2.5, 3.5], [10.5, 20.5], [100.5]]
+
+        multiindex_df = utils.list_of_dataframes_to_multiindex_timeseries_dataframe(
+            list_of_dataframes=dfs,
+            sample_index=sample_index,
+            time_indexes=time_indexes,
+            feature_index=None,
+        )
+
+        multiindex_df_expected = pd.DataFrame(
+            {
+                "sample_idx": ["s1", "s1", "s1", "s2", "s2", "s3"],
+                "time_idx": [1.5, 2.5, 3.5, 10.5, 20.5, 100.5],
+                "feat_1": [11, 12, 13, 21, 22, 31],
+                "feat_2": [1.1, 1.2, 1.3, 2.1, 2.2, 3.1],
+            }
+        )
+        multiindex_df_expected.set_index(keys=["sample_idx", "time_idx"], drop=True, inplace=True)
+
+        assert multiindex_df.equals(multiindex_df_expected)
+
+    def test_case_feature_index_provided(self, list_of_dfs_ts):
+        dfs, sample_index = list_of_dfs_ts
+
+        multiindex_df = utils.list_of_dataframes_to_multiindex_timeseries_dataframe(
+            list_of_dataframes=dfs,
+            sample_index=sample_index,
+            time_indexes=None,
+            feature_index=["f1", "f2"],
+        )
+
+        multiindex_df_expected = pd.DataFrame(
+            {
+                "sample_idx": ["s1", "s1", "s1", "s2", "s2", "s3"],
+                "time_idx": [1, 2, 3, 10, 20, 100],
+                "f1": [11, 12, 13, 21, 22, 31],
+                "f2": [1.1, 1.2, 1.3, 2.1, 2.2, 3.1],
+            }
+        )
+        multiindex_df_expected.set_index(keys=["sample_idx", "time_idx"], drop=True, inplace=True)
+
+        assert list(multiindex_df.columns) == ["f1", "f2"]
+        assert multiindex_df.equals(multiindex_df_expected)
+
+    def test_case_time_indexes_provided_fails_length_mismatch(self, list_of_dfs_ts):
+        dfs, sample_index = list_of_dfs_ts
+        time_indexes = [[1.5, 2.5, 3.5], [10.5, 20.5]]
+
+        with pytest.raises(ValueError, match=".*same length.*"):
+            utils.list_of_dataframes_to_multiindex_timeseries_dataframe(
+                list_of_dataframes=dfs,
+                sample_index=sample_index,
+                time_indexes=time_indexes,
+                feature_index=None,
+            )
+
+
+class TestEventTimeValuePairsToEventDataframe:
+    @pytest.mark.parametrize(
+        "sample_index",
+        [
+            ["s1", "s2", "s3"],
+            [1, 2, 3],
+        ],
+    )
+    @pytest.mark.parametrize(
+        "event_time_value_pairs",
+        [
+            [([11, 12, 13], [True, True, False]), ([21, 22, 23], [False, True, False])],
+            [([1.1, 1.2, 1.3], [True, True, False]), ([2.1, 2.2, 2.3], [False, True, False])],
+            [
+                (list(pd.to_datetime(["2000-01-01", "2000-01-02", "2000-01-03"])), [True, True, False]),
+                (list(pd.to_datetime(["2000-02-01", "2000-02-02", "2000-02-03"])), [False, True, False]),
+            ],
+        ],
+    )
+    def test_success(self, sample_index, event_time_value_pairs):
+        feature_index = ["f1", "f2"]
+        df = utils.event_time_value_pairs_to_event_dataframe(
+            event_time_value_pairs, sample_index=sample_index, feature_index=feature_index
+        )
+
+        assert list(df.index) == sample_index
+        assert list(df.columns) == feature_index
+        assert df.shape == (3, 2)
+        assert isinstance(df.iloc[0, 0], tuple)
+
+    @pytest.mark.parametrize(
+        "event_time_value_pairs",
+        [
+            [([11, 12, 13], [4, 5, 6]), ([21, 22, 23], [5, 9, 9])],
+        ],
+    )
+    def test_fails_input_validation(self, event_time_value_pairs):
+        sample_index = ["s1", "s2", "s3"]
+        feature_index = ["f1", "f2"]
+        with pytest.raises(ValueError, match=".*validation.*error.*"):
+            utils.event_time_value_pairs_to_event_dataframe(
+                event_time_value_pairs, sample_index=sample_index, feature_index=feature_index
+            )
+
+
+time_index_under_test = pd.to_datetime(["2000-01-02 15:31", "2000-02-03 23:11", "2000-07-11 00:15"]).to_list()
+
+
+class TestDatetimeTimeIndexToFloat:
+    @pytest.mark.parametrize(
+        "time_index",
+        [
+            time_index_under_test,
+            pd.Series(time_index_under_test),
+            pd.Index(time_index_under_test),
+        ],
+    )
+    def test_convert(self, time_index):
+        as_float = utils.datetime_time_index_to_float(time_index=time_index)
+        assert all(issubclass(type(x), float) for x in as_float)
+        assert np.isclose(as_float, np.asarray([9.4682706e17, 9.4961946e17, 9.6327450e17], dtype=float)).all()
+
+    @pytest.mark.parametrize(
+        "time_index",
+        [
+            [1.4, 1.7, 1.9],
+            [1, 2, 3],
+        ],
+    )
+    def test_numeric_case(self, time_index):
+        as_float = utils.datetime_time_index_to_float(time_index=time_index)
+        assert all(issubclass(type(x), float) for x in as_float)
+        assert np.isclose(as_float, np.asarray(time_index, dtype=float)).all()

@@ -1,25 +1,13 @@
 import numpy as np
 import pandas as pd
 
-from tempor.data.dataset import OneOffPredictionDataset
+from tempor.data import dataloader, dataset
 
 
-class SineDataloader:
-    """Sine data generation.
-
-    Args:
-
-    - no: the number of samples
-    - seq_len: sequence length of the time-series
-    - dim: feature dimensions
-
-    Returns:
-    - data: generated data
-
-    """
-
+class SineDataLoader(dataloader.OneOffPredictionDataLoader):
     def __init__(
         self,
+        *args,
         no: int = 100,
         seq_len: int = 10,
         temporal_dim: int = 5,
@@ -27,7 +15,29 @@ class SineDataloader:
         freq_scale: float = 1,
         with_missing: bool = False,
         miss_ratio: float = 0.1,
+        **kwargs,
     ) -> None:
+        """Sine data generation.
+
+        Args:
+            no (int, optional):
+                The number of samples. Defaults to ``100``.
+            seq_len (int, optional):
+                Sequence length of the time-series. Defaults to ``10``.
+            temporal_dim (int, optional):
+                Time-series feature dimensions. Defaults to ``5``.
+            static_dim (int, optional):
+                Static feature dimensions. Defaults to ``4``.
+            freq_scale (float, optional):
+                The frequency scaling multiplier for the signal (``sin(freq_scale * random_drawn_freq * x + phase)``).
+                Defaults to ``1``.
+            with_missing (bool, optional):
+                Whether to generate missing data points (`np.nan`). Defaults to `False`.
+            miss_ratio (float, optional):
+                The ration of missing data points. Defaults to ``0.1``.
+        """
+        super().__init__(*args, **kwargs)
+
         self.no = no
         self.seq_len = seq_len
         self.temporal_dim = temporal_dim
@@ -36,10 +46,16 @@ class SineDataloader:
         self.with_missing = with_missing
         self.miss_ratio = miss_ratio
 
-    def load(
-        self,
-    ) -> OneOffPredictionDataset:
-        # Initialize the output
+    @staticmethod
+    def url() -> None:
+        return None
+
+    @staticmethod
+    def dataset_dir() -> None:
+        return None
+
+    def load(self, **kwargs) -> dataset.OneOffPredictionDataset:
+        # Initialize the output.
 
         static_data = pd.DataFrame(np.random.rand(self.no, self.static_dim))
         static_data["sample_idx"] = [str(i) for i in range(self.no)]
@@ -58,7 +74,7 @@ class SineDataloader:
 
         outcome.set_index(keys=["sample_idx"], drop=True, inplace=True)
 
-        # Generate sine data
+        # Generate sine data.
 
         for i in range(self.no):
 
@@ -70,17 +86,17 @@ class SineDataloader:
 
             for k in range(self.temporal_dim):  # pylint: disable=unused-variable
 
-                # Randomly drawn frequency and phase
+                # Randomly drawn frequency and phase:
                 freq = np.random.beta(2, 2)
                 phase = np.random.normal()
 
-                # Generate sine signal based on the drawn frequency and phase
+                # Generate sine signal based on the drawn frequency and phase:
                 temp_data = [np.sin(self.freq_scale * freq * j + phase) for j in range(seq_len)]
 
                 local.append(temp_data)
 
-            # Align row/column
-            # DataFrame with index - time, and columns - temporal features
+            # Align row/column.
+            # DataFrame with index - time, and columns - temporal features.
             local_data = pd.DataFrame(np.transpose(np.asarray(local)))
             local_data.columns = local_data.columns.astype(str)
 
@@ -88,7 +104,7 @@ class SineDataloader:
                 for col in local_data.columns:
                     local_data.loc[local_data.sample(frac=self.miss_ratio).index, col] = np.nan
 
-            # Stack the generated data
+            # Stack the generated data:
             local_data["sample_idx"] = str(i)
             local_data["time_idx"] = list(range(seq_len))
             temporal_data.append(local_data)
@@ -100,7 +116,7 @@ class SineDataloader:
         static_data.sort_index(inplace=True)
         outcome.sort_index(inplace=True)
 
-        return OneOffPredictionDataset(
+        return dataset.OneOffPredictionDataset(
             time_series=time_series_df,
             targets=outcome,
             static=static_data,

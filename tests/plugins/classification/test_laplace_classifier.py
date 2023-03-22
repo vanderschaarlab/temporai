@@ -5,7 +5,7 @@ from tempor.plugins.classification import BaseClassifier
 from tempor.plugins.classification.plugin_laplace_classifier import (
     LaplaceODEClassifier as plugin,
 )
-from tempor.utils.datasets.google_stocks import GoogleStocksDataloader
+from tempor.utils.dataloaders.google_stocks import GoogleStocksDataLoader
 
 train_kwargs = {"random_state": 123, "n_iter": 50}
 
@@ -28,14 +28,14 @@ def test_laplace_ode_classifier_plugin_sanity(test_plugin: BaseClassifier) -> No
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
 def test_laplace_ode_classifier_plugin_fit(test_plugin: BaseClassifier) -> None:
-    dataset = GoogleStocksDataloader().load()
+    dataset = GoogleStocksDataLoader().load()
 
     test_plugin.fit(dataset)
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
 def test_laplace_ode_classifier_plugin_predict(test_plugin: BaseClassifier) -> None:
-    dataset = GoogleStocksDataloader().load()
+    dataset = GoogleStocksDataLoader().load()
 
     output = test_plugin.fit(dataset).predict(dataset)
     assert output.numpy().shape == (len(dataset.time_series), 1)

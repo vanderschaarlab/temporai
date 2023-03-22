@@ -576,6 +576,21 @@ class TestTimeSeriesSamples:
         s = samples.TimeSeriesSamples.from_dataframe(df_time_series)
         assert s.time_indexes_as_dict() == {"a": [1, 2, 3, 4], "b": [2, 4], "c": [9]}
 
+    def test_time_indexes_float(self):
+        df = pd.DataFrame(
+            {
+                "sample_idx": ["s1", "s1", "s2"],
+                "time_idx": pd.to_datetime(["2000-01-02 15:31", "2000-02-03 23:11", "2020-01-01 00:15"]),
+                "feat_1": [11, 12, 21],
+            }
+        )
+        df.set_index(keys=["sample_idx", "time_idx"], drop=True, inplace=True)
+        s = samples.TimeSeriesSamples.from_dataframe(df)
+        float_time_index = s.time_indexes_float()
+        assert len(float_time_index) == 2
+        assert all(issubclass(type(x), float) for x in float_time_index[0])
+        assert all(issubclass(type(x), float) for x in float_time_index[1])
+
     def test_num_timesteps(self, df_time_series: pd.DataFrame):
         s = samples.TimeSeriesSamples.from_dataframe(df_time_series)
         assert s.num_timesteps() == [4, 2, 1]
@@ -726,6 +741,37 @@ class TestEventSamples:
         expected_df.set_index("sample_idx", drop=True, inplace=True)
 
         assert s_split.equals(expected_df)
+
+    def test_split_as_two_dataframes(self, df_event: pd.DataFrame):
+        s = samples.EventSamples(data=df_event)
+        s_split_df_event_time, s_split_df_event_value = s.split_as_two_dataframes(time_feature_suffix="_time")
+
+        expected_df_event_time = pd.DataFrame(
+            {
+                "sample_idx": [f"sample_{x}" for x in range(1, 3 + 1)],
+                "feat_1_time": [5, 6, 3],
+                "feat_2_time": [1, 8, 8],
+                "feat_3_time": [
+                    pd.to_datetime("2000-01-02"),
+                    pd.to_datetime("2000-01-03"),
+                    pd.to_datetime("2000-01-01"),
+                ],
+            },
+        )
+        expected_df_event_time.set_index("sample_idx", drop=True, inplace=True)
+
+        expected_df_event_value = pd.DataFrame(
+            {
+                "sample_idx": [f"sample_{x}" for x in range(1, 3 + 1)],
+                "feat_1": [True, False, True],
+                "feat_2": [False, False, True],
+                "feat_3": [False, True, True],
+            },
+        )
+        expected_df_event_value.set_index("sample_idx", drop=True, inplace=True)
+
+        assert s_split_df_event_time.equals(expected_df_event_time)
+        assert s_split_df_event_value.equals(expected_df_event_value)
 
     def test_split_fails_column_naming_conflict(self):
         df = pd.DataFrame({"feat_1_time": [(5, True), (6, False), (3, True)]})

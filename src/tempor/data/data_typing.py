@@ -55,7 +55,11 @@ SampleTimeIndexTuples = List[
         Tuple[str, pd.Timestamp],
     ]
 ]
-TimeIndexList = List[TimeIndex]
+TimeIndexList = Union[
+    List[List[float]],
+    List[List[int]],
+    List[List[pd.Timestamp]],
+]
 
 
 GetItemKey = Union[int, Iterable[int], slice]

@@ -23,10 +23,10 @@ class StaticOnlyImputer(BaseImputer):
             Random seed. Defaults to ``0``.
 
     Example:
-        >>> from tempor.utils.datasets.sine import SineDataloader
+        >>> from tempor.utils.dataloaders.sine import SineDataLoader
         >>> from tempor.plugins import plugin_loader
         >>>
-        >>> dataset = SineDataloader(with_missing = True).load()
+        >>> dataset = SineDataLoader(with_missing = True).load()
         >>> assert dataset.static.dataframe().isna().sum().sum() != 0
         >>> assert dataset.time_series.dataframe().isna().sum().sum() != 0
         >>>

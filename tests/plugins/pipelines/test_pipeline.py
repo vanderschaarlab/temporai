@@ -5,7 +5,7 @@ from typing import Any, List
 import pytest
 
 from tempor.plugins.pipeline import Pipeline, PipelineGroup, PipelineMeta
-from tempor.utils.datasets.sine import SineDataloader
+from tempor.utils.dataloaders.sine import SineDataLoader
 
 
 @pytest.mark.parametrize(
@@ -97,9 +97,9 @@ def test_pipeline_fails(plugins_str: List[Any]) -> None:
 )
 def test_pipeline_end2end(plugins_str) -> None:
     if len(plugins_str) > 1:
-        dataset = SineDataloader(with_missing=True).load()
+        dataset = SineDataLoader(with_missing=True).load()
     else:
-        dataset = SineDataloader(with_missing=False).load()
+        dataset = SineDataLoader(with_missing=False).load()
 
     template: PipelineMeta = Pipeline(plugins_str)
     pipeline = template()

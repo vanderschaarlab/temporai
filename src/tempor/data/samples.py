@@ -3,7 +3,7 @@
 # pylint: disable=useless-super-delegation, unnecessary-ellipsis
 
 import abc
-from typing import TYPE_CHECKING, Any, List, Optional
+from typing import TYPE_CHECKING, Any, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -457,7 +457,7 @@ class TimeSeriesSamples(DataSamples):
         return self._data
 
     def sample_index(self) -> data_typing.SampleIndex:
-        return list(self._data.index.get_level_values(0).unique())  # pyright: ignore
+        return list(utils.get_df_index_level0_unique(self._data))  # pyright: ignore
 
     def time_indexes(self) -> data_typing.TimeIndexList:
         """Get a list containing time indexes for each sample. Each time index is represented as a list of time step
@@ -466,7 +466,7 @@ class TimeSeriesSamples(DataSamples):
         Returns:
             List[List[<timestep element>]]: A list containing time indexes for each sample.
         """
-        return list(self.time_indexes_as_dict().values())
+        return list(self.time_indexes_as_dict().values())  # pyright: ignore
 
     def time_indexes_as_dict(self) -> data_typing.SampleToTimeIndexDict:
         """Get a dictionary mapping each sample index to its time index. Time index is represented as a list of time
@@ -485,7 +485,15 @@ class TimeSeriesSamples(DataSamples):
             d[s] = list(multiindex.get_level_values(1)[time_index_locs])
         return d  # type: ignore[return-value]
 
-    # TODO: time indexes sensibly converted to floats would be useful.
+    def time_indexes_float(self) -> List[np.ndarray]:
+        """Return time indexes but converting their elements to `float` values.
+
+        Date-time time index will be converted using :obj:`~tempor.data.utils.datetime_time_index_to_float`.
+
+        Returns:
+            List[np.ndarray]: List of 1D `numpy.ndarray` s of `float` values, corresponding to the time index.
+        """
+        return [utils.datetime_time_index_to_float(ti) for ti in self.time_indexes()]
 
     def num_timesteps(self) -> List[int]:
         """Get the number of timesteps for each sample.
@@ -512,6 +520,14 @@ class TimeSeriesSamples(DataSamples):
         timesteps = self.num_timesteps()
         return True if len(timesteps) == 0 else all([x == timesteps[0] for x in timesteps])
 
+    def list_of_dataframes(self) -> List[pd.DataFrame]:
+        """Returns a list of dataframes where each dataframe has the data for each sample.
+
+        Returns:
+            List[pd.DataFrame]: List of dataframes for each sample.
+        """
+        return utils.multiindex_timeseries_dataframe_to_list_of_dataframes(self._data)
+
     @property
     def num_samples(self) -> int:
         sample_ids = self._data.index.levels[0]  # pyright: ignore
@@ -526,12 +542,15 @@ class TimeSeriesSamples(DataSamples):
 
     def __getitem__(self, key: data_typing.GetItemKey) -> Self:
         key_ = utils.ensure_pd_iloc_key_returns_df(key)
-        sample_index = self._data.index.get_level_values(0).unique()
+        sample_index = utils.get_df_index_level0_unique(self._data)
         selected = list(sample_index[key_])  # pyright: ignore
         return TimeSeriesSamples(  # type: ignore[return-value]
             self._data.loc[(selected, slice(None)), :],  # pyright: ignore
             _skip_validate=True,
         )
+
+
+_DEFAULT_EVENTS_TIME_FEATURE_SUFFIX = "_time"
 
 
 class EventSamples(DataSamples):
@@ -601,7 +620,7 @@ class EventSamples(DataSamples):
         )
         self._data = schema.validate(self._data)
         # Validate event time and value components:
-        suffix = "_time"
+        suffix = _DEFAULT_EVENTS_TIME_FEATURE_SUFFIX
         data_split = self.split(time_feature_suffix=suffix)
         schema_split = pa.infer_schema(data_split)
         schema_split = pandera_utils.add_regex_column_checks(
@@ -683,7 +702,7 @@ class EventSamples(DataSamples):
         return self._data.shape[1]
 
     @pydantic.validate_arguments(config={"arbitrary_types_allowed": True})
-    def split(self, time_feature_suffix: str = "_time") -> pd.DataFrame:
+    def split(self, time_feature_suffix: str = _DEFAULT_EVENTS_TIME_FEATURE_SUFFIX) -> pd.DataFrame:
         """Return a `pandas.DataFrame` where the time component of each event feature has been split off to its own
         column. The new columns that contain the times will be named ``"<original column name><time_feature_suffix>"``
         and will be inserted before each corresponding ``<original column name>`` column. The ``<original column name>``
@@ -706,6 +725,26 @@ class EventSamples(DataSamples):
         for f in features:
             df[f] = df[f].apply(lambda x: x[1])
         return df
+
+    def split_as_two_dataframes(
+        self, time_feature_suffix: str = _DEFAULT_EVENTS_TIME_FEATURE_SUFFIX
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        """Analogous to :func:`~tempor.data.samples.EventSamples.split` but returns two `pandas.DataFrame` s:
+            - first dataframe contains the event times of each feature.
+            - second dataframe contains the event values (`True`/`False`) of each feature.
+
+        Args:
+            time_feature_suffix (str, optional):
+                A column name suffix string to identify the time columns that will be split off. Defaults to
+                ``"_time"``.
+
+        Returns:
+            Tuple[pd.DataFrame, pd.DataFrame]: Two `pandas.DataFrame` s containing event times and values respectively.
+        """
+        df_split = self.split(time_feature_suffix=time_feature_suffix)
+        df_event_times = df_split.loc[:, [c for c in df_split.columns if time_feature_suffix in c]]
+        df_event_values = df_split.loc[:, [c for c in df_split.columns if time_feature_suffix not in c]]
+        return df_event_times, df_event_values
 
     def short_repr(self) -> str:
         return f"{self.__class__.__name__}([{self.num_samples}, {self.num_features}])"

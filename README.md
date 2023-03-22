@@ -59,10 +59,10 @@ print(plugin_loader.list())
 
 * Use an imputer
 ```python
-from tempor.utils.datasets.sine import SineDataloader
+from tempor.utils.dataloaders import SineDataLoader
 from tempor.plugins import plugin_loader
 
-dataset = SineDataloader(with_missing=True).load()
+dataset = SineDataLoader(with_missing=True).load()
 assert dataset.static.dataframe().isna().sum().sum() != 0
 assert dataset.time_series.dataframe().isna().sum().sum() != 0
 
@@ -80,10 +80,10 @@ assert imputed.time_series.dataframe().isna().sum().sum() == 0
 
 * Use a classifier
 ```python
-from tempor.utils.datasets.sine import SineDataloader
+from tempor.utils.dataloaders import SineDataLoader
 from tempor.plugins import plugin_loader
 
-dataset = SineDataloader().load()
+dataset = SineDataLoader().load()
 
 # load the model
 model = plugin_loader.get("classification.nn_classifier", n_iter=50)
@@ -97,10 +97,10 @@ assert model.predict(dataset).numpy().shape == (len(dataset), 1)
 
 * Use a regressor
 ```python
-from tempor.utils.datasets.sine import SineDataloader
+from tempor.utils.dataloaders import SineDataLoader
 from tempor.plugins import plugin_loader
 
-dataset = SineDataloader().load()
+dataset = SineDataLoader().load()
 
 # load the model
 model = plugin_loader.get("regression.nn_regressor", n_iter=50)
@@ -114,7 +114,7 @@ assert model.predict(dataset).numpy().shape == (len(dataset), 1)
 
 * Benchmark models
 ```python
-TODO
+# TODO
 ```
 
 
@@ -172,7 +172,7 @@ TODO
 | [SyncTwin](https://github.com/vanderschaarlab/SyncTwin-NeurIPS-2021/) | [van der Schaar Lab] | [📄](https://proceedings.neurips.cc/paper/2021/hash/19485224d128528da1602ca47383f078-Abstract.html) | ➰ Experimental |
 | [TE-CDE](https://github.com/vanderschaarlab/TE-CDE/) | [van der Schaar Lab] | [📄](https://proceedings.mlr.press/v162/seedat22b/seedat22b.pdf) | 🔵 Planned |
 
-**Temporal Survival Analysis**
+**Temporal Time-to-event Analysis**
 
 | Model &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Affiliation &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; | Paper | Status &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; |
 | ----- | ----------- | ----- | ------ |

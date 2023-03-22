@@ -1,8 +1,24 @@
 import copy
 from types import ModuleType
-from typing import Any, List, Tuple
+from typing import TYPE_CHECKING, Any, List, Tuple
 
+if TYPE_CHECKING:
+    from tempor.data.dataset import TimeToEventAnalysisDataset
+
+import numpy as np
 import pytest
+
+# --- Reusable functions. ---
+
+
+@pytest.fixture
+def get_event0_time_percentiles():
+    def func(dataset: "TimeToEventAnalysisDataset", horizon_percentiles: List):
+        event0_times = dataset.predictive.targets.split_as_two_dataframes()[0].to_numpy().reshape((-1,))
+        return np.quantile(event0_times, horizon_percentiles).tolist()
+
+    return func
+
 
 # --- Test utilities. ---
 
@@ -13,8 +29,8 @@ def patch_module(monkeypatch, request):
     and optionally refresh pydantic.
 
     For reference:
-    - https://github.com/streamlit/streamlit/issues/3218#issuecomment-1050647471
-    - https://docs.pytest.org/en/6.2.x/fixture.html#adding-finalizers-directly
+        - https://github.com/streamlit/streamlit/issues/3218#issuecomment-1050647471
+        - https://docs.pytest.org/en/6.2.x/fixture.html#adding-finalizers-directly
 
     Args:
         monkeypatch: pytest monkeypatch object.
