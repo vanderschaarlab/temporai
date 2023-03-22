@@ -64,17 +64,14 @@ class Seq2seqRegressor(BaseRegressor):
             >>> from tempor.utils.dataloaders.sine import SineDataLoader
             >>> from tempor.plugins import plugin_loader
             >>>
-            >>> dataset = SineDataLoader(temporal_dim = 5).load()
-            >>>
+            >>> raw_data = SineDataLoader(temporal_dim=5).load()
+            >>> data = dataset.TemporalPredictionDataset(time_series=raw_data.time_series.dataframe(), static=raw_data.static.dataframe(), targets=raw_data.time_series.dataframe().copy())
             >>> # Load the model:
             >>> model = plugin_loader.get("regression.seq2seq_regressor", epochs=50)
-            >>>
             >>> # Train:
-            >>> model.fit(dataset)
-            Seq2seqRegressor(...)
-            >>>
+            >>> model.fit(data)
             >>> # Predict:
-            >>> assert model.predict(dataset, n_future_steps = 10).numpy().shape == (len(dataset), 10, 5)
+            >>> assert model.predict(data, n_future_steps = 10).numpy().shape == (len(data), 10, 5)
         """
         super().__init__(**params)
         self.model = Seq2SeqRegressor(

@@ -70,9 +70,9 @@ class Seq2seqClassifier(BaseClassifier):
             >>> # Load the model:
             >>> model = plugin_loader.get("classification.seq2seq_classifier", epochs=10)
             >>> # Train:
-            >>> _ = model.fit(data)
+            >>> model.fit(data)
             >>> # Predict:
-            >>> assert model.predict(data, n_future_steps = 10).numpy().shape == (len(dataset), 10, 5)
+            >>> assert model.predict(data, n_future_steps = 10).numpy().shape == (len(data), 10, 5)
         """
         super().__init__(**params)
         self.model = Seq2SeqClassifier(
