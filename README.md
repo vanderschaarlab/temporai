@@ -113,10 +113,58 @@ assert model.predict(dataset).numpy().shape == (len(dataset), 1)
 ```
 
 * Benchmark models
+Classification task
 ```python
-# TODO
+from tempor.benchmarks import (
+    benchmark_models,
+)
+from tempor.plugins import plugin_loader
+from tempor.plugins.pipeline import Pipeline
+from tempor.utils.dataloaders import (
+    SineDataLoader,
+)
+
+testcases = [
+    (
+        "pipeline1",
+        Pipeline(
+            [
+                "preprocessing.scaling.static_minmax_scaler",
+                "classification.nn_classifier",
+            ]
+        )({"nn_classifier": {"n_iter": 10}}),
+    ),
+    (
+        "plugin1",
+        plugin_loader.get("classification.nn_classifier", n_iter=10),
+    ),
+]
+dataset = SineDataLoader().load()
+
+aggr_score, per_test_score = benchmark_models(
+    task_type="classification",
+    tests=testcases,
+    data=dataset,
+    n_splits=2,
+    random_state=0,
+)
+
+print(aggr_score)
 ```
 
+^ Serialization
+```python
+from tempor.utils.serialization import load, save
+from tempor.plugins import plugin_loader
+
+# load the model
+model = plugin_loader.get("classification.nn_classifier", n_iter=50)
+
+buff = save(model)  # save model to bytes
+reloaded = load(buff)  # reload model
+
+# save_to_file. load_from_file also available in the serialization module
+```
 
 ## 🔑 Methods
 
