@@ -15,6 +15,7 @@ class SineDataLoader(dataloader.OneOffPredictionDataLoader):
         freq_scale: float = 1,
         with_missing: bool = False,
         miss_ratio: float = 0.1,
+        static_scale: int = 1,
         **kwargs,
     ) -> None:
         """Sine data generation.
@@ -45,6 +46,7 @@ class SineDataLoader(dataloader.OneOffPredictionDataLoader):
         self.freq_scale = freq_scale
         self.with_missing = with_missing
         self.miss_ratio = miss_ratio
+        self.static_scale = static_scale
 
     @staticmethod
     def url() -> None:
@@ -57,7 +59,7 @@ class SineDataLoader(dataloader.OneOffPredictionDataLoader):
     def load(self, **kwargs) -> dataset.OneOffPredictionDataset:
         # Initialize the output.
 
-        static_data = pd.DataFrame(np.random.rand(self.no, self.static_dim))
+        static_data = pd.DataFrame(np.random.rand(self.no, self.static_dim) * self.static_scale)
         static_data["sample_idx"] = [str(i) for i in range(self.no)]
         static_data.set_index(keys=["sample_idx"], drop=True, inplace=True)
 
