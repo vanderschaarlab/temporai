@@ -7,6 +7,7 @@ from tempor.plugins.regression.plugin_seq2seq_regressor import (
     Seq2seqRegressor as plugin,
 )
 from tempor.utils.dataloaders.sine import SineDataLoader
+from tempor.utils.serialization import load, save
 
 
 def from_api() -> BaseRegressor:
@@ -45,8 +46,16 @@ def test_seq2seq_regressor_plugin_predict(test_plugin: BaseRegressor) -> None:
         static=raw_data.static.dataframe(),  # type: ignore
         targets=raw_data.time_series.dataframe().copy(),
     )
-    test_plugin.fit(data)
-    output = test_plugin.predict(data, n_future_steps=10)
+
+    dump = save(test_plugin)
+    reloaded = load(dump)
+
+    reloaded.fit(data)
+
+    dump = save(reloaded)
+    reloaded = load(dump)
+
+    output = reloaded.predict(data, n_future_steps=10)
 
     assert output.numpy().shape == (len(raw_data.time_series), 10, temporal_dim)
 

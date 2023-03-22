@@ -129,6 +129,7 @@ assert model.predict(dataset).numpy().shape == (len(dataset), 1)
 | `classification.ode_classifier` | Classifier based on ordinary differential equation (ODE) solvers.  | --- |
 | `classification.cde_classifier` | Classifier based Neural Controlled Differential Equations for Irregular Time Series.  | [Paper](https://arxiv.org/abs/2005.08926) |
 | `classification.laplace_ode_classifier` | Classifier based Inverse Laplace Transform (ILT) algorithms implemented in PyTorch.  | [Paper](https://arxiv.org/abs/2206.04843) |
+| `classification.seq2seq_classifier` | Seq2Seq prediction  | --- |
 
 * Regression
 
@@ -138,6 +139,7 @@ assert model.predict(dataset).numpy().shape == (len(dataset), 1)
 | `regression.ode_regressor` | Regressor based on ordinary differential equation (ODE) solvers.  | --- |
 | `regression.cde_regressor` | Regressor based Neural Controlled Differential Equations for Irregular Time Series.  | [Paper](https://arxiv.org/abs/2005.08926)
 | `regression.laplace_ode_regressor` | Regressor based Inverse Laplace Transform (ILT) algorithms implemented in PyTorch.  | [Paper](https://arxiv.org/abs/2206.04843) |
+| `classification.seq2seq_regressor` | Seq2Seq prediction  | --- |
 
 * Time-to-Event
 
@@ -146,6 +148,16 @@ assert model.predict(dataset).numpy().shape == (len(dataset), 1)
 | `dynamic_deephit` | Dynamic-DeepHit incorporates the available longitudinal data comprising various repeated measurements (rather than only the last available measurements) in order to issue dynamically updated survival predictions | [Paper](https://pubmed.ncbi.nlm.nih.gov/30951460/) |
 | `ts_coxph` | Create embeddings from the time series and use a CoxPH model for predicting the survival function| --- |
 | `ts_xgb` | Create embeddings from the time series and use a SurvivalXGBoost model for predicting the survival function| --- |
+
+* Treatment effects
+
+| Name | Description| Reference |
+| --- | --- | --- |
+| `crn_regressor` | The Counterfactual Recurrent Network (CRN), a sequence-to-sequence model that leverages the available patient observational data to estimate treatment effects over time. | [Paper](https://arxiv.org/abs/2002.04083) |
+| `crn_classifier` | The Counterfactual Recurrent Network (CRN), a sequence-to-sequence model that leverages the available patient observational data to estimate treatment effects over time. | [Paper](https://arxiv.org/abs/2002.04083) |
+| `synctwin_regressor` | SyncTwin is a treatment effect estimation method tailored for observational studies with longitudinal data, applied to the LIP setting: Longitudinal, Irregular and Point treatment.  | [Paper](https://proceedings.neurips.cc/paper/2021/hash/19485224d128528da1602ca47383f078-Abstract.html) |
+
+
 
 ### Preprocessing
 * Imputation

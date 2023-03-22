@@ -8,6 +8,7 @@ from tempor.plugins.time_to_event.plugin_ddh import (
     DynamicDeepHitTimeToEventAnalysis as plugin,
 )
 from tempor.utils.dataloaders import PBCDataLoader
+from tempor.utils.serialization import load, save
 
 if TYPE_CHECKING:  # pragma: no cover
     from tempor.plugins.time_to_event import BaseTimeToEventAnalysis
@@ -45,7 +46,15 @@ def test_dynamic_deephit_plugin_predict(
 
     horizons = get_event0_time_percentiles(dataset, [0.25, 0.5, 0.75])
 
-    output = test_plugin.fit(dataset).predict(dataset, horizons=horizons)
+    dump = save(test_plugin)
+    reloaded = load(dump)
+
+    reloaded.fit(dataset)
+
+    dump = save(reloaded)
+    reloaded = load(dump)
+
+    output = reloaded.predict(dataset, horizons=horizons)
 
     assert output.numpy().shape == (len(dataset.time_series), len(horizons), 1)
 

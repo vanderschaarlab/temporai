@@ -6,6 +6,7 @@ import pytest
 
 from tempor.plugins.pipeline import Pipeline, PipelineGroup, PipelineMeta
 from tempor.utils.dataloaders.sine import SineDataLoader
+from tempor.utils.serialization import load, save
 
 
 @pytest.mark.parametrize(
@@ -105,7 +106,8 @@ def test_pipeline_fails(plugins_str: List[Any]) -> None:
         ],
     ],
 )
-def test_pipeline_end2end(plugins_str) -> None:
+@pytest.mark.parametrize("serialize", [True, False])
+def test_pipeline_end2end(plugins_str, serialize: bool) -> None:
     if len(plugins_str) > 1:
         dataset = SineDataLoader(with_missing=True).load()
     else:
@@ -114,7 +116,15 @@ def test_pipeline_end2end(plugins_str) -> None:
     template: PipelineMeta = Pipeline(plugins_str)
     pipeline = template()
 
+    if serialize:
+        dump = save(pipeline)
+        pipeline = load(dump)
+
     pipeline.fit(dataset)
+
+    if serialize:
+        dump = save(pipeline)
+        pipeline = load(dump)
 
     y_pred = pipeline.predict(dataset)
 

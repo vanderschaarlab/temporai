@@ -7,6 +7,7 @@ from tempor.plugins.treatments import BaseTreatments
 from tempor.plugins.treatments.plugin_crn_classifier import (
     CRNTreatmentsClassifier as plugin,
 )
+from tempor.utils.serialization import load, save
 
 
 def get_dummy_data(
@@ -59,8 +60,16 @@ def test_CRN_classifier_plugin_fit(test_plugin: BaseTreatments) -> None:
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
 def test_CRN_classifier_plugin_predict(test_plugin: BaseTreatments) -> None:
     data = get_dummy_data(temporal_targets_n_features=3)
-    test_plugin.fit(data)
-    output = test_plugin.predict(data)
+
+    dump = save(test_plugin)
+    reloaded = load(dump)
+
+    reloaded.fit(data)
+
+    dump = save(reloaded)
+    reloaded = load(dump)
+
+    output = reloaded.predict(data)
 
     assert output.numpy().shape == (len(data.time_series), 6, 3)
 
