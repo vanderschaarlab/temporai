@@ -10,7 +10,7 @@ from tempor.data import dataset, samples
 
 
 def check_data_class(data):
-    if not isinstance(data, dataset.OneOffPredictionDataset):
+    if not isinstance(data, (dataset.OneOffPredictionDataset, dataset.TemporalPredictionDataset)):
         raise TypeError(
             "Expected `data` passed to a classification estimator to be "
             f"`{dataset.OneOffPredictionDataset.__name__}` but was {type(data)}"

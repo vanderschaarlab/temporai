@@ -2,30 +2,30 @@ import pytest
 
 from tempor.data import dataset
 from tempor.plugins import plugin_loader
-from tempor.plugins.regression import BaseRegressor
-from tempor.plugins.regression.plugin_seq2seq_regressor import (
-    Seq2seqRegressor as plugin,
+from tempor.plugins.classification import BaseClassifier
+from tempor.plugins.classification.plugin_seq2seq_classifier import (
+    Seq2seqClassifier as plugin,
 )
 from tempor.utils.dataloaders.sine import SineDataLoader
 
 
-def from_api() -> BaseRegressor:
-    return plugin_loader.get("regression.seq2seq_regressor", random_state=123, epochs=10)
+def from_api() -> BaseClassifier:
+    return plugin_loader.get("classification.seq2seq_classifier", random_state=123, epochs=10)
 
 
-def from_module() -> BaseRegressor:
+def from_module() -> BaseClassifier:
     return plugin(random_state=123, epochs=10)
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_seq2seq_regressor_plugin_sanity(test_plugin: BaseRegressor) -> None:
+def test_seq2seq_classifier_plugin_sanity(test_plugin: BaseClassifier) -> None:
     assert test_plugin is not None
-    assert test_plugin.name == "seq2seq_regressor"
+    assert test_plugin.name == "seq2seq_classifier"
     assert len(test_plugin.hyperparameter_space()) == 6
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_seq2seq_regressor_plugin_fit(test_plugin: BaseRegressor) -> None:
+def test_seq2seq_classifier_plugin_fit(test_plugin: BaseClassifier) -> None:
     raw_data = SineDataLoader().load()
     data = dataset.TemporalPredictionDataset(
         time_series=raw_data.time_series.dataframe(),
@@ -37,7 +37,7 @@ def test_seq2seq_regressor_plugin_fit(test_plugin: BaseRegressor) -> None:
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_seq2seq_regressor_plugin_predict(test_plugin: BaseRegressor) -> None:
+def test_seq2seq_classifier_plugin_predict(test_plugin: BaseClassifier) -> None:
     temporal_dim = 11
     raw_data = SineDataLoader(temporal_dim=temporal_dim).load()
     data = dataset.TemporalPredictionDataset(

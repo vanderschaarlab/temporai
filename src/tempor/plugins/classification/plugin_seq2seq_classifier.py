@@ -2,7 +2,7 @@ import dataclasses
 from typing import Optional
 
 from clairvoyance2.data import DEFAULT_PADDING_INDICATOR
-from clairvoyance2.prediction.seq2seq import Seq2SeqRegressor, TimeIndexHorizon
+from clairvoyance2.prediction.seq2seq import Seq2SeqClassifier, TimeIndexHorizon
 
 import tempor.plugins.core as plugins
 from tempor.data import dataset, samples
@@ -10,8 +10,8 @@ from tempor.data.clv2conv import (
     _from_clv2_time_series,
     tempor_dataset_to_clairvoyance2_dataset,
 )
+from tempor.plugins.classification import BaseClassifier
 from tempor.plugins.core._params import FloatParams, IntegerParams
-from tempor.plugins.regression import BaseRegressor
 
 
 @dataclasses.dataclass
@@ -49,8 +49,8 @@ class seq2seqParams:
     padding_indicator: float = DEFAULT_PADDING_INDICATOR
 
 
-@plugins.register_plugin(name="seq2seq_regressor", category="regression")
-class Seq2seqRegressor(BaseRegressor):
+@plugins.register_plugin(name="seq2seq_classifier", category="classification")
+class Seq2seqClassifier(BaseClassifier):
     ParamsDefinition = seq2seqParams
     params: seq2seqParams  # type: ignore
 
@@ -58,7 +58,7 @@ class Seq2seqRegressor(BaseRegressor):
         self,
         **params,
     ) -> None:
-        """Seq2seq regressor.
+        """Seq2seq classifier.
 
         Example:
             >>> from tempor.utils.dataloaders.sine import SineDataLoader
@@ -67,17 +67,17 @@ class Seq2seqRegressor(BaseRegressor):
             >>> dataset = SineDataLoader(temporal_dim = 5).load()
             >>>
             >>> # Load the model:
-            >>> model = plugin_loader.get("regression.seq2seq_regressor", n_iter=50)
+            >>> model = plugin_loader.get("classification.seq2seq_classifier", n_iter=50)
             >>>
             >>> # Train:
             >>> model.fit(dataset)
-            Seq2seqRegressor(...)
+            Seq2seqClassifier(...)
             >>>
             >>> # Predict:
             >>> assert model.predict(dataset, n_future_steps = 10).numpy().shape == (len(dataset), 10, 5)
         """
         super().__init__(**params)
-        self.model = Seq2SeqRegressor(
+        self.model = Seq2SeqClassifier(
             params=self.params,
         )
 
@@ -86,7 +86,7 @@ class Seq2seqRegressor(BaseRegressor):
         data: dataset.Dataset,
         *args,
         **kwargs,
-    ) -> "Seq2seqRegressor":  # pyright: ignore
+    ) -> "Seq2seqClassifier":  # pyright: ignore
         cl_dataset = tempor_dataset_to_clairvoyance2_dataset(data)
         self.model.fit(cl_dataset)
         return self
@@ -111,6 +111,14 @@ class Seq2seqRegressor(BaseRegressor):
 
         preds = _from_clv2_time_series(self.model.predict(cl_dataset, horizons).to_multi_index_dataframe())
         return samples.TimeSeriesSamples.from_dataframe(preds)
+
+    def _predict_proba(  # type: ignore[override]
+        self,
+        data: dataset.Dataset,
+        *args,
+        **kwargs,
+    ) -> samples.TimeSeriesSamples:
+        raise NotImplementedError("not supported")
 
     @staticmethod
     def hyperparameter_space(*args, **kwargs):
