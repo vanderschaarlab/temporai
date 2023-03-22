@@ -105,7 +105,7 @@ class Dataset(abc.ABC):
         if self.static is not None:
             yield "static", RichReprStrPassthrough(self.static.short_repr())
         if self.predictive is not None:
-            yield "static", self.predictive
+            yield "predictive", self.predictive
 
     def __repr__(self) -> str:
         return rich.pretty.pretty_repr(self)
