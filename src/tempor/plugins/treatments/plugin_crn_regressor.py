@@ -10,7 +10,7 @@ from tempor.data.clv2conv import (
     _from_clv2_time_series,
     tempor_dataset_to_clairvoyance2_dataset,
 )
-from tempor.plugins.core._params import FloatParams, IntegerParams
+from tempor.plugins.core._params import CategoricalParams, FloatParams, IntegerParams
 from tempor.plugins.treatments import BaseTreatments
 
 
@@ -92,8 +92,6 @@ class CRNTreatmentsRegressor(BaseTreatments):
     def _predict(  # type: ignore[override]
         self,
         data: dataset.Dataset,
-        n_future_steps: Optional[int] = None,
-        time_delta: int = 1,
         *args,
         **kwargs,
     ) -> samples.TimeSeriesSamples:
@@ -101,13 +99,9 @@ class CRNTreatmentsRegressor(BaseTreatments):
             raise RuntimeError("Fit the model first")
         cl_dataset = tempor_dataset_to_clairvoyance2_dataset(data)
 
-        horizons = None
-        if n_future_steps is not None:
-            horizons = TimeIndexHorizon.future_horizon_from_dataset(
-                cl_dataset,
-                forecast_n_future_steps=n_future_steps,
-                time_delta=time_delta,
-            )
+        horizons = TimeIndexHorizon(
+            time_index_sequence=[tc.time_index[len(tc.time_index) // 2 :] for tc in cl_dataset.temporal_covariates]
+        )
 
         preds = _from_clv2_time_series(self.model.predict(cl_dataset, horizons).to_multi_index_dataframe())
         return samples.TimeSeriesSamples.from_dataframe(preds)
@@ -118,7 +112,9 @@ class CRNTreatmentsRegressor(BaseTreatments):
             IntegerParams(name="encoder_hidden_size", low=10, high=500),
             IntegerParams(name="encoder_num_layers", low=1, high=10),
             FloatParams(name="encoder_dropout", low=0, high=0.2),
+            CategoricalParams(name="encoder_rnn_type", choices=["LSTM", "GRU"]),
             IntegerParams(name="decoder_hidden_size", low=10, high=500),
             IntegerParams(name="decoder_num_layers", low=1, high=10),
             FloatParams(name="decoder_dropout", low=0, high=0.2),
+            CategoricalParams(name="decoder_rnn_type", choices=["LSTM", "GRU"]),
         ]

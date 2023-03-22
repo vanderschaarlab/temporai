@@ -21,7 +21,7 @@ def from_module() -> BaseClassifier:
 def test_seq2seq_classifier_plugin_sanity(test_plugin: BaseClassifier) -> None:
     assert test_plugin is not None
     assert test_plugin.name == "seq2seq_classifier"
-    assert len(test_plugin.hyperparameter_space()) == 6
+    assert len(test_plugin.hyperparameter_space()) == 8
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])

@@ -11,7 +11,7 @@ from tempor.data.clv2conv import (
     tempor_dataset_to_clairvoyance2_dataset,
 )
 from tempor.plugins.classification import BaseClassifier
-from tempor.plugins.core._params import FloatParams, IntegerParams
+from tempor.plugins.core._params import CategoricalParams, FloatParams, IntegerParams
 
 
 @dataclasses.dataclass
@@ -126,7 +126,9 @@ class Seq2seqClassifier(BaseClassifier):
             IntegerParams(name="encoder_hidden_size", low=10, high=500),
             IntegerParams(name="encoder_num_layers", low=1, high=10),
             FloatParams(name="encoder_dropout", low=0, high=0.2),
+            CategoricalParams(name="encoder_rnn_type", choices=["LSTM", "GRU"]),
             IntegerParams(name="decoder_hidden_size", low=10, high=500),
             IntegerParams(name="decoder_num_layers", low=1, high=10),
             FloatParams(name="decoder_dropout", low=0, high=0.2),
+            CategoricalParams(name="decoder_rnn_type", choices=["LSTM", "GRU"]),
         ]

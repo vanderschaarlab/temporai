@@ -21,7 +21,7 @@ def from_module() -> BaseRegressor:
 def test_seq2seq_regressor_plugin_sanity(test_plugin: BaseRegressor) -> None:
     assert test_plugin is not None
     assert test_plugin.name == "seq2seq_regressor"
-    assert len(test_plugin.hyperparameter_space()) == 6
+    assert len(test_plugin.hyperparameter_space()) == 8
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])

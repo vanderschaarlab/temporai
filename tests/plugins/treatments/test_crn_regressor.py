@@ -9,18 +9,29 @@ from tempor.plugins.treatments.plugin_crn_regressor import (
 )
 
 
-def get_dummy_data(temporal_dim: int = 5):
+def get_dummy_data(
+    n_samples: int = 100,
+    temporal_covariates_n_features: int = 5,
+    temporal_covariates_max_len: int = 11,
+    temporal_covariates_missing_prob: float = 0.0,
+    static_covariates_n_features: int = 13,
+    temporal_treatments_n_features: int = 5,
+    temporal_treatments_n_categories: int = 2,
+    temporal_targets_n_features: int = 7,
+    temporal_targets_n_categories: int = 4,
+):
     local_dataset = dummy_dataset(
-        n_samples=100,
-        temporal_covariates_n_features=temporal_dim,
-        temporal_covariates_max_len=6 * 2,
-        temporal_covariates_missing_prob=0.0,
-        static_covariates_n_features=0,
-        temporal_treatments_n_features=2,
-        temporal_treatments_n_categories=1,
+        n_samples=n_samples,
+        temporal_covariates_n_features=temporal_covariates_n_features,
+        temporal_covariates_max_len=temporal_covariates_max_len,
+        temporal_covariates_missing_prob=temporal_covariates_missing_prob,
+        static_covariates_n_features=static_covariates_n_features,
+        temporal_treatments_n_features=temporal_treatments_n_features,
+        temporal_treatments_n_categories=temporal_treatments_n_categories,
+        temporal_targets_n_features=temporal_targets_n_features,
+        temporal_targets_n_categories=temporal_targets_n_categories,
         random_seed=12345,
     )
-    print(local_dataset)
     return clairvoyance2_dataset_to_tempor_dataset(local_dataset)
 
 
@@ -36,7 +47,7 @@ def from_module() -> BaseTreatments:
 def test_CRN_regressor_plugin_sanity(test_plugin: BaseTreatments) -> None:
     assert test_plugin is not None
     assert test_plugin.name == "crn_regressor"
-    assert len(test_plugin.hyperparameter_space()) == 6
+    assert len(test_plugin.hyperparameter_space()) == 8
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
@@ -47,12 +58,11 @@ def test_CRN_regressor_plugin_fit(test_plugin: BaseTreatments) -> None:
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
 def test_CRN_regressor_plugin_predict(test_plugin: BaseTreatments) -> None:
-    temporal_dim = 5
-    data = get_dummy_data(temporal_dim=temporal_dim)
+    data = get_dummy_data(temporal_targets_n_features=3)
     test_plugin.fit(data)
     output = test_plugin.predict(data, n_future_steps=10)
 
-    assert output.numpy().shape == (len(data.time_series), 10, temporal_dim)
+    assert output.numpy().shape == (len(data.time_series), 6, 3)
 
 
 def test_hyperparam_sample():

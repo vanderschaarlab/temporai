@@ -10,7 +10,7 @@ from tempor.data.clv2conv import (
     _from_clv2_time_series,
     tempor_dataset_to_clairvoyance2_dataset,
 )
-from tempor.plugins.core._params import FloatParams, IntegerParams
+from tempor.plugins.core._params import CategoricalParams, FloatParams, IntegerParams
 from tempor.plugins.regression import BaseRegressor
 
 
@@ -118,7 +118,9 @@ class Seq2seqRegressor(BaseRegressor):
             IntegerParams(name="encoder_hidden_size", low=10, high=500),
             IntegerParams(name="encoder_num_layers", low=1, high=10),
             FloatParams(name="encoder_dropout", low=0, high=0.2),
+            CategoricalParams(name="encoder_rnn_type", choices=["LSTM", "GRU"]),
             IntegerParams(name="decoder_hidden_size", low=10, high=500),
             IntegerParams(name="decoder_num_layers", low=1, high=10),
             FloatParams(name="decoder_dropout", low=0, high=0.2),
+            CategoricalParams(name="decoder_rnn_type", choices=["LSTM", "GRU"]),
         ]
