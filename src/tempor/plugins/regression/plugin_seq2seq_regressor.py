@@ -1,0 +1,132 @@
+import dataclasses
+from typing import Optional
+
+from clairvoyance2.data import DEFAULT_PADDING_INDICATOR
+from clairvoyance2.prediction.seq2seq import Seq2SeqRegressor, TimeIndexHorizon
+
+import tempor.plugins.core as plugins
+from tempor.data import dataset, samples
+from tempor.data.clv2conv import (
+    clairvoyance2_dataset_to_tempor_dataset,
+    tempor_dataset_to_clairvoyance2_dataset,
+)
+from tempor.plugins.core._params import FloatParams, IntegerParams
+from tempor.plugins.regression import BaseRegressor
+
+
+@dataclasses.dataclass
+class seq2seqParams:
+    # Encoder:
+    encoder_rnn_type: str = "LSTM"
+    encoder_hidden_size: int = 100
+    encoder_num_layers: int = 1
+    encoder_bias: bool = True
+    encoder_dropout: float = 0.0
+    encoder_bidirectional: bool = False
+    encoder_nonlinearity: Optional[str] = None
+    encoder_proj_size: Optional[int] = None
+    # Decoder:
+    decoder_rnn_type: str = "LSTM"
+    decoder_hidden_size: int = 100
+    decoder_num_layers: int = 1
+    decoder_bias: bool = True
+    decoder_dropout: float = 0.0
+    decoder_bidirectional: bool = False
+    decoder_nonlinearity: Optional[str] = None
+    decoder_proj_size: Optional[int] = None
+    # Adapter FF NN:
+    # adapter_hidden_dims: Sequence[int] = dataclasses.field(default_factory=lambda: [50])
+    adapter_out_activation: Optional[str] = "Tanh"
+    # Predictor FF NN:
+    # predictor_hidden_dims: Sequence[int] = dataclasses.field(default_factory=lambda: [])
+    predictor_out_activation: Optional[str] = None
+    # Misc:
+    max_len: Optional[int] = None
+    optimizer_str: str = "Adam"
+    # optimizer_kwargs: Mapping[str, Any] = dataclasses.field(default_factory=lambda: dict(lr=0.01, weight_decay=1e-5))
+    batch_size: int = 32
+    epochs: int = 100
+    padding_indicator: float = DEFAULT_PADDING_INDICATOR
+
+
+@plugins.register_plugin(name="seq2seq_regressor", category="regression")
+class Seq2seqRegressor(BaseRegressor):
+    ParamsDefinition = seq2seqParams
+    params: seq2seqParams  # type: ignore
+
+    def __init__(
+        self,
+        **params,
+    ) -> None:
+        """Seq2seq regressor.
+
+        Example:
+            >>> from tempor.utils.dataloaders.sine import SineDataLoader
+            >>> from tempor.plugins import plugin_loader
+            >>>
+            >>> dataset = SineDataLoader().load()
+            >>>
+            >>> # Load the model:
+            >>> model = plugin_loader.get("regression.seq2seq_regressor", n_iter=50)
+            >>>
+            >>> # Train:
+            >>> model.fit(dataset)
+            Seq2seqRegressor(...)
+            >>>
+            >>> # Predict:
+            >>> assert model.predict(dataset).numpy().shape == (len(dataset), 1)
+        """
+        super().__init__(**params)
+        self.model = Seq2SeqRegressor(
+            params=self.params,
+        )
+
+    def _fit(
+        self,
+        data: dataset.Dataset,
+        *args,
+        **kwargs,
+    ) -> "Seq2seqRegressor":  # pyright: ignore
+        cl_dataset = tempor_dataset_to_clairvoyance2_dataset(data)
+        self.model.fit(cl_dataset)
+        return self
+
+    def _predict(  # type: ignore[override]
+        self,
+        data: dataset.Dataset,
+        n_future_steps: int,
+        time_delta: int = 1,
+        *args,
+        **kwargs,
+    ) -> samples.TimeSeriesSamples:
+        if self.model is None:
+            raise RuntimeError("Fit the model first")
+        cl_dataset = tempor_dataset_to_clairvoyance2_dataset(data)
+
+        horizons = TimeIndexHorizon.future_horizon_from_dataset(
+            cl_dataset,
+            forecast_n_future_steps=n_future_steps,
+            time_delta=time_delta,
+        )
+
+        preds = self.model.predict(cl_dataset, horizons)
+
+        output = clairvoyance2_dataset_to_tempor_dataset(preds).time_series
+
+        return samples.TimeSeriesSamples(
+            output,
+            sample_index=data.time_series.sample_index(),
+            time_indexes=[horizons] * data.time_series.num_samples,  # pyright: ignore
+            features=output.dataframe().columns,
+        )
+
+    @staticmethod
+    def hyperparameter_space(*args, **kwargs):
+        return [
+            IntegerParams(name="encoder_hidden_size", low=10, high=500),
+            IntegerParams(name="encoder_num_layers", low=1, high=10),
+            FloatParams(name="encoder_dropout", low=0, high=0.2),
+            IntegerParams(name="decoder_hidden_size", low=10, high=500),
+            IntegerParams(name="decoder_num_layers", low=1, high=10),
+            FloatParams(name="decoder_dropout", low=0, high=0.2),
+        ]
