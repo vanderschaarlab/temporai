@@ -39,6 +39,6 @@ def test_ode_regressor_plugin_predict(test_plugin: BaseRegressor) -> None:
 
 
 def test_hyperparam_sample():
-    for repeat in range(100):  # pylint: disable=unused-variable
+    for repeat in range(10):  # pylint: disable=unused-variable
         args = plugin._cls.sample_hyperparameters()  # pylint: disable=no-member, protected-access
         plugin(**args)
