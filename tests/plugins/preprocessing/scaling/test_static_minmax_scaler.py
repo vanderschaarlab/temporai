@@ -8,6 +8,7 @@ from tempor.plugins.preprocessing.scaling.plugin_static_minmax_scaler import (
     StaticMinMaxScaler as plugin,
 )
 from tempor.utils.dataloaders import GoogleStocksDataLoader, SineDataLoader
+from tempor.utils.serialization import load, save
 
 
 def from_api() -> BaseScaler:
@@ -38,7 +39,15 @@ def test_static_minmax_scaler_plugin_transform(test_plugin: BaseScaler) -> None:
     assert dataset.static is not None  # nosec B101
     assert (dataset.static.numpy() > 1.1).any()
 
-    output = test_plugin.fit(dataset).transform(dataset)
+    dump = save(test_plugin)
+    reloaded = load(dump)
+
+    reloaded.fit(dataset)
+
+    dump = save(reloaded)
+    reloaded = load(dump)
+
+    output = reloaded.transform(dataset)
 
     assert (output.static.numpy() < 1 + 1e-1).all()
     assert (output.static.numpy() >= 0).all()

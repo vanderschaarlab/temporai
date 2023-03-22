@@ -8,6 +8,7 @@ from tempor.plugins.preprocessing.imputation.plugin_static_imputation import (
     StaticOnlyImputer as plugin,
 )
 from tempor.utils.dataloaders.sine import SineDataLoader
+from tempor.utils.serialization import load, save
 
 
 def from_api() -> BaseImputer:
@@ -44,7 +45,15 @@ def test_static_imputation_plugin_transform(test_plugin: BaseImputer) -> None:
 
     assert dataset.static.dataframe().isna().sum().sum() != 0
 
-    output = test_plugin.fit(dataset).transform(dataset)
+    dump = save(test_plugin)
+    reloaded = load(dump)
+
+    reloaded.fit(dataset)
+
+    dump = save(reloaded)
+    reloaded = load(dump)
+
+    output = reloaded.transform(dataset)
 
     assert output.static.dataframe().isna().sum().sum() == 0
     assert output.time_series.dataframe().isna().sum().sum() == 0

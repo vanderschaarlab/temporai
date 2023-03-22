@@ -6,6 +6,7 @@ from tempor.plugins.classification.plugin_nn_classifier import (
     NeuralNetClassifier as plugin,
 )
 from tempor.utils.dataloaders.sine import SineDataLoader
+from tempor.utils.serialization import load, save
 
 
 def from_api() -> BaseClassifier:
@@ -52,3 +53,19 @@ def test_hyperparam_sample():
     for repeat in range(10):  # pylint: disable=unused-variable
         args = plugin._cls.sample_hyperparameters()  # pylint: disable=no-member, protected-access
         plugin(**args)
+
+
+def test_nn_classifier_serde() -> None:
+    test_plugin = from_api()
+
+    data = SineDataLoader().load()
+
+    dump = save(test_plugin)
+    reloaded1 = load(dump)
+
+    reloaded1.fit(data)
+
+    dump = save(reloaded1)
+    reloaded2 = load(dump)
+
+    reloaded2.predict(data)
