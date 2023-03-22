@@ -2,7 +2,7 @@ import dataclasses
 from typing import Optional
 
 from clairvoyance2.data import DEFAULT_PADDING_INDICATOR
-from clairvoyance2.treatment_effects.crn import CRNRegressor, TimeIndexHorizon
+from clairvoyance2.treatment_effects.crn import CRNClassifier, TimeIndexHorizon
 
 import tempor.plugins.core as plugins
 from tempor.data import dataset, samples
@@ -46,8 +46,8 @@ class CRNParams:
     padding_indicator: float = DEFAULT_PADDING_INDICATOR
 
 
-@plugins.register_plugin(name="crn_regressor", category="treatments")
-class CRNTreatmentsRegressor(BaseTreatments):
+@plugins.register_plugin(name="crn_classifier", category="treatments")
+class CRNTreatmentsClassifier(BaseTreatments):
     """
     Paper: Estimating counterfactual treatment outcomes over time through adversarially balanced representations, Ioana Bica, Ahmed M. Alaa, James Jordon, Mihaela van der Schaar
     """
@@ -65,17 +65,17 @@ class CRNTreatmentsRegressor(BaseTreatments):
             >>> from tempor.plugins import plugin_loader
             >>>
             >>> # Load the model:
-            >>> model = plugin_loader.get("treatments.crn_regressor", n_iter=50)
+            >>> model = plugin_loader.get("treatments.crn_classifier", n_iter=50)
             >>>
             >>> # Train:
             >>> model.fit(dataset)
-            CRNTreatmentsRegressor(...)
+            CRNTreatmentsClassifier(...)
             >>>
             >>> # Predict:
             >>> assert model.predict(dataset, n_future_steps = 10).numpy().shape == (len(dataset), 10, 5)
         """
         super().__init__(**params)
-        self.model = CRNRegressor(
+        self.model = CRNClassifier(
             params=self.params,
         )
 
@@ -84,7 +84,7 @@ class CRNTreatmentsRegressor(BaseTreatments):
         data: dataset.Dataset,
         *args,
         **kwargs,
-    ) -> "CRNTreatmentsRegressor":  # pyright: ignore
+    ) -> "CRNTreatmentsClassifier":  # pyright: ignore
         cl_dataset = tempor_dataset_to_clairvoyance2_dataset(data)
         self.model.fit(cl_dataset)
         return self
