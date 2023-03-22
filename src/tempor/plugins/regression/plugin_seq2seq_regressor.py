@@ -67,7 +67,7 @@ class Seq2seqRegressor(BaseRegressor):
             >>> dataset = SineDataLoader(temporal_dim = 5).load()
             >>>
             >>> # Load the model:
-            >>> model = plugin_loader.get("regression.seq2seq_regressor", n_iter=50)
+            >>> model = plugin_loader.get("regression.seq2seq_regressor", epochs=50)
             >>>
             >>> # Train:
             >>> model.fit(dataset)

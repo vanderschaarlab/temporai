@@ -2,7 +2,7 @@ import dataclasses
 from typing import Optional
 
 from clairvoyance2.data import DEFAULT_PADDING_INDICATOR
-from clairvoyance2.prediction.seq2seq import Seq2SeqClassifier, TimeIndexHorizon
+from clairvoyance2.treatment_effects.crn import CRNRegressor, TimeIndexHorizon
 
 import tempor.plugins.core as plugins
 from tempor.data import dataset, samples
@@ -10,12 +10,12 @@ from tempor.data.clv2conv import (
     _from_clv2_time_series,
     tempor_dataset_to_clairvoyance2_dataset,
 )
-from tempor.plugins.classification import BaseClassifier
 from tempor.plugins.core._params import FloatParams, IntegerParams
+from tempor.plugins.treatments import BaseTreatments
 
 
 @dataclasses.dataclass
-class seq2seqParams:
+class CRNParams:
     # Encoder:
     encoder_rnn_type: str = "LSTM"
     encoder_hidden_size: int = 100
@@ -35,49 +35,47 @@ class seq2seqParams:
     decoder_nonlinearity: Optional[str] = None
     decoder_proj_size: Optional[int] = None
     # Adapter FF NN:
-    # adapter_hidden_dims: Sequence[int] = dataclasses.field(default_factory=lambda: [50])
     adapter_out_activation: Optional[str] = "Tanh"
     # Predictor FF NN:
-    # predictor_hidden_dims: Sequence[int] = dataclasses.field(default_factory=lambda: [])
     predictor_out_activation: Optional[str] = None
     # Misc:
     max_len: Optional[int] = None
     optimizer_str: str = "Adam"
-    # optimizer_kwargs: Mapping[str, Any] = dataclasses.field(default_factory=lambda: dict(lr=0.01, weight_decay=1e-5))
     batch_size: int = 32
     epochs: int = 100
     padding_indicator: float = DEFAULT_PADDING_INDICATOR
 
 
-@plugins.register_plugin(name="seq2seq_classifier", category="classification")
-class Seq2seqClassifier(BaseClassifier):
-    ParamsDefinition = seq2seqParams
-    params: seq2seqParams  # type: ignore
+@plugins.register_plugin(name="crn_regressor", category="treatments")
+class CRNTreatmentsRegressor(BaseTreatments):
+    """
+    Paper: Estimating counterfactual treatment outcomes over time through adversarially balanced representations, Ioana Bica, Ahmed M. Alaa, James Jordon, Mihaela van der Schaar
+    """
+
+    ParamsDefinition = CRNParams
+    params: CRNParams  # type: ignore
 
     def __init__(
         self,
         **params,
     ) -> None:
-        """Seq2seq classifier.
+        """.
 
         Example:
-            >>> from tempor.utils.dataloaders.sine import SineDataLoader
             >>> from tempor.plugins import plugin_loader
             >>>
-            >>> dataset = SineDataLoader(temporal_dim = 5).load()
-            >>>
             >>> # Load the model:
-            >>> model = plugin_loader.get("classification.seq2seq_classifier", epochs=50)
+            >>> model = plugin_loader.get("treatments.crn", n_iter=50)
             >>>
             >>> # Train:
             >>> model.fit(dataset)
-            Seq2seqClassifier(...)
+            CRNTreatmentsRegressor(...)
             >>>
             >>> # Predict:
             >>> assert model.predict(dataset, n_future_steps = 10).numpy().shape == (len(dataset), 10, 5)
         """
         super().__init__(**params)
-        self.model = Seq2SeqClassifier(
+        self.model = CRNRegressor(
             params=self.params,
         )
 
@@ -86,7 +84,7 @@ class Seq2seqClassifier(BaseClassifier):
         data: dataset.Dataset,
         *args,
         **kwargs,
-    ) -> "Seq2seqClassifier":  # pyright: ignore
+    ) -> "CRNTreatmentsRegressor":  # pyright: ignore
         cl_dataset = tempor_dataset_to_clairvoyance2_dataset(data)
         self.model.fit(cl_dataset)
         return self
@@ -94,7 +92,7 @@ class Seq2seqClassifier(BaseClassifier):
     def _predict(  # type: ignore[override]
         self,
         data: dataset.Dataset,
-        n_future_steps: int,
+        n_future_steps: Optional[int] = None,
         time_delta: int = 1,
         *args,
         **kwargs,
@@ -103,22 +101,16 @@ class Seq2seqClassifier(BaseClassifier):
             raise RuntimeError("Fit the model first")
         cl_dataset = tempor_dataset_to_clairvoyance2_dataset(data)
 
-        horizons = TimeIndexHorizon.future_horizon_from_dataset(
-            cl_dataset,
-            forecast_n_future_steps=n_future_steps,
-            time_delta=time_delta,
-        )
+        horizons = None
+        if n_future_steps is not None:
+            horizons = TimeIndexHorizon.future_horizon_from_dataset(
+                cl_dataset,
+                forecast_n_future_steps=n_future_steps,
+                time_delta=time_delta,
+            )
 
         preds = _from_clv2_time_series(self.model.predict(cl_dataset, horizons).to_multi_index_dataframe())
         return samples.TimeSeriesSamples.from_dataframe(preds)
-
-    def _predict_proba(  # type: ignore[override]
-        self,
-        data: dataset.Dataset,
-        *args,
-        **kwargs,
-    ) -> samples.TimeSeriesSamples:
-        raise NotImplementedError("not supported")
 
     @staticmethod
     def hyperparameter_space(*args, **kwargs):
