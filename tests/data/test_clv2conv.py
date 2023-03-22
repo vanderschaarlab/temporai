@@ -5,10 +5,11 @@ import numpy as np
 import pandas as pd
 import pytest
 from clairvoyance2.data import Dataset as Clairvoyance2Dataset
-from clairvoyance2.data import EventSamples, StaticSamples
+from clairvoyance2.data import dataformat as clairvoyance_samples
 from clairvoyance2.datasets import dummy_dataset, simple_pkpd_dataset
 
 from tempor.data import clv2conv, dataset
+from tempor.utils import dataloaders
 
 
 @pytest.fixture(scope="module")
@@ -83,7 +84,7 @@ class TestClairvoyance2DatasetToTemporDataset:
             }
         )
         dummy_event_data.set_index(keys=["sample_index", "time_index"], drop=True, inplace=True)
-        data.event_targets = EventSamples(dummy_event_data)
+        data.event_targets = clairvoyance_samples.EventSamples(dummy_event_data)
 
         data_converted = clv2conv.clairvoyance2_dataset_to_tempor_dataset(data)
 
@@ -118,7 +119,7 @@ class TestClairvoyance2DatasetToTemporDataset:
     def test_one_off_treatment_effects_dataset(self, n_static, pkpd_data: Clairvoyance2Dataset):
         data = pkpd_data
         if n_static > 0:
-            data.static_covariates = StaticSamples(data=np.ones((data.n_samples, n_static)))
+            data.static_covariates = clairvoyance_samples.StaticSamples(data=np.ones((data.n_samples, n_static)))
         data_converted = clv2conv.clairvoyance2_dataset_to_tempor_dataset(data)
 
         assert isinstance(data_converted, dataset.OneOffTreatmentEffectsDataset)
@@ -150,3 +151,142 @@ class TestClairvoyance2DatasetToTemporDataset:
         )
         if n_static > 0:
             assert data_converted.static.num_features == data.static_covariates.n_features  # pyright: ignore
+
+
+@pytest.fixture(scope="module")
+def load_sine():
+    return dataloaders.SineDataLoader().load()
+
+
+@pytest.fixture(scope="module")
+def load_pbc():
+    return dataloaders.PBCDataLoader().load()
+
+
+class TestTemporDatasetToClairvoyance2Dataset:
+    def test_one_off_prediction_dataset_fails(self, load_sine: dataset.OneOffPredictionDataset):
+        data = load_sine
+
+        with pytest.raises(ValueError, match=".*OneOffPredictionDataset.*"):
+            clv2conv.tempor_dataset_to_clairvoyance2_dataset(data)
+
+    def test_event_conversion_fails_times_differ_per_feature(self, load_pbc: dataset.TimeToEventAnalysisDataset):
+        data_ = load_pbc
+
+        # Add an event feature with different times.
+        df = data_.predictive.targets.dataframe()
+        df["feat_2"] = df["status"].apply(lambda x: (x[0] + 0.5, x[1]))
+
+        data = dataset.TimeToEventAnalysisDataset(
+            time_series=data_.time_series.dataframe(),
+            static=data_.static.dataframe(),  # type: ignore
+            targets=df,
+            treatments=None,
+        )
+
+        with pytest.raises(ValueError, match=".*[Ee]vent times.*all features.*"):
+            clv2conv.tempor_dataset_to_clairvoyance2_dataset(data)
+
+    @pytest.mark.parametrize("static", [False, True])
+    def test_temporal_prediction_dataset(self, load_sine: dataset.OneOffPredictionDataset, static):
+        data_ = load_sine
+        data = dataset.TemporalPredictionDataset(
+            time_series=data_.time_series.dataframe(),
+            static=data_.static.dataframe() if static else None,  # type: ignore
+            targets=data_.time_series.dataframe().copy(),
+            treatments=None,
+        )
+
+        data_converted = clv2conv.tempor_dataset_to_clairvoyance2_dataset(data)
+
+        assert isinstance(data_converted, Clairvoyance2Dataset)
+        assert len(data) == data_converted.n_samples
+        assert list(range(len(data))) == data_converted.sample_indices
+        assert data.time_series.num_features == data_converted.temporal_covariates.n_features
+        assert data_converted.temporal_targets is not None
+        assert data.predictive.targets.num_features == data_converted.temporal_targets.n_features  # pyright: ignore
+        if static:
+            assert data_converted.static_covariates is not None
+            assert data.static.num_features == data_converted.static_covariates.n_features  # pyright: ignore
+
+    @pytest.mark.parametrize("static", [False, True])
+    def test_time_to_event_analysis_dataset(self, load_pbc: dataset.TimeToEventAnalysisDataset, static):
+        data_ = load_pbc
+
+        # Make events multi-feature:
+        df = data_.predictive.targets.dataframe()
+        df["feat_2"] = df["status"].copy()
+
+        data = dataset.TimeToEventAnalysisDataset(
+            time_series=data_.time_series.dataframe(),
+            static=data_.static.dataframe() if static else None,  # type: ignore
+            targets=df,
+            treatments=None,
+        )
+
+        data_converted = clv2conv.tempor_dataset_to_clairvoyance2_dataset(data)
+
+        assert isinstance(data_converted, Clairvoyance2Dataset)
+        assert len(data) == data_converted.n_samples
+        assert list(range(len(data))) == data_converted.sample_indices
+        assert data.time_series.num_features == data_converted.temporal_covariates.n_features
+        assert data_converted.event_targets is not None
+        assert data.predictive.targets.num_features == data_converted.event_targets.n_features  # pyright: ignore
+        if static:
+            assert data_converted.static_covariates is not None
+            assert data.static.num_features == data_converted.static_covariates.n_features  # pyright: ignore
+
+    @pytest.mark.parametrize("static", [False, True])
+    def test_one_off_treatment_effects_dataset(self, load_pbc: dataset.TimeToEventAnalysisDataset, static):
+        data_ = load_pbc
+
+        # Make events multi-feature:
+        df = data_.predictive.targets.dataframe()
+        df["feat_2"] = df["status"].copy()
+
+        data = dataset.OneOffTreatmentEffectsDataset(
+            time_series=data_.time_series.dataframe(),
+            static=data_.static.dataframe() if static else None,  # type: ignore
+            targets=data_.time_series.dataframe().copy(),
+            treatments=df,
+        )
+
+        data_converted = clv2conv.tempor_dataset_to_clairvoyance2_dataset(data)
+
+        assert isinstance(data_converted, Clairvoyance2Dataset)
+        assert len(data) == data_converted.n_samples
+        assert list(range(len(data))) == data_converted.sample_indices
+        assert data.time_series.num_features == data_converted.temporal_covariates.n_features
+        assert data_converted.temporal_targets is not None
+        assert data.predictive.targets.num_features == data_converted.temporal_targets.n_features  # pyright: ignore
+        assert data_converted.event_treatments is not None
+        assert data.predictive.treatments.num_features == data_converted.event_treatments.n_features  # pyright: ignore
+        if static:
+            assert data_converted.static_covariates is not None
+            assert data.static.num_features == data_converted.static_covariates.n_features  # pyright: ignore
+
+    @pytest.mark.parametrize("static", [False, True])
+    def test_temporal_off_treatment_effects_dataset(self, load_sine: dataset.OneOffTreatmentEffectsDataset, static):
+        data_ = load_sine
+        data = dataset.TemporalTreatmentEffectsDataset(
+            time_series=data_.time_series.dataframe(),
+            static=data_.static.dataframe() if static else None,  # type: ignore
+            targets=data_.time_series.dataframe().copy(),
+            treatments=data_.time_series.dataframe().copy(),
+        )
+
+        data_converted = clv2conv.tempor_dataset_to_clairvoyance2_dataset(data)
+
+        assert isinstance(data_converted, Clairvoyance2Dataset)
+        assert len(data) == data_converted.n_samples
+        assert list(range(len(data))) == data_converted.sample_indices
+        assert data.time_series.num_features == data_converted.temporal_covariates.n_features
+        assert data_converted.temporal_targets is not None
+        assert data.predictive.targets.num_features == data_converted.temporal_targets.n_features  # pyright: ignore
+        assert data_converted.temporal_treatments is not None
+        assert (
+            data.predictive.treatments.num_features == data_converted.temporal_treatments.n_features  # pyright: ignore
+        )
+        if static:
+            assert data_converted.static_covariates is not None
+            assert data.static.num_features == data_converted.static_covariates.n_features  # pyright: ignore

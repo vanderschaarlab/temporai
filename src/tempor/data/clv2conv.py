@@ -1,10 +1,10 @@
 """Utilities for converting to and from ``clairvoyance2`` datasets."""
-from typing import Type
+from typing import List, Type
 
 import pandas as pd
 from clairvoyance2.data import Dataset as Clairvoyance2Dataset
 
-from tempor.data import dataset
+from tempor.data import dataset, samples
 
 from . import utils
 
@@ -106,4 +106,79 @@ def clairvoyance2_dataset_to_tempor_dataset(data: Clairvoyance2Dataset) -> datas
         static=static_df,
         targets=targets_df,  # pyright: ignore
         treatments=treatments_df,  # pyright: ignore
+    )
+
+
+def _to_clv2_static(s: samples.StaticSamples) -> pd.DataFrame:
+    int_sample_index = list(range(s.num_samples))
+    return s.dataframe().set_index(keys=pd.Index(int_sample_index), drop=True)
+
+
+def _to_clv2_time_series(s: samples.TimeSeriesSamples) -> List[pd.DataFrame]:
+    return [df.droplevel(0) for df in s.list_of_dataframes()]
+
+
+def _to_clv2_event(s: samples.EventSamples) -> pd.DataFrame:
+    int_sample_index = list(range(s.num_samples))
+
+    df_event_times, df_event_values = s.split_as_two_dataframes()
+
+    all_event_times_match = df_event_times.eq(df_event_times.iloc[:, 0], axis=0).all(1).all()
+    # ^ Check all time columns equal else exception.
+    if not all_event_times_match:
+        raise ValueError(
+            "Event times must be the same for all features of each sample in order to "
+            "be convertible to a clairvoyance2 dataset"
+        )
+    times = df_event_times.iloc[:, 0].to_list()
+
+    df = df_event_values.astype(int).set_index(keys=[pd.Index(int_sample_index), times])  # pyright: ignore
+
+    return df
+
+
+def tempor_dataset_to_clairvoyance2_dataset(data: dataset.Dataset) -> Clairvoyance2Dataset:
+    if isinstance(data, dataset.OneOffPredictionDataset):
+        raise ValueError(
+            "Cannot convert a `OneOffPredictionDataset` to a clairvoyance2 dataset, as this setting is not supported"
+        )
+
+    def has_temporal_targets(d: dataset.Dataset) -> bool:
+        if d.predictive is not None:
+            return isinstance(d.predictive.targets, samples.TimeSeriesSamples)
+        else:
+            return False
+
+    def has_temporal_treatments(d: dataset.Dataset) -> bool:
+        if d.predictive is not None:
+            return isinstance(d.predictive.treatments, samples.TimeSeriesSamples)
+        else:
+            return False
+
+    def has_event_targets(d: dataset.Dataset) -> bool:
+        if d.predictive is not None:
+            return isinstance(d.predictive.targets, samples.EventSamples)
+        else:
+            return False
+
+    def has_event_treatments(d: dataset.Dataset) -> bool:
+        if d.predictive is not None:
+            return isinstance(d.predictive.treatments, samples.EventSamples)
+        else:
+            return False
+
+    return Clairvoyance2Dataset(
+        temporal_covariates=_to_clv2_time_series(data.time_series),
+        static_covariates=_to_clv2_static(data.static) if data.static is not None else None,
+        event_covariates=None,
+        temporal_targets=(
+            _to_clv2_time_series(data.predictive.targets) if has_temporal_targets(data) else None  # type: ignore
+        ),
+        temporal_treatments=(
+            _to_clv2_time_series(data.predictive.treatments) if has_temporal_treatments(data) else None  # type: ignore
+        ),
+        event_targets=(_to_clv2_event(data.predictive.targets) if has_event_targets(data) else None),  # type: ignore
+        event_treatments=(
+            _to_clv2_event(data.predictive.treatments) if has_event_treatments(data) else None  # type: ignore
+        ),
     )
