@@ -1,8 +1,10 @@
 import dataclasses
-from typing import Optional
+from typing import Any, Dict, List, Optional, cast
 
+import clairvoyance2.data.dataformat as cl_dataformat
 from clairvoyance2.data import DEFAULT_PADDING_INDICATOR
 from clairvoyance2.prediction.seq2seq import Seq2SeqClassifier, TimeIndexHorizon
+from typing_extensions import Self
 
 import tempor.plugins.core as plugins
 from tempor.data import dataset, samples
@@ -35,15 +37,15 @@ class seq2seqParams:
     decoder_nonlinearity: Optional[str] = None
     decoder_proj_size: Optional[int] = None
     # Adapter FF NN:
-    # adapter_hidden_dims: Sequence[int] = dataclasses.field(default_factory=lambda: [50])
+    adapter_hidden_dims: List[int] = dataclasses.field(default_factory=lambda: [50])  # TODO
     adapter_out_activation: Optional[str] = "Tanh"
     # Predictor FF NN:
-    # predictor_hidden_dims: Sequence[int] = dataclasses.field(default_factory=lambda: [])
+    predictor_hidden_dims: List[int] = dataclasses.field(default_factory=lambda: [])
     predictor_out_activation: Optional[str] = None
     # Misc:
     max_len: Optional[int] = None
     optimizer_str: str = "Adam"
-    # optimizer_kwargs: Mapping[str, Any] = dataclasses.field(default_factory=lambda: dict(lr=0.01, weight_decay=1e-5))
+    optimizer_kwargs: Dict[str, Any] = dataclasses.field(default_factory=lambda: dict(lr=0.01, weight_decay=1e-5))
     batch_size: int = 32
     epochs: int = 100
     padding_indicator: float = DEFAULT_PADDING_INDICATOR
@@ -76,7 +78,7 @@ class Seq2seqClassifier(BaseClassifier):
         """
         super().__init__(**params)
         self.model = Seq2SeqClassifier(
-            params=self.params,
+            params=self.params,  # pyright: ignore
         )
 
     def _fit(
@@ -84,17 +86,17 @@ class Seq2seqClassifier(BaseClassifier):
         data: dataset.Dataset,
         *args,
         **kwargs,
-    ) -> "Seq2seqClassifier":  # pyright: ignore
+    ) -> Self:
         cl_dataset = tempor_dataset_to_clairvoyance2_dataset(data)
         self.model.fit(cl_dataset)
         return self
 
-    def _predict(  # type: ignore[override]
+    def _predict(  # type: ignore[override]  # pylint: disable=arguments-differ
         self,
         data: dataset.Dataset,
         n_future_steps: int,
-        time_delta: int = 1,
         *args,
+        time_delta: int = 1,
         **kwargs,
     ) -> samples.TimeSeriesSamples:
         if self.model is None:
@@ -107,7 +109,8 @@ class Seq2seqClassifier(BaseClassifier):
             time_delta=time_delta,
         )
 
-        preds = _from_clv2_time_series(self.model.predict(cl_dataset, horizons).to_multi_index_dataframe())
+        preds_cl = cast(cl_dataformat.TimeSeriesSamples, self.model.predict(cl_dataset, horizons))
+        preds = _from_clv2_time_series(preds_cl.to_multi_index_dataframe())
         return samples.TimeSeriesSamples.from_dataframe(preds)
 
     def _predict_proba(  # type: ignore[override]

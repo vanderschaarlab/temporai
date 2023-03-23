@@ -7,7 +7,7 @@ import pydantic
 import rich.pretty
 from typing_extensions import Self
 
-import tempor.core.utils
+from tempor.core import pydantic_utils, utils
 from tempor.data import dataset
 from tempor.log import logger
 
@@ -40,10 +40,11 @@ class BaseEstimator(Plugin, abc.ABC):
                 assert ParamsDefinitionClass is not None  # nosec B101
 
             try:
-                ParamsDefinitionClass = pydantic.dataclasses.dataclass(ParamsDefinitionClass)
+                if not pydantic_utils.is_pydantic_dataclass(ParamsDefinitionClass):
+                    ParamsDefinitionClass = pydantic_utils.make_pydantic_dataclass(ParamsDefinitionClass)
                 defined_params = omegaconf.OmegaConf.structured(dataclasses.asdict(ParamsDefinitionClass(**params)))
             except Exception as ex:
-                name = tempor.core.utils.get_class_full_name(ex)
+                name = utils.get_class_full_name(ex)
                 sep = "\n" + "-" * (len(name) + 1) + "\n"
                 raise ValueError(
                     f"Model parameters could not be validated as defined by `{ParamsDefinitionClass.__name__}`, "
