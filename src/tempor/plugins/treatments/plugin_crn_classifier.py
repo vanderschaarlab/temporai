@@ -1,7 +1,7 @@
 import dataclasses
 from typing import List, Optional
 
-import numpy as np
+import pandas as pd
 from clairvoyance2.data import DEFAULT_PADDING_INDICATOR
 from clairvoyance2.treatment_effects.crn import CRNClassifier, TimeIndexHorizon
 
@@ -75,9 +75,7 @@ class CRNTreatmentsClassifier(BaseTreatments):
             >>> # assert model.predict(dataset, n_future_steps = 10).numpy().shape == (len(dataset), 10, 5)
         """
         super().__init__(**params)
-        self.model = CRNClassifier(
-            params=self.params,
-        )
+        self.model: Optional[CRNClassifier] = None
 
     def _fit(
         self,
@@ -86,54 +84,62 @@ class CRNTreatmentsClassifier(BaseTreatments):
         **kwargs,
     ) -> "CRNTreatmentsClassifier":  # pyright: ignore
         cl_dataset = tempor_dataset_to_clairvoyance2_dataset(data)
+        self.model = CRNClassifier(
+            params=self.params,
+        )
         self.model.fit(cl_dataset)
         return self
 
     def _predict(  # type: ignore[override]
         self,
         data: dataset.Dataset,
+        horizons: List[List[float]],
         *args,
         **kwargs,
     ) -> samples.TimeSeriesSamples:
         if self.model is None:
             raise RuntimeError("Fit the model first")
+        if len(data) != len(horizons):
+            raise ValueError("Invalid horizons length")
+
         cl_dataset = tempor_dataset_to_clairvoyance2_dataset(data)
 
-        horizons = TimeIndexHorizon(
-            time_index_sequence=[tc.time_index[len(tc.time_index) // 2 :] for tc in cl_dataset.temporal_covariates]
-        )
+        cl_horizons_pd = []
+        for horizon in horizons:
+            cl_horizons_pd.append(pd.Index(horizon))
+        cl_horizons = TimeIndexHorizon(time_index_sequence=cl_horizons_pd)
 
-        preds = _from_clv2_time_series(self.model.predict(cl_dataset, horizons).to_multi_index_dataframe())
+        preds = _from_clv2_time_series(self.model.predict(cl_dataset, cl_horizons).to_multi_index_dataframe())
         return samples.TimeSeriesSamples.from_dataframe(preds)
 
     def _predict_counterfactuals(  # type: ignore[override]
         self,
         data: dataset.Dataset,
-        n_counterfactuals_per_sample: int = 2,
+        horizons: List[List[float]],
+        treatment_scenarios: List[List[int]],
         *args,
         **kwargs,
     ) -> List:
         if self.model is None:
             raise RuntimeError("Fit the model first")
+        if len(data) != len(horizons):
+            raise ValueError("Invalid horizons length")
+
+        if len(horizons) != len(treatment_scenarios):
+            raise ValueError("Invalid treatment_scenarios length")
 
         cl_dataset = tempor_dataset_to_clairvoyance2_dataset(data)
-
-        horizon_counterfactuals = TimeIndexHorizon(
-            time_index_sequence=[tc.time_index[len(tc.time_index) // 2 :] for tc in cl_dataset.temporal_covariates]
-        )
+        cl_horizons_pd = []
+        for horizon in horizons:
+            cl_horizons_pd.append(pd.Index(horizon))
+        cl_horizons = TimeIndexHorizon(time_index_sequence=cl_horizons_pd)
 
         counterfactuals = []
         for idx, sample_idx in enumerate(cl_dataset.sample_indices):
-            treat = cl_dataset.temporal_treatments[sample_idx].df.values
-            horizon_counterfactuals_sample = horizon_counterfactuals.time_index_sequence[idx]
-            treat_scenarios = []
-            for treat_sc_idx in range(n_counterfactuals_per_sample):
-                np.random.seed(12345 + treat_sc_idx)
-                treat_sc = np.random.randint(
-                    low=0, high=1 + 1, size=(len(horizon_counterfactuals_sample), treat.shape[1])
-                )
-                treat_scenarios.append(treat_sc)
+            treat_scenarios = treatment_scenarios[idx]
+            horizon_counterfactuals_sample = cl_horizons.time_index_sequence[idx]
 
+            # TODO: should enforce treat - treat_scenarios shapes here.
             c = self.model.predict_counterfactuals(
                 cl_dataset,
                 sample_index=sample_idx,

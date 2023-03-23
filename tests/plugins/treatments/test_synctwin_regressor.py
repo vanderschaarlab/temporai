@@ -8,6 +8,8 @@ from tempor.plugins.treatments.plugin_synctwin_regressor import (
     SyncTwinTreatmentsRegressor as plugin,
 )
 
+from .helpers_treatments import simulate_treatments_scenarios
+
 
 def get_dummy_data(
     n_timesteps: int = 30,
@@ -55,13 +57,16 @@ def test_synctwin_regressor_plugin_fit(test_plugin: BaseTreatments) -> None:
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-@pytest.mark.xfail()
 def test_synctwin_regressor_plugin_predict_counterfactuals(test_plugin: BaseTreatments) -> None:
     data = get_dummy_data()
     test_plugin.fit(data)
 
     n_counterfactuals_per_sample = 2
-    output = test_plugin.predict_counterfactuals(data, n_counterfactuals_per_sample=n_counterfactuals_per_sample)
+    horizons, treatment_scenarios = simulate_treatments_scenarios(
+        data, n_counterfactuals_per_sample=n_counterfactuals_per_sample
+    )
+
+    output = test_plugin.predict_counterfactuals(data, horizons=horizons, treatment_scenarios=treatment_scenarios)
 
     assert len(output) == len(data)
 

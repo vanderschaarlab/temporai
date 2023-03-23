@@ -9,6 +9,8 @@ from tempor.plugins.treatments.plugin_crn_regressor import (
 )
 from tempor.utils.serialization import load, save
 
+from .helpers_treatments import simulate_horizons, simulate_treatments_scenarios
+
 
 def get_dummy_data(
     n_samples: int = 100,
@@ -69,7 +71,8 @@ def test_crn_regressor_plugin_predict(test_plugin: BaseTreatments) -> None:
     dump = save(reloaded)
     reloaded = load(dump)
 
-    output = reloaded.predict(data)
+    horizons = simulate_horizons(data)
+    output = reloaded.predict(data, horizons=horizons)
 
     assert output.numpy().shape == (len(data.time_series), 6, 3)
 
@@ -80,7 +83,11 @@ def test_crn_regressor_plugin_predict_counterfactuals(test_plugin: BaseTreatment
     test_plugin.fit(data)
 
     n_counterfactuals_per_sample = 2
-    output = test_plugin.predict_counterfactuals(data, n_counterfactuals_per_sample=n_counterfactuals_per_sample)
+    horizons, treatment_scenarios = simulate_treatments_scenarios(
+        data, n_counterfactuals_per_sample=n_counterfactuals_per_sample
+    )
+
+    output = test_plugin.predict_counterfactuals(data, horizons=horizons, treatment_scenarios=treatment_scenarios)
 
     assert len(output) == len(data)
 
