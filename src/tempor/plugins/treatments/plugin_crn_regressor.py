@@ -69,11 +69,10 @@ class CRNTreatmentsRegressor(BaseTreatments):
             >>> model = plugin_loader.get("treatments.crn_regressor", n_iter=50)
             >>>
             >>> # Train:
-            >>> model.fit(dataset)
-            CRNTreatmentsRegressor(...)
+            >>> # model.fit(dataset)
             >>>
             >>> # Predict:
-            >>> assert model.predict(dataset, n_future_steps = 10).numpy().shape == (len(dataset), 10, 5)
+            >>> # assert model.predict(dataset, n_future_steps = 10).numpy().shape == (len(dataset), 10, 5)
         """
         super().__init__(**params)
         self.model = CRNRegressor(

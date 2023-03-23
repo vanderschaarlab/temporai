@@ -63,17 +63,30 @@ class Seq2seqRegressor(BaseRegressor):
         """Seq2seq regressor.
 
         Example:
+            >>> import doctest; doctest.ELLIPSIS_MARKER = "[...]"  # Doctest config, ignore.
+            >>>
             >>> from tempor.utils.dataloaders.sine import SineDataLoader
+            >>> from tempor.data import dataset
             >>> from tempor.plugins import plugin_loader
             >>>
             >>> raw_data = SineDataLoader(temporal_dim=5).load()
-            >>> data = dataset.TemporalPredictionDataset(time_series=raw_data.time_series.dataframe(), static=raw_data.static.dataframe(), targets=raw_data.time_series.dataframe().copy())
+            >>> data = dataset.TemporalPredictionDataset(
+            ...    time_series=raw_data.time_series.dataframe(),
+            ...    static=raw_data.static.dataframe(),
+            ...    targets=raw_data.time_series.dataframe(),
+            ... )
+            >>>
             >>> # Load the model:
             >>> model = plugin_loader.get("regression.seq2seq_regressor", epochs=50)
+            >>>
             >>> # Train:
             >>> model.fit(data)
+            [...]
+            >>>
             >>> # Predict:
             >>> assert model.predict(data, n_future_steps = 10).numpy().shape == (len(data), 10, 5)
+            >>>
+            >>> doctest.ELLIPSIS_MARKER = "..."  # Doctest config, ignore.
         """
         super().__init__(**params)
         self.model = Seq2SeqRegressor(

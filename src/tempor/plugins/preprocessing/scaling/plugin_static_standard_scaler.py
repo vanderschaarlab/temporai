@@ -17,16 +17,17 @@ class StaticStandardScaler(BaseScaler):
         Standardize the static features by removing the mean and scaling to unit variance.
 
         Example:
-            >>> from tempor.utils.datasets.sine import SineDataloader
+            >>> from tempor.utils.dataloaders import SineDataLoader
             >>> from tempor.plugins import plugin_loader
             >>>
-            >>> dataset = SineDataloader().load()
+            >>> dataset = SineDataLoader().load()
             >>>
             >>> # Load the model:
             >>> model = plugin_loader.get("preprocessing.scaling.static_standard_scaler")
             >>>
             >>> # Train:
             >>> model.fit(dataset)
+            StaticStandardScaler(...)
             >>>
             >>> # Scale:
             >>> scaled = model.transform(dataset)

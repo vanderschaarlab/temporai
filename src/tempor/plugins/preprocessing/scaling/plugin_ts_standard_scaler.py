@@ -17,16 +17,17 @@ class TimeSeriesStandardScaler(BaseScaler):
         Standardize the temporal features by removing the mean and scaling to unit variance.
 
         Example:
-            >>> from tempor.utils.datasets.sine import SineDataloader
+            >>> from tempor.utils.dataloaders import SineDataLoader
             >>> from tempor.plugins import plugin_loader
             >>>
-            >>> dataset = SineDataloader().load()
+            >>> dataset = SineDataLoader().load()
             >>>
             >>> # Load the model:
             >>> model = plugin_loader.get("preprocessing.scaling.ts_standard_scaler")
             >>>
             >>> # Train:
             >>> model.fit(dataset)
+            TimeSeriesStandardScaler(...)
             >>>
             >>> # Scale:
             >>> scaled = model.transform(dataset)

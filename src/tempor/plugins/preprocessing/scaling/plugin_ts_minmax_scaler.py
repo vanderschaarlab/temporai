@@ -19,16 +19,17 @@ class TimeSeriesMinMaxScaler(BaseScaler):
 
 
         Example:
-            >>> from tempor.utils.datasets.sine import SineDataloader
+            >>> from tempor.utils.dataloaders import SineDataLoader
             >>> from tempor.plugins import plugin_loader
             >>>
-            >>> dataset = SineDataloader().load()
+            >>> dataset = SineDataLoader().load()
             >>>
             >>> # Load the model:
             >>> model = plugin_loader.get("preprocessing.scaling.ts_minmax_scaler")
             >>>
             >>> # Train:
             >>> model.fit(dataset)
+            TimeSeriesMinMaxScaler(...)
             >>>
             >>> # Scale:
             >>> scaled = model.transform(dataset)
