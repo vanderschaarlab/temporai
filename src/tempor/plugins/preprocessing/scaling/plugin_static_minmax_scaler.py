@@ -14,8 +14,10 @@ from tempor.plugins.preprocessing.scaling import BaseScaler
 class StaticMinMaxScaler(BaseScaler):
     def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
         """MinMax scaling for the static data.
+
         Transform the static features by scaling each feature to a given range.
-        This estimator scales and translates each feature individually such that it is in the given range on the training set, e.g. between zero and one.
+        This estimator scales and translates each feature individually such that it is in the given range on the
+        training set, e.g. between zero and one.
 
         Example:
             >>> from tempor.utils.dataloaders import SineDataLoader

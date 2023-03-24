@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Any, List
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -18,10 +18,10 @@ from .helper_embedding import EmbTimeToEventAnalysis, OutputTimeToEventAnalysis
 @dataclasses.dataclass
 class CoxPHTimeToEventAnalysisParams:
     # TODO: Docstring.
-    # Output model
+    # Output model:
     coxph_alpha: float = 0.05
-    coxph_penalizer: float = 0
-    # Embedding model
+    coxph_penalizer: float = 0.0
+    # Embedding model:
     n_iter: int = 1000
     batch_size: int = 100
     lr: float = 1e-3
@@ -39,10 +39,8 @@ class CoxPHTimeToEventAnalysisParams:
     random_state: int = 0
 
 
-def constant_columns(dataframe: pd.DataFrame) -> list:
-    """
-    Drops constant value columns of pandas dataframe.
-    """
+def drop_constant_columns(dataframe: pd.DataFrame) -> list:
+    """Drops constant value columns of pandas dataframe."""
     result = []
     for column in dataframe.columns:
         if len(dataframe[column].unique()) == 1:
@@ -51,25 +49,30 @@ def constant_columns(dataframe: pd.DataFrame) -> list:
 
 
 class CoxPHSurvivalAnalysis(OutputTimeToEventAnalysis):
-    """CoxPHFitter wrapper
-    Args:
-        alpha: float
-            the level in the confidence intervals.
-        penalizer: float
-            Attach a penalty to the size of the coefficients during regression.
-        fit_options: dict
-             pass kwargs for the fitting algorithm.
-    """
-
     def __init__(
-        self, alpha: float = 0.05, penalizer: float = 0, fit_options: dict = {"step_size": 0.1}, **kwargs: Any
+        self,
+        alpha: float = 0.05,
+        penalizer: float = 0,
+        fit_options: Optional[Dict] = None,
+        **kwargs: Any,
     ) -> None:
-        super().__init__()
+        """CoxPHFitter wrapper.
+
+        Args:
+            alpha (float, optional):
+                The level in the confidence intervals. Defaults to ``0.05``.
+            penalizer (float, optional):
+                Attach a penalty to the size of the coefficients during regression. Defaults to ``0``.
+            fit_options (Optional[Dict], optional):
+                Pass kwargs for the fitting algorithm. Defaults to ``{"step_size": 0.1}``.
+        """
+        if fit_options is None:
+            fit_options = {"step_size": 0.1}
         self.fit_options = fit_options
         self.model = CoxPHFitter(alpha=alpha, penalizer=penalizer, **kwargs)
 
-    def fit(self, X: pd.DataFrame, T: pd.Series, Y: pd.Series) -> "CoxPHSurvivalAnalysis":
-        self.constant_cols = constant_columns(X)
+    def fit(self, X: pd.DataFrame, T: pd.Series, Y: pd.Series) -> Self:
+        self.constant_cols = drop_constant_columns(X)  # pylint: disable=attribute-defined-outside-init
         X = X.drop(columns=self.constant_cols)
 
         df = X.copy()
@@ -81,7 +84,7 @@ class CoxPHSurvivalAnalysis(OutputTimeToEventAnalysis):
         return self
 
     def predict_risk(self, X: pd.DataFrame, time_horizons: List) -> pd.DataFrame:
-        "Predict risk estimation"
+        """Predict risk estimation."""
 
         X = X.drop(columns=self.constant_cols)
 

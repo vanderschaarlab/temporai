@@ -3,7 +3,7 @@ from typing import Any, List
 
 import numpy as np
 import pandas as pd
-from typing_extensions import Self
+from typing_extensions import Literal, Self
 from xgbse import XGBSEDebiasedBCE, XGBSEKaplanNeighbors, XGBSEStackedWeibull
 from xgbse.converters import convert_to_structured
 
@@ -16,11 +16,14 @@ from tempor.plugins.time_to_event import BaseTimeToEventAnalysis
 
 from .helper_embedding import EmbTimeToEventAnalysis, OutputTimeToEventAnalysis
 
+XGBObjective = Literal["aft", "cox"]
+XGBStrategy = Literal["weibull", "debiased_bce", "km"]
+
 
 @dataclasses.dataclass
 class XGBTimeToEventAnalysisParams:
     # TODO: Docstring.
-    # Output model
+    # Output model:
     xgb_n_estimators: int = 100
     xgb_colsample_bynode: float = 0.5
     xgb_max_depth: int = 5
@@ -29,11 +32,11 @@ class XGBTimeToEventAnalysisParams:
     xgb_min_child_weight: int = 50
     xgb_tree_method: str = "hist"
     xgb_booster: int = 0
-    xgb_objective: str = "aft"  # "aft", "cox"
-    xgb_strategy: str = "debiased_bce"  # "weibull", "debiased_bce", "km"
+    xgb_objective: XGBObjective = "aft"
+    xgb_strategy: XGBStrategy = "debiased_bce"
     xgb_bce_n_iter: int = 1000
     xgb_time_points: int = 100
-    # Embedding model
+    # Embedding model:
     n_iter: int = 1000
     batch_size: int = 100
     lr: float = 1e-3
@@ -65,11 +68,11 @@ class XGBSurvivalAnalysis(OutputTimeToEventAnalysis):
         tree_method: str = "hist",
         booster: int = 0,
         random_state: int = 0,
-        objective: str = "aft",  # "aft", "cox"
-        strategy: str = "debiased_bce",  # "weibull", "debiased_bce", "km"
+        objective: XGBObjective = "aft",
+        strategy: XGBStrategy = "debiased_bce",
         bce_n_iter: int = 1000,
         time_points: int = 100,
-        device: Any = DEVICE,
+        device: Any = DEVICE,  # pylint: disable=unused-argument
         **kwargs: Any,
     ) -> None:
         super().__init__()
@@ -140,14 +143,14 @@ class XGBSurvivalAnalysis(OutputTimeToEventAnalysis):
         return array[idx]
 
     def predict_risk(self, X: pd.DataFrame, time_horizons: List) -> pd.DataFrame:
-        "Predict risk"
+        """Predict risk."""
         chunks = int(len(X) / 1024) + 1
 
         preds_ = []
         for chunk in np.array_split(X, chunks):
             local_preds_ = np.zeros([len(chunk), len(time_horizons)])
             surv = self.model.predict(chunk)
-            surv = surv.loc[:, ~surv.columns.duplicated()]
+            surv = surv.loc[:, ~surv.columns.duplicated()]  # pyright: ignore
             time_bins = surv.columns
             for t, eval_time in enumerate(time_horizons):
                 nearest = self._find_nearest(time_bins, eval_time)

@@ -19,7 +19,7 @@ from tempor.plugins.core._params import CategoricalParams, FloatParams, IntegerP
 
 class OutputTimeToEventAnalysis:
     @abc.abstractmethod
-    def fit(self, X: pd.DataFrame, T: pd.Series, Y: pd.Series) -> "OutputTimeToEventAnalysis":
+    def fit(self, X: pd.DataFrame, T: pd.Series, Y: pd.Series) -> Self:
         ...
 
     @abc.abstractmethod
@@ -27,6 +27,7 @@ class OutputTimeToEventAnalysis:
         ...
 
 
+# TODO: Refactor to avoid duplication with DynamicDeepHitTimeToEventAnalysis.
 class EmbTimeToEventAnalysis:
     def __init__(
         self,
@@ -45,41 +46,45 @@ class EmbTimeToEventAnalysis:
         device: str = "cpu",
         patience: int = 20,
         output_mode: OutputMode = "MLP",
-        random_state: int = 0,
-    ) -> None:  # pylint: disable=useless-super-delegation
+        random_state: int = 0,  # pylint: disable=unused-argument
+    ) -> None:
         """Survival analysis embedding creation for time-series.
 
         Args:
-        n_iter: int = 1000
-            Number of training epochs
-        batch_size: int = 100
-            Training batch size
-        lr: float = 1e-3
-            Training learning rate
-        n_layers_hidden: int = 1
-            Number of hidden layers in the network
-        n_units_hidden: int = 40
-            Number of units for each hidden layer
-        split: int = 100
-            Number of discrete buckets
-        rnn_mode: RnnMode = "GRU"
-            Internal temporal architecture. Available options: RNN, LSTM, GRU, Transformer.
-        alpha: float = 0.34
-            Weighting (0, 1) likelihood and rank loss (L2 in paper). 1 gives only likelihood, and 0 gives only rank loss.
-        beta: float = 0.27
-
-        sigma: float = 0.21,
-            from eta in rank loss (L2 in paper)
-        dropout: float = 0.06
-            Network dropout value
-        device: str = "cpu"
-            PyTorch Device
-        patience: int = 20
-            Training patience without any improvement.
-        output_mode: OutputMode = "MLP"
-            Output network. Available options: MLP, LSTM, GRU, RNN.
-        random_state: int = 0
-            Random seed
+            output_model (OutputTimeToEventAnalysis):
+                Output model to use for predicting risk.
+            n_iter (int):
+                Number of training epochs. Defaults to ``1000``.
+            batch_size (int):
+                Training batch size. Defaults to ``100``.
+            lr (float):
+                Training learning rate. Defaults to ``1e-3``.
+            n_layers_hidden (int):
+                Number of hidden layers in the network. Defaults to ``1``.
+            n_units_hidden (int):
+                Number of units for each hidden layer. Defaults to ``40``.
+            split (int):
+                Number of discrete buckets. Defaults to ``100``.
+            rnn_mode (RnnMode):
+                Internal temporal architecture. Available options: ``"RNN"``, ``"LSTM"``, ``"GRU"``, ``"Transformer"``.
+                Defaults to ``"GRU"``.
+            alpha (float):
+                Weighting (0, 1) likelihood and rank loss (L2 in paper). 1 gives only likelihood, and 0 gives only
+                rank loss. Defaults to ``0.34``.
+            beta (float):
+                Defaults to ``0.27``.
+            sigma (float):
+                From eta in rank loss (L2 in paper). Defaults to ``0.21``.
+            dropout (float):
+                Network dropout value. Defaults to ``0.06``.
+            device (str):
+                PyTorch Device. Defaults to ``"cpu"``.
+            patience (int):
+                Training patience without any improvement. Defaults to ``20``.
+            output_mode (OutputMode):
+                Output network. Available options: ``"MLP"``, ``"LSTM"``, ``"GRU"``, ``"RNN"``. Defaults to ``"MLP"``.
+            random_state (int):
+                Random seed. Defaults to ``0``.
         """
         self.emb_model = DynamicDeepHitModel(
             split=split,
@@ -155,8 +160,8 @@ class EmbTimeToEventAnalysis:
     def fit(
         self,
         data: dataset.Dataset,
-        *args,
-        **kwargs,
+        *args,  # pylint: disable=unused-argument
+        **kwargs,  # pylint: disable=unused-argument
     ) -> Self:
         data = cast(dataset.TimeToEventAnalysisDataset, data)
         self._validate_data(data)
@@ -167,16 +172,20 @@ class EmbTimeToEventAnalysis:
 
         self.emb_model.fit(processed_data, event_times, event_values)
         embeddings = self.emb_model.predict_emb(processed_data)
-        self.output_model.fit(pd.DataFrame(embeddings), pd.Series(event_times), pd.Series(event_values))
+        self.output_model.fit(
+            pd.DataFrame(embeddings),  # pyright: ignore
+            pd.Series(event_times),
+            pd.Series(event_values),
+        )
 
         return self
 
-    def predict(  # type: ignore[override]
+    def predict(
         self,
         data: dataset.Dataset,
         horizons: data_typing.TimeIndex,
-        *args,
-        **kwargs,
+        *args,  # pylint: disable=unused-argument
+        **kwargs,  # pylint: disable=unused-argument
     ) -> samples.TimeSeriesSamples:
         # NOTE: kwargs will be passed to DynamicDeepHitModel.predict_emb().
         # E.g. `bs` batch size parameter can be provided this way.
@@ -186,7 +195,10 @@ class EmbTimeToEventAnalysis:
         processed_data = self._merge_data(static, temporal, observation_times)
 
         embeddings = self.emb_model.predict_emb(processed_data)
-        risk = self.output_model.predict_risk(pd.DataFrame(embeddings), horizons)
+        risk = self.output_model.predict_risk(
+            pd.DataFrame(embeddings),  # pyright: ignore
+            horizons,
+        )
         risk = np.asarray(risk)
 
         return samples.TimeSeriesSamples(
@@ -197,7 +209,7 @@ class EmbTimeToEventAnalysis:
         )
 
     @staticmethod
-    def hyperparameter_space(*args, **kwargs):
+    def hyperparameter_space(*args, **kwargs):  # pylint: disable=unused-argument
         return [
             IntegerParams(name="n_units_hidden", low=10, high=100, step=10),
             IntegerParams(name="n_layers_hidden", low=1, high=4),

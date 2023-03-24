@@ -14,9 +14,10 @@ from tempor.plugins.preprocessing.scaling import BaseScaler
 class TimeSeriesMinMaxScaler(BaseScaler):
     def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
         """MinMax scaling for the time-series data.
-        Transform the temporal features by scaling each feature to a given range.
-        This estimator scales and translates each feature individually such that it is in the given range on the training set, e.g. between zero and one.
 
+        Transform the temporal features by scaling each feature to a given range.
+        This estimator scales and translates each feature individually such that it is in the given range on the
+        training set, e.g. between zero and one.
 
         Example:
             >>> from tempor.utils.dataloaders import SineDataLoader

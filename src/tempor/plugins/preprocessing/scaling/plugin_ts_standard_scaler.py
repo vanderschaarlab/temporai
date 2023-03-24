@@ -14,6 +14,7 @@ from tempor.plugins.preprocessing.scaling import BaseScaler
 class TimeSeriesStandardScaler(BaseScaler):
     def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
         """Standard scaling for the time-series data.
+
         Standardize the temporal features by removing the mean and scaling to unit variance.
 
         Example:

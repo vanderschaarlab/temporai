@@ -15,8 +15,8 @@ class SineDataLoader(dataloader.OneOffPredictionDataLoader):
         freq_scale: float = 1,
         with_missing: bool = False,
         miss_ratio: float = 0.1,
-        static_scale: int = 1,
-        ts_scale: int = 1,
+        static_scale: float = 1.0,
+        ts_scale: float = 1.0,
         **kwargs,
     ) -> None:
         """Sine data generation.
@@ -37,6 +37,10 @@ class SineDataLoader(dataloader.OneOffPredictionDataLoader):
                 Whether to generate missing data points (`np.nan`). Defaults to `False`.
             miss_ratio (float, optional):
                 The ration of missing data points. Defaults to ``0.1``.
+            static_scale (float, optional):
+                The scaling factor to apply to the static data. Defaults to ``1.0``.
+            ts_scale (float, optional):
+                The scaling factor to apply to the time series data. Defaults to ``1.0``.
         """
         super().__init__(*args, **kwargs)
 
