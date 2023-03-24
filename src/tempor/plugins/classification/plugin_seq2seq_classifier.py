@@ -37,7 +37,7 @@ class seq2seqParams:
     decoder_nonlinearity: Optional[str] = None
     decoder_proj_size: Optional[int] = None
     # Adapter FF NN:
-    adapter_hidden_dims: List[int] = dataclasses.field(default_factory=lambda: [50])  # TODO
+    adapter_hidden_dims: List[int] = dataclasses.field(default_factory=lambda: [50])
     adapter_out_activation: Optional[str] = "Tanh"
     # Predictor FF NN:
     predictor_hidden_dims: List[int] = dataclasses.field(default_factory=lambda: [])

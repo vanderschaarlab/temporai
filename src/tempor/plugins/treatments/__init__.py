@@ -11,7 +11,8 @@ def check_data_class(data):
     if not isinstance(data, (dataset.OneOffTreatmentEffectsDataset, dataset.TemporalTreatmentEffectsDataset)):
         raise TypeError(
             "Expected `data` passed to a treatments estimator to be "
-            f"`{dataset.OneOffTreatmentEffectsDataset.__name__}` or `{dataset.TemporalTreatmentEffectsDataset.__name__}` but was {type(data)}"
+            f"`{dataset.OneOffTreatmentEffectsDataset.__name__}` or "
+            f"`{dataset.TemporalTreatmentEffectsDataset.__name__}` but was {type(data)}"
         )
 
 

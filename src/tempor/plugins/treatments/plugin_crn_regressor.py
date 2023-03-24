@@ -1,9 +1,11 @@
 import dataclasses
-from typing import List, Optional
+from typing import Any, Dict, List, Optional, cast
 
+import clairvoyance2.data.dataformat as cl_dataformat
 import pandas as pd
 from clairvoyance2.data import DEFAULT_PADDING_INDICATOR
 from clairvoyance2.treatment_effects.crn import CRNRegressor, TimeIndexHorizon
+from typing_extensions import Self
 
 import tempor.plugins.core as plugins
 from tempor.data import dataset, samples
@@ -36,12 +38,15 @@ class CRNParams:
     decoder_nonlinearity: Optional[str] = None
     decoder_proj_size: Optional[int] = None
     # Adapter FF NN:
+    adapter_hidden_dims: List[int] = dataclasses.field(default_factory=lambda: [50])
     adapter_out_activation: Optional[str] = "Tanh"
     # Predictor FF NN:
+    predictor_hidden_dims: List[int] = dataclasses.field(default_factory=lambda: [])
     predictor_out_activation: Optional[str] = None
     # Misc:
     max_len: Optional[int] = None
     optimizer_str: str = "Adam"
+    optimizer_kwargs: Dict[str, Any] = dataclasses.field(default_factory=lambda: dict(lr=0.01, weight_decay=1e-5))
     batch_size: int = 32
     epochs: int = 100
     padding_indicator: float = DEFAULT_PADDING_INDICATOR
@@ -49,10 +54,6 @@ class CRNParams:
 
 @plugins.register_plugin(name="crn_regressor", category="treatments")
 class CRNTreatmentsRegressor(BaseTreatments):
-    """
-    Paper: Estimating counterfactual treatment outcomes over time through adversarially balanced representations, Ioana Bica, Ahmed M. Alaa, James Jordon, Mihaela van der Schaar
-    """
-
     ParamsDefinition = CRNParams
     params: CRNParams  # type: ignore
 
@@ -60,7 +61,11 @@ class CRNTreatmentsRegressor(BaseTreatments):
         self,
         **params,
     ) -> None:
-        """.
+        """Counterfactual Recurrent Network treatment effects model for regression on the outcomes (targets).
+
+        Paper:
+            Estimating counterfactual treatment outcomes over time through adversarially balanced representations,
+            Ioana Bica, Ahmed M. Alaa, James Jordon, Mihaela van der Schaar.
 
         Example:
             >>> from tempor.plugins import plugin_loader
@@ -82,17 +87,17 @@ class CRNTreatmentsRegressor(BaseTreatments):
         data: dataset.Dataset,
         *args,
         **kwargs,
-    ) -> "CRNTreatmentsRegressor":  # pyright: ignore
+    ) -> Self:
         cl_dataset = tempor_dataset_to_clairvoyance2_dataset(data)
 
         self.model = CRNRegressor(
-            params=self.params,
+            params=self.params,  # pyright: ignore
         )
 
         self.model.fit(cl_dataset)
         return self
 
-    def _predict(  # type: ignore[override]
+    def _predict(  # type: ignore[override]  # pylint: disable=arguments-differ
         self,
         data: dataset.Dataset,
         horizons: List[List[float]],
@@ -111,10 +116,11 @@ class CRNTreatmentsRegressor(BaseTreatments):
             cl_horizons_pd.append(pd.Index(horizon))
         cl_horizons = TimeIndexHorizon(time_index_sequence=cl_horizons_pd)
 
-        preds = _from_clv2_time_series(self.model.predict(cl_dataset, cl_horizons).to_multi_index_dataframe())
+        preds_cl = cast(cl_dataformat.TimeSeriesSamples, self.model.predict(cl_dataset, cl_horizons))
+        preds = _from_clv2_time_series(preds_cl.to_multi_index_dataframe())
         return samples.TimeSeriesSamples.from_dataframe(preds)
 
-    def _predict_counterfactuals(  # type: ignore[override]
+    def _predict_counterfactuals(  # type: ignore[override]  # pylint: disable=arguments-differ
         self,
         data: dataset.Dataset,
         horizons: List[List[float]],
@@ -126,7 +132,6 @@ class CRNTreatmentsRegressor(BaseTreatments):
             raise RuntimeError("Fit the model first")
         if len(data) != len(horizons):
             raise ValueError("Invalid horizons length")
-
         if len(horizons) != len(treatment_scenarios):
             raise ValueError("Invalid treatment_scenarios length")
 
@@ -145,7 +150,7 @@ class CRNTreatmentsRegressor(BaseTreatments):
             c = self.model.predict_counterfactuals(
                 cl_dataset,
                 sample_index=sample_idx,
-                treatment_scenarios=treat_scenarios,
+                treatment_scenarios=treat_scenarios,  # pyright: ignore
                 horizon=TimeIndexHorizon(time_index_sequence=[horizon_counterfactuals_sample]),
                 **kwargs,
             )
