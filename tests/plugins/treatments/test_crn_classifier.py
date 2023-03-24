@@ -90,6 +90,7 @@ def test_crn_classifier_plugin_predict_counterfactuals(test_plugin: BaseTreatmen
     output = test_plugin.predict_counterfactuals(data, horizons=horizons, treatment_scenarios=treatment_scenarios)
 
     assert len(output) == len(data)
+    assert len(output[0]) == n_counterfactuals_per_sample
 
 
 def test_hyperparam_sample():

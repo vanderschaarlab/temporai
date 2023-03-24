@@ -154,7 +154,16 @@ class CRNTreatmentsClassifier(BaseTreatments):
                 horizon=TimeIndexHorizon(time_index_sequence=[horizon_counterfactuals_sample]),
                 **kwargs,
             )
+
+            # Export as DFs, rather than clairvoyance2 TimeSeries:
+            c_dfs = []
+            for c_ in c:
+                c_df = c_.df
+                c_df.index.name = "time_idx"
+                c_dfs.append(c_df)
+
             counterfactuals.append(c)
+
         return counterfactuals
 
     @staticmethod
