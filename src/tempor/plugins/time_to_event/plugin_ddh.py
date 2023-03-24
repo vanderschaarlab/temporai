@@ -7,6 +7,7 @@ from typing_extensions import Self
 import tempor.exc
 import tempor.plugins.core as plugins
 from tempor.data import data_typing, dataset, samples
+from tempor.models import utils
 from tempor.models.ddh import (
     DynamicDeepHitModel,
     OutputMode,
@@ -129,6 +130,8 @@ class DynamicDeepHitTimeToEventAnalysis(BaseTimeToEventAnalysis):
         *args,
         **kwargs,
     ) -> Self:
+        utils.enable_reproducibility(self.params.random_state)
+
         data = cast(dataset.TimeToEventAnalysisDataset, data)
         self._validate_data(data)
         (static, temporal, observation_times, event_times, event_values) = self._convert_data(data)

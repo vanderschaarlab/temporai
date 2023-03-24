@@ -13,7 +13,7 @@ from tempor.utils.serialization import load, save
 if TYPE_CHECKING:  # pragma: no cover
     from tempor.plugins.time_to_event import BaseTimeToEventAnalysis
 
-train_kwargs = {"random_state": 123, "n_iter": 10}
+train_kwargs = {"random_state": 123, "n_iter": 100}
 
 
 def from_api() -> "BaseTimeToEventAnalysis":
