@@ -51,7 +51,7 @@ _PA_MULTI_INDEX_INIT_PARAMETERS = [
     "unique",
 ]
 
-if pa_major == 0 and pa_minor < 14:
+if tempor.core.utils.version_below_excl(version=(pa_major, pa_minor), below_excl=(0, 14)):
     # Before v0.14, pandera API had an extra parameter `report_duplicates`.
     _PA_MULTI_INDEX_INIT_PARAMETERS.append("report_duplicates")
 

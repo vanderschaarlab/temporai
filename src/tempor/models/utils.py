@@ -62,10 +62,8 @@ def enable_reproducibility(
                     "CUDA_LAUNCH_BLOCKING must be set to 1, else RNN/LSTM algorithms will not be deterministic.",
                     UserWarning,
                 )
-            if (
-                major > 10
-                or (major == 10 and minor >= 2)
-                and os.environ.get("CUBLAS_WORKSPACE_CONFIG", None) not in (":4096:2", ":16:8")
+            if tempor.core.utils.version_above_incl(version=(major, minor), above_incl=(10, 2)) and (
+                os.environ.get("CUBLAS_WORKSPACE_CONFIG", None) not in (":4096:2", ":16:8")
             ):
                 warnings.warn(
                     "When setting torch.use_deterministic_algorithms and using CUDA 10.2 or later, the environment "
