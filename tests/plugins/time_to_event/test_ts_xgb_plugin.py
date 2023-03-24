@@ -63,6 +63,7 @@ def test_ts_xgb_plugin_benchmark(get_event0_time_percentiles: Callable) -> None:
 
     score = evaluate_time_to_event(test_plugin, dataset, horizons)
 
+    assert (score.loc[:, "errors"] == 0).all()
     assert score.loc["c_index", "mean"] > 0.5  # pyright: ignore
 
 
