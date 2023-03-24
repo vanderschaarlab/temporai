@@ -1,3 +1,4 @@
+import pandas as pd
 import pytest
 from clairvoyance2.datasets import simple_pkpd_dataset
 
@@ -8,15 +9,13 @@ from tempor.plugins.treatments.plugin_synctwin_regressor import (
     SyncTwinTreatmentsRegressor as plugin,
 )
 
-from .helpers_treatments import simulate_treatments_scenarios
-
 
 def get_dummy_data(
-    n_timesteps: int = 30,
-    time_index_treatment_event: int = 25,
-    n_control_samples: int = 200,
-    n_treated_samples: int = 200,
-    seed: int = 100,
+    n_timesteps: int = 10,
+    time_index_treatment_event: int = 7,
+    n_control_samples: int = 10,
+    n_treated_samples: int = 10,
+    seed: int = 123,
 ):
     local_dataset = simple_pkpd_dataset(
         n_timesteps=n_timesteps,
@@ -56,21 +55,21 @@ def test_synctwin_regressor_plugin_fit(test_plugin: BaseTreatments) -> None:
     test_plugin.fit(data)
 
 
-# TODO: Handle this scenario.
-@pytest.mark.xfail
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
 def test_synctwin_regressor_plugin_predict_counterfactuals(test_plugin: BaseTreatments) -> None:
     data = get_dummy_data()
     test_plugin.fit(data)
 
-    n_counterfactuals_per_sample = 2
-    horizons, treatment_scenarios = simulate_treatments_scenarios(
-        data, n_counterfactuals_per_sample=n_counterfactuals_per_sample
-    )
-
-    output = test_plugin.predict_counterfactuals(data, horizons=horizons, treatment_scenarios=treatment_scenarios)
+    output = test_plugin.predict_counterfactuals(data)
 
     assert len(output) == len(data)
+    for o in output:
+        assert isinstance(o, (list, str))
+        if isinstance(o, list):
+            assert len(o) == 1
+            assert isinstance(o[0], pd.DataFrame)
+        else:
+            assert "SyncTwin implementation can currently only predict counterfactuals for treated samples" in o
 
 
 def test_hyperparam_sample():

@@ -1,8 +1,7 @@
 import dataclasses
 from typing import List
 
-import pandas as pd
-from clairvoyance2.treatment_effects.synctwin import SyncTwinRegressor, TimeIndexHorizon
+from clairvoyance2.treatment_effects.synctwin import SyncTwinRegressor
 
 import tempor.plugins.core as plugins
 from tempor.data import dataset, samples
@@ -29,10 +28,6 @@ class SyncTwinParams:
 
 @plugins.register_plugin(name="synctwin_regressor", category="treatments")
 class SyncTwinTreatmentsRegressor(BaseTreatments):
-    """
-    Paper: Estimating counterfactual treatment outcomes over time through adversarially balanced representations, Ioana Bica, Ahmed M. Alaa, James Jordon, Mihaela van der Schaar
-    """
-
     ParamsDefinition = SyncTwinParams
     params: SyncTwinParams  # type: ignore
 
@@ -40,7 +35,11 @@ class SyncTwinTreatmentsRegressor(BaseTreatments):
         self,
         **params,
     ) -> None:
-        """.
+        """SyncTwin treatment effects estimation.
+
+        Paper:
+            SyncTwin: Treatment Effect Estimation with Longitudinal Outcomes,
+            Zhaozhi Qian, Yao Zhang, Ioana Bica, Angela Wood, Mihaela van der Schaar.
 
         Example:
             >>> from tempor.plugins import plugin_loader
@@ -56,7 +55,7 @@ class SyncTwinTreatmentsRegressor(BaseTreatments):
         """
         super().__init__(**params)
         self.model = SyncTwinRegressor(
-            params=self.params,
+            params=self.params,  # pyright: ignore
         )
 
     def _fit(
@@ -69,51 +68,63 @@ class SyncTwinTreatmentsRegressor(BaseTreatments):
         self.model.fit(cl_dataset)
         return self
 
-    def _predict(  # type: ignore[override]
+    def _predict(  # type: ignore[override]  # pylint: disable=arguments-differ
         self,
         data: dataset.Dataset,
         horizons: List[List[float]],
         *args,
         **kwargs,
     ) -> samples.TimeSeriesSamples:
-        raise NotImplementedError()
+        raise NotImplementedError(
+            "SyncTwin implementation does not currently support `predict`, only `predict_counterfactuals`"
+        )
 
-    def _predict_counterfactuals(  # type: ignore[override]
+    def _predict_counterfactuals(  # type: ignore[override]  # pylint: disable=arguments-differ
         self,
         data: dataset.Dataset,
-        horizons: List[List[float]],
-        treatment_scenarios: List[List[int]],
+        # horizons: SyncTwin can only handle the same time horizon as targets in the data.
+        # treatment_scenarios: SyncTwin can only handle the one alternative treatment case.
         *args,
         **kwargs,
     ) -> List:
         if self.model is None:
             raise RuntimeError("Fit the model first")
-        if len(data) != len(horizons):
-            raise ValueError("Invalid horizons length")
-
-        if len(horizons) != len(treatment_scenarios):
-            raise ValueError("Invalid treatment_scenarios length")
 
         cl_dataset = tempor_dataset_to_clairvoyance2_dataset(data)
-        cl_horizons_pd = []
-        for horizon in horizons:
-            cl_horizons_pd.append(pd.Index(horizon))
-        cl_horizons = TimeIndexHorizon(time_index_sequence=cl_horizons_pd)
 
-        counterfactuals = []
-        for idx, sample_idx in enumerate(cl_dataset.sample_indices):
-            treat_scenarios = treatment_scenarios[idx]
-            horizon_counterfactuals_sample = cl_horizons.time_index_sequence[idx]
+        counterfactuals: List = []
+        for idx, sample_idx in enumerate(cl_dataset.sample_indices):  # pylint: disable=unused-variable
+            treatment_status = data[idx].predictive.treatments.dataframe().iloc[0, 0][1]  # type: ignore
 
-            # TODO: should enforce treat - treat_scenarios shapes here.
-            c = self.model.predict_counterfactuals(
-                cl_dataset,
-                sample_index=sample_idx,
-                treatment_scenarios=treat_scenarios,
-                horizon=TimeIndexHorizon(time_index_sequence=[horizon_counterfactuals_sample]),
-                **kwargs,
-            )
-            counterfactuals.append(c)
+            if treatment_status is True:
+                treat_scenarios = self.model.get_possible_treatment_scenarios(sample_index=sample_idx, data=cl_dataset)
+                horizon_counterfactuals_sample = self.model.get_possible_prediction_horizon(
+                    sample_index=sample_idx, data=cl_dataset
+                )
+
+                # TODO: should enforce treat - treat_scenarios shapes here.
+                c = self.model.predict_counterfactuals(
+                    cl_dataset,
+                    sample_index=sample_idx,
+                    treatment_scenarios=treat_scenarios,
+                    horizon=horizon_counterfactuals_sample,
+                )
+
+                # Export as DFs, rather than clairvoyance2 TimeSeries:
+                c_dfs = []
+                for c_ in c:
+                    c_df = c_.df
+                    c_df.index.name = "time_idx"
+                    c_dfs.append(c_df)
+
+                counterfactuals.append(c_dfs)
+
+            else:
+                counterfactuals.append(
+                    "SyncTwin implementation can currently only predict counterfactuals for treated "
+                    f"samples (event value = True), but this sample (sample_idx = {sample_idx}) was untreated"
+                )
+
         return counterfactuals
 
     @staticmethod
