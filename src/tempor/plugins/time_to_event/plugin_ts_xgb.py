@@ -25,7 +25,9 @@ class XGBTimeToEventAnalysisParams:
     # TODO: Docstring.
     # Output model:
     xgb_n_estimators: int = 100
-    xgb_colsample_bynode: float = 0.5
+    xgb_colsample_bynode: float = 1.0
+    xgb_colsample_bytree: float = 1.0
+    xgb_colsample_bylevel: float = 1.0
     xgb_max_depth: int = 5
     xgb_subsample: float = 0.5
     xgb_learning_rate: float = 5e-2
@@ -36,6 +38,8 @@ class XGBTimeToEventAnalysisParams:
     xgb_strategy: XGBStrategy = "debiased_bce"
     xgb_bce_n_iter: int = 1000
     xgb_time_points: int = 100
+    xgb_reg_lambda: float = 1
+    xgb_reg_alpha: float = 0
     # Embedding model:
     n_iter: int = 1000
     batch_size: int = 100
@@ -60,7 +64,9 @@ class XGBSurvivalAnalysis(OutputTimeToEventAnalysis):
     def __init__(
         self,
         n_estimators: int = 100,
-        colsample_bynode: float = 0.5,
+        colsample_bynode: float = 1,
+        colsample_bylevel: float = 1,
+        colsample_bytree: float = 1,
         max_depth: int = 5,
         subsample: float = 0.5,
         learning_rate: float = 5e-2,
@@ -72,6 +78,8 @@ class XGBSurvivalAnalysis(OutputTimeToEventAnalysis):
         strategy: XGBStrategy = "debiased_bce",
         bce_n_iter: int = 1000,
         time_points: int = 100,
+        reg_lambda: float = 1,
+        reg_alpha: float = 0,
         device: Any = DEVICE,  # pylint: disable=unused-argument
         **kwargs: Any,
     ) -> None:
@@ -97,10 +105,14 @@ class XGBSurvivalAnalysis(OutputTimeToEventAnalysis):
             # basic xgboost
             "n_estimators": n_estimators,
             "colsample_bynode": colsample_bynode,
+            "colsample_bylevel": colsample_bylevel,
+            "colsample_bytree": colsample_bytree,
             "max_depth": max_depth,
             "subsample": subsample,
             "learning_rate": learning_rate,
             "min_child_weight": min_child_weight,
+            "reg_lambda": reg_lambda,
+            "reg_alpha": reg_alpha,
             "verbosity": 0,
             "tree_method": tree_method,
             "booster": XGBSurvivalAnalysis.booster[booster],
@@ -177,6 +189,10 @@ class XGBTimeToEventAnalysis(BaseTimeToEventAnalysis):
         output_model = XGBSurvivalAnalysis(
             n_estimators=self.params.xgb_n_estimators,
             colsample_bynode=self.params.xgb_colsample_bynode,
+            colsample_bytree=self.params.xgb_colsample_bytree,
+            colsample_bylevel=self.params.xgb_colsample_bylevel,
+            reg_alpha=self.params.xgb_reg_alpha,
+            reg_lambda=self.params.xgb_reg_lambda,
             max_depth=self.params.xgb_max_depth,
             subsample=self.params.xgb_subsample,
             learning_rate=self.params.xgb_learning_rate,
@@ -235,9 +251,9 @@ class XGBTimeToEventAnalysis(BaseTimeToEventAnalysis):
             CategoricalParams(name="xgb_strategy", choices=["weibull", "debiased_bce", "km"]),
             FloatParams(name="xgb_reg_lambda", low=1e-3, high=10.0),
             FloatParams(name="xgb_reg_alpha", low=1e-3, high=10.0),
-            FloatParams(name="xgb_colsample_bytree", low=0.1, high=0.9),
-            FloatParams(name="xgb_colsample_bynode", low=0.1, high=0.9),
-            FloatParams(name="xgb_colsample_bylevel", low=0.1, high=0.9),
+            FloatParams(name="xgb_colsample_bytree", low=0.1, high=1),
+            FloatParams(name="xgb_colsample_bynode", low=0.1, high=1),
+            FloatParams(name="xgb_colsample_bylevel", low=0.1, high=1),
             FloatParams(name="xgb_subsample", low=0.1, high=0.9),
             FloatParams(name="xgb_learning_rate", low=1e-4, high=1e-2),
             IntegerParams(name="xgb_max_bin", low=256, high=512),
