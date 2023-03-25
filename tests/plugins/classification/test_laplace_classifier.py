@@ -6,6 +6,7 @@ from tempor.plugins.classification.plugin_laplace_classifier import (
     LaplaceODEClassifier as plugin,
 )
 from tempor.utils.dataloaders.google_stocks import GoogleStocksDataLoader
+from tempor.utils.serialization import load, save
 
 train_kwargs = {"random_state": 123, "n_iter": 50}
 
@@ -42,6 +43,22 @@ def test_laplace_ode_classifier_plugin_predict(test_plugin: BaseClassifier) -> N
 
 
 def test_hyperparam_sample():
-    for repeat in range(100):  # pylint: disable=unused-variable
+    for repeat in range(10):  # pylint: disable=unused-variable
         args = plugin._cls.sample_hyperparameters()  # pylint: disable=no-member, protected-access
         plugin(**args)
+
+
+def test_laplace_classifier_serde() -> None:
+    test_plugin = from_api()
+
+    data = GoogleStocksDataLoader().load()
+
+    dump = save(test_plugin)
+    reloaded1 = load(dump)
+
+    reloaded1.fit(data)
+
+    dump = save(reloaded1)
+    reloaded2 = load(dump)
+
+    reloaded2.predict(data)

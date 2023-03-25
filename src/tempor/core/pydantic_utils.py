@@ -1,4 +1,6 @@
-from typing import Dict, Optional
+from typing import Any, Dict, Optional, Type
+
+import pydantic
 
 
 def exclusive_args(
@@ -14,3 +16,47 @@ def exclusive_args(
     arg2_name = arg2_friendly_name if arg2_friendly_name else f"`{arg2}`"
     if arg1_value is not None and arg2_value is not None:
         raise ValueError(f"Must provide either {arg1_name} or {arg2_name} but not both")
+
+
+def is_pydantic_dataclass(cls: Type) -> bool:
+    return hasattr(cls, "__dataclass__")
+
+
+PYDANTIC_DATACLASS_WORKAROUND_DICT = dict()
+
+
+def make_pydantic_dataclass(builtin_dataclass: Type) -> Type:
+    """Workaround for a `pydantic` edge case issue when calling ``pydantic.dataclass(<builtin_dataclass>)``
+    more than once where ``builtin_dataclass`` has a default factory filed after a keyword parameter.
+
+    E.g. the following would normally fail, this works around the issue.
+
+    .. code-block:: python
+
+        from typing import List
+        import dataclasses
+        import pydantic
+
+
+        @dataclasses.dataclass
+        class MyDataclass:
+            a: str = "string"
+            b: List[int] = dataclasses.field(default_factory=lambda: [1, 2, 3])
+
+
+        pydantic.dataclasses.dataclass(MyDataclass)  # OK.
+        pydantic.dataclasses.dataclass(MyDataclass)  # TypeError.
+
+    Args:
+        builtin_dataclass (Type): Python builtin dataclass.
+
+    Returns:
+        Type: ``builtin_dataclass`` safely converted to pydantic dataclass.
+    """
+    name = f"{builtin_dataclass.__module__}.{builtin_dataclass.__name__}"
+    if name not in PYDANTIC_DATACLASS_WORKAROUND_DICT:
+        pydantic_dataclass: Any = pydantic.dataclasses.dataclass(builtin_dataclass)
+        PYDANTIC_DATACLASS_WORKAROUND_DICT[name] = pydantic_dataclass
+    else:
+        pydantic_dataclass = PYDANTIC_DATACLASS_WORKAROUND_DICT[name]
+    return pydantic_dataclass

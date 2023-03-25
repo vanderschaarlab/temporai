@@ -15,6 +15,8 @@ class SineDataLoader(dataloader.OneOffPredictionDataLoader):
         freq_scale: float = 1,
         with_missing: bool = False,
         miss_ratio: float = 0.1,
+        static_scale: float = 1.0,
+        ts_scale: float = 1.0,
         **kwargs,
     ) -> None:
         """Sine data generation.
@@ -35,6 +37,10 @@ class SineDataLoader(dataloader.OneOffPredictionDataLoader):
                 Whether to generate missing data points (`np.nan`). Defaults to `False`.
             miss_ratio (float, optional):
                 The ration of missing data points. Defaults to ``0.1``.
+            static_scale (float, optional):
+                The scaling factor to apply to the static data. Defaults to ``1.0``.
+            ts_scale (float, optional):
+                The scaling factor to apply to the time series data. Defaults to ``1.0``.
         """
         super().__init__(*args, **kwargs)
 
@@ -45,6 +51,8 @@ class SineDataLoader(dataloader.OneOffPredictionDataLoader):
         self.freq_scale = freq_scale
         self.with_missing = with_missing
         self.miss_ratio = miss_ratio
+        self.static_scale = static_scale
+        self.ts_scale = ts_scale
 
     @staticmethod
     def url() -> None:
@@ -57,7 +65,7 @@ class SineDataLoader(dataloader.OneOffPredictionDataLoader):
     def load(self, **kwargs) -> dataset.OneOffPredictionDataset:
         # Initialize the output.
 
-        static_data = pd.DataFrame(np.random.rand(self.no, self.static_dim))
+        static_data = pd.DataFrame(np.random.rand(self.no, self.static_dim) * self.static_scale)
         static_data["sample_idx"] = [str(i) for i in range(self.no)]
         static_data.set_index(keys=["sample_idx"], drop=True, inplace=True)
 
@@ -91,7 +99,7 @@ class SineDataLoader(dataloader.OneOffPredictionDataLoader):
                 phase = np.random.normal()
 
                 # Generate sine signal based on the drawn frequency and phase:
-                temp_data = [np.sin(self.freq_scale * freq * j + phase) for j in range(seq_len)]
+                temp_data = [np.sin(self.freq_scale * freq * j + phase) * self.ts_scale for j in range(seq_len)]
 
                 local.append(temp_data)
 

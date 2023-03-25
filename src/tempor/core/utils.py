@@ -46,3 +46,15 @@ def get_version(version: str) -> Tuple[int, ...]:
         Tuple[int, ...]: Tuple of integers representing ``(major, minor, patch[, ...])``.
     """
     return tuple(int(v) for v in version.split("."))
+
+
+def version_above_incl(version: Tuple[int, int], above_incl: Tuple[int, int]) -> bool:
+    v_major, v_minor = version
+    compare_major, compare_minor = above_incl
+    return (v_major == compare_major and v_minor >= compare_minor) or v_major > compare_major
+
+
+def version_below_excl(version: Tuple[int, int], below_excl: Tuple[int, int]) -> bool:
+    v_major, v_minor = version
+    compare_major, compare_minor = below_excl
+    return (v_major == compare_major and v_minor < compare_minor) or v_major < compare_major

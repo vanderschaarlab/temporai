@@ -1,13 +1,12 @@
-import dataclasses
+import abc
 from typing import TYPE_CHECKING, List, Optional, cast
 
 import numpy as np
+import pandas as pd
 from typing_extensions import Self
 
 import tempor.exc
-import tempor.plugins.core as plugins
 from tempor.data import data_typing, dataset, samples
-from tempor.models import utils
 from tempor.models.ddh import (
     DynamicDeepHitModel,
     OutputMode,
@@ -16,60 +15,94 @@ from tempor.models.ddh import (
     rnn_modes,
 )
 from tempor.plugins.core._params import CategoricalParams, FloatParams, IntegerParams
-from tempor.plugins.time_to_event import BaseTimeToEventAnalysis
 
 
-@dataclasses.dataclass
-class DynamicDeepHitTimeToEventAnalysisParams:
-    # TODO: Docstring.
-    n_iter: int = 1000
-    batch_size: int = 100
-    lr: float = 1e-3
-    n_layers_hidden: int = 1
-    n_units_hidden: int = 40
-    split: int = 100
-    rnn_mode: RnnMode = "GRU"
-    alpha: float = 0.34
-    beta: float = 0.27
-    sigma: float = 0.21
-    dropout: float = 0.06
-    device: str = "cpu"
-    patience: int = 20
-    output_mode: OutputMode = "MLP"
-    random_state: int = 0
+class OutputTimeToEventAnalysis:
+    @abc.abstractmethod
+    def fit(self, X: pd.DataFrame, T: pd.Series, Y: pd.Series) -> Self:
+        ...
+
+    @abc.abstractmethod
+    def predict_risk(self, X: pd.DataFrame, time_horizons: List) -> pd.DataFrame:
+        ...
 
 
-# TODO: Docstring.
-@plugins.register_plugin(name="dynamic_deephit", category="time_to_event")
-class DynamicDeepHitTimeToEventAnalysis(BaseTimeToEventAnalysis):
-    ParamsDefinition = DynamicDeepHitTimeToEventAnalysisParams
-    params: DynamicDeepHitTimeToEventAnalysisParams  # type: ignore
-
-    def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
-        """Dynamic DeepHit survival analysis model.
+# TODO: Refactor to avoid duplication with DynamicDeepHitTimeToEventAnalysis.
+class EmbTimeToEventAnalysis:
+    def __init__(
+        self,
+        output_model: OutputTimeToEventAnalysis,
+        n_iter: int = 1000,
+        batch_size: int = 100,
+        lr: float = 1e-3,
+        n_layers_hidden: int = 1,
+        n_units_hidden: int = 40,
+        split: int = 100,
+        rnn_mode: RnnMode = "GRU",
+        alpha: float = 0.34,
+        beta: float = 0.27,
+        sigma: float = 0.21,
+        dropout: float = 0.06,
+        device: str = "cpu",
+        patience: int = 20,
+        output_mode: OutputMode = "MLP",
+        random_state: int = 0,  # pylint: disable=unused-argument
+    ) -> None:
+        """Survival analysis embedding creation for time-series.
 
         Args:
-            **params:
-                Parameters and defaults as defined in :class:`DynamicDeepHitTimeToEventAnalysisParams`.
+            output_model (OutputTimeToEventAnalysis):
+                Output model to use for predicting risk.
+            n_iter (int):
+                Number of training epochs. Defaults to ``1000``.
+            batch_size (int):
+                Training batch size. Defaults to ``100``.
+            lr (float):
+                Training learning rate. Defaults to ``1e-3``.
+            n_layers_hidden (int):
+                Number of hidden layers in the network. Defaults to ``1``.
+            n_units_hidden (int):
+                Number of units for each hidden layer. Defaults to ``40``.
+            split (int):
+                Number of discrete buckets. Defaults to ``100``.
+            rnn_mode (RnnMode):
+                Internal temporal architecture. Available options: ``"RNN"``, ``"LSTM"``, ``"GRU"``, ``"Transformer"``.
+                Defaults to ``"GRU"``.
+            alpha (float):
+                Weighting (0, 1) likelihood and rank loss (L2 in paper). 1 gives only likelihood, and 0 gives only
+                rank loss. Defaults to ``0.34``.
+            beta (float):
+                Defaults to ``0.27``.
+            sigma (float):
+                From eta in rank loss (L2 in paper). Defaults to ``0.21``.
+            dropout (float):
+                Network dropout value. Defaults to ``0.06``.
+            device (str):
+                PyTorch Device. Defaults to ``"cpu"``.
+            patience (int):
+                Training patience without any improvement. Defaults to ``20``.
+            output_mode (OutputMode):
+                Output network. Available options: ``"MLP"``, ``"LSTM"``, ``"GRU"``, ``"RNN"``. Defaults to ``"MLP"``.
+            random_state (int):
+                Random seed. Defaults to ``0``.
         """
-        super().__init__(**params)
-
-        self.model = DynamicDeepHitModel(
-            split=self.params.split,
-            n_layers_hidden=self.params.n_layers_hidden,
-            n_units_hidden=self.params.n_units_hidden,
-            rnn_mode=self.params.rnn_mode,
-            alpha=self.params.alpha,
-            beta=self.params.beta,
-            sigma=self.params.sigma,
-            dropout=self.params.dropout,
-            patience=self.params.patience,
-            lr=self.params.lr,
-            batch_size=self.params.batch_size,
-            n_iter=self.params.n_iter,
-            output_mode=self.params.output_mode,
-            device=self.params.device,
+        self.emb_model = DynamicDeepHitModel(
+            split=split,
+            n_layers_hidden=n_layers_hidden,
+            n_units_hidden=n_units_hidden,
+            rnn_mode=rnn_mode,
+            alpha=alpha,
+            beta=beta,
+            sigma=sigma,
+            dropout=dropout,
+            patience=patience,
+            lr=lr,
+            batch_size=batch_size,
+            n_iter=n_iter,
+            output_mode=output_mode,
+            device=device,
         )
+        self.output_model = output_model
 
     def _merge_data(
         self,
@@ -124,14 +157,12 @@ class DynamicDeepHitTimeToEventAnalysis(BaseTimeToEventAnalysis):
             event_times, event_values = None, None
         return (static, temporal, observation_times, event_times, event_values)
 
-    def _fit(
+    def fit(
         self,
         data: dataset.Dataset,
-        *args,
-        **kwargs,
+        *args,  # pylint: disable=unused-argument
+        **kwargs,  # pylint: disable=unused-argument
     ) -> Self:
-        utils.enable_reproducibility(self.params.random_state)
-
         data = cast(dataset.TimeToEventAnalysisDataset, data)
         self._validate_data(data)
         (static, temporal, observation_times, event_times, event_values) = self._convert_data(data)
@@ -139,24 +170,37 @@ class DynamicDeepHitTimeToEventAnalysis(BaseTimeToEventAnalysis):
         if TYPE_CHECKING:  # pragma: no cover
             assert event_times is not None and event_values is not None  # nosec B101
 
-        self.model.fit(processed_data, event_times, event_values)
+        self.emb_model.fit(processed_data, event_times, event_values)
+        embeddings = self.emb_model.predict_emb(processed_data)
+        self.output_model.fit(
+            pd.DataFrame(embeddings),  # pyright: ignore
+            pd.Series(event_times),
+            pd.Series(event_values),
+        )
 
         return self
 
-    def _predict(  # type: ignore[override]
+    def predict(
         self,
         data: dataset.Dataset,
         horizons: data_typing.TimeIndex,
-        *args,
-        **kwargs,
+        *args,  # pylint: disable=unused-argument
+        **kwargs,  # pylint: disable=unused-argument
     ) -> samples.TimeSeriesSamples:
-        # NOTE: kwargs will be passed to DynamicDeepHitModel.predict_risk().
+        # NOTE: kwargs will be passed to DynamicDeepHitModel.predict_emb().
         # E.g. `bs` batch size parameter can be provided this way.
         data = cast(dataset.TimeToEventAnalysisDataset, data)
         self._validate_data(data)
         (static, temporal, observation_times, _, _) = self._convert_data(data)
         processed_data = self._merge_data(static, temporal, observation_times)
-        risk = self.model.predict_risk(processed_data, horizons, **kwargs)
+
+        embeddings = self.emb_model.predict_emb(processed_data)
+        risk = self.output_model.predict_risk(
+            pd.DataFrame(embeddings),  # pyright: ignore
+            horizons,
+        )
+        risk = np.asarray(risk)
+
         return samples.TimeSeriesSamples(
             risk.reshape((risk.shape[0], risk.shape[1], 1)),
             sample_index=data.time_series.sample_index(),
@@ -165,7 +209,7 @@ class DynamicDeepHitTimeToEventAnalysis(BaseTimeToEventAnalysis):
         )
 
     @staticmethod
-    def hyperparameter_space(*args, **kwargs):
+    def hyperparameter_space(*args, **kwargs):  # pylint: disable=unused-argument
         return [
             IntegerParams(name="n_units_hidden", low=10, high=100, step=10),
             IntegerParams(name="n_layers_hidden", low=1, high=4),

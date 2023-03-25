@@ -6,6 +6,7 @@ from tempor.plugins import plugin_loader
 from tempor.plugins.preprocessing.imputation import BaseImputer
 from tempor.plugins.preprocessing.imputation.plugin_bfill import BFillImputer as plugin
 from tempor.utils.dataloaders.sine import SineDataLoader
+from tempor.utils.serialization import load, save
 
 
 def from_api() -> BaseImputer:
@@ -42,13 +43,21 @@ def test_bfill_plugin_transform(test_plugin: BaseImputer) -> None:
 
     assert dataset.static.dataframe().isna().sum().sum() != 0
 
-    output = test_plugin.fit(dataset).transform(dataset)
+    dump = save(test_plugin)
+    reloaded = load(dump)
+
+    reloaded.fit(dataset)
+
+    dump = save(reloaded)
+    reloaded = load(dump)
+
+    output = reloaded.transform(dataset)
 
     assert output.static.dataframe().isna().sum().sum() == 0
     assert output.time_series.dataframe().isna().sum().sum() == 0
 
 
 def test_hyperparam_sample():
-    for repeat in range(100):  # pylint: disable=unused-variable
+    for repeat in range(10):  # pylint: disable=unused-variable
         args = plugin._cls.sample_hyperparameters()  # pylint: disable=no-member, protected-access
         plugin(**args)

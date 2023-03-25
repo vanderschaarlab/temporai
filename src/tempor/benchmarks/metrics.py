@@ -1,12 +1,22 @@
 from typing import Any, Optional, Tuple
 
 import numpy as np
+import sklearn
 import sklearn.base
 import sklearn.utils
 import sklearn.utils.validation
 from typing_extensions import Self
 
+import tempor.core.utils
+
 # --- Utilities. ---
+
+sklearn_major, sklearn_minor, *_ = tempor.core.utils.get_version(sklearn.__version__)
+
+if tempor.core.utils.version_above_incl(version=(sklearn_major, sklearn_minor), above_incl=(1, 1)):
+    _has_input_name = True
+else:
+    _has_input_name = False
 
 
 def check_y_survival(y_or_event: np.ndarray, *args, allow_all_censored=False) -> Tuple[np.ndarray, ...]:
@@ -73,7 +83,7 @@ def _check_estimate_1d(estimate, test_time):
     estimate = sklearn.utils.check_array(
         estimate,
         ensure_2d=False,
-        input_name="estimate",  # pyright: ignore
+        **dict(input_name="estimate") if _has_input_name else dict(),
     )
     if estimate.ndim != 1:
         raise ValueError("Expected 1D array, got {:d}D array instead:\narray={}.\n".format(estimate.ndim, estimate))
@@ -86,12 +96,12 @@ def _check_inputs(event_indicator, event_time, estimate):
     event_indicator = sklearn.utils.check_array(
         event_indicator,
         ensure_2d=False,
-        input_name="event_indicator",  # pyright: ignore
+        **dict(input_name="event_indicator") if _has_input_name else dict(),
     )
     event_time = sklearn.utils.check_array(
         event_time,
         ensure_2d=False,
-        input_name="event_time",  # pyright: ignore
+        **dict(input_name="event_time") if _has_input_name else dict(),
     )
     estimate = _check_estimate_1d(estimate, event_time)
 
@@ -116,7 +126,7 @@ def _check_times(test_time, times):
         np.atleast_1d(times),
         ensure_2d=False,
         dtype=test_time.dtype,
-        input_name="times",  # pyright: ignore
+        **dict(input_name="times") if _has_input_name else dict(),
     )
     times = np.unique(times)
 
@@ -133,8 +143,8 @@ def _check_estimate_2d(estimate, test_time, time_points, estimator):
         estimate,
         ensure_2d=False,
         allow_nd=False,
-        input_name="estimate",  # pyright: ignore
         estimator=estimator,
+        **dict(input_name="estimate") if _has_input_name else dict(),
     )
     time_points = _check_times(test_time, time_points)
     sklearn.utils.check_consistent_length(test_time, estimate)
@@ -393,7 +403,7 @@ class SurvivalFunctionEstimator(sklearn.base.BaseEstimator):
             time,
             ensure_2d=False,
             estimator=self,
-            input_name="time",  # pyright: ignore
+            **dict(input_name="estimate") if _has_input_name else dict(),
         )
 
         # K-M is undefined if estimate at last time point is non-zero.

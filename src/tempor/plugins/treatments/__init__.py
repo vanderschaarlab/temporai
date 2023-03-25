@@ -1,7 +1,5 @@
 import abc
-from typing import Tuple
 
-import numpy as np
 import pydantic
 from typing_extensions import Self
 
@@ -10,14 +8,15 @@ from tempor.data import dataset, samples
 
 
 def check_data_class(data):
-    if not isinstance(data, (dataset.OneOffPredictionDataset, dataset.TemporalPredictionDataset)):
+    if not isinstance(data, (dataset.OneOffTreatmentEffectsDataset, dataset.TemporalTreatmentEffectsDataset)):
         raise TypeError(
-            "Expected `data` passed to a regression estimator to be "
-            f"`{dataset.OneOffPredictionDataset.__name__}` or `{dataset.TemporalPredictionDataset.__name__}` but was {type(data)}"
+            "Expected `data` passed to a treatments estimator to be "
+            f"`{dataset.OneOffTreatmentEffectsDataset.__name__}` or "
+            f"`{dataset.TemporalTreatmentEffectsDataset.__name__}` but was {type(data)}"
         )
 
 
-class BaseRegressor(plugins.BasePredictor):
+class BaseTreatments(plugins.BasePredictor):
     def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
         super().__init__(**params)
 
@@ -40,27 +39,26 @@ class BaseRegressor(plugins.BasePredictor):
     def _predict(self, data: dataset.Dataset, *args, **kwargs) -> samples.StaticSamples:
         ...
 
-    def _unpack_dataset(self, data: dataset.Dataset) -> Tuple:
-        temporal = data.time_series.numpy()
-        observation_times = data.time_series.time_indexes()
-        if data.predictive is not None:
-            outcome = data.predictive.targets.numpy()
-        else:
-            outcome = np.zeros((len(temporal), 0))
+    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    def predict_counterfactuals(
+        self,
+        data: dataset.Dataset,
+        *args,
+        **kwargs,
+    ) -> samples.TimeSeriesSamples:
+        check_data_class(data)
+        return super().predict_counterfactuals(data, *args, **kwargs)
 
-        if data.static is not None:
-            static = data.static.numpy()
-        else:
-            static = np.zeros((len(temporal), 0))
-
-        return static, temporal, observation_times, outcome
+    @abc.abstractmethod
+    def _predict_counterfactuals(self, data: dataset.Dataset, *args, **kwargs) -> samples.TimeSeriesSamples:
+        ...
 
 
-plugins.register_plugin_category("regression", BaseRegressor)
+plugins.register_plugin_category("treatments", BaseTreatments)
 
 plugins.importing.import_plugins(__file__)
 
 __all__ = [  # pyright: ignore
     *plugins.importing.gather_modules_names(__file__),
-    "BaseRegressor",
+    "BaseTreatments",
 ]
