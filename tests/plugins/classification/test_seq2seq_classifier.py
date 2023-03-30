@@ -54,7 +54,7 @@ def test_seq2seq_classifier_plugin_predict(test_plugin: BaseClassifier) -> None:
 
 def test_hyperparam_sample():
     for repeat in range(10):  # pylint: disable=unused-variable
-        args = plugin._cls.sample_hyperparameters()  # pylint: disable=no-member, protected-access
+        args = plugin.sample_hyperparameters()  # pylint: disable=no-member, protected-access
         plugin(**args)
 
 

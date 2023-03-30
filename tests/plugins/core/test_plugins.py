@@ -75,7 +75,7 @@ class TestRegistration:
         assert fqn in plugin_core.PLUGIN_REGISTRY
 
         assert plugin_core.PLUGIN_CATEGORY_REGISTRY["dummy_category"] == plugin_core.Plugin
-        assert plugin_core.PLUGIN_REGISTRY[fqn] == DummyPlugin._cls  # type: ignore  # pylint: disable=E,W
+        assert plugin_core.PLUGIN_REGISTRY[fqn] == DummyPlugin
 
     def test_register_multiple_plugins_and_categories_success(self):
         plugin_core.register_plugin_category("dummy_category_A", expected_class=plugin_core.Plugin)
@@ -100,9 +100,9 @@ class TestRegistration:
 
         assert plugin_core.PLUGIN_CATEGORY_REGISTRY["dummy_category_A"] == plugin_core.Plugin
         assert plugin_core.PLUGIN_CATEGORY_REGISTRY["dummy_category_B"] == plugin_core.Plugin
-        assert plugin_core.PLUGIN_REGISTRY[p_a1.fqn()] == DummyPluginA1._cls  # type: ignore  # pylint: disable=E,W
-        assert plugin_core.PLUGIN_REGISTRY[p_a2.fqn()] == DummyPluginA2._cls  # type: ignore  # pylint: disable=E,W
-        assert plugin_core.PLUGIN_REGISTRY[p_b1.fqn()] == DummyPluginB1._cls  # type: ignore  # pylint: disable=E,W
+        assert plugin_core.PLUGIN_REGISTRY[p_a1.fqn()] == DummyPluginA1
+        assert plugin_core.PLUGIN_REGISTRY[p_a2.fqn()] == DummyPluginA2
+        assert plugin_core.PLUGIN_REGISTRY[p_b1.fqn()] == DummyPluginB1
 
     def test_category_registration_fails_duplicate(self):
         plugin_core.register_plugin_category("same_category", expected_class=plugin_core.Plugin)

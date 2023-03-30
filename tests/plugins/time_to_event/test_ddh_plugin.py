@@ -73,5 +73,5 @@ def test_dynamic_deephit_plugin_benchmark(get_event0_time_percentiles: Callable)
 
 def test_hyperparam_sample():
     for repeat in range(10):  # pylint: disable=unused-variable
-        args = plugin._cls.sample_hyperparameters()  # pylint: disable=no-member, protected-access
+        args = plugin.sample_hyperparameters()  # pylint: disable=no-member, protected-access
         plugin(**args)

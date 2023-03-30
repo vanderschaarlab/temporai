@@ -1,13 +1,11 @@
-import functools
 import glob
 import importlib
 import importlib.abc
 import importlib.util
-import inspect
 import os
 import os.path
 import sys
-from typing import TYPE_CHECKING, Any, Callable, ClassVar, Dict, List, Type, TypeVar
+from typing import Any, ClassVar, Dict, List, Type, TypeVar
 
 from typing_extensions import ParamSpec
 
@@ -63,16 +61,7 @@ def _check_same_class(class_1, class_2) -> bool:
 
 
 def register_plugin(name: str, category: str):
-    def inner(cls: Callable[P, T]) -> Callable[P, T]:
-        # NOTE:
-        # The Callable[<ParamSpec>, <TypeVar>] approach allows to preserve the type annotation of the parameters of the
-        # wrapped class (its __init__ method, specifically). See resources:
-        #     * https://stackoverflow.com/a/74080156
-        #     * https://docs.python.org/3/library/typing.html#typing.ParamSpec
-
-        if TYPE_CHECKING:  # pragma: no cover
-            assert isinstance(cls, Plugin)  # nosec B101
-
+    def class_decorator(cls: Type[Plugin]):
         logger.debug(f"Registering plugin of class {cls}")
         cls.name = name
         cls.category = category
@@ -98,19 +87,12 @@ def register_plugin(name: str, category: str):
             else:
                 # The same class is being reimported, do not raise error.
                 pass
+
         PLUGIN_REGISTRY[cls.fqn()] = cls
 
-        @functools.wraps(cls)
-        def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:  # See NOTE above.
-            return cls(*args, **kwargs)
+        return cls
 
-        # Set attributes.
-        setattr(wrapper, "_cls", cls)  # To access the class directly if required.
-        setattr(wrapper, "_tempor_plugin_", True)
-
-        return wrapper
-
-    return inner
+    return class_decorator
 
 
 class PluginLoader:
@@ -163,7 +145,6 @@ def _glob_plugin_paths(package_dir: str) -> List[str]:
 def _module_name_from_path(path: str) -> str:
     path = os.path.normpath(path)
     split = path[path.rfind(f"{tempor.import_name}{os.sep}") :].split(os.sep)
-    print(split)
     if split[-1][-3:] != ".py":
         raise ValueError(f"Path `{path}` is not a python file.")
     split[-1] = split[-1].replace(".py", "")
@@ -179,7 +160,6 @@ class importing:  # Functions as namespace, for clarity.
         logger.trace(f"Found plugin module paths to import:\n{paths}")
         for f in paths:
             module_name = _module_name_from_path(f)
-            print(module_name)
             logger.debug(f"Importing plugin module: {module_name}")
             spec = importlib.util.spec_from_file_location(module_name, f)
             if spec is None or not isinstance(spec.loader, importlib.abc.Loader):
@@ -187,14 +167,6 @@ class importing:  # Functions as namespace, for clarity.
             module = importlib.util.module_from_spec(spec)
             sys.modules[module_name] = module
             spec.loader.exec_module(module)
-
-            # Ensure doctests of plugins are included.
-            # See: https://docs.python.org/3.8/library/doctest.html#which-docstrings-are-examined
-            for name, obj in inspect.getmembers(module):
-                if hasattr(obj, "_tempor_plugin_"):
-                    test_dict = getattr(module, "__test__", dict())
-                    test_dict[name] = getattr(obj, "_cls")
-                    setattr(module, "__test__", test_dict)
 
     @staticmethod
     def gather_modules_names(package_init_file: str) -> List[str]:
