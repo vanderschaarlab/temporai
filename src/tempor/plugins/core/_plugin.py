@@ -5,9 +5,7 @@ import importlib.util
 import os
 import os.path
 import sys
-from typing import Any, ClassVar, Dict, List, Type, TypeVar
-
-from typing_extensions import ParamSpec
+from typing import Any, ClassVar, Dict, List, Type
 
 import tempor
 from tempor.log import logger
@@ -16,9 +14,6 @@ from . import utils
 
 PLUGIN_NAME_NOT_SET = "NOT_SET"
 PLUGIN_CATEGORY_NOT_SET = "NOT_SET"
-
-P = ParamSpec("P")
-T = TypeVar("T")
 
 
 class Plugin:
