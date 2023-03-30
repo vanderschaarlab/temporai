@@ -162,7 +162,8 @@ def _glob_plugin_paths(package_dir: str) -> List[str]:
 
 def _module_name_from_path(path: str) -> str:
     path = os.path.normpath(path)
-    split = path[path.rfind(tempor.import_name) :].split(os.sep)
+    split = path[path.rfind(f"{tempor.import_name}{os.sep}") :].split(os.sep)
+    print(split)
     if split[-1][-3:] != ".py":
         raise ValueError(f"Path `{path}` is not a python file.")
     split[-1] = split[-1].replace(".py", "")
@@ -178,6 +179,7 @@ class importing:  # Functions as namespace, for clarity.
         logger.trace(f"Found plugin module paths to import:\n{paths}")
         for f in paths:
             module_name = _module_name_from_path(f)
+            print(module_name)
             logger.debug(f"Importing plugin module: {module_name}")
             spec = importlib.util.spec_from_file_location(module_name, f)
             if spec is None or not isinstance(spec.loader, importlib.abc.Loader):
