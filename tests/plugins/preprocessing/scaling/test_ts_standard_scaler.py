@@ -54,5 +54,5 @@ def test_ts_standard_scaler_plugin_transform(test_plugin: BaseScaler) -> None:
 
 def test_hyperparam_sample():
     for repeat in range(10):  # pylint: disable=unused-variable
-        args = plugin.sample_hyperparameters()  # pylint: disable=no-member, protected-access
+        args = plugin.sample_hyperparameters()
         plugin(**args)

@@ -51,7 +51,7 @@ def test_ode_classifier_plugin_predict_proba(test_plugin: BaseClassifier) -> Non
 
 def test_hyperparam_sample():
     for repeat in range(10):  # pylint: disable=unused-variable
-        args = plugin.sample_hyperparameters()  # pylint: disable=no-member, protected-access
+        args = plugin.sample_hyperparameters()
         plugin(**args)
 
 
