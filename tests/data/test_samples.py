@@ -61,9 +61,8 @@ def set_up_dfs_test():
     df_s_fail_index_dtype_float["sample_idx"] = list([x + 0.5 for x in range(len(df_s_success_nonan))])
     df_s_fail_index_dtype_float.set_index(keys=["sample_idx"], drop=True, inplace=True)
 
-    df_s_fail_columns_multiindex = pd.DataFrame(
-        data=df_s_success_nonan.to_numpy(),
-        columns=pd.MultiIndex.from_tuples([("something", x) for x in df_s_success_nonan.columns]),
+    df_s_fail_columns_multiindex = df_s_fail_index_dtype_float.set_axis(
+        pd.MultiIndex.from_tuples([("something", x) for x in df_s_success_nonan.columns]), axis="columns"
     )
 
     df_s_fail_values_dtype_string = df_s_success_nonan.copy()
@@ -190,8 +189,8 @@ def set_up_dfs_test():
             (df_e_fail_index_dtype_float, r".*DataFrame.*index.*dtype.*"),
             (df_e_fail_columns_multiindex, r".*MultiIndex.*columns.*not allowed.*"),
             (df_e_fail_values_non_len2_seq, r".*sequence.*length 2.*"),
-            (df_e_fail_values_dtype_unexp_event_value, r".*feat_2.*DataFrame.*dtype.*"),
-            (df_e_fail_values_dtype_unexp_event_time, r".*feat_2_time.*DataFrame.*dtype.*"),
+            (df_e_fail_values_dtype_unexp_event_value, r".*feat_2.*type.*UnionDtype.*"),
+            (df_e_fail_values_dtype_unexp_event_time, r".*feat_2_time.*type.*UnionDtype.*"),
         ],
     )
 

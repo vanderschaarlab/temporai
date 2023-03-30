@@ -2,7 +2,7 @@
 
 import abc
 import dataclasses
-from typing import ClassVar, Generator, Optional, Tuple, Union
+from typing import Any, ClassVar, Generator, Optional, Tuple, Union
 
 import rich.pretty
 import sklearn.model_selection
@@ -166,7 +166,7 @@ class Dataset(abc.ABC):
         self.validate()
 
     def __len__(self) -> int:
-        return len(self.time_series)
+        return self.time_series.num_samples
 
     def __getitem__(self, key: data_typing.GetItemKey) -> Self:
         key_ = utils.ensure_pd_iloc_key_returns_df(key)
@@ -236,7 +236,7 @@ class Dataset(abc.ABC):
         Yields:
             Generator[Tuple[Self, Self], None, None]: ``(dataset_train, dataset_test)`` for each split.
         """
-        sample_ilocs = list(range(len(self)))
+        sample_ilocs: Any = list(range(len(self)))
         for sample_ilocs_train, sample_ilocs_test in splitter.split(X=sample_ilocs, **kwargs):
             yield self[sample_ilocs_train], self[sample_ilocs_test]
 

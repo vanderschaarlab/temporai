@@ -1,11 +1,13 @@
 import sys
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Tuple, Union
 
+import numpy as np
 import pandas as pd
 import pandera as pa
+import pandera.dtypes as pa_dtypes
+import pandera.engines.pandas_engine as pd_engine
 
 import tempor.core.utils
-from tempor.log import logger
 
 from . import data_typing
 
@@ -117,43 +119,126 @@ PA_DTYPE_MAP: Dict[data_typing.Dtype, pa.DataType] = {
 
 def get_pa_dtypes(dtypes: Iterable[data_typing.Dtype]) -> List[pa.DataType]:
     """Return a list of `pandera.DataType` corresponding to ``dtypes``. Raises `KeyError` If not found."""
-    pa_dtypes = []
+    pa_dtypes_ = []
     for dt in dtypes:
         if isinstance(dt, pa.DataType):
-            # If item in `dtypes` already a `pandera.Dtype`, pass it through.
+            # If item in `dtypes` already an instance of `pandera.DataType`, pass it through.
             dt_add = dt
+        elif hasattr(dt, "__mro__") and issubclass(dt, pa.DataType):  # type: ignore
+            # If item in `dtypes` a `pandera.DataType` class, pass it through as an instance.
+            dt_add = dt()  # type: ignore
         else:
             try:
                 dt_add = PA_DTYPE_MAP[dt]
             except KeyError as ex:
                 raise KeyError(f"Mapping from `{dt}` to a pandera DataType not found") from ex
-        pa_dtypes.append(dt_add)
+        pa_dtypes_.append(dt_add)
         if sys.platform == "win32":
             # Pandera .Int()/.Float() do not appear to correctly validate on Windows, unless one specifically
             # provides the bytes.
             if dt_add == pa.Int():
-                pa_dtypes.extend([pa.Int8(), pa.Int16(), pa.Int32(), pa.Int64()])
+                pa_dtypes_.extend([pa.Int8(), pa.Int16(), pa.Int32(), pa.Int64()])
             if dt_add == pa.Float():
-                pa_dtypes.extend([pa.Float16(), pa.Float32(), pa.Float64()])
-    return list(set(pa_dtypes))
+                pa_dtypes_.extend([pa.Float16(), pa.Float32(), pa.Float64()])
+    return list(set(pa_dtypes_))
 
 
-def check_by_series_schema(series: pd.Series, series_name: str, dtypes: List[pa.DataType], **kwargs) -> bool:
-    """Will check that ``series`` satisfies a `pandera.SeriesSchema` with at least one dtype from ``dtypes``.
-    May pass additional `pandera.SeriesSchema` kwargs via ``kwargs``.
+class UnionDtype(pd_engine.DataType):
+    """Extend `pandera` ``DataType`` s with a custom ``UnionDtype``, which will function similarly to ``Union``.
+
+    See `pandera` ``DataType`` [guide](https://pandera.readthedocs.io/en/stable/dtypes.html) for details.
+
+    In this case, rather than wrapping the extension ``DataType`` with ``register_dtype`` and ``immutable`` decorators,
+    we apply these directly to the class returned by ``__class_getitem__``, which dynamically creates the union
+    specified with its dtypes. In this way, `pandera`'s ``pandas`` engine correctly registers each new kind of union
+    as a different dtype.
+
+    Attributes:
+        union_dtypes (List[Type]):
+            The list of types in the union.
+        type (str):
+            The string representation of the data type, which will be, e.g., shown in exceptions.
     """
-    logger.trace(f"Doing {series_name} dtype validation.")
-    validated: List[bool] = []
-    for type_ in set(dtypes):
-        try:
-            pa.SeriesSchema(type_, **kwargs).validate(series)
-            logger.trace(f"{series_name} validated? Yes: {type_}")
-            validated.append(True)
-            break
-        except (pa.errors.SchemaError, pa.errors.SchemaErrors):  # pyright: ignore
-            logger.trace(f"{series_name} validated?  No: {type_}")
-            validated.append(False)
-    return any(validated)
+
+    union_dtypes: List
+    type: Any
+    name: str
+
+    @classmethod
+    def __class_getitem__(cls, item):
+        """Allows for setting union types like ``UnionDtype[dtype, ...]``.
+
+        Acceptable ``dtype`` s are: `pandera.DataType` (as a class or instance) or the keys of
+        `~tempor.data.pandera_utils.PA_DTYPE_MAP`.
+        """
+        if not tempor.core.utils.is_iterable(item):
+            item = [item]
+        union_dtypes = get_pa_dtypes(item)
+        union_dtypes = sorted(union_dtypes, key=str)  # For consistency: `item` can get captured in random order.
+        repr_union_dtypes = str([str(t) for t in union_dtypes]).replace("'", "")
+        name = f"{cls.__name__}{repr_union_dtypes}"
+
+        cls_ = type(name, (UnionDtype,), dict())
+        cls_.union_dtypes = union_dtypes  # type: ignore
+        cls_.type = name  # type: ignore
+        cls_.name = name  # type: ignore
+
+        return pd_engine.Engine.register_dtype(pa_dtypes.immutable(cls_))  # type: ignore
+
+    def __repr__(self) -> str:
+        return self.name
+
+    def check(
+        self,
+        pandera_dtype: pa_dtypes.DataType,
+        data_container=None,
+    ) -> Union[bool, Iterable[bool]]:
+        """Checks whether the ``pandera_dtype`` and optionally ``data_container`` satisfy at least one the union's
+        ``union_dtypes``.
+
+        Args:
+            pandera_dtype (pa_dtypes.DataType):
+                The data type received as part of the check/validation.
+            data_container (PandasObject, optional):
+                The data container received as part of the check/validation. Defaults to `None`.
+
+        Returns:
+            Union[bool, Iterable[bool]]:
+                A `bool` stating whether the data type is satisfied, or an iterable thereof\
+                (for each item in the ``data_container``).
+        """
+        for union_dtype in self.union_dtypes:
+            validated = pd_engine.Engine.dtype(union_dtype).check(pandera_dtype, data_container)
+            if data_container is None:
+                # Only in case of direct type comparison, we also need to check via the union_dtype.check(pandera_dtype)
+                # method, making sure that pandera_dtype is an DataType instance not class.
+                if hasattr(pandera_dtype, "__mro__"):
+                    pandera_dtype = pandera_dtype()  # type: ignore
+                validated = validated or union_dtype.check(pandera_dtype)
+            if tempor.core.utils.is_iterable(validated):
+                validated = all(validated)  # type: ignore
+            if validated:
+                if data_container is None:
+                    return True
+                else:
+                    return np.full_like(data_container, True, dtype=bool)
+
+        if data_container is None:
+            return False
+        else:
+            return np.full_like(data_container, False, dtype=bool)
+
+    def coerce(self, data_container):
+        """The ``coerce`` method is not supported and will throw a `NotImplementedError`."""
+        raise NotImplementedError(f"`coerce` not supported by {self.__class__.__name__}")
+
+
+def init_schema(data: pd.DataFrame, **kwargs) -> pa.DataFrameSchema:
+    schema = pa.infer_schema(data)
+    if TYPE_CHECKING:  # pragma: no cover
+        assert isinstance(schema, pa.DataFrameSchema)  # nosec B101
+    schema = update_schema(schema, **kwargs)
+    return schema
 
 
 def add_df_checks(schema: pa.DataFrameSchema, *, checks_list: List[pa.Check]) -> pa.DataFrameSchema:
@@ -162,7 +247,12 @@ def add_df_checks(schema: pa.DataFrameSchema, *, checks_list: List[pa.Check]) ->
 
 
 def add_regex_column_checks(
-    schema: pa.DataFrameSchema, *, regex: str = ".*", dtype: Any, nullable: bool, checks_list: List[pa.Check]
+    schema: pa.DataFrameSchema,
+    *,
+    regex: str = ".*",
+    dtype: Any,
+    nullable: bool,
+    checks_list: Optional[List[pa.Check]] = None,
 ) -> pa.DataFrameSchema:
     """Update ``schema`` with checks specified in ``checks_list``, applied to all columns specified by ``regex``.
     ``dtype`` and ``nullable`` can also be specified and will apply to all columns.
@@ -186,12 +276,14 @@ def set_up_index(
     schema: pa.DataFrameSchema,
     data: pd.DataFrame,
     *,
+    dtype: Any,
     name: str,
     nullable: bool,
     unique: bool,
-    checks_list: List[pa.Check],
+    coerce: bool,
+    checks_list: Optional[List[pa.Check]] = None,
 ) -> Tuple[pa.DataFrameSchema, pd.DataFrame]:
-    """Update ``schema.index`` (`pandera.Index`) with ``name``, ``nullable``, ... schema settings.
+    """Update ``schema.index`` (`pandera.Index`) with ``dtype``, ``name``, ``nullable``, ... schema settings.
 
     In addition, set the index name of ``data`` (`pandas.DataFrame`) to ``name``.
 
@@ -201,10 +293,12 @@ def set_up_index(
         raise ValueError("Expected DataFrameSchema Index to not be None")
     index = update_index(
         schema.index,
+        dtype=dtype,
         nullable=nullable,
         unique=unique,
         name=name,
         checks=checks_list,
+        coerce=coerce,
     )
     schema = update_schema(schema, index=index)
     data.index.set_names(name, inplace=True)  # Name the index.
@@ -215,12 +309,14 @@ def set_up_2level_multiindex(
     schema: pa.DataFrameSchema,
     data: pd.DataFrame,
     *,
+    dtypes: Tuple[Any, Any],
     names: Tuple[str, str],
     nullable: Tuple[bool, bool],
+    coerce: bool,
     unique: Tuple[str, ...],
-    checks_list: Tuple[List[pa.Check], List[pa.Check]],
+    checks_list: Optional[Tuple[List[pa.Check], List[pa.Check]]] = None,
 ) -> Tuple[pa.DataFrameSchema, pd.DataFrame]:
-    """Update ``schema.index`` (`pandera.MultiIndex`), which is expected to have 2 levels, with ``name``,
+    """Update ``schema.index`` (`pandera.MultiIndex`), which is expected to have 2 levels, with `dtypes```, ``names``,
     ``nullable``, ... schema settings.
 
     In addition, set the index name of ``data`` (`pandas.DataFrame`) to ``name``.
@@ -236,14 +332,18 @@ def set_up_2level_multiindex(
 
     index_0 = update_index(
         schema.index.indexes[0],
+        dtype=dtypes[0],
         name=names[0],
         nullable=nullable[0],
-        checks=checks_list[0],
+        coerce=coerce,
+        checks=checks_list[0] if checks_list is not None else None,
     )
     index_1 = update_index(
         schema.index.indexes[1],
+        dtype=dtypes[1],
         name=names[1],
-        checks=checks_list[1],
+        coerce=coerce,
+        checks=checks_list[1] if checks_list is not None else None,
     )
 
     index = update_multiindex(schema.index, indexes=[index_0, index_1], unique=unique)
@@ -282,46 +382,17 @@ class checks:
         """Namespace containing functions to get configurable `pandera.Check` s."""
 
         @staticmethod
-        def values_satisfy_dtypes(dtypes: List[data_typing.Dtype]) -> pa.Check:
-            series_name = "Values"
-            error = str(f"DataFrame {series_name} dtype validation failed, must be one of: {dtypes}")
-            return pa.Check(
-                lambda col: check_by_series_schema(
-                    pd.Series(col),
-                    series_name=series_name,
-                    dtypes=get_pa_dtypes(dtypes),
-                    nullable=True,
-                    coerce=False,  # NOTE: For simplicity "coerce-able" values are not accepted.
-                ),
-                error=error,
-            )
-
-        @staticmethod
-        def index_satisfies_dtypes(dtypes: List[data_typing.Dtype]) -> pa.Check:
-            series_name = "Index"
-            error = str(f"DataFrame {series_name} dtype validation failed, must be one of: {dtypes}")
-            return pa.Check(
-                lambda idx: check_by_series_schema(
-                    pd.Series(idx),
-                    series_name=series_name,
-                    dtypes=get_pa_dtypes(dtypes),
-                    nullable=False,
-                    coerce=False,
-                ),
-                error=error,
-            )
-
-        @staticmethod
-        def column_index_satisfies_dtypes(dtypes: List[data_typing.Dtype], *, nullable: bool) -> pa.Check:
+        def column_index_satisfies_dtype(dtype: Any, *, nullable: bool) -> pa.Check:
             series_name = "Column Index"
-            error = str(f"DataFrame {series_name} dtype validation failed, must be one of: {dtypes}")
-            return pa.Check(
-                lambda df: check_by_series_schema(
-                    pd.Series(df.columns),
-                    series_name=series_name,
-                    dtypes=get_pa_dtypes(dtypes),
+            error = str(f"DataFrame {series_name} dtype validation failed, must be of type: {dtype}")
+
+            def _check(df: pd.DataFrame) -> bool:
+                pa.SeriesSchema(
+                    dtype,
+                    name=series_name,
                     nullable=nullable,
                     coerce=False,
-                ),
-                error=error,
-            )
+                ).validate(pd.Series(df.columns, name=series_name))
+                return True
+
+            return pa.Check(_check, error=error)
