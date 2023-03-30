@@ -1,14 +1,10 @@
-# pylint: disable=redefined-outer-name, unused-argument
+# pylint: disable=unused-argument
 
-from typing import Dict, Type
 from unittest.mock import Mock
 
 import pytest
 
 import tempor.plugins.core._plugin as plugin_core
-
-DUMMY_PLUGIN_CATEGORY_REGISTRY: Dict[str, Type[plugin_core.Plugin]] = dict()
-DUMMY_PLUGIN_REGISTRY: Dict[str, Type[plugin_core.Plugin]] = dict()
 
 
 class TestPluginClass:
@@ -25,28 +21,6 @@ class TestPluginClass:
 
         with pytest.raises(ValueError, match=".*category.*not set.*"):
             CategorylessPlugin()
-
-
-@pytest.fixture
-def patch_plugins_core_module(patch_module):
-    patch_module(
-        main_module=plugin_core,
-        module_vars=[
-            (
-                plugin_core,
-                plugin_core.PLUGIN_CATEGORY_REGISTRY,
-                "PLUGIN_CATEGORY_REGISTRY",
-                DUMMY_PLUGIN_CATEGORY_REGISTRY,
-            ),
-            (
-                plugin_core,
-                plugin_core.PLUGIN_REGISTRY,
-                "PLUGIN_REGISTRY",
-                DUMMY_PLUGIN_REGISTRY,
-            ),
-        ],
-        refresh_pydantic=False,
-    )
 
 
 class TestRegistration:
