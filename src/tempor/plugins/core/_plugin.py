@@ -5,7 +5,7 @@ import importlib.util
 import os
 import os.path
 import sys
-from typing import TYPE_CHECKING, Any, Callable, ClassVar, Dict, List, Type, TypeVar
+from typing import Any, ClassVar, Dict, List, Type, TypeVar
 
 from typing_extensions import ParamSpec
 
@@ -179,7 +179,6 @@ class importing:  # Functions as namespace, for clarity.
         logger.trace(f"Found plugin module paths to import:\n{paths}")
         for f in paths:
             module_name = _module_name_from_path(f)
-            print(module_name)
             logger.debug(f"Importing plugin module: {module_name}")
             spec = importlib.util.spec_from_file_location(module_name, f)
             if spec is None or not isinstance(spec.loader, importlib.abc.Loader):
