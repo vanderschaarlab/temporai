@@ -58,8 +58,8 @@ jobs:
           pip install -r prereq.txt
           pip install .[dev]
       - name: Test with pytest
-        run: pytest -vvvx -m "not slow" --durations=50
+        run: pytest -vvvx -n auto -m "not slow" --durations=50
       - name: Run doctests with pytest
-        run: pytest -vvvx src/ --doctest-modules --durations=50
+        run: pytest -vvvx -n auto src/ --doctest-modules --durations=50
       - name: Test notebooks run without error
         run: python tests/nb_eval.py --nb_dir ./
