@@ -10,6 +10,7 @@ def test_tempor_plugin_loader_contents():
     # Check categories:
     assert "prediction" in all_plugins
     assert "preprocessing" in all_plugins
+    assert "regression" in all_plugins
     assert "time_to_event" in all_plugins
     assert "treatments" in all_plugins
 
