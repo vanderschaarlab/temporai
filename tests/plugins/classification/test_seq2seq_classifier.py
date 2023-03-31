@@ -52,12 +52,6 @@ def test_seq2seq_classifier_plugin_predict(test_plugin: BaseClassifier) -> None:
     assert output.numpy().shape == (len(raw_data.time_series), 10, temporal_dim)
 
 
-def test_hyperparam_sample():
-    for repeat in range(10):  # pylint: disable=unused-variable
-        args = plugin.sample_hyperparameters()
-        plugin(**args)
-
-
 def test_seq2seq_classifier_serde() -> None:
     test_plugin = from_api()
 

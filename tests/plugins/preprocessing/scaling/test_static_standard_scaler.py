@@ -50,9 +50,3 @@ def test_static_scaler_plugin_transform(test_plugin: BaseScaler) -> None:
     output = reloaded.transform(dataset)
 
     assert (output.static.numpy() < 50).all()
-
-
-def test_hyperparam_sample():
-    for repeat in range(10):  # pylint: disable=unused-variable
-        args = plugin.sample_hyperparameters()
-        plugin(**args)

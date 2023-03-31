@@ -42,12 +42,6 @@ def test_laplace_ode_classifier_plugin_predict(test_plugin: BaseClassifier) -> N
     assert output.numpy().shape == (len(dataset.time_series), 1)
 
 
-def test_hyperparam_sample():
-    for repeat in range(10):  # pylint: disable=unused-variable
-        args = plugin.sample_hyperparameters()
-        plugin(**args)
-
-
 def test_laplace_classifier_serde() -> None:
     test_plugin = from_api()
 

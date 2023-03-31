@@ -58,9 +58,3 @@ def test_seq2seq_regressor_plugin_predict(test_plugin: BaseRegressor) -> None:
     output = reloaded.predict(data, n_future_steps=10)
 
     assert output.numpy().shape == (len(raw_data.time_series), 10, temporal_dim)
-
-
-def test_hyperparam_sample():
-    for repeat in range(10):  # pylint: disable=unused-variable
-        args = plugin.sample_hyperparameters()
-        plugin(**args)

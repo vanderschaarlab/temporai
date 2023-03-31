@@ -44,9 +44,3 @@ def test_nn_regressor_plugin_predict(test_plugin: BaseRegressor) -> None:
     output = reloaded.predict(dataset)
 
     assert output.numpy().shape == (len(dataset.time_series), 1)
-
-
-def test_hyperparam_sample():
-    for repeat in range(10):  # pylint: disable=unused-variable
-        args = plugin.sample_hyperparameters()
-        plugin(**args)

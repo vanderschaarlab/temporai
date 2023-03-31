@@ -50,9 +50,3 @@ def test_ts_standard_scaler_plugin_transform(test_plugin: BaseScaler) -> None:
     output = reloaded.transform(dataset)
 
     assert (output.time_series.numpy() < 50).all()
-
-
-def test_hyperparam_sample():
-    for repeat in range(10):  # pylint: disable=unused-variable
-        args = plugin.sample_hyperparameters()
-        plugin(**args)

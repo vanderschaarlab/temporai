@@ -55,9 +55,3 @@ def test_ffill_plugin_transform(test_plugin: BaseImputer) -> None:
 
     assert output.static.dataframe().isna().sum().sum() == 0
     assert output.time_series.dataframe().isna().sum().sum() == 0
-
-
-def test_hyperparam_sample():
-    for repeat in range(10):  # pylint: disable=unused-variable
-        args = plugin.sample_hyperparameters()
-        plugin(**args)

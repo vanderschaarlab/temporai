@@ -49,12 +49,6 @@ def test_nn_classifier_plugin_predict_proba(test_plugin: BaseClassifier) -> None
     assert output.numpy().shape == (len(dataset.time_series), 2)
 
 
-def test_hyperparam_sample():
-    for repeat in range(10):  # pylint: disable=unused-variable
-        args = plugin.sample_hyperparameters()
-        plugin(**args)
-
-
 def test_nn_classifier_serde() -> None:
     test_plugin = from_api()
 

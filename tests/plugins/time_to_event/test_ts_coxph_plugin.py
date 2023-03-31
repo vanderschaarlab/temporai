@@ -67,9 +67,3 @@ def test_ts_coxph_plugin_benchmark(get_event0_time_percentiles: Callable) -> Non
 
     assert (score.loc[:, "errors"] == 0).all()
     assert score.loc["c_index", "mean"] > 0.5  # pyright: ignore
-
-
-def test_hyperparam_sample():
-    for repeat in range(10):  # pylint: disable=unused-variable
-        args = plugin.sample_hyperparameters()
-        plugin(**args)

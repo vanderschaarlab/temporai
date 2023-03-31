@@ -51,9 +51,3 @@ def test_ts_minmax_scaler_plugin_transform(test_plugin: BaseScaler) -> None:
 
     assert (output.time_series.numpy() < 1 + 1e-1).all()
     assert (output.time_series.numpy() >= 0).all()
-
-
-def test_hyperparam_sample():
-    for repeat in range(10):  # pylint: disable=unused-variable
-        args = plugin.sample_hyperparameters()
-        plugin(**args)

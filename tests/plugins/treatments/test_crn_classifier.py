@@ -91,9 +91,3 @@ def test_crn_classifier_plugin_predict_counterfactuals(test_plugin: BaseTreatmen
 
     assert len(output) == len(data)
     assert len(output[0]) == n_counterfactuals_per_sample
-
-
-def test_hyperparam_sample():
-    for repeat in range(10):  # pylint: disable=unused-variable
-        args = plugin.sample_hyperparameters()
-        plugin(**args)

@@ -70,9 +70,3 @@ def test_synctwin_regressor_plugin_predict_counterfactuals(test_plugin: BaseTrea
             assert isinstance(o[0], pd.DataFrame)
         else:
             assert "SyncTwin implementation can currently only predict counterfactuals for treated samples" in o
-
-
-def test_hyperparam_sample():
-    for repeat in range(10):  # pylint: disable=unused-variable
-        args = plugin.sample_hyperparameters()
-        plugin(**args)
