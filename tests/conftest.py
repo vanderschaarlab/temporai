@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING, Any, List, Tuple
 
 import numpy as np
 import pytest
+from clairvoyance2.datasets.dummy import dummy_dataset
+from clairvoyance2.datasets.simulated.simple_pkpd import simple_pkpd_dataset
 
 if TYPE_CHECKING:
     from tempor.data import dataset  # nosec B101
