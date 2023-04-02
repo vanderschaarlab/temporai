@@ -1,8 +1,7 @@
 # pylint: disable=redefined-outer-name
 
-from typing import Literal
-
 import pytest
+from typing_extensions import Literal
 
 from tempor.core import utils
 
