@@ -1,91 +1,75 @@
-from typing import Any, List, Optional, Tuple
+import dataclasses
+from typing import Optional
 
-from torch.utils.data import sampler
-from typing_extensions import get_args
+from typing_extensions import Self, get_args
 
 import tempor.plugins.core as plugins
 from tempor.data import dataset, samples
-from tempor.models.constants import DEVICE
-from tempor.models.ts_model import Nonlin, TimeSeriesModel, TSModelMode
+from tempor.models import utils as model_utils
+from tempor.models.constants import Nonlin, Samp
+from tempor.models.ts_model import TimeSeriesModel, TSModelMode
 from tempor.plugins.core._params import CategoricalParams, FloatParams, IntegerParams
 from tempor.plugins.regression import BaseRegressor
 
 
+@dataclasses.dataclass
+class NeuralNetRegressorParams:
+    """Initialization parameters for :class:`NeuralNetRegressor`."""
+
+    n_static_units_hidden: int = 100
+    """Number of hidden units for the static features."""
+    n_static_layers_hidden: int = 2
+    """Number of hidden layers for the static features."""
+    n_temporal_units_hidden: int = 102
+    """Number of hidden units for the temporal features."""
+    n_temporal_layers_hidden: int = 2
+    """Number of hidden layers for the temporal features."""
+    n_iter: int = 500
+    """Number of epochs."""
+    mode: TSModelMode = "RNN"
+    """Core neural net architecture. Available options: :obj:`~tempor.models.ts_model.TSModelMode`."""
+    n_iter_print: int = 10
+    """Number of epochs to print the loss."""
+    batch_size: int = 100
+    """Batch size."""
+    lr: float = 1e-3
+    """Learning rate."""
+    weight_decay: float = 1e-3
+    """l2 (ridge) penalty for the weights."""
+    window_size: int = 1
+    """How many hidden states to use for the outcome."""
+    device: Optional[str] = None
+    """String representing PyTorch device. If `None`, `~tempor.models.constants.DEVICE`."""
+    dataloader_sampler: Optional[Samp] = None
+    """Custom data sampler for training."""
+    dropout: float = 0
+    """Dropout value."""
+    nonlin: Nonlin = "relu"
+    """Activation for hidden layers. Available options: :obj:`~tempor.models.constants.Nonlin`."""
+    random_state: int = 0
+    """Random seed."""
+    clipping_value: int = 1
+    """Gradients clipping value. Zero disables the feature."""
+    patience: int = 20
+    """How many ``epoch * n_iter_print`` to wait without loss improvement."""
+    train_ratio: float = 0.8
+    """Train/test split ratio."""
+
+
 @plugins.register_plugin(name="nn_regressor", category="regression")
 class NeuralNetRegressor(BaseRegressor):
-    def __init__(
-        self,
-        n_static_units_hidden: int = 100,
-        n_static_layers_hidden: int = 2,
-        n_temporal_units_hidden: int = 102,
-        n_temporal_layers_hidden: int = 2,
-        n_iter: int = 500,
-        mode: TSModelMode = "RNN",
-        n_iter_print: int = 10,
-        batch_size: int = 100,
-        lr: float = 1e-3,
-        weight_decay: float = 1e-3,
-        window_size: int = 1,
-        device: Any = DEVICE,
-        dataloader_sampler: Optional[sampler.Sampler] = None,
-        nonlin_out: Optional[List[Tuple[Nonlin, int]]] = None,
-        dropout: float = 0,
-        nonlin: Nonlin = "relu",
-        random_state: int = 0,
-        clipping_value: int = 1,
-        patience: int = 20,
-        train_ratio: float = 0.8,
-    ) -> None:
+    ParamsDefinition = NeuralNetRegressorParams
+    params: NeuralNetRegressorParams  # type: ignore
+
+    def __init__(self, **params) -> None:
         """Neural-net regressor.
 
         Args:
-            n_static_units_hidden (int, optional):
-                Number of hidden units for the static features. Defaults to ``100``.
-            n_static_layers_hidden (int, optional):
-                Number of hidden layers for the static features. Defaults to ``2``.
-            n_temporal_units_hidden (int, optional):
-                Number of hidden units for the temporal features. Defaults to ``102``.
-            n_temporal_layers_hidden (int, optional):
-                Number of hidden layers for the temporal features. Defaults to ``2``.
-            n_iter (int, optional):
-                Number of epochs. Defaults to ``500``.
-            mode (TSModelMode, optional):
-                Core neural net architecture. Available options: :obj:`~tempor.models.ts_model.TSModelMode`.
-                Defaults to ``"RNN"``.
-            n_iter_print (int, optional):
-                Number of epochs to print the loss. Defaults to ``10``.
-            batch_size (int, optional):
-                Batch size. Defaults to ``100``.
-            lr (float, optional):
-                Learning rate. Defaults to ``1e-3``.
-            weight_decay (float, optional):
-                l2 (ridge) penalty for the weights. Defaults to ``1e-3``.
-            window_size (int, optional):
-                How many hidden states to use for the outcome. Defaults to ``1``.
-            device (Any, optional):
-                PyTorch device to use. Defaults to `~tempor.models.constants.DEVICE`.
-            dataloader_sampler (Optional[sampler.Sampler], optional):
-                Custom data sampler for training. Defaults to `None`.
-            nonlin_out (Optional[List[Tuple[Nonlin, int]]], optional):
-                List of activations for the output. Example ``[("tanh", 1), ("softmax", 3)]`` - means the output layer
-                will apply ``"tanh"`` for the first unit, and ``"softmax"`` for the following 3 units in the output.
-                Defaults to `None`.
-            dropout (float, optional):
-                Dropout value. Defaults to ``0``.
-            nonlin (Nonlin, optional):
-                Activation for hidden layers. Available options: :obj:`~tempor.models.constants.Nonlin`.
-                Defaults to ``"relu"``.
-            random_state (int, optional):
-                Random seed. Defaults to ``0``.
-            clipping_value (int, optional):
-                Gradients clipping value. Zero disables the feature. Defaults to ``1``.
-            patience (int, optional):
-                How many epoch * n_iter_print to wait without loss improvement. Defaults to ``20``.
-            train_ratio (float, optional):
-                Train/test split ratio. Defaults to ``0.8``.
+            **params:
+                Parameters and defaults as defined in :class:`NeuralNetRegressorParams`.
 
         Example:
-            >>> from tempor.utils.dataloaders.sine import SineDataLoader
+            >>> from tempor.utils.dataloaders import SineDataLoader
             >>> from tempor.plugins import plugin_loader
             >>>
             >>> dataset = SineDataLoader().load()
@@ -100,27 +84,10 @@ class NeuralNetRegressor(BaseRegressor):
             >>> # Predict:
             >>> assert model.predict(dataset).numpy().shape == (len(dataset), 1)
         """
-        super().__init__()
-        self.n_static_units_hidden = n_static_units_hidden
-        self.n_static_layers_hidden = n_static_layers_hidden
-        self.n_temporal_units_hidden = n_temporal_units_hidden
-        self.n_temporal_layers_hidden = n_temporal_layers_hidden
-        self.n_iter = n_iter
-        self.mode: TSModelMode = mode
-        self.n_iter_print = n_iter_print
-        self.batch_size = batch_size
-        self.lr = lr
-        self.weight_decay = weight_decay
-        self.window_size = window_size
-        self.device = device
-        self.dataloader_sampler = dataloader_sampler
-        self.nonlin_out = nonlin_out
-        self.dropout = dropout
-        self.nonlin: Nonlin = nonlin
-        self.random_state = random_state
-        self.clipping_value = clipping_value
-        self.patience = patience
-        self.train_ratio = train_ratio
+        super().__init__(**params)
+
+        self.device = model_utils.get_device(self.params.device)
+        self.dataloader_sampler = model_utils.get_sampler(self.params.dataloader_sampler)
 
         self.model: Optional[TimeSeriesModel] = None
 
@@ -129,7 +96,7 @@ class NeuralNetRegressor(BaseRegressor):
         data: dataset.Dataset,
         *args,
         **kwargs,
-    ) -> "NeuralNetRegressor":  # pyright: ignore
+    ) -> Self:
         static, temporal, observation_times, outcome = self._unpack_dataset(data)
         outcome = outcome.squeeze()
 
@@ -139,26 +106,25 @@ class NeuralNetRegressor(BaseRegressor):
             n_temporal_units_in=temporal.shape[-1],
             n_temporal_window=temporal.shape[1],
             output_shape=[1],
-            n_static_units_hidden=self.n_static_units_hidden,
-            n_static_layers_hidden=self.n_static_layers_hidden,
-            n_temporal_units_hidden=self.n_temporal_units_hidden,
-            n_temporal_layers_hidden=self.n_temporal_layers_hidden,
-            n_iter=self.n_iter,
-            mode=self.mode,
-            n_iter_print=self.n_iter_print,
-            batch_size=self.batch_size,
-            lr=self.lr,
-            weight_decay=self.weight_decay,
-            window_size=self.window_size,
+            n_static_units_hidden=self.params.n_static_units_hidden,
+            n_static_layers_hidden=self.params.n_static_layers_hidden,
+            n_temporal_units_hidden=self.params.n_temporal_units_hidden,
+            n_temporal_layers_hidden=self.params.n_temporal_layers_hidden,
+            n_iter=self.params.n_iter,
+            mode=self.params.mode,
+            n_iter_print=self.params.n_iter_print,
+            batch_size=self.params.batch_size,
+            lr=self.params.lr,
+            weight_decay=self.params.weight_decay,
+            window_size=self.params.window_size,
             device=self.device,
             dataloader_sampler=self.dataloader_sampler,
-            nonlin_out=self.nonlin_out,
-            dropout=self.dropout,
-            nonlin=self.nonlin,
-            random_state=self.random_state,
-            clipping_value=self.clipping_value,
-            patience=self.patience,
-            train_ratio=self.train_ratio,
+            dropout=self.params.dropout,
+            nonlin=self.params.nonlin,
+            random_state=self.params.random_state,
+            clipping_value=self.params.clipping_value,
+            patience=self.params.patience,
+            train_ratio=self.params.train_ratio,
         )
 
         self.model.fit(static, temporal, observation_times, outcome)

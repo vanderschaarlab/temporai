@@ -17,7 +17,8 @@ from tempor.plugins.regression import BaseRegressor
 
 
 @dataclasses.dataclass
-class seq2seqParams:
+class Seq2seqRegressorParams:
+    # TODO: Docstrings.
     # Encoder:
     encoder_rnn_type: str = "LSTM"
     encoder_hidden_size: int = 100
@@ -53,8 +54,8 @@ class seq2seqParams:
 
 @plugins.register_plugin(name="seq2seq_regressor", category="regression")
 class Seq2seqRegressor(BaseRegressor):
-    ParamsDefinition = seq2seqParams
-    params: seq2seqParams  # type: ignore
+    ParamsDefinition = Seq2seqRegressorParams
+    params: Seq2seqRegressorParams  # type: ignore
 
     def __init__(
         self,
@@ -62,10 +63,14 @@ class Seq2seqRegressor(BaseRegressor):
     ) -> None:
         """Seq2seq regressor.
 
+        Args:
+            **params:
+                Parameters and defaults as defined in :class:`Seq2seqClassifierParams`.
+
         Example:
             >>> import doctest; doctest.ELLIPSIS_MARKER = "[...]"  # Doctest config, ignore.
             >>>
-            >>> from tempor.utils.dataloaders.sine import SineDataLoader
+            >>> from tempor.utils.dataloaders import SineDataLoader
             >>> from tempor.data import dataset
             >>> from tempor.plugins import plugin_loader
             >>>

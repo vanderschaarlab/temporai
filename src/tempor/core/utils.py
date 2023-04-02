@@ -1,5 +1,7 @@
 import enum
-from typing import Tuple
+from typing import Any, Dict, Tuple
+
+from typing_extensions import get_args
 
 
 def get_class_full_name(o: object):
@@ -58,3 +60,15 @@ def version_below_excl(version: Tuple[int, int], below_excl: Tuple[int, int]) ->
     v_major, v_minor = version
     compare_major, compare_minor = below_excl
     return (v_major == compare_major and v_minor < compare_minor) or v_major < compare_major
+
+
+def ensure_literal_matches_dict_keys(
+    literal: Any, d: Dict[str, Any], literal_name: str = "literal", dict_name: str = "dictionary"
+):
+    lits = set(get_args(literal))
+    keys = set(d.keys())
+    if lits != keys:
+        raise TypeError(
+            f"There was a mismatch between the literal '{literal_name}' and the the dictionary "
+            f"'{dict_name}' keys: {list(lits.symmetric_difference(keys))}"
+        )

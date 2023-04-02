@@ -37,10 +37,6 @@ class SyncTwinTreatmentsRegressor(BaseTreatments):
     ) -> None:
         """SyncTwin treatment effects estimation.
 
-        Paper:
-            SyncTwin: Treatment Effect Estimation with Longitudinal Outcomes,
-            Zhaozhi Qian, Yao Zhang, Ioana Bica, Angela Wood, Mihaela van der Schaar.
-
         Example:
             >>> from tempor.plugins import plugin_loader
             >>>
@@ -52,6 +48,10 @@ class SyncTwinTreatmentsRegressor(BaseTreatments):
             >>>
             >>> # Predict:
             >>> # assert model.predict(dataset, n_future_steps = 10).numpy().shape == (len(dataset), 10, 5)
+
+        References:
+            SyncTwin: Treatment Effect Estimation with Longitudinal Outcomes,
+            Zhaozhi Qian, Yao Zhang, Ioana Bica, Angela Wood, Mihaela van der Schaar.
         """
         super().__init__(**params)
         self.model = SyncTwinRegressor(

@@ -152,17 +152,15 @@ class UnionDtype(pd_engine.DataType):
     we apply these directly to the class returned by ``__class_getitem__``, which dynamically creates the union
     specified with its dtypes. In this way, `pandera`'s ``pandas`` engine correctly registers each new kind of union
     as a different dtype.
-
-    Attributes:
-        union_dtypes (List[Type]):
-            The list of types in the union.
-        type (str):
-            The string representation of the data type, which will be, e.g., shown in exceptions.
     """
 
     union_dtypes: List
+    """The list of types in the union."""
     type: Any
+    """The string representation of the data type, which will be, e.g., shown in exceptions."""
+
     name: str
+    """The string representation of the data type used for `repr`."""
 
     @classmethod
     def __class_getitem__(cls, item):

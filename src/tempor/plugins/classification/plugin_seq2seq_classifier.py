@@ -17,7 +17,8 @@ from tempor.plugins.core._params import CategoricalParams, FloatParams, IntegerP
 
 
 @dataclasses.dataclass
-class seq2seqParams:
+class Seq2seqClassifierParams:
+    # TODO: Docstrings.
     # Encoder:
     encoder_rnn_type: str = "LSTM"
     encoder_hidden_size: int = 100
@@ -53,8 +54,8 @@ class seq2seqParams:
 
 @plugins.register_plugin(name="seq2seq_classifier", category="classification")
 class Seq2seqClassifier(BaseClassifier):
-    ParamsDefinition = seq2seqParams
-    params: seq2seqParams  # type: ignore
+    ParamsDefinition = Seq2seqClassifierParams
+    params: Seq2seqClassifierParams  # type: ignore
 
     def __init__(
         self,
@@ -62,10 +63,14 @@ class Seq2seqClassifier(BaseClassifier):
     ) -> None:
         """Seq2seq classifier.
 
+        Args:
+            **params:
+                Parameters and defaults as defined in :class:`Seq2seqClassifierParams`.
+
         Example:
             >>> import doctest; doctest.ELLIPSIS_MARKER = "[...]"  # Doctest config, ignore.
             >>>
-            >>> from tempor.utils.dataloaders.sine import SineDataLoader
+            >>> from tempor.utils.dataloaders import SineDataLoader
             >>> from tempor.data import dataset
             >>> from tempor.plugins import plugin_loader
             >>>
@@ -73,7 +78,7 @@ class Seq2seqClassifier(BaseClassifier):
             >>> data = dataset.TemporalPredictionDataset(
             ...    time_series=raw_data.time_series.dataframe(),
             ...    static=raw_data.static.dataframe(),
-            ...    targets=raw_data.time_series.dataframe()
+            ...    targets=raw_data.time_series.dataframe(),
             ... )
             >>>
             >>> # Load the model:

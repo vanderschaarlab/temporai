@@ -171,6 +171,8 @@ todo_emit_warnings = True
 
 autoclass_content = "both"
 
+autodoc_member_order = "bysource"
+
 # autodoc_mock_imports = ["sklearn"]  # Update as needed.
 
 # -- Configure autodoc (end) ---------------------------------------

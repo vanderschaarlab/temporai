@@ -63,10 +63,6 @@ class CRNTreatmentsClassifier(BaseTreatments):
     ) -> None:
         """Counterfactual Recurrent Network treatment effects model for classification on the outcomes (targets).
 
-        Paper:
-            Estimating counterfactual treatment outcomes over time through adversarially balanced representations,
-            Ioana Bica, Ahmed M. Alaa, James Jordon, Mihaela van der Schaar.
-
         Example:
             >>> from tempor.plugins import plugin_loader
             >>>
@@ -78,6 +74,10 @@ class CRNTreatmentsClassifier(BaseTreatments):
             >>>
             >>> # Predict:
             >>> # assert model.predict(dataset, n_future_steps = 10).numpy().shape == (len(dataset), 10, 5)
+
+        References:
+            Estimating counterfactual treatment outcomes over time through adversarially balanced representations,
+            Ioana Bica, Ahmed M. Alaa, James Jordon, Mihaela van der Schaar.
         """
         super().__init__(**params)
         self.model: Optional[CRNClassifier] = None

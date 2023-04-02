@@ -1,85 +1,77 @@
-from typing import Any, Optional
+import dataclasses
+from typing import Optional
 
-from torch.utils.data import sampler
+from typing_extensions import Self
 
 import tempor.plugins.core as plugins
 from tempor.data import dataset, samples
-from tempor.models.constants import DEVICE
-from tempor.models.ts_ode import Interpolation, NeuralODE, Nonlin
+from tempor.models import utils as model_utils
+from tempor.models.constants import Nonlin, Samp
+from tempor.models.ts_ode import Interpolation, NeuralODE
 from tempor.plugins.core._params import CategoricalParams, FloatParams, IntegerParams
 from tempor.plugins.regression import BaseRegressor
 
 
+@dataclasses.dataclass
+class ODERegressorParams:
+    """Initialization parameters for :class:`ODERegressor`."""
+
+    n_units_hidden: int = 100
+    """Number of hidden units."""
+    n_layers_hidden: int = 1
+    """Number of hidden layers."""
+    nonlin: Nonlin = "relu"
+    """Activation for hidden layers. Available options: :obj:`~tempor.models.constants.Nonlin`."""
+    dropout: float = 0
+    """Dropout value."""
+
+    # CDE specific:
+    atol: float = 1e-2
+    """Absolute tolerance for solution."""
+    rtol: float = 1e-2
+    """Relative tolerance for solution."""
+    interpolation: Interpolation = "cubic"
+    """``"cubic"`` or ``"linear"``."""
+
+    # Training:
+    lr: float = 1e-3
+    """Learning rate for optimizer."""
+    weight_decay: float = 1e-3
+    """l2 (ridge) penalty for the weights."""
+    n_iter: int = 1000
+    """Maximum number of iterations."""
+    batch_size: int = 500
+    """Batch size."""
+    n_iter_print: int = 100
+    """Number of iterations after which to print updates and check the validation loss."""
+    random_state: int = 0
+    """Random_state used."""
+    patience: int = 10
+    """Number of iterations to wait before early stopping after decrease in validation loss."""
+    clipping_value: int = 1
+    """Gradients clipping value."""
+    train_ratio: float = 0.8
+    """Train/test split ratio."""
+    device: Optional[str] = None
+    """String representing PyTorch device. If `None`, `~tempor.models.constants.DEVICE`."""
+    dataloader_sampler: Optional[Samp] = None
+    """Custom data sampler for training."""
+
+
 @plugins.register_plugin(name="ode_regressor", category="regression")
 class ODERegressor(BaseRegressor):
-    def __init__(
-        self,
-        *,
-        n_units_hidden: int = 100,
-        n_layers_hidden: int = 1,
-        nonlin: Nonlin = "relu",
-        dropout: float = 0,
-        # ODE specific:
-        atol: float = 1e-2,
-        rtol: float = 1e-2,
-        interpolation: Interpolation = "cubic",
-        # Training:
-        lr: float = 1e-3,
-        weight_decay: float = 1e-3,
-        n_iter: int = 1000,
-        batch_size: int = 500,
-        n_iter_print: int = 100,
-        random_state: int = 0,
-        patience: int = 10,
-        clipping_value: int = 1,
-        train_ratio: float = 0.8,
-        device: Any = DEVICE,
-        dataloader_sampler: Optional[sampler.Sampler] = None,
-    ) -> None:
+    ParamsDefinition = ODERegressorParams
+    params: ODERegressorParams  # type: ignore
+
+    def __init__(self, **params) -> None:
         """Regressor based on ordinary differential equation (ODE) solvers.
 
         Args:
-            n_units_hidden (int, optional):
-                Number of hidden units. Defaults to ``100``.
-            n_layers_hidden (int, optional):
-                Number of hidden layers. Defaults to ``2``.
-            nonlin (Nonlin, optional):
-                Activation for hidden layers. Available options: :obj:`~tempor.models.constants.Nonlin`.
-                Defaults to ``"relu"``.
-            dropout (float, optional):
-                Dropout value. Defaults to ``0``.
-            atol (float, optional):
-                Absolute tolerance for solution. Defaults to ``1e-2``.
-            rtol (float, optional):
-                Relative tolerance for solution. Defaults to ``1e-2``.
-            interpolation (Interpolation, optional):
-                ``"cubic"`` or ``"linear"``. Defaults to ``"cubic"``.
-            lr (float, optional):
-                Learning rate for optimizer. Defaults to ``1e-3``.
-            weight_decay (float, optional):
-                l2 (ridge) penalty for the weights. Defaults to ``1e-3``.
-            n_iter (int, optional):
-                Maximum number of iterations. Defaults to ``1000``.
-            batch_size (int, optional):
-                Batch size. Defaults to ``500``.
-            n_iter_print (int, optional):
-                Number of iterations after which to print updates and check the validation loss. Defaults to ``100``.
-            random_state (int, optional):
-                Random_state used. Defaults to ``0``.
-            patience (int, optional):
-                Number of iterations to wait before early stopping after decrease in validation loss.
-                Defaults to ``10``.
-            clipping_value (int, optional):
-                Gradients clipping value. Defaults to ``1``.
-            train_ratio (float, optional):
-                Train/test split ratio. Defaults to ``0.8``.
-            device (Any, optional):
-                PyTorch device to use. Defaults to `~tempor.models.constants.DEVICE`.
-            dataloader_sampler (Optional[sampler.Sampler], optional):
-                Custom data sampler for training. Defaults to `None`.
+            **params:
+                Parameters and defaults as defined in :class:`ODERegressorParams`.
 
         Example:
-            >>> from tempor.utils.dataloaders.sine import SineDataLoader
+            >>> from tempor.utils.dataloaders import SineDataLoader
             >>> from tempor.plugins import plugin_loader
             >>>
             >>> dataset = SineDataLoader().load()
@@ -93,28 +85,15 @@ class ODERegressor(BaseRegressor):
             >>>
             >>> # Predict:
             >>> assert model.predict(dataset).numpy().shape == (len(dataset), 1)
-        """
-        super().__init__()
-        self.n_units_hidden = n_units_hidden
-        self.n_layers_hidden = n_layers_hidden
-        self.n_iter = n_iter
-        self.n_iter_print = n_iter_print
-        self.batch_size = batch_size
-        self.lr = lr
-        self.weight_decay = weight_decay
-        self.device = device
-        self.dataloader_sampler = dataloader_sampler
-        self.dropout = dropout
-        self.nonlin: Nonlin = nonlin
-        self.random_state = random_state
-        self.clipping_value = clipping_value
-        self.patience = patience
-        self.train_ratio = train_ratio
 
-        # ODE
-        self.atol = atol
-        self.rtol = rtol
-        self.interpolation: Interpolation = interpolation
+        References:
+            "Neural Controlled Differential Equations for Irregular Time Series", Patrick Kidger, James Morrill,
+            James Foster, Terry Lyons.
+        """
+        super().__init__(**params)
+
+        self.device = model_utils.get_device(self.params.device)
+        self.dataloader_sampler = model_utils.get_sampler(self.params.dataloader_sampler)
 
         self.model: Optional[NeuralODE] = None
 
@@ -123,7 +102,7 @@ class ODERegressor(BaseRegressor):
         data: dataset.Dataset,
         *args,
         **kwargs,
-    ) -> "ODERegressor":  # pyright: ignore
+    ) -> Self:
         static, temporal, observation_times, outcome = self._unpack_dataset(data)
         outcome = outcome.squeeze()
 
@@ -132,27 +111,27 @@ class ODERegressor(BaseRegressor):
             n_static_units_in=static.shape[-1],
             n_temporal_units_in=temporal.shape[-1],
             output_shape=[1],
-            n_units_hidden=self.n_units_hidden,
-            n_layers_hidden=self.n_layers_hidden,
+            n_units_hidden=self.params.n_units_hidden,
+            n_layers_hidden=self.params.n_layers_hidden,
             # ODE
             backend="ode",
-            atol=self.atol,
-            rtol=self.rtol,
-            interpolation=self.interpolation,
+            atol=self.params.atol,
+            rtol=self.params.rtol,
+            interpolation=self.params.interpolation,
             # training
-            n_iter=self.n_iter,
-            n_iter_print=self.n_iter_print,
-            batch_size=self.batch_size,
-            lr=self.lr,
-            weight_decay=self.weight_decay,
+            n_iter=self.params.n_iter,
+            n_iter_print=self.params.n_iter_print,
+            batch_size=self.params.batch_size,
+            lr=self.params.lr,
+            weight_decay=self.params.weight_decay,
             device=self.device,
             dataloader_sampler=self.dataloader_sampler,
-            dropout=self.dropout,
-            nonlin=self.nonlin,
-            random_state=self.random_state,
-            clipping_value=self.clipping_value,
-            patience=self.patience,
-            train_ratio=self.train_ratio,
+            dropout=self.params.dropout,
+            nonlin=self.params.nonlin,
+            random_state=self.params.random_state,
+            clipping_value=self.params.clipping_value,
+            patience=self.params.patience,
+            train_ratio=self.params.train_ratio,
         )
 
         self.model.fit(static, temporal, observation_times, outcome)

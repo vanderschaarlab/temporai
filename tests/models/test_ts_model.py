@@ -5,8 +5,7 @@ import pytest
 from typing_extensions import get_args
 
 from tempor.models.ts_model import ModelTaskType, TimeSeriesModel, TSModelMode
-from tempor.utils.dataloaders.google_stocks import GoogleStocksDataLoader
-from tempor.utils.dataloaders.sine import SineDataLoader
+from tempor.utils.dataloaders import GoogleStocksDataLoader, SineDataLoader
 
 
 def unpack_dataset(source):
