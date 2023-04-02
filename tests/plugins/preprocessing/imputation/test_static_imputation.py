@@ -7,28 +7,32 @@ from tempor.plugins.preprocessing.imputation import BaseImputer
 from tempor.plugins.preprocessing.imputation.plugin_static_imputation import (
     StaticOnlyImputer as plugin,
 )
-from tempor.utils.dataloaders.sine import SineDataLoader
 from tempor.utils.serialization import load, save
+
+train_kwargs = {"random_state": 123}
+
+TEST_ON_DATASETS = ["sine_data_missing_small"]
 
 
 def from_api() -> BaseImputer:
-    return plugin_loader.get("preprocessing.imputation.static_imputation", random_state=123)
+    return plugin_loader.get("preprocessing.imputation.static_imputation", **train_kwargs)
 
 
 def from_module() -> BaseImputer:
-    return plugin(random_state=123)
+    return plugin(**train_kwargs)
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_static_imputation_plugin_sanity(test_plugin: BaseImputer) -> None:
+def test_sanity(test_plugin: BaseImputer) -> None:
     assert test_plugin is not None
     assert test_plugin.name == "static_imputation"
     assert len(test_plugin.hyperparameter_space()) == 2
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_static_imputation_plugin_fit(test_plugin: BaseImputer) -> None:
-    dataset = SineDataLoader(with_missing=True).load()
+@pytest.mark.parametrize("data", TEST_ON_DATASETS)
+def test_fit(test_plugin: BaseImputer, data: str, request: pytest.FixtureRequest) -> None:
+    dataset = request.getfixturevalue(data)
     if TYPE_CHECKING:  # pragma: no cover
         assert dataset.static is not None  # nosec B101
 
@@ -38,8 +42,9 @@ def test_static_imputation_plugin_fit(test_plugin: BaseImputer) -> None:
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_static_imputation_plugin_transform(test_plugin: BaseImputer) -> None:
-    dataset = SineDataLoader(with_missing=True).load()
+@pytest.mark.parametrize("data", TEST_ON_DATASETS)
+def test_transform(test_plugin: BaseImputer, data: str, request: pytest.FixtureRequest) -> None:
+    dataset = request.getfixturevalue(data)
     if TYPE_CHECKING:  # pragma: no cover
         assert dataset.static is not None  # nosec B101
 

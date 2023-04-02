@@ -5,10 +5,11 @@ from tempor.plugins.classification import BaseClassifier
 from tempor.plugins.classification.plugin_laplace_classifier import (
     LaplaceODEClassifier as plugin,
 )
-from tempor.utils.dataloaders.google_stocks import GoogleStocksDataLoader
 from tempor.utils.serialization import load, save
 
-train_kwargs = {"random_state": 123, "n_iter": 50}
+train_kwargs = {"random_state": 123, "n_iter": 5}
+
+TEST_ON_DATASETS = ["google_stocks_data_small"]
 
 
 def from_api() -> BaseClassifier:
@@ -20,7 +21,7 @@ def from_module() -> BaseClassifier:
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_laplace_ode_classifier_plugin_sanity(test_plugin: BaseClassifier) -> None:
+def test_sanity(test_plugin: BaseClassifier) -> None:
     assert test_plugin is not None
     assert test_plugin.name == "laplace_ode_classifier"
     assert test_plugin.fqn() == "classification.laplace_ode_classifier"
@@ -28,31 +29,32 @@ def test_laplace_ode_classifier_plugin_sanity(test_plugin: BaseClassifier) -> No
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_laplace_ode_classifier_plugin_fit(test_plugin: BaseClassifier) -> None:
-    dataset = GoogleStocksDataLoader().load()
-
+@pytest.mark.parametrize("data", TEST_ON_DATASETS)
+def test_fit(test_plugin: BaseClassifier, data: str, request: pytest.FixtureRequest) -> None:
+    dataset = request.getfixturevalue(data)
     test_plugin.fit(dataset)
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_laplace_ode_classifier_plugin_predict(test_plugin: BaseClassifier) -> None:
-    dataset = GoogleStocksDataLoader().load()
-
+@pytest.mark.parametrize("data", TEST_ON_DATASETS)
+def test_predict(test_plugin: BaseClassifier, data: str, request: pytest.FixtureRequest) -> None:
+    dataset = request.getfixturevalue(data)
     output = test_plugin.fit(dataset).predict(dataset)
     assert output.numpy().shape == (len(dataset.time_series), 1)
 
 
-def test_laplace_classifier_serde() -> None:
+@pytest.mark.parametrize("data", TEST_ON_DATASETS)
+def test_serde(data: str, request: pytest.FixtureRequest) -> None:
     test_plugin = from_api()
 
-    data = GoogleStocksDataLoader().load()
+    dataset = request.getfixturevalue(data)
 
     dump = save(test_plugin)
     reloaded1 = load(dump)
 
-    reloaded1.fit(data)
+    reloaded1.fit(dataset)
 
     dump = save(reloaded1)
     reloaded2 = load(dump)
 
-    reloaded2.predict(data)
+    reloaded2.predict(dataset)

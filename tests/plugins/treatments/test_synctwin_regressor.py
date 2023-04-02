@@ -1,68 +1,52 @@
 import pandas as pd
 import pytest
-from clairvoyance2.datasets import simple_pkpd_dataset
 
-from tempor.data.clv2conv import clairvoyance2_dataset_to_tempor_dataset
 from tempor.plugins import plugin_loader
 from tempor.plugins.treatments import BaseTreatments
 from tempor.plugins.treatments.plugin_synctwin_regressor import (
     SyncTwinTreatmentsRegressor as plugin,
 )
 
-
-def get_dummy_data(
-    n_timesteps: int = 10,
-    time_index_treatment_event: int = 7,
-    n_control_samples: int = 10,
-    n_treated_samples: int = 10,
-    seed: int = 123,
-):
-    local_dataset = simple_pkpd_dataset(
-        n_timesteps=n_timesteps,
-        time_index_treatment_event=time_index_treatment_event,
-        n_control_samples=n_control_samples,
-        n_treated_samples=n_treated_samples,
-        seed=seed,
-    )
-    return clairvoyance2_dataset_to_tempor_dataset(local_dataset)
-
-
-kwargs = {
-    "pretraining_iterations": 10,
-    "matching_iterations": 10,
-    "inference_iterations": 10,
+train_kwargs = {
+    "pretraining_iterations": 3,
+    "matching_iterations": 3,
+    "inference_iterations": 3,
 }
+
+TEST_ON_DATASETS = ["pkpd_data_small"]
 
 
 def from_api() -> BaseTreatments:
-    return plugin_loader.get("treatments.synctwin_regressor", **kwargs)
+    return plugin_loader.get("treatments.synctwin_regressor", **train_kwargs)
 
 
 def from_module() -> BaseTreatments:
-    return plugin(**kwargs)
+    return plugin(**train_kwargs)
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_synctwin_regressor_plugin_sanity(test_plugin: BaseTreatments) -> None:
+def test_sanity(test_plugin: BaseTreatments) -> None:
     assert test_plugin is not None
     assert test_plugin.name == "synctwin_regressor"
     assert len(test_plugin.hyperparameter_space()) == 5
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_synctwin_regressor_plugin_fit(test_plugin: BaseTreatments) -> None:
-    data = get_dummy_data()
-    test_plugin.fit(data)
+@pytest.mark.parametrize("data", TEST_ON_DATASETS)
+def test_fit(test_plugin: BaseTreatments, data: str, request: pytest.FixtureRequest) -> None:
+    dataset = request.getfixturevalue(data)
+    test_plugin.fit(dataset)
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_synctwin_regressor_plugin_predict_counterfactuals(test_plugin: BaseTreatments) -> None:
-    data = get_dummy_data()
-    test_plugin.fit(data)
+@pytest.mark.parametrize("data", TEST_ON_DATASETS)
+def test_predict_counterfactuals(test_plugin: BaseTreatments, data: str, request: pytest.FixtureRequest) -> None:
+    dataset = request.getfixturevalue(data)
+    test_plugin.fit(dataset)
 
-    output = test_plugin.predict_counterfactuals(data)
+    output = test_plugin.predict_counterfactuals(dataset)
 
-    assert len(output) == len(data)
+    assert len(output) == len(dataset)
     for o in output:
         assert isinstance(o, (list, str))
         if isinstance(o, list):

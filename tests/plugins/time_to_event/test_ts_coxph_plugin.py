@@ -7,13 +7,14 @@ from tempor.plugins import plugin_loader
 from tempor.plugins.time_to_event.plugin_ts_coxph import (
     CoxPHTimeToEventAnalysis as plugin,
 )
-from tempor.utils.dataloaders import PBCDataLoader
 from tempor.utils.serialization import load, save
 
 if TYPE_CHECKING:  # pragma: no cover
     from tempor.plugins.time_to_event import BaseTimeToEventAnalysis
 
-train_kwargs = {"random_state": 123, "n_iter": 10}
+train_kwargs = {"random_state": 123, "n_iter": 5}
+
+TEST_ON_DATASETS = ["pbc_data_small"]
 
 
 def from_api() -> "BaseTimeToEventAnalysis":
@@ -25,22 +26,33 @@ def from_module() -> "BaseTimeToEventAnalysis":
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_ts_coxph_plugin_sanity(test_plugin: "BaseTimeToEventAnalysis") -> None:
+def test_sanity(test_plugin: "BaseTimeToEventAnalysis") -> None:
     assert test_plugin is not None
     assert test_plugin.name == "ts_coxph"
     assert test_plugin.fqn() == "time_to_event.ts_coxph"
     assert len(test_plugin.hyperparameter_space()) == 12
 
 
+@pytest.mark.filterwarnings("ignore::lifelines.utils.ConvergenceWarning")  # Expected.
+@pytest.mark.filterwarnings("ignore:.*Index constructor.*:FutureWarning")
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_ts_coxph_plugin_fit(test_plugin: "BaseTimeToEventAnalysis") -> None:
-    dataset = PBCDataLoader().load()
+@pytest.mark.parametrize("data", TEST_ON_DATASETS)
+def test_fit(test_plugin: "BaseTimeToEventAnalysis", data: str, request: pytest.FixtureRequest) -> None:
+    dataset = request.getfixturevalue(data)
     test_plugin.fit(dataset)
 
 
+@pytest.mark.filterwarnings("ignore::lifelines.utils.ConvergenceWarning")  # Expected.
+@pytest.mark.filterwarnings("ignore:.*Index constructor.*:FutureWarning")
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_ts_coxph_plugin_predict(test_plugin: "BaseTimeToEventAnalysis", get_event0_time_percentiles: Callable) -> None:
-    dataset = PBCDataLoader().load()
+@pytest.mark.parametrize("data", TEST_ON_DATASETS)
+def test_predict(
+    test_plugin: "BaseTimeToEventAnalysis",
+    get_event0_time_percentiles: Callable,
+    data: str,
+    request: pytest.FixtureRequest,
+) -> None:
+    dataset = request.getfixturevalue(data)
 
     horizons = get_event0_time_percentiles(dataset, [0.25, 0.5, 0.75])
 
@@ -57,9 +69,12 @@ def test_ts_coxph_plugin_predict(test_plugin: "BaseTimeToEventAnalysis", get_eve
     assert output.numpy().shape == (len(dataset.time_series), len(horizons), 1)
 
 
-def test_ts_coxph_plugin_benchmark(get_event0_time_percentiles: Callable) -> None:
+@pytest.mark.filterwarnings("ignore::lifelines.utils.ConvergenceWarning")  # Expected.
+@pytest.mark.filterwarnings("ignore:.*Index constructor.*:FutureWarning")
+@pytest.mark.parametrize("data", TEST_ON_DATASETS)
+def test_benchmark(get_event0_time_percentiles: Callable, data: str, request: pytest.FixtureRequest) -> None:
     test_plugin = from_api()
-    dataset = PBCDataLoader().load()
+    dataset = request.getfixturevalue(data)
 
     horizons = get_event0_time_percentiles(dataset, [0.25, 0.5, 0.75])
 

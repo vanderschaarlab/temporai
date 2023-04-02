@@ -5,8 +5,9 @@ from typing import Any, List
 import pytest
 
 from tempor.plugins.pipeline import Pipeline, PipelineGroup, PipelineMeta
-from tempor.utils.dataloaders.sine import SineDataLoader
 from tempor.utils.serialization import load, save
+
+TEST_ON_DATASETS = ["sine_data_small"]
 
 
 @pytest.mark.parametrize(
@@ -27,7 +28,7 @@ from tempor.utils.serialization import load, save
         ],
     ],
 )
-def test_pipeline_sanity(plugins_str: List[Any]) -> None:
+def test_sanity(plugins_str: List[Any]) -> None:
     dtype: PipelineMeta = Pipeline(plugins_str)
     plugins = PipelineGroup(plugins_str)
 
@@ -70,7 +71,7 @@ def test_pipeline_sanity(plugins_str: List[Any]) -> None:
         [],
     ],
 )
-def test_pipeline_fails(plugins_str: List[Any]) -> None:
+def test_fails(plugins_str: List[Any]) -> None:
     with pytest.raises(RuntimeError):
         Pipeline(plugins_str)()
 
@@ -107,11 +108,11 @@ def test_pipeline_fails(plugins_str: List[Any]) -> None:
     ],
 )
 @pytest.mark.parametrize("serialize", [True, False])
-def test_pipeline_end2end(plugins_str, serialize: bool) -> None:
+def test_end2end(plugins_str, serialize: bool, sine_data_small, sine_data_missing_small) -> None:
     if len(plugins_str) > 1:
-        dataset = SineDataLoader(with_missing=True).load()
+        dataset = sine_data_missing_small
     else:
-        dataset = SineDataLoader(with_missing=False).load()
+        dataset = sine_data_small
 
     template: PipelineMeta = Pipeline(plugins_str)
     pipeline = template()

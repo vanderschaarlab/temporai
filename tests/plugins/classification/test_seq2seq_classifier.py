@@ -1,73 +1,61 @@
 import pytest
 
-from tempor.data import dataset
 from tempor.plugins import plugin_loader
 from tempor.plugins.classification import BaseClassifier
 from tempor.plugins.classification.plugin_seq2seq_classifier import (
     Seq2seqClassifier as plugin,
 )
-from tempor.utils.dataloaders.sine import SineDataLoader
 from tempor.utils.serialization import load, save
+
+train_kwargs = {"random_state": 123, "epochs": 5}
+
+TEST_ON_DATASETS = ["sine_data_temporal_small"]
 
 
 def from_api() -> BaseClassifier:
-    return plugin_loader.get("classification.seq2seq_classifier", random_state=123, epochs=10)
+    return plugin_loader.get("classification.seq2seq_classifier", **train_kwargs)
 
 
 def from_module() -> BaseClassifier:
-    return plugin(random_state=123, epochs=10)
+    return plugin(**train_kwargs)
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_seq2seq_classifier_plugin_sanity(test_plugin: BaseClassifier) -> None:
+def test_sanity(test_plugin: BaseClassifier) -> None:
     assert test_plugin is not None
     assert test_plugin.name == "seq2seq_classifier"
     assert len(test_plugin.hyperparameter_space()) == 8
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_seq2seq_classifier_plugin_fit(test_plugin: BaseClassifier) -> None:
-    raw_data = SineDataLoader().load()
-    data = dataset.TemporalPredictionDataset(
-        time_series=raw_data.time_series.dataframe(),
-        static=raw_data.static.dataframe(),  # type: ignore
-        targets=raw_data.time_series.dataframe().copy(),
-    )
-
-    test_plugin.fit(data)
+@pytest.mark.parametrize("data", TEST_ON_DATASETS)
+def test_fit(test_plugin: BaseClassifier, data: str, request: pytest.FixtureRequest) -> None:
+    dataset = request.getfixturevalue(data)
+    test_plugin.fit(dataset)
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_seq2seq_classifier_plugin_predict(test_plugin: BaseClassifier) -> None:
-    temporal_dim = 11
-    raw_data = SineDataLoader(temporal_dim=temporal_dim).load()
-    data = dataset.TemporalPredictionDataset(
-        time_series=raw_data.time_series.dataframe(),
-        static=raw_data.static.dataframe(),  # type: ignore
-        targets=raw_data.time_series.dataframe().copy(),
-    )
-    test_plugin.fit(data)
-    output = test_plugin.predict(data, n_future_steps=10)
+@pytest.mark.parametrize("data", TEST_ON_DATASETS)
+def test_predict(test_plugin: BaseClassifier, data: str, request: pytest.FixtureRequest) -> None:
+    dataset = request.getfixturevalue(data)
+    test_plugin.fit(dataset)
+    output = test_plugin.predict(dataset, n_future_steps=10)
 
-    assert output.numpy().shape == (len(raw_data.time_series), 10, temporal_dim)
+    assert output.numpy().shape == (len(dataset.time_series), 10, 5)
 
 
-def test_seq2seq_classifier_serde() -> None:
+@pytest.mark.parametrize("data", TEST_ON_DATASETS)
+def test_seq2seq_classifier_serde(data: str, request: pytest.FixtureRequest) -> None:
     test_plugin = from_api()
 
-    raw_data = SineDataLoader().load()
-    data = dataset.TemporalPredictionDataset(
-        time_series=raw_data.time_series.dataframe(),
-        static=raw_data.static.dataframe(),  # type: ignore
-        targets=raw_data.time_series.dataframe().copy(),
-    )
+    dataset = request.getfixturevalue(data)
 
     dump = save(test_plugin)
     reloaded1 = load(dump)
 
-    reloaded1.fit(data)
+    reloaded1.fit(dataset)
 
     dump = save(reloaded1)
     reloaded2 = load(dump)
 
-    reloaded2.predict(data, n_future_steps=10)
+    reloaded2.predict(dataset, n_future_steps=10)

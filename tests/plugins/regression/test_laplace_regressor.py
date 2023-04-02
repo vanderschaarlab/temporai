@@ -5,10 +5,11 @@ from tempor.plugins.regression import BaseRegressor
 from tempor.plugins.regression.plugin_laplace_regressor import (
     LaplaceODERegressor as plugin,
 )
-from tempor.utils.dataloaders.google_stocks import GoogleStocksDataLoader
 from tempor.utils.serialization import load, save
 
-train_kwargs = {"random_state": 123, "n_iter": 50}
+train_kwargs = {"random_state": 123, "n_iter": 5}
+
+TEST_ON_DATASETS = ["google_stocks_data_small"]
 
 
 def from_api() -> BaseRegressor:
@@ -20,22 +21,23 @@ def from_module() -> BaseRegressor:
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_laplace_ode_regressor_plugin_sanity(test_plugin: BaseRegressor) -> None:
+def test_sanity(test_plugin: BaseRegressor) -> None:
     assert test_plugin is not None
     assert test_plugin.name == "laplace_ode_regressor"
     assert len(test_plugin.hyperparameter_space()) == 7
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_laplace_ode_regressor_plugin_fit(test_plugin: BaseRegressor) -> None:
-    dataset = GoogleStocksDataLoader().load()
-
+@pytest.mark.parametrize("data", TEST_ON_DATASETS)
+def test_fit(test_plugin: BaseRegressor, data: str, request: pytest.FixtureRequest) -> None:
+    dataset = request.getfixturevalue(data)
     test_plugin.fit(dataset)
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_laplace_ode_regressor_plugin_predict(test_plugin: BaseRegressor) -> None:
-    dataset = GoogleStocksDataLoader().load()
+@pytest.mark.parametrize("data", TEST_ON_DATASETS)
+def test_predict(test_plugin: BaseRegressor, data: str, request: pytest.FixtureRequest) -> None:
+    dataset = request.getfixturevalue(data)
 
     dump = save(test_plugin)
     reloaded = load(dump)

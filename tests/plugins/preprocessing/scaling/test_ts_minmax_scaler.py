@@ -1,5 +1,3 @@
-from typing import Any
-
 import pytest
 
 from tempor.plugins import plugin_loader
@@ -7,35 +5,40 @@ from tempor.plugins.preprocessing.scaling import BaseScaler
 from tempor.plugins.preprocessing.scaling.plugin_ts_minmax_scaler import (
     TimeSeriesMinMaxScaler as plugin,
 )
-from tempor.utils.dataloaders import GoogleStocksDataLoader, SineDataLoader
 from tempor.utils.serialization import load, save
+
+train_kwargs = {"random_state": 123}
+
+TEST_ON_DATASETS = ["google_stocks_data_full", "sine_data_scaled_small"]
+TEST_TRANSFORM_ON_DATASETS = ["sine_data_scaled_small"]
 
 
 def from_api() -> BaseScaler:
-    return plugin_loader.get("preprocessing.scaling.ts_minmax_scaler", random_state=123)
+    return plugin_loader.get("preprocessing.scaling.ts_minmax_scaler", **train_kwargs)
 
 
 def from_module() -> BaseScaler:
-    return plugin(random_state=123)
+    return plugin(**train_kwargs)
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_ts_minmax_scaler_plugin_sanity(test_plugin: BaseScaler) -> None:
+def test_sanity(test_plugin: BaseScaler) -> None:
     assert test_plugin is not None
     assert test_plugin.name == "ts_minmax_scaler"
     assert len(test_plugin.hyperparameter_space()) == 0
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-@pytest.mark.parametrize("dataloader", [GoogleStocksDataLoader(), SineDataLoader(ts_scale=5)])
-def test_ts_minmax_scaler_plugin_fit(test_plugin: BaseScaler, dataloader: Any) -> None:
-    dataset = dataloader.load()
+@pytest.mark.parametrize("data", TEST_ON_DATASETS)
+def test_fit(test_plugin: BaseScaler, data: str, request: pytest.FixtureRequest) -> None:
+    dataset = request.getfixturevalue(data)
     test_plugin.fit(dataset)
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_ts_minmax_scaler_plugin_transform(test_plugin: BaseScaler) -> None:
-    dataset = SineDataLoader(ts_scale=100).load()
+@pytest.mark.parametrize("data", TEST_TRANSFORM_ON_DATASETS)
+def test_transform(test_plugin: BaseScaler, data: str, request: pytest.FixtureRequest) -> None:
+    dataset = request.getfixturevalue(data)
     assert dataset.time_series is not None  # nosec B101
     assert (dataset.time_series.numpy() > 1.1).any()
 

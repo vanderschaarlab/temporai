@@ -3,35 +3,39 @@ import pytest
 from tempor.plugins import plugin_loader
 from tempor.plugins.regression import BaseRegressor
 from tempor.plugins.regression.plugin_nn_regressor import NeuralNetRegressor as plugin
-from tempor.utils.dataloaders.sine import SineDataLoader
 from tempor.utils.serialization import load, save
+
+train_kwargs = {"random_state": 123, "n_iter": 5}
+
+TEST_ON_DATASETS = ["sine_data_small"]
 
 
 def from_api() -> BaseRegressor:
-    return plugin_loader.get("regression.nn_regressor", random_state=123)
+    return plugin_loader.get("regression.nn_regressor", **train_kwargs)
 
 
 def from_module() -> BaseRegressor:
-    return plugin(random_state=123)
+    return plugin(**train_kwargs)
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_nn_regressor_plugin_sanity(test_plugin: BaseRegressor) -> None:
+def test_sanity(test_plugin: BaseRegressor) -> None:
     assert test_plugin is not None
     assert test_plugin.name == "nn_regressor"
     assert len(test_plugin.hyperparameter_space()) == 9
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_nn_regressor_plugin_fit(test_plugin: BaseRegressor) -> None:
-    dataset = SineDataLoader().load()
-
+@pytest.mark.parametrize("data", TEST_ON_DATASETS)
+def test_fit(test_plugin: BaseRegressor, data: str, request: pytest.FixtureRequest) -> None:
+    dataset = request.getfixturevalue(data)
     test_plugin.fit(dataset)
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_nn_regressor_plugin_predict(test_plugin: BaseRegressor) -> None:
-    dataset = SineDataLoader().load()
+@pytest.mark.parametrize("data", TEST_ON_DATASETS)
+def test_predict(test_plugin: BaseRegressor, data: str, request: pytest.FixtureRequest) -> None:
+    dataset = request.getfixturevalue(data)
 
     dump = save(test_plugin)
     reloaded = load(dump)
