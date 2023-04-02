@@ -1,12 +1,8 @@
-name: Run tests
+name: Run full set of tests (slow)
 
 on:
-  push:
-    branches: [main, release]
-  pull_request:
-    types: [opened, synchronize, reopened]
   schedule:
-    - cron: "21 5 * * 1"
+    - cron: "17 4 * * 3"
   workflow_dispatch:
 
 jobs:
@@ -59,11 +55,11 @@ jobs:
           pip install .[dev]
       - name: Test with pytest (xdist)
         if: matrix.os != 'ubuntu-latest'
-        run: pytest -vvvx -n auto -m "not slow and not extra" --durations=50
+        run: pytest -vvvx -n auto --durations=50
       - name: Test with pytest
         # Avoid xdist on 'ubuntu-latest', as this has worse performance.
         if: matrix.os == 'ubuntu-latest'
-        run: pytest -vvvx -m "not slow and not extra" --durations=50
+        run: pytest -vvvx -m --durations=50
       - name: Run doctests with pytest (xdist)
         if: matrix.os != 'ubuntu-latest'
         run: pytest -vvvx -n auto src/ --doctest-modules --durations=50

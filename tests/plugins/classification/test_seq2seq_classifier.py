@@ -27,14 +27,26 @@ def test_sanity(test_plugin: BaseClassifier) -> None:
     assert len(test_plugin.hyperparameter_space()) == 8
 
 
-@pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
+@pytest.mark.parametrize(
+    "test_plugin",
+    [
+        from_api(),
+        pytest.param(from_module(), marks=pytest.mark.extra),
+    ],
+)
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
 def test_fit(test_plugin: BaseClassifier, data: str, request: pytest.FixtureRequest) -> None:
     dataset = request.getfixturevalue(data)
     test_plugin.fit(dataset)
 
 
-@pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
+@pytest.mark.parametrize(
+    "test_plugin",
+    [
+        from_api(),
+        pytest.param(from_module(), marks=pytest.mark.extra),
+    ],
+)
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
 def test_predict(test_plugin: BaseClassifier, data: str, request: pytest.FixtureRequest) -> None:
     dataset = request.getfixturevalue(data)
@@ -45,7 +57,7 @@ def test_predict(test_plugin: BaseClassifier, data: str, request: pytest.Fixture
 
 
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
-def test_seq2seq_classifier_serde(data: str, request: pytest.FixtureRequest) -> None:
+def test_serde(data: str, request: pytest.FixtureRequest) -> None:
     test_plugin = from_api()
 
     dataset = request.getfixturevalue(data)

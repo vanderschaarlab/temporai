@@ -27,7 +27,13 @@ def test_sanity(test_plugin: BaseImputer) -> None:
     assert len(test_plugin.hyperparameter_space()) == 1
 
 
-@pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
+@pytest.mark.parametrize(
+    "test_plugin",
+    [
+        from_api(),
+        pytest.param(from_module(), marks=pytest.mark.extra),
+    ],
+)
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
 def test_fit(test_plugin: BaseImputer, data: str, request: pytest.FixtureRequest) -> None:
     dataset = request.getfixturevalue(data)
@@ -39,7 +45,13 @@ def test_fit(test_plugin: BaseImputer, data: str, request: pytest.FixtureRequest
     test_plugin.fit(dataset)
 
 
-@pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
+@pytest.mark.parametrize(
+    "test_plugin",
+    [
+        from_api(),
+        pytest.param(from_module(), marks=pytest.mark.extra),
+    ],
+)
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
 def test_transform(test_plugin: BaseImputer, data: str, request: pytest.FixtureRequest) -> None:
     dataset = request.getfixturevalue(data)

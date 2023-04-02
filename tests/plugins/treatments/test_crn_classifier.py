@@ -29,14 +29,26 @@ def test_sanity(test_plugin: BaseTreatments) -> None:
     assert len(test_plugin.hyperparameter_space()) == 8
 
 
-@pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
+@pytest.mark.parametrize(
+    "test_plugin",
+    [
+        from_api(),
+        pytest.param(from_module(), marks=pytest.mark.extra),
+    ],
+)
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
 def test_fit(test_plugin: BaseTreatments, data: str, request: pytest.FixtureRequest) -> None:
     dataset = request.getfixturevalue(data)
     test_plugin.fit(dataset)
 
 
-@pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
+@pytest.mark.parametrize(
+    "test_plugin",
+    [
+        from_api(),
+        pytest.param(from_module(), marks=pytest.mark.extra),
+    ],
+)
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
 def test_predict(test_plugin: BaseTreatments, data: str, request: pytest.FixtureRequest) -> None:
     dataset = request.getfixturevalue(data)
@@ -55,7 +67,13 @@ def test_predict(test_plugin: BaseTreatments, data: str, request: pytest.Fixture
     assert output.numpy().shape == (len(dataset.time_series), 6, 3)
 
 
-@pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
+@pytest.mark.parametrize(
+    "test_plugin",
+    [
+        from_api(),
+        pytest.param(from_module(), marks=pytest.mark.extra),
+    ],
+)
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
 def test_crn_classifier_plugin_predict_counterfactuals(
     test_plugin: BaseTreatments, data: str, request: pytest.FixtureRequest

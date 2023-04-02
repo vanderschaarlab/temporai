@@ -33,14 +33,26 @@ def test_sanity(test_plugin: "BaseTimeToEventAnalysis") -> None:
     assert len(test_plugin.hyperparameter_space()) == 10
 
 
-@pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
+@pytest.mark.parametrize(
+    "test_plugin",
+    [
+        from_api(),
+        pytest.param(from_module(), marks=pytest.mark.extra),
+    ],
+)
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
 def test_fit(test_plugin: "BaseTimeToEventAnalysis", data: str, request: pytest.FixtureRequest) -> None:
     dataset = request.getfixturevalue(data)
     test_plugin.fit(dataset)
 
 
-@pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
+@pytest.mark.parametrize(
+    "test_plugin",
+    [
+        from_api(),
+        pytest.param(from_module(), marks=pytest.mark.extra),
+    ],
+)
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
 def test_predict(
     test_plugin: "BaseTimeToEventAnalysis",
