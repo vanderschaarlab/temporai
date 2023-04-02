@@ -1,15 +1,12 @@
 import copy
 from types import ModuleType
-from typing import Any, List, Tuple
+from typing import TYPE_CHECKING, Any, List, Tuple
 
 import numpy as np
 import pytest
-from clairvoyance2.datasets.dummy import dummy_dataset
-from clairvoyance2.datasets.simulated.simple_pkpd import simple_pkpd_dataset
 
-from tempor.data import dataset
-from tempor.data.clv2conv import clairvoyance2_dataset_to_tempor_dataset
-from tempor.utils import dataloaders
+if TYPE_CHECKING:
+    from tempor.data import dataset  # nosec B101
 
 # --- Test utilities. ---
 
@@ -91,7 +88,7 @@ def patch_module(monkeypatch, request):
 
 @pytest.fixture
 def get_event0_time_percentiles():
-    def func(data: dataset.TimeToEventAnalysisDataset, horizon_percentiles: List):
+    def func(data: "dataset.TimeToEventAnalysisDataset", horizon_percentiles: List):
         event0_times = data.predictive.targets.split_as_two_dataframes()[0].to_numpy().reshape((-1,))
         return np.quantile(event0_times, horizon_percentiles).tolist()
 
@@ -103,11 +100,13 @@ def get_event0_time_percentiles():
 # Sine data: full.
 @pytest.fixture(scope="session")
 def _sine_data_full():
+    from tempor.utils import dataloaders
+
     return dataloaders.SineDataLoader(no=100, temporal_dim=5, random_state=42).load()
 
 
 @pytest.fixture(scope="function")
-def sine_data_full(_sine_data_full: dataset.OneOffPredictionDataset) -> dataset.OneOffPredictionDataset:
+def sine_data_full(_sine_data_full: "dataset.OneOffPredictionDataset") -> "dataset.OneOffPredictionDataset":
     # Give each test a copy, just in case.
     return copy.deepcopy(_sine_data_full)
 
@@ -115,17 +114,21 @@ def sine_data_full(_sine_data_full: dataset.OneOffPredictionDataset) -> dataset.
 # Sine data: full, missing.
 @pytest.fixture(scope="session")
 def _sine_data_missing_full():
+    from tempor.utils import dataloaders
+
     return dataloaders.SineDataLoader(no=100, with_missing=True, temporal_dim=5, random_state=42).load()
 
 
 @pytest.fixture(scope="function")
-def sine_data_missing_full(_sine_data_missing_full: dataset.OneOffPredictionDataset) -> dataset.OneOffPredictionDataset:
+def sine_data_missing_full(
+    _sine_data_missing_full: "dataset.OneOffPredictionDataset",
+) -> "dataset.OneOffPredictionDataset":
     return copy.deepcopy(_sine_data_missing_full)
 
 
 # Sine data: small.
 @pytest.fixture(scope="session")
-def _sine_data_small(_sine_data_full: dataset.OneOffPredictionDataset) -> dataset.OneOffPredictionDataset:
+def _sine_data_small(_sine_data_full: "dataset.OneOffPredictionDataset") -> "dataset.OneOffPredictionDataset":
     data, _ = copy.deepcopy(_sine_data_full).train_test_split(
         train_size=6,
         stratify=_sine_data_full.predictive.targets.numpy(),
@@ -135,15 +138,15 @@ def _sine_data_small(_sine_data_full: dataset.OneOffPredictionDataset) -> datase
 
 
 @pytest.fixture(scope="function")
-def sine_data_small(_sine_data_small: dataset.OneOffPredictionDataset) -> dataset.OneOffPredictionDataset:
+def sine_data_small(_sine_data_small: "dataset.OneOffPredictionDataset") -> "dataset.OneOffPredictionDataset":
     return copy.deepcopy(_sine_data_small)
 
 
 # Sine data: small, missing.
 @pytest.fixture(scope="session")
 def _sine_data_missing_small(
-    _sine_data_missing_full: dataset.OneOffPredictionDataset,
-) -> dataset.OneOffPredictionDataset:
+    _sine_data_missing_full: "dataset.OneOffPredictionDataset",
+) -> "dataset.OneOffPredictionDataset":
     data, _ = copy.deepcopy(_sine_data_missing_full).train_test_split(
         train_size=6,
         stratify=_sine_data_missing_full.predictive.targets.numpy(),
@@ -154,14 +157,16 @@ def _sine_data_missing_small(
 
 @pytest.fixture(scope="function")
 def sine_data_missing_small(
-    _sine_data_missing_small: dataset.OneOffPredictionDataset,
-) -> dataset.OneOffPredictionDataset:
+    _sine_data_missing_small: "dataset.OneOffPredictionDataset",
+) -> "dataset.OneOffPredictionDataset":
     return copy.deepcopy(_sine_data_missing_small)
 
 
 # Sine data: temporal, full.
 @pytest.fixture(scope="session")
-def _sine_data_temporal(_sine_data_full: dataset.OneOffPredictionDataset) -> dataset.TemporalPredictionDataset:
+def _sine_data_temporal(_sine_data_full: "dataset.OneOffPredictionDataset") -> "dataset.TemporalPredictionDataset":
+    from tempor.data import dataset
+
     raw_data, _ = copy.deepcopy(_sine_data_full).train_test_split(
         train_size=6,
         stratify=_sine_data_full.predictive.targets.numpy(),
@@ -177,70 +182,74 @@ def _sine_data_temporal(_sine_data_full: dataset.OneOffPredictionDataset) -> dat
 
 # Sine data: temporal, small.
 @pytest.fixture(scope="function")
-def sine_data_temporal(_sine_data_temporal: dataset.TemporalPredictionDataset) -> dataset.TemporalPredictionDataset:
+def sine_data_temporal(_sine_data_temporal: "dataset.TemporalPredictionDataset") -> "dataset.TemporalPredictionDataset":
     return copy.deepcopy(_sine_data_temporal)
 
 
 @pytest.fixture(scope="session")
 def _sine_data_temporal_small(
-    _sine_data_temporal: dataset.TemporalPredictionDataset,
-) -> dataset.TemporalPredictionDataset:
+    _sine_data_temporal: "dataset.TemporalPredictionDataset",
+) -> "dataset.TemporalPredictionDataset":
     data = copy.deepcopy(_sine_data_temporal)[:6]
     return data
 
 
 @pytest.fixture(scope="function")
 def sine_data_temporal_small(
-    _sine_data_temporal_small: dataset.TemporalPredictionDataset,
-) -> dataset.TemporalPredictionDataset:
+    _sine_data_temporal_small: "dataset.TemporalPredictionDataset",
+) -> "dataset.TemporalPredictionDataset":
     return copy.deepcopy(_sine_data_temporal_small)
 
 
 # Google stocks data: full.
 @pytest.fixture(scope="session")
-def _google_stocks_data_full() -> dataset.OneOffPredictionDataset:
+def _google_stocks_data_full() -> "dataset.OneOffPredictionDataset":
+    from tempor.utils import dataloaders
+
     data = dataloaders.GoogleStocksDataLoader(seq_len=50).load()
     return data
 
 
 @pytest.fixture(scope="function")
 def google_stocks_data_full(
-    _google_stocks_data_full: dataset.OneOffPredictionDataset,
-) -> dataset.OneOffPredictionDataset:
+    _google_stocks_data_full: "dataset.OneOffPredictionDataset",
+) -> "dataset.OneOffPredictionDataset":
     return copy.deepcopy(_google_stocks_data_full)
 
 
 # Google stocks data: small.
 @pytest.fixture(scope="session")
 def _google_stocks_data_small(
-    _google_stocks_data_full: dataset.OneOffPredictionDataset,
-) -> dataset.OneOffPredictionDataset:
+    _google_stocks_data_full: "dataset.OneOffPredictionDataset",
+) -> "dataset.OneOffPredictionDataset":
     data = copy.deepcopy(_google_stocks_data_full)[:6]
     return data
 
 
 @pytest.fixture(scope="function")
 def google_stocks_data_small(
-    _google_stocks_data_small: dataset.OneOffPredictionDataset,
-) -> dataset.OneOffPredictionDataset:
+    _google_stocks_data_small: "dataset.OneOffPredictionDataset",
+) -> "dataset.OneOffPredictionDataset":
     return copy.deepcopy(_google_stocks_data_small)
 
 
 # PBC data: full.
 @pytest.fixture(scope="session")
-def _pbc_data_full() -> dataset.TimeToEventAnalysisDataset:
+def _pbc_data_full() -> "dataset.TimeToEventAnalysisDataset":
+    from tempor.utils import dataloaders
+
     data = dataloaders.PBCDataLoader().load()
     return data
 
 
 @pytest.fixture(scope="function")
-def pbc_data_full(_pbc_data_full: dataset.TimeToEventAnalysisDataset) -> dataset.TimeToEventAnalysisDataset:
+def pbc_data_full(_pbc_data_full: "dataset.TimeToEventAnalysisDataset") -> "dataset.TimeToEventAnalysisDataset":
     return copy.deepcopy(_pbc_data_full)
 
 
 # PBC data: small.
 @pytest.fixture(scope="session")
-def _pbc_data_small(_pbc_data_full: dataset.TimeToEventAnalysisDataset) -> dataset.TimeToEventAnalysisDataset:
+def _pbc_data_small(_pbc_data_full: "dataset.TimeToEventAnalysisDataset") -> "dataset.TimeToEventAnalysisDataset":
     si = list(range(len(_pbc_data_full.time_series)))
     np.random.seed(42)
     np.random.shuffle(si)
@@ -250,13 +259,17 @@ def _pbc_data_small(_pbc_data_full: dataset.TimeToEventAnalysisDataset) -> datas
 
 
 @pytest.fixture(scope="function")
-def pbc_data_small(_pbc_data_small: dataset.TimeToEventAnalysisDataset) -> dataset.TimeToEventAnalysisDataset:
+def pbc_data_small(_pbc_data_small: "dataset.TimeToEventAnalysisDataset") -> "dataset.TimeToEventAnalysisDataset":
     return copy.deepcopy(_pbc_data_small)
 
 
 # Clairvoyance dummy data: full.
 @pytest.fixture(scope="session")
-def _clv_data_full() -> dataset.TemporalTreatmentEffectsDataset:
+def _clv_data_full() -> "dataset.TemporalTreatmentEffectsDataset":
+    from clairvoyance2.datasets.dummy import dummy_dataset
+
+    from tempor.data.clv2conv import clairvoyance2_dataset_to_tempor_dataset
+
     clv_dataset = dummy_dataset(
         n_samples=100,
         temporal_covariates_n_features=5,
@@ -273,25 +286,35 @@ def _clv_data_full() -> dataset.TemporalTreatmentEffectsDataset:
 
 
 @pytest.fixture(scope="function")
-def clv_data_full(_clv_data_full: dataset.TemporalTreatmentEffectsDataset) -> dataset.TemporalTreatmentEffectsDataset:
+def clv_data_full(
+    _clv_data_full: "dataset.TemporalTreatmentEffectsDataset",
+) -> "dataset.TemporalTreatmentEffectsDataset":
     return copy.deepcopy(_clv_data_full)
 
 
 # Clairvoyance dummy data: small.
 @pytest.fixture(scope="session")
-def _clv_data_small(_clv_data_full: dataset.TemporalTreatmentEffectsDataset) -> dataset.TemporalTreatmentEffectsDataset:
+def _clv_data_small(
+    _clv_data_full: "dataset.TemporalTreatmentEffectsDataset",
+) -> "dataset.TemporalTreatmentEffectsDataset":
     data = copy.deepcopy(_clv_data_full)[:10]
     return data
 
 
 @pytest.fixture(scope="function")
-def clv_data_small(_clv_data_small: dataset.TemporalTreatmentEffectsDataset) -> dataset.TemporalTreatmentEffectsDataset:
+def clv_data_small(
+    _clv_data_small: "dataset.TemporalTreatmentEffectsDataset",
+) -> "dataset.TemporalTreatmentEffectsDataset":
     return copy.deepcopy(_clv_data_small)
 
 
 # PKPD data: full.
 @pytest.fixture(scope="session")
-def _pkpd_data_full() -> dataset.OneOffTreatmentEffectsDataset:
+def _pkpd_data_full() -> "dataset.OneOffTreatmentEffectsDataset":
+    from clairvoyance2.datasets.simulated.simple_pkpd import simple_pkpd_dataset
+
+    from tempor.data.clv2conv import clairvoyance2_dataset_to_tempor_dataset
+
     local_dataset = simple_pkpd_dataset(
         n_timesteps=30,
         time_index_treatment_event=25,
@@ -303,13 +326,17 @@ def _pkpd_data_full() -> dataset.OneOffTreatmentEffectsDataset:
 
 
 @pytest.fixture(scope="function")
-def pkpd_data_full(_pkpd_data_full: dataset.OneOffTreatmentEffectsDataset) -> dataset.OneOffTreatmentEffectsDataset:
+def pkpd_data_full(_pkpd_data_full: "dataset.OneOffTreatmentEffectsDataset") -> "dataset.OneOffTreatmentEffectsDataset":
     return copy.deepcopy(_pkpd_data_full)
 
 
 # PKPD data: small.
 @pytest.fixture(scope="session")
-def _pkpd_data_small() -> dataset.OneOffTreatmentEffectsDataset:
+def _pkpd_data_small() -> "dataset.OneOffTreatmentEffectsDataset":
+    from clairvoyance2.datasets.simulated.simple_pkpd import simple_pkpd_dataset
+
+    from tempor.data.clv2conv import clairvoyance2_dataset_to_tempor_dataset
+
     local_dataset = simple_pkpd_dataset(
         n_timesteps=6,
         time_index_treatment_event=3,
@@ -321,5 +348,7 @@ def _pkpd_data_small() -> dataset.OneOffTreatmentEffectsDataset:
 
 
 @pytest.fixture(scope="function")
-def pkpd_data_small(_pkpd_data_small: dataset.OneOffTreatmentEffectsDataset) -> dataset.OneOffTreatmentEffectsDataset:
+def pkpd_data_small(
+    _pkpd_data_small: "dataset.OneOffTreatmentEffectsDataset",
+) -> "dataset.OneOffTreatmentEffectsDataset":
     return copy.deepcopy(_pkpd_data_small)
