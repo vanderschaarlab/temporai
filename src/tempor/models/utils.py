@@ -108,6 +108,8 @@ def get_nonlin(name: str) -> nn.Module:
     elif name == "sigmoid":
         return nn.Sigmoid()
     elif name == "softmax":
+        return nn.Softmax(dim=-1)
+    elif name == "gumbel_softmax":
         return GumbelSoftmax(dim=-1)
     else:
         raise ValueError(f"Unknown nonlinearity {name}")
