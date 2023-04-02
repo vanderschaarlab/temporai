@@ -76,6 +76,7 @@ def test_fails(plugins_str: List[Any]) -> None:
         Pipeline(plugins_str)()
 
 
+@pytest.mark.filterwarnings("ignore:RNN.*contiguous.*:UserWarning")  # Expected: problem with current serialization.
 @pytest.mark.parametrize(
     "plugins_str",
     [

@@ -48,6 +48,7 @@ def test_fit(test_plugin: "BaseTimeToEventAnalysis", data: str, request: pytest.
     test_plugin.fit(dataset)
 
 
+@pytest.mark.filterwarnings("ignore:RNN.*contiguous.*:UserWarning")  # Expected: problem with current serialization.
 @pytest.mark.filterwarnings("ignore::lifelines.utils.ConvergenceWarning")  # Expected.
 @pytest.mark.filterwarnings("ignore:.*Index constructor.*:FutureWarning")
 @pytest.mark.parametrize(

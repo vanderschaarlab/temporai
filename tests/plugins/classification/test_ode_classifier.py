@@ -67,6 +67,7 @@ def test_predict_proba(test_plugin: BaseClassifier, data: str, request: pytest.F
     assert output.numpy().shape == (len(dataset.time_series), 2)
 
 
+@pytest.mark.filterwarnings("ignore:RNN.*contiguous.*:UserWarning")  # Expected: problem with current serialization.
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
 def test_serde(data: str, request: pytest.FixtureRequest) -> None:
     test_plugin = from_api()

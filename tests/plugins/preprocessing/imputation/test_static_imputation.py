@@ -47,6 +47,7 @@ def test_fit(test_plugin: BaseImputer, data: str, request: pytest.FixtureRequest
     test_plugin.fit(dataset)
 
 
+@pytest.mark.filterwarnings("ignore:RNN.*contiguous.*:UserWarning")  # Expected: problem with current serialization.
 @pytest.mark.parametrize(
     "test_plugin",
     [
