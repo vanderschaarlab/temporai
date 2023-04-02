@@ -270,6 +270,7 @@ class TestStaticSamples:
     def test_sample_index(self, df_static: pd.DataFrame):
         s = samples.StaticSamples.from_dataframe(df_static)
         assert s.sample_index() == [f"sample_{x}" for x in range(1, 10 + 1)]
+        assert s.sample_index() == [x.dataframe().index[0] for x in s]
 
     def test_repr(self, df_static: pd.DataFrame):
         s = samples.StaticSamples(data=df_static)
@@ -566,6 +567,7 @@ class TestTimeSeriesSamples:
     def test_sample_index(self, df_time_series: pd.DataFrame):
         s = samples.TimeSeriesSamples.from_dataframe(df_time_series)
         assert s.sample_index() == ["a", "b", "c"]
+        assert s.sample_index() == [x.dataframe().index.get_level_values(0)[0] for x in s]
 
     def test_time_indexes(self, df_time_series: pd.DataFrame):
         s = samples.TimeSeriesSamples.from_dataframe(df_time_series)
@@ -699,6 +701,7 @@ class TestEventSamples:
     def test_sample_index(self, df_event: pd.DataFrame):
         s = samples.EventSamples.from_dataframe(df_event)
         assert s.sample_index() == [f"sample_{x}" for x in range(1, 3 + 1)]
+        assert s.sample_index() == [x.dataframe().index[0] for x in s]
 
     def test_repr(self, df_event: pd.DataFrame):
         s = samples.EventSamples.from_dataframe(df_event)
