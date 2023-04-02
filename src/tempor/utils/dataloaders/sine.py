@@ -71,7 +71,7 @@ class SineDataLoader(dataloader.OneOffPredictionDataLoader):
         np.random.seed(self.random_state)
 
         static_data = pd.DataFrame(np.random.rand(self.no, self.static_dim) * self.static_scale)
-        static_data["sample_idx"] = [str(i) for i in range(self.no)]
+        static_data["sample_idx"] = [i for i in range(self.no)]
         static_data.set_index(keys=["sample_idx"], drop=True, inplace=True)
 
         static_data.columns = static_data.columns.astype(str)
@@ -82,7 +82,7 @@ class SineDataLoader(dataloader.OneOffPredictionDataLoader):
         temporal_data = []
 
         outcome = pd.DataFrame(np.random.randint(0, 2, self.no))
-        outcome["sample_idx"] = [str(i) for i in range(self.no)]
+        outcome["sample_idx"] = [i for i in range(self.no)]
         outcome.columns = outcome.columns.astype(str)
 
         outcome.set_index(keys=["sample_idx"], drop=True, inplace=True)
@@ -118,7 +118,7 @@ class SineDataLoader(dataloader.OneOffPredictionDataLoader):
                     local_data.loc[local_data.sample(frac=self.miss_ratio).index, col] = np.nan
 
             # Stack the generated data:
-            local_data["sample_idx"] = str(i)
+            local_data["sample_idx"] = i
             local_data["time_idx"] = list(range(seq_len))
             temporal_data.append(local_data)
 
