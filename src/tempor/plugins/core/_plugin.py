@@ -108,6 +108,9 @@ def register_plugin(name: str, category: str):
 
 class PluginLoader:
     def __init__(self) -> None:
+        self._refresh()
+
+    def _refresh(self):
         self._plugin_registry: Dict[str, Type[Plugin]] = PLUGIN_REGISTRY
 
         name_by_category: Dict = dict()
@@ -125,12 +128,15 @@ class PluginLoader:
         self._plugin_class_by_category = class_by_category
 
     def list(self) -> Dict:
+        self._refresh()
         return self._plugin_name_by_category
 
     def list_fqns(self) -> List[str]:
+        self._refresh()
         return list(self._plugin_registry.keys())
 
     def list_classes(self) -> Dict:
+        self._refresh()
         return self._plugin_class_by_category
 
     def _raise_plugin_does_not_exist_error(self, name: str):
@@ -138,10 +144,12 @@ class PluginLoader:
             raise ValueError(f"Plugin {name} does not exist.")
 
     def get(self, name: str, *args, **kwargs) -> Any:
+        self._refresh()
         self._raise_plugin_does_not_exist_error(name)
         return self._plugin_registry[name](*args, **kwargs)
 
     def get_class(self, name: str) -> Type:
+        self._refresh()
         self._raise_plugin_does_not_exist_error(name)
         return self._plugin_registry[name]
 
