@@ -7,7 +7,7 @@ import tempor.plugins.core as plugins
 from tempor.data import dataset, samples
 from tempor.data.clv2conv import tempor_dataset_to_clairvoyance2_dataset
 from tempor.plugins.core._params import FloatParams, IntegerParams
-from tempor.plugins.treatments import BaseTreatments
+from tempor.plugins.treatments.one_off._base import BaseOneOffTreatmentEffects
 
 
 @dataclasses.dataclass
@@ -26,8 +26,8 @@ class SyncTwinParams:
     treatment_status_is_treated: int = 1
 
 
-@plugins.register_plugin(name="synctwin_regressor", category="treatments")
-class SyncTwinTreatmentsRegressor(BaseTreatments):
+@plugins.register_plugin(name="synctwin_regressor", category="treatments.one_off.regression")
+class SyncTwinTreatmentsRegressor(BaseOneOffTreatmentEffects):
     ParamsDefinition = SyncTwinParams
     params: SyncTwinParams  # type: ignore
 
@@ -41,7 +41,7 @@ class SyncTwinTreatmentsRegressor(BaseTreatments):
             >>> from tempor.plugins import plugin_loader
             >>>
             >>> # Load the model:
-            >>> model = plugin_loader.get("treatments.synctwin_regressor", n_iter=50)
+            >>> model = plugin_loader.get("treatments.one_off.regression.synctwin_regressor", n_iter=50)
             >>>
             >>> # Train:
             >>> # model.fit(dataset)

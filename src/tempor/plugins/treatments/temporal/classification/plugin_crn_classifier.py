@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional, cast
 import clairvoyance2.data.dataformat as cl_dataformat
 import pandas as pd
 from clairvoyance2.data import DEFAULT_PADDING_INDICATOR
-from clairvoyance2.treatment_effects.crn import CRNRegressor, TimeIndexHorizon
+from clairvoyance2.treatment_effects.crn import CRNClassifier, TimeIndexHorizon
 from typing_extensions import Self
 
 import tempor.plugins.core as plugins
@@ -14,7 +14,7 @@ from tempor.data.clv2conv import (
     tempor_dataset_to_clairvoyance2_dataset,
 )
 from tempor.plugins.core._params import CategoricalParams, FloatParams, IntegerParams
-from tempor.plugins.treatments import BaseTreatments
+from tempor.plugins.treatments.temporal._base import BaseTemporalTreatmentEffects
 
 
 @dataclasses.dataclass
@@ -52,8 +52,8 @@ class CRNParams:
     padding_indicator: float = DEFAULT_PADDING_INDICATOR
 
 
-@plugins.register_plugin(name="crn_regressor", category="treatments")
-class CRNTreatmentsRegressor(BaseTreatments):
+@plugins.register_plugin(name="crn_classifier", category="treatments.temporal.classification")
+class CRNTreatmentsClassifier(BaseTemporalTreatmentEffects):
     ParamsDefinition = CRNParams
     params: CRNParams  # type: ignore
 
@@ -61,17 +61,13 @@ class CRNTreatmentsRegressor(BaseTreatments):
         self,
         **params,
     ) -> None:
-        """Counterfactual Recurrent Network treatment effects model for regression on the outcomes (targets).
-
-        References:
-            Estimating counterfactual treatment outcomes over time through adversarially balanced representations,
-            Ioana Bica, Ahmed M. Alaa, James Jordon, Mihaela van der Schaar.
+        """Counterfactual Recurrent Network treatment effects model for classification on the outcomes (targets).
 
         Example:
             >>> from tempor.plugins import plugin_loader
             >>>
             >>> # Load the model:
-            >>> model = plugin_loader.get("treatments.crn_regressor", n_iter=50)
+            >>> model = plugin_loader.get("treatments.temporal.classification.crn_classifier", n_iter=50)
             >>>
             >>> # Train:
             >>> # model.fit(dataset)
@@ -84,7 +80,7 @@ class CRNTreatmentsRegressor(BaseTreatments):
             Ioana Bica, Ahmed M. Alaa, James Jordon, Mihaela van der Schaar.
         """
         super().__init__(**params)
-        self.model: Optional[CRNRegressor] = None
+        self.model: Optional[CRNClassifier] = None
 
     def _fit(
         self,
@@ -94,7 +90,7 @@ class CRNTreatmentsRegressor(BaseTreatments):
     ) -> Self:
         cl_dataset = tempor_dataset_to_clairvoyance2_dataset(data)
 
-        self.model = CRNRegressor(
+        self.model = CRNClassifier(
             params=self.params,  # pyright: ignore
         )
 

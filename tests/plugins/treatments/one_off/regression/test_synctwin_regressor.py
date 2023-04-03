@@ -2,8 +2,8 @@ import pandas as pd
 import pytest
 
 from tempor.plugins import plugin_loader
-from tempor.plugins.treatments import BaseTreatments
-from tempor.plugins.treatments.plugin_synctwin_regressor import (
+from tempor.plugins.treatments.one_off import BaseOneOffTreatmentEffects
+from tempor.plugins.treatments.one_off.regression.plugin_synctwin_regressor import (
     SyncTwinTreatmentsRegressor as plugin,
 )
 
@@ -16,16 +16,16 @@ train_kwargs = {
 TEST_ON_DATASETS = ["pkpd_data_small"]
 
 
-def from_api() -> BaseTreatments:
-    return plugin_loader.get("treatments.synctwin_regressor", **train_kwargs)
+def from_api() -> BaseOneOffTreatmentEffects:
+    return plugin_loader.get("treatments.one_off.regression.synctwin_regressor", **train_kwargs)
 
 
-def from_module() -> BaseTreatments:
+def from_module() -> BaseOneOffTreatmentEffects:
     return plugin(**train_kwargs)
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_sanity(test_plugin: BaseTreatments) -> None:
+def test_sanity(test_plugin: BaseOneOffTreatmentEffects) -> None:
     assert test_plugin is not None
     assert test_plugin.name == "synctwin_regressor"
     assert len(test_plugin.hyperparameter_space()) == 5
@@ -39,7 +39,7 @@ def test_sanity(test_plugin: BaseTreatments) -> None:
     ],
 )
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
-def test_fit(test_plugin: BaseTreatments, data: str, request: pytest.FixtureRequest) -> None:
+def test_fit(test_plugin: BaseOneOffTreatmentEffects, data: str, request: pytest.FixtureRequest) -> None:
     dataset = request.getfixturevalue(data)
     test_plugin.fit(dataset)
 
@@ -52,7 +52,9 @@ def test_fit(test_plugin: BaseTreatments, data: str, request: pytest.FixtureRequ
     ],
 )
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
-def test_predict_counterfactuals(test_plugin: BaseTreatments, data: str, request: pytest.FixtureRequest) -> None:
+def test_predict_counterfactuals(
+    test_plugin: BaseOneOffTreatmentEffects, data: str, request: pytest.FixtureRequest
+) -> None:
     dataset = request.getfixturevalue(data)
     test_plugin.fit(dataset)
 

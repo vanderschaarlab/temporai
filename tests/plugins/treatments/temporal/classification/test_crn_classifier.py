@@ -1,29 +1,29 @@
 import pytest
 
 from tempor.plugins import plugin_loader
-from tempor.plugins.treatments import BaseTreatments
-from tempor.plugins.treatments.plugin_crn_classifier import (
+from tempor.plugins.treatments.temporal import BaseTemporalTreatmentEffects
+from tempor.plugins.treatments.temporal.classification.plugin_crn_classifier import (
     CRNTreatmentsClassifier as plugin,
 )
 from tempor.utils.serialization import load, save
 
-from .helpers_treatments import simulate_horizons, simulate_treatments_scenarios
+from ...helpers_treatments import simulate_horizons, simulate_treatments_scenarios
 
 train_kwargs = {"random_state": 123, "n_iter": 3}
 
 TEST_ON_DATASETS = ["clv_data_small"]
 
 
-def from_api() -> BaseTreatments:
-    return plugin_loader.get("treatments.crn_classifier", **train_kwargs)
+def from_api() -> BaseTemporalTreatmentEffects:
+    return plugin_loader.get("treatments.temporal.classification.crn_classifier", **train_kwargs)
 
 
-def from_module() -> BaseTreatments:
+def from_module() -> BaseTemporalTreatmentEffects:
     return plugin(**train_kwargs)
 
 
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_sanity(test_plugin: BaseTreatments) -> None:
+def test_sanity(test_plugin: BaseTemporalTreatmentEffects) -> None:
     assert test_plugin is not None
     assert test_plugin.name == "crn_classifier"
     assert len(test_plugin.hyperparameter_space()) == 8
@@ -37,7 +37,7 @@ def test_sanity(test_plugin: BaseTreatments) -> None:
     ],
 )
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
-def test_fit(test_plugin: BaseTreatments, data: str, request: pytest.FixtureRequest) -> None:
+def test_fit(test_plugin: BaseTemporalTreatmentEffects, data: str, request: pytest.FixtureRequest) -> None:
     dataset = request.getfixturevalue(data)
     test_plugin.fit(dataset)
 
@@ -51,7 +51,7 @@ def test_fit(test_plugin: BaseTreatments, data: str, request: pytest.FixtureRequ
     ],
 )
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
-def test_predict(test_plugin: BaseTreatments, data: str, request: pytest.FixtureRequest) -> None:
+def test_predict(test_plugin: BaseTemporalTreatmentEffects, data: str, request: pytest.FixtureRequest) -> None:
     dataset = request.getfixturevalue(data)
 
     dump = save(test_plugin)
@@ -77,7 +77,7 @@ def test_predict(test_plugin: BaseTreatments, data: str, request: pytest.Fixture
 )
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
 def test_crn_classifier_plugin_predict_counterfactuals(
-    test_plugin: BaseTreatments, data: str, request: pytest.FixtureRequest
+    test_plugin: BaseTemporalTreatmentEffects, data: str, request: pytest.FixtureRequest
 ) -> None:
     dataset = request.getfixturevalue(data)
     test_plugin.fit(dataset)

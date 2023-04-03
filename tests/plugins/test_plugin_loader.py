@@ -19,6 +19,8 @@ def test_tempor_plugin_loader_contents():
     assert "nop" in all_plugins["preprocessing"]
     assert "one_off" in all_plugins["prediction"]
     assert "temporal" in all_plugins["prediction"]
+    assert "one_off" in all_plugins["treatments"]
+    assert "temporal" in all_plugins["treatments"]
 
     # Check sub-subcategories:
     assert "classification" in all_plugins["prediction"]["one_off"]
@@ -29,6 +31,10 @@ def test_tempor_plugin_loader_contents():
     assert "temporal" in all_plugins["preprocessing"]["imputation"]
     assert "static" in all_plugins["preprocessing"]["scaling"]
     assert "temporal" in all_plugins["preprocessing"]["scaling"]
+    # assert "classification" in all_plugins["treatments"]["one_off"]
+    assert "regression" in all_plugins["treatments"]["one_off"]
+    assert "classification" in all_plugins["treatments"]["temporal"]
+    assert "regression" in all_plugins["treatments"]["temporal"]
 
     # Check plugins:
     assert "cde_classifier" in all_plugins["prediction"]["one_off"]["classification"]
@@ -60,6 +66,6 @@ def test_tempor_plugin_loader_contents():
     assert "ts_xgb" in all_plugins["time_to_event"]
     assert "dynamic_deephit" in all_plugins["time_to_event"]
     # ---
-    assert "crn_classifier" in all_plugins["treatments"]
-    assert "crn_regressor" in all_plugins["treatments"]
-    assert "synctwin_regressor" in all_plugins["treatments"]
+    assert "crn_classifier" in all_plugins["treatments"]["temporal"]["classification"]
+    assert "crn_regressor" in all_plugins["treatments"]["temporal"]["regression"]
+    assert "synctwin_regressor" in all_plugins["treatments"]["one_off"]["regression"]
