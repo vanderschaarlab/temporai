@@ -1,5 +1,3 @@
-from typing import Any
-
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from typing_extensions import Self
@@ -46,7 +44,7 @@ class TimeSeriesStandardScaler(BaseScaler):
         self.model.fit(data.time_series.dataframe())
         return self
 
-    def _transform(self, data: dataset.Dataset, *args, **kwargs) -> Any:
+    def _transform(self, data: dataset.Dataset, *args, **kwargs) -> dataset.Dataset:
         temporal_data = data.time_series.dataframe()
         scaled = pd.DataFrame(self.model.transform(temporal_data))
         scaled.columns = temporal_data.columns

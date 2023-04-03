@@ -1,5 +1,3 @@
-from typing import Any
-
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 from typing_extensions import Self
@@ -51,7 +49,7 @@ class StaticMinMaxScaler(BaseScaler):
         self.model.fit(data.static.dataframe())
         return self
 
-    def _transform(self, data: dataset.Dataset, *args, **kwargs) -> Any:
+    def _transform(self, data: dataset.Dataset, *args, **kwargs) -> dataset.Dataset:
         if data.static is None:
             return data
 

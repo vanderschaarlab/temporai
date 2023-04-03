@@ -30,10 +30,10 @@ class BaseTransformer(estimator.BaseEstimator):
         data: dataset.Dataset,
         *args,
         **kwargs,
-    ) -> Any:
+    ) -> dataset.Dataset:
         self.fit(data, *args, **kwargs)
         return self.transform(data, *args, **kwargs)
 
     @abc.abstractmethod
-    def _transform(self, data: dataset.Dataset, *args, **kwargs) -> Any:  # pragma: no cover
+    def _transform(self, data: dataset.Dataset, *args, **kwargs) -> dataset.Dataset:  # pragma: no cover
         ...

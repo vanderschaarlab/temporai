@@ -1,5 +1,3 @@
-from typing import Any
-
 from typing_extensions import Self
 
 import tempor.plugins.core as plugins
@@ -21,7 +19,7 @@ class NopTransformer(plugins.BaseTransformer):
     ) -> Self:
         return self
 
-    def _transform(self, data: dataset.Dataset, *args, **kwargs) -> Any:
+    def _transform(self, data: dataset.Dataset, *args, **kwargs) -> dataset.Dataset:
         return data
 
     @staticmethod

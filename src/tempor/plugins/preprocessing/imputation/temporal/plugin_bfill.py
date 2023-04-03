@@ -51,7 +51,7 @@ class BFillImputer(BaseImputer):
 
         return self
 
-    def _transform(self, data: dataset.Dataset, *args, **kwargs) -> Any:
+    def _transform(self, data: dataset.Dataset, *args, **kwargs) -> dataset.Dataset:
         # impute static data
         if data.static is not None:
             static_data = data.static.dataframe()

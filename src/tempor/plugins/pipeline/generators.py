@@ -76,7 +76,7 @@ def _generate_get_args() -> Callable:
 
 
 def _generate_fit() -> Callable:
-    def fit_impl(self: Any, X: dataset.Dataset, *args: Any, **kwargs: Any) -> Any:
+    def fit_impl(self: Any, X: dataset.Dataset, *args: Any, **kwargs: Any) -> dataset.Dataset:
         local_X = X
         for stage in self.stages[:-1]:
             local_X = stage.fit_transform(local_X)
