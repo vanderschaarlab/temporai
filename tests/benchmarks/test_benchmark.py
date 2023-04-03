@@ -17,8 +17,8 @@ TEST_ON_DATASETS_CLASSIFIER = ["sine_data_small"]
 TEST_ON_DATASETS_REGRESSOR = ["google_stocks_data_small"]
 TEST_ON_DATASETS_TIME_TO_EVENT = ["pbc_data_small"]
 
-PREDICTOR_CLASSIFICATION = "classification.nn_classifier"
-PREDICTOR_REGRESSION = "regression.nn_regressor"
+PREDICTOR_CLASSIFICATION = "prediction.one_off.classification.nn_classifier"
+PREDICTOR_REGRESSION = "prediction.one_off.regression.nn_regressor"
 PREDICTOR_TIME_TO_EVENT = "time_to_event.dynamic_deephit"
 
 

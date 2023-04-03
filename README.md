@@ -86,7 +86,7 @@ from tempor.plugins import plugin_loader
 dataset = SineDataLoader().load()
 
 # load the model
-model = plugin_loader.get("classification.nn_classifier", n_iter=50)
+model = plugin_loader.get("prediction.one_off.classification.nn_classifier", n_iter=50)
 
 # train
 model.fit(dataset)
@@ -103,7 +103,7 @@ from tempor.plugins import plugin_loader
 dataset = SineDataLoader().load()
 
 # load the model
-model = plugin_loader.get("regression.nn_regressor", n_iter=50)
+model = plugin_loader.get("prediction.one_off.regression.nn_regressor", n_iter=50)
 
 # train
 model.fit(dataset)
@@ -130,13 +130,13 @@ testcases = [
         Pipeline(
             [
                 "preprocessing.scaling.static_minmax_scaler",
-                "classification.nn_classifier",
+                "prediction.one_off.classification.nn_classifier",
             ]
         )({"nn_classifier": {"n_iter": 10}}),
     ),
     (
         "plugin1",
-        plugin_loader.get("classification.nn_classifier", n_iter=10),
+        plugin_loader.get("prediction.one_off.classification.nn_classifier", n_iter=10),
     ),
 ]
 dataset = SineDataLoader().load()
@@ -158,7 +158,7 @@ from tempor.utils.serialization import load, save
 from tempor.plugins import plugin_loader
 
 # load the model
-model = plugin_loader.get("classification.nn_classifier", n_iter=50)
+model = plugin_loader.get("prediction.one_off.classification.nn_classifier", n_iter=50)
 
 buff = save(model)  # save model to bytes
 reloaded = load(buff)  # reload model

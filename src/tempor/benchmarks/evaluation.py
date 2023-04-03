@@ -1,6 +1,6 @@
 import copy
 from time import time
-from typing import Any, Callable, Dict, List, Sequence, Union, cast
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Sequence, Union, cast
 
 import numpy as np
 import pandas as pd
@@ -13,12 +13,16 @@ from typing_extensions import Literal, get_args
 from tempor.data import data_typing, dataset, samples
 from tempor.log import logger
 from tempor.models.utils import enable_reproducibility
-from tempor.plugins.classification import BaseClassifier
-from tempor.plugins.regression import BaseRegressor
-from tempor.plugins.time_to_event import BaseTimeToEventAnalysis
 
 from . import metrics as tempor_metrics
 from . import utils
+
+if TYPE_CHECKING:  # pragma: no cover
+    from tempor.plugins.prediction.one_off.classification import BaseOneOffClassifier
+    from tempor.plugins.prediction.one_off.regression import BaseOneOffRegressor
+    from tempor.plugins.time_to_event import BaseTimeToEventAnalysis
+
+# TODO: Benchmarking workflow for prediction.temporal case.
 
 ClassifierSupportedMetric = Literal[
     "aucroc",
@@ -367,7 +371,7 @@ def evaluate_classifier(  # pylint: disable=unused-argument
 
     if n_splits < 2 or not isinstance(n_splits, int):
         raise ValueError("n_splits must be an integer >= 2")
-    estimator_: BaseClassifier = cast(BaseClassifier, estimator)
+    estimator_ = cast("BaseOneOffClassifier", estimator)
     enable_reproducibility(random_state)
 
     results = _InternalScores()
@@ -443,7 +447,7 @@ def evaluate_regressor(  # pylint: disable=unused-argument
     """
     if n_splits < 2 or not isinstance(n_splits, int):
         raise ValueError("n_splits must be an integer >= 2")
-    estimator_: BaseRegressor = cast(BaseRegressor, estimator)
+    estimator_ = cast("BaseOneOffRegressor", estimator)
     enable_reproducibility(random_state)
     metrics = regression_supported_metrics
 
@@ -592,7 +596,7 @@ def evaluate_time_to_event(  # pylint: disable=unused-argument
     """
     if n_splits < 2 or not isinstance(n_splits, int):
         raise ValueError("n_splits must be an integer >= 2")
-    estimator_: BaseTimeToEventAnalysis = cast(BaseTimeToEventAnalysis, estimator)
+    estimator_ = cast("BaseTimeToEventAnalysis", estimator)
     enable_reproducibility(random_state)
     metrics = time_to_event_supported_metrics
     metrics_map = {

@@ -17,14 +17,14 @@ TEST_ON_DATASETS = ["sine_data_small"]
             "preprocessing.imputation.bfill",
             "preprocessing.scaling.static_minmax_scaler",
             "preprocessing.scaling.ts_minmax_scaler",
-            "classification.nn_classifier",
+            "prediction.one_off.classification.nn_classifier",
         ],
         [
             "preprocessing.imputation.static_imputation",
-            "regression.nn_regressor",
+            "prediction.one_off.regression.nn_regressor",
         ],
         [
-            "classification.nn_classifier",
+            "prediction.one_off.classification.nn_classifier",
         ],
     ],
 )
@@ -43,7 +43,7 @@ def test_sanity(plugins_str: List[Any]) -> None:
     "plugins_str",
     [
         [
-            "classification.nn_classifier",
+            "prediction.one_off.classification.nn_classifier",
             "preprocessing.imputation.bfill",
         ],
         [
@@ -53,16 +53,16 @@ def test_sanity(plugins_str: List[Any]) -> None:
             "preprocessing.imputation.bfill",
         ],
         [
-            "regression.nn_regressor",
-            "regression.nn_regressor",
+            "prediction.one_off.regression.nn_regressor",
+            "prediction.one_off.regression.nn_regressor",
         ],
         [
-            "regression.nn_regressor",
-            "regression.nn_regressor",
+            "prediction.one_off.regression.nn_regressor",
+            "prediction.one_off.regression.nn_regressor",
             "preprocessing.imputation.bfill",
         ],
         [
-            "regression.nn_regressor",
+            "prediction.one_off.regression.nn_regressor",
             "preprocessing.imputation.bfill",
             "preprocessing.imputation.bfill",
             "preprocessing.imputation.bfill",
@@ -86,25 +86,25 @@ def test_fails(plugins_str: List[Any]) -> None:
             "preprocessing.imputation.bfill",
             "preprocessing.scaling.static_minmax_scaler",
             "preprocessing.scaling.ts_minmax_scaler",
-            "classification.nn_classifier",
+            "prediction.one_off.classification.nn_classifier",
         ],
         [
             "preprocessing.imputation.bfill",
             "preprocessing.scaling.ts_minmax_scaler",
-            "regression.nn_regressor",
+            "prediction.one_off.regression.nn_regressor",
         ],
         [
             "preprocessing.imputation.ffill",
             "preprocessing.scaling.static_minmax_scaler",
             "preprocessing.scaling.ts_minmax_scaler",
-            "regression.nn_regressor",
+            "prediction.one_off.regression.nn_regressor",
         ],
         [
             "preprocessing.imputation.ffill",
-            "regression.nn_regressor",
+            "prediction.one_off.regression.nn_regressor",
         ],
         [
-            "classification.nn_classifier",
+            "prediction.one_off.classification.nn_classifier",
         ],
     ],
 )
