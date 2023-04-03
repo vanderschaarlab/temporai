@@ -11,8 +11,8 @@ from tempor.data import dataloader, dataset
 
 # TODO: Docstring to explain the dataset.
 class GoogleStocksDataLoader(dataloader.OneOffPredictionDataLoader):
-    def __init__(self, *args, seq_len: int = 10, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, seq_len: int = 10, **kwargs) -> None:
+        super().__init__(**kwargs)
 
         self.seq_len = seq_len
         self.df_path = Path(self.dataset_dir()) / "goog.csv"

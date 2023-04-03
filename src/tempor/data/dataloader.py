@@ -24,13 +24,15 @@ class DataLoader(abc.ABC):
     It will be ``< tempor -> config -> working_directory > / data``.
     """
 
-    def __init__(self, *args, **kwargs) -> None:  # pylint: disable=unused-argument
+    def __init__(self, **kwargs) -> None:  # pylint: disable=unused-argument
         """Initializer for `DataLoader`.
 
         Args:
             dataset_dir (Optional[str]):
                 Pass in the subdirectory within ``data_root_dir`` where the data source files will be stored,
                 if relevant.
+            **kwargs:
+                Any additional keyword arguments for the :class:`DataLoader`.
         """
         os.makedirs(self.data_root_dir, exist_ok=True)
         dataset_dir = self.dataset_dir()

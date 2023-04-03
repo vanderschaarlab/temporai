@@ -266,11 +266,9 @@ def pbc_data_small(_pbc_data_small: "dataset.TimeToEventAnalysisDataset") -> "da
 # Clairvoyance dummy data: full.
 @pytest.fixture(scope="session")
 def _clv_data_full() -> "dataset.TemporalTreatmentEffectsDataset":
-    from clairvoyance2.datasets.dummy import dummy_dataset
+    from tempor.utils.dataloaders import DummyTemporalTreatmentEffectsDataLoader
 
-    from tempor.data.clv2conv import clairvoyance2_dataset_to_tempor_dataset
-
-    clv_dataset = dummy_dataset(
+    return DummyTemporalTreatmentEffectsDataLoader(
         n_samples=100,
         temporal_covariates_n_features=5,
         temporal_covariates_max_len=11,
@@ -280,9 +278,8 @@ def _clv_data_full() -> "dataset.TemporalTreatmentEffectsDataset":
         temporal_treatments_n_categories=2,
         temporal_targets_n_features=3,
         temporal_targets_n_categories=4,
-        random_seed=12345,
-    )
-    return clairvoyance2_dataset_to_tempor_dataset(clv_dataset)  # type: ignore
+        random_state=12345,
+    ).load()
 
 
 @pytest.fixture(scope="function")
@@ -311,18 +308,11 @@ def clv_data_small(
 # PKPD data: full.
 @pytest.fixture(scope="session")
 def _pkpd_data_full() -> "dataset.OneOffTreatmentEffectsDataset":
-    from clairvoyance2.datasets.simulated.simple_pkpd import simple_pkpd_dataset
+    from tempor.utils.dataloaders import PKPDDataLoader
 
-    from tempor.data.clv2conv import clairvoyance2_dataset_to_tempor_dataset
-
-    local_dataset = simple_pkpd_dataset(
-        n_timesteps=30,
-        time_index_treatment_event=25,
-        n_control_samples=50,
-        n_treated_samples=50,
-        seed=123,
-    )
-    return clairvoyance2_dataset_to_tempor_dataset(local_dataset)  # type: ignore
+    return PKPDDataLoader(
+        n_timesteps=30, time_index_treatment_event=25, n_control_samples=50, n_treated_samples=50, random_state=123
+    ).load()
 
 
 @pytest.fixture(scope="function")
@@ -333,18 +323,11 @@ def pkpd_data_full(_pkpd_data_full: "dataset.OneOffTreatmentEffectsDataset") -> 
 # PKPD data: small.
 @pytest.fixture(scope="session")
 def _pkpd_data_small() -> "dataset.OneOffTreatmentEffectsDataset":
-    from clairvoyance2.datasets.simulated.simple_pkpd import simple_pkpd_dataset
+    from tempor.utils.dataloaders import PKPDDataLoader
 
-    from tempor.data.clv2conv import clairvoyance2_dataset_to_tempor_dataset
-
-    local_dataset = simple_pkpd_dataset(
-        n_timesteps=6,
-        time_index_treatment_event=3,
-        n_control_samples=4,
-        n_treated_samples=4,
-        seed=123,
-    )
-    return clairvoyance2_dataset_to_tempor_dataset(local_dataset)  # type: ignore
+    return PKPDDataLoader(
+        n_timesteps=6, time_index_treatment_event=3, n_control_samples=4, n_treated_samples=4, random_state=123
+    ).load()
 
 
 @pytest.fixture(scope="function")

@@ -7,7 +7,6 @@ from tempor.data import dataloader, dataset
 class SineDataLoader(dataloader.OneOffPredictionDataLoader):
     def __init__(
         self,
-        *args,
         no: int = 100,
         seq_len: int = 10,
         temporal_dim: int = 5,
@@ -45,7 +44,7 @@ class SineDataLoader(dataloader.OneOffPredictionDataLoader):
             random_state (int, optional):
                 The random seed to set for `numpy.random.seed`. Defaults to ``42``.
         """
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
 
         self.no = no
         self.seq_len = seq_len

@@ -12,9 +12,9 @@ from tempor.data import dataloader, dataset, utils
 
 # TODO: Docstring to explain the dataset.
 class PBCDataLoader(dataloader.TimeToEventAnalysisDataLoader):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, **kwargs) -> None:
         self.datafile_path = os.path.join(self.dataset_dir(), "pbc2.csv")
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
 
     @staticmethod
     def dataset_dir() -> str:
