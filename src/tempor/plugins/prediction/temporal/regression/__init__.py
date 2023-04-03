@@ -1,3 +1,5 @@
+# pylint: disable=unused-argument
+
 import abc
 
 import pydantic
@@ -5,8 +7,6 @@ from typing_extensions import Self
 
 import tempor.plugins.core as plugins
 from tempor.data import dataset, samples
-
-# TODO: DIFFERENT PREDICTION SIGNATURE!!!! --------------------------------------------------------------------------------------------
 
 
 def check_data_class(data):
@@ -27,17 +27,21 @@ class BaseTemporalRegressor(plugins.BasePredictor):
         return self
 
     @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
-    def predict(
+    def predict(  # type: ignore[override]  # pylint: disable=arguments-differ
         self,
         data: dataset.Dataset,
+        n_future_steps: int,
         *args,
+        time_delta: int = 1,
         **kwargs,
     ) -> samples.TimeSeriesSamples:
         check_data_class(data)
-        return super().predict(data, *args, **kwargs)
+        return super().predict(data, n_future_steps, *args, time_delta=time_delta, **kwargs)
 
     @abc.abstractmethod
-    def _predict(self, data: dataset.Dataset, *args, **kwargs) -> samples.TimeSeriesSamples:
+    def _predict(  # type: ignore[override]  # pylint: disable=arguments-differ
+        self, data: dataset.Dataset, n_future_steps: int, *args, time_delta: int = 1, **kwargs
+    ) -> samples.TimeSeriesSamples:
         ...
 
 

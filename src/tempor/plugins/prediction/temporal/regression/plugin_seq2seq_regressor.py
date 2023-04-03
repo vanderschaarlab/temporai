@@ -108,7 +108,7 @@ class Seq2seqRegressor(BaseTemporalRegressor):
         self.model.fit(cl_dataset)
         return self
 
-    def _predict(  # type: ignore[override]  # pylint: disable=arguments-differ
+    def _predict(  # type: ignore[override]
         self,
         data: dataset.Dataset,
         n_future_steps: int,
