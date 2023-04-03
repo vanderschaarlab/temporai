@@ -6,13 +6,11 @@ import pandas as pd
 import pandera as pa
 import pandera.dtypes as pa_dtypes
 import pandera.engines.pandas_engine as pd_engine
+from packaging.version import Version
 
 import tempor.core.utils
 
 from . import data_typing
-
-pa_major, pa_minor, *_ = tempor.core.utils.get_version(pa.__version__)
-
 
 _PA_DF_SCHEMA_INIT_PARAMETERS = [
     "columns",
@@ -53,7 +51,7 @@ _PA_MULTI_INDEX_INIT_PARAMETERS = [
     "unique",
 ]
 
-if tempor.core.utils.version_below_excl(version=(pa_major, pa_minor), below_excl=(0, 14)):
+if Version(pa.__version__) < Version("0.14"):
     # Before v0.14, pandera API had an extra parameter `report_duplicates`.
     _PA_MULTI_INDEX_INIT_PARAMETERS.append("report_duplicates")
 

@@ -5,15 +5,12 @@ import sklearn
 import sklearn.base
 import sklearn.utils
 import sklearn.utils.validation
+from packaging.version import Version
 from typing_extensions import Self
-
-import tempor.core.utils
 
 # --- Utilities. ---
 
-sklearn_major, sklearn_minor, *_ = tempor.core.utils.get_version(sklearn.__version__)
-
-if tempor.core.utils.version_above_incl(version=(sklearn_major, sklearn_minor), above_incl=(1, 1)):
+if Version(sklearn.__version__) >= Version("1.1"):
     _has_input_name = True
 else:
     _has_input_name = False
