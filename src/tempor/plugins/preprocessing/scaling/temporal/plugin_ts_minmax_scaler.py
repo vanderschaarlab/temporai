@@ -1,21 +1,23 @@
 from typing import Any
 
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler
 from typing_extensions import Self
 
 import tempor.plugins.core as plugins
 from tempor.data import dataset
 from tempor.data.samples import TimeSeriesSamples
-from tempor.plugins.preprocessing.scaling import BaseScaler
+from tempor.plugins.preprocessing.scaling._base import BaseScaler
 
 
-@plugins.register_plugin(name="ts_standard_scaler", category="preprocessing.scaling")
-class TimeSeriesStandardScaler(BaseScaler):
+@plugins.register_plugin(name="ts_minmax_scaler", category="preprocessing.scaling.temporal")
+class TimeSeriesMinMaxScaler(BaseScaler):
     def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
-        """Standard scaling for the time-series data.
+        """MinMax scaling for the time-series data.
 
-        Standardize the temporal features by removing the mean and scaling to unit variance.
+        Transform the temporal features by scaling each feature to a given range.
+        This estimator scales and translates each feature individually such that it is in the given range on the
+        training set, e.g. between zero and one.
 
         Example:
             >>> from tempor.utils.dataloaders import SineDataLoader
@@ -24,18 +26,18 @@ class TimeSeriesStandardScaler(BaseScaler):
             >>> dataset = SineDataLoader().load()
             >>>
             >>> # Load the model:
-            >>> model = plugin_loader.get("preprocessing.scaling.ts_standard_scaler")
+            >>> model = plugin_loader.get("preprocessing.scaling.temporal.ts_minmax_scaler")
             >>>
             >>> # Train:
             >>> model.fit(dataset)
-            TimeSeriesStandardScaler(...)
+            TimeSeriesMinMaxScaler(...)
             >>>
             >>> # Scale:
             >>> scaled = model.transform(dataset)
         """
 
         super().__init__(**params)
-        self.model = StandardScaler()
+        self.model = MinMaxScaler()
 
     def _fit(
         self,

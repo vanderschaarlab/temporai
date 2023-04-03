@@ -16,6 +16,7 @@ def test_tempor_plugin_loader_contents():
     # Check subcategories:
     assert "imputation" in all_plugins["preprocessing"]
     assert "scaling" in all_plugins["preprocessing"]
+    assert "nop" in all_plugins["preprocessing"]
     assert "one_off" in all_plugins["prediction"]
     assert "temporal" in all_plugins["prediction"]
 
@@ -24,6 +25,10 @@ def test_tempor_plugin_loader_contents():
     assert "regression" in all_plugins["prediction"]["one_off"]
     assert "classification" in all_plugins["prediction"]["temporal"]
     assert "regression" in all_plugins["prediction"]["temporal"]
+    assert "static" in all_plugins["preprocessing"]["imputation"]
+    assert "temporal" in all_plugins["preprocessing"]["imputation"]
+    assert "static" in all_plugins["preprocessing"]["scaling"]
+    assert "temporal" in all_plugins["preprocessing"]["scaling"]
 
     # Check plugins:
     assert "cde_classifier" in all_plugins["prediction"]["one_off"]["classification"]
@@ -40,14 +45,16 @@ def test_tempor_plugin_loader_contents():
     # ---
     assert "seq2seq_regressor" in all_plugins["prediction"]["temporal"]["regression"]
     # ---
-    assert "nop_imputer" in all_plugins["preprocessing"]["imputation"]
-    assert "ffill" in all_plugins["preprocessing"]["imputation"]
-    assert "bfill" in all_plugins["preprocessing"]["imputation"]
-    assert "static_imputation" in all_plugins["preprocessing"]["imputation"]
-    assert "ts_minmax_scaler" in all_plugins["preprocessing"]["scaling"]
-    assert "static_minmax_scaler" in all_plugins["preprocessing"]["scaling"]
-    assert "static_standard_scaler" in all_plugins["preprocessing"]["scaling"]
-    assert "ts_standard_scaler" in all_plugins["preprocessing"]["scaling"]
+    assert "nop_transformer" in all_plugins["preprocessing"]["nop"]
+    # ---
+    assert "static_imputation" in all_plugins["preprocessing"]["imputation"]["static"]
+    assert "ffill" in all_plugins["preprocessing"]["imputation"]["temporal"]
+    assert "bfill" in all_plugins["preprocessing"]["imputation"]["temporal"]
+    # ---
+    assert "static_minmax_scaler" in all_plugins["preprocessing"]["scaling"]["static"]
+    assert "static_standard_scaler" in all_plugins["preprocessing"]["scaling"]["static"]
+    assert "ts_minmax_scaler" in all_plugins["preprocessing"]["scaling"]["temporal"]
+    assert "ts_standard_scaler" in all_plugins["preprocessing"]["scaling"]["temporal"]
     # ---
     assert "ts_coxph" in all_plugins["time_to_event"]
     assert "ts_xgb" in all_plugins["time_to_event"]

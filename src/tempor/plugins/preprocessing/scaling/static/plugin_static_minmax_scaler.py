@@ -1,21 +1,23 @@
 from typing import Any
 
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler
 from typing_extensions import Self
 
 import tempor.plugins.core as plugins
 from tempor.data import dataset
 from tempor.data.samples import StaticSamples
-from tempor.plugins.preprocessing.scaling import BaseScaler
+from tempor.plugins.preprocessing.scaling._base import BaseScaler
 
 
-@plugins.register_plugin(name="static_standard_scaler", category="preprocessing.scaling")
-class StaticStandardScaler(BaseScaler):
+@plugins.register_plugin(name="static_minmax_scaler", category="preprocessing.scaling.static")
+class StaticMinMaxScaler(BaseScaler):
     def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
-        """Standard scaling for the static data.
+        """MinMax scaling for the static data.
 
-        Standardize the static features by removing the mean and scaling to unit variance.
+        Transform the static features by scaling each feature to a given range.
+        This estimator scales and translates each feature individually such that it is in the given range on the
+        training set, e.g. between zero and one.
 
         Example:
             >>> from tempor.utils.dataloaders import SineDataLoader
@@ -24,18 +26,18 @@ class StaticStandardScaler(BaseScaler):
             >>> dataset = SineDataLoader().load()
             >>>
             >>> # Load the model:
-            >>> model = plugin_loader.get("preprocessing.scaling.static_standard_scaler")
+            >>> model = plugin_loader.get("preprocessing.scaling.static.static_minmax_scaler")
             >>>
             >>> # Train:
             >>> model.fit(dataset)
-            StaticStandardScaler(...)
+            StaticMinMaxScaler(...)
             >>>
             >>> # Scale:
             >>> scaled = model.transform(dataset)
         """
 
         super().__init__(**params)
-        self.model = StandardScaler()
+        self.model = MinMaxScaler()
 
     def _fit(
         self,

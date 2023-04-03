@@ -4,7 +4,9 @@ import pytest
 
 from tempor.plugins import plugin_loader
 from tempor.plugins.preprocessing.imputation import BaseImputer
-from tempor.plugins.preprocessing.imputation.plugin_bfill import BFillImputer as plugin
+from tempor.plugins.preprocessing.imputation.temporal.plugin_ffill import (
+    FFillImputer as plugin,
+)
 from tempor.utils.serialization import load, save
 
 train_kwargs = {"random_state": 123}
@@ -13,7 +15,7 @@ TEST_ON_DATASETS = ["sine_data_missing_small"]
 
 
 def from_api() -> BaseImputer:
-    return plugin_loader.get("preprocessing.imputation.bfill", **train_kwargs)
+    return plugin_loader.get("preprocessing.imputation.temporal.ffill", **train_kwargs)
 
 
 def from_module() -> BaseImputer:
@@ -23,7 +25,7 @@ def from_module() -> BaseImputer:
 @pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
 def test_sanity(test_plugin: BaseImputer) -> None:
     assert test_plugin is not None
-    assert test_plugin.name == "bfill"
+    assert test_plugin.name == "ffill"
     assert len(test_plugin.hyperparameter_space()) == 1
 
 

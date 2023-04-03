@@ -67,7 +67,7 @@ assert dataset.static.dataframe().isna().sum().sum() != 0
 assert dataset.time_series.dataframe().isna().sum().sum() != 0
 
 # load the model
-model = plugin_loader.get("preprocessing.imputation.bfill")
+model = plugin_loader.get("preprocessing.imputation.temporal.bfill")
 
 # train
 model.fit(dataset)

@@ -14,13 +14,13 @@ TEST_ON_DATASETS = ["sine_data_small"]
     "plugins_str",
     [
         [
-            "preprocessing.imputation.bfill",
-            "preprocessing.scaling.static_minmax_scaler",
-            "preprocessing.scaling.ts_minmax_scaler",
+            "preprocessing.imputation.temporal.bfill",
+            "preprocessing.scaling.static.static_minmax_scaler",
+            "preprocessing.scaling.temporal.ts_minmax_scaler",
             "prediction.one_off.classification.nn_classifier",
         ],
         [
-            "preprocessing.imputation.static_imputation",
+            "preprocessing.imputation.static.static_imputation",
             "prediction.one_off.regression.nn_regressor",
         ],
         [
@@ -44,29 +44,29 @@ def test_sanity(plugins_str: List[Any]) -> None:
     [
         [
             "prediction.one_off.classification.nn_classifier",
-            "preprocessing.imputation.bfill",
+            "preprocessing.imputation.temporal.bfill",
         ],
         [
-            "preprocessing.imputation.bfill",
-            "preprocessing.imputation.bfill",
-            "preprocessing.imputation.bfill",
-            "preprocessing.imputation.bfill",
-        ],
-        [
-            "prediction.one_off.regression.nn_regressor",
-            "prediction.one_off.regression.nn_regressor",
+            "preprocessing.imputation.temporal.bfill",
+            "preprocessing.imputation.temporal.bfill",
+            "preprocessing.imputation.temporal.bfill",
+            "preprocessing.imputation.temporal.bfill",
         ],
         [
             "prediction.one_off.regression.nn_regressor",
             "prediction.one_off.regression.nn_regressor",
-            "preprocessing.imputation.bfill",
         ],
         [
             "prediction.one_off.regression.nn_regressor",
-            "preprocessing.imputation.bfill",
-            "preprocessing.imputation.bfill",
-            "preprocessing.imputation.bfill",
-            "preprocessing.scaling.ts_minmax_scaler",
+            "prediction.one_off.regression.nn_regressor",
+            "preprocessing.imputation.temporal.bfill",
+        ],
+        [
+            "prediction.one_off.regression.nn_regressor",
+            "preprocessing.imputation.temporal.bfill",
+            "preprocessing.imputation.temporal.bfill",
+            "preprocessing.imputation.temporal.bfill",
+            "preprocessing.scaling.temporal.ts_minmax_scaler",
         ],
         [],
     ],
@@ -81,26 +81,26 @@ def test_fails(plugins_str: List[Any]) -> None:
     "plugins_str",
     [
         [
-            "preprocessing.imputation.static_imputation",
-            "preprocessing.imputation.nop_imputer",
-            "preprocessing.imputation.bfill",
-            "preprocessing.scaling.static_minmax_scaler",
-            "preprocessing.scaling.ts_minmax_scaler",
+            "preprocessing.imputation.static.static_imputation",
+            "preprocessing.nop.nop_transformer",
+            "preprocessing.imputation.temporal.bfill",
+            "preprocessing.scaling.static.static_minmax_scaler",
+            "preprocessing.scaling.temporal.ts_minmax_scaler",
             "prediction.one_off.classification.nn_classifier",
         ],
         [
-            "preprocessing.imputation.bfill",
-            "preprocessing.scaling.ts_minmax_scaler",
+            "preprocessing.imputation.temporal.bfill",
+            "preprocessing.scaling.temporal.ts_minmax_scaler",
             "prediction.one_off.regression.nn_regressor",
         ],
         [
-            "preprocessing.imputation.ffill",
-            "preprocessing.scaling.static_minmax_scaler",
-            "preprocessing.scaling.ts_minmax_scaler",
+            "preprocessing.imputation.temporal.ffill",
+            "preprocessing.scaling.static.static_minmax_scaler",
+            "preprocessing.scaling.temporal.ts_minmax_scaler",
             "prediction.one_off.regression.nn_regressor",
         ],
         [
-            "preprocessing.imputation.ffill",
+            "preprocessing.imputation.temporal.ffill",
             "prediction.one_off.regression.nn_regressor",
         ],
         [

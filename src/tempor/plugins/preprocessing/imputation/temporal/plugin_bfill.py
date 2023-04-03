@@ -7,10 +7,10 @@ import tempor.plugins.core as plugins
 from tempor.data import dataset
 from tempor.data.samples import StaticSamples, TimeSeriesSamples
 from tempor.plugins.core._params import CategoricalParams, Params
-from tempor.plugins.preprocessing.imputation import BaseImputer
+from tempor.plugins.preprocessing.imputation._base import BaseImputer
 
 
-@plugins.register_plugin(name="bfill", category="preprocessing.imputation")
+@plugins.register_plugin(name="bfill", category="preprocessing.imputation.temporal")
 class BFillImputer(BaseImputer):
     def __init__(self, static_imputer: str = "mean", random_state: int = 0, **params) -> None:
         """Backward-first Time-Series Imputation.
@@ -30,7 +30,7 @@ class BFillImputer(BaseImputer):
             >>> assert dataset.time_series.dataframe().isna().sum().sum() != 0
             >>>
             >>> # Load the model:
-            >>> model = plugin_loader.get("preprocessing.imputation.bfill")
+            >>> model = plugin_loader.get("preprocessing.imputation.temporal.bfill")
             >>>
             >>> # Train:
             >>> model.fit(dataset)

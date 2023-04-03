@@ -31,7 +31,7 @@ PREDICTOR_TIME_TO_EVENT = "time_to_event.dynamic_deephit"
     [
         Pipeline(
             [
-                "preprocessing.imputation.ffill",
+                "preprocessing.imputation.temporal.ffill",
                 PREDICTOR_CLASSIFICATION,
             ]
         )({"nn_classifier": {"n_iter": N_ITER}}),
@@ -73,7 +73,7 @@ def test_classifier_evaluation_fail(n_splits: int, data: str, request: pytest.Fi
     [
         Pipeline(
             [
-                "preprocessing.imputation.ffill",
+                "preprocessing.imputation.temporal.ffill",
                 PREDICTOR_REGRESSION,
             ]
         )({"nn_regressor": {"n_iter": N_ITER}}),
@@ -113,7 +113,7 @@ def test_regressor_evaluation_fail(n_splits: int, data: str, request: pytest.Fix
     [
         Pipeline(
             [
-                "preprocessing.imputation.ffill",
+                "preprocessing.imputation.temporal.ffill",
                 PREDICTOR_TIME_TO_EVENT,
             ]
         )({"dynamic_deephit": {"n_iter": N_ITER}}),

@@ -2,7 +2,7 @@ import pytest
 
 from tempor.plugins import plugin_loader
 from tempor.plugins.preprocessing.scaling import BaseScaler
-from tempor.plugins.preprocessing.scaling.plugin_ts_standard_scaler import (
+from tempor.plugins.preprocessing.scaling.temporal.plugin_ts_standard_scaler import (
     TimeSeriesStandardScaler as plugin,
 )
 from tempor.utils.serialization import load, save
@@ -14,7 +14,7 @@ TEST_TRANSFORM_ON_DATASETS = ["sine_data_scaled_small"]
 
 
 def from_api() -> BaseScaler:
-    return plugin_loader.get("preprocessing.scaling.ts_standard_scaler", **train_kwargs)
+    return plugin_loader.get("preprocessing.scaling.temporal.ts_standard_scaler", **train_kwargs)
 
 
 def from_module() -> BaseScaler:
