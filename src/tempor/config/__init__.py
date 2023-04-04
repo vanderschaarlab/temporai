@@ -46,10 +46,10 @@ class TemporConfig:
     working_directory: str = omegaconf.MISSING
 
     def get_working_dir(self):
-        if self.working_directory == "$PWD":
-            return os.getcwd()
-        elif self.working_directory == "~":
-            return os.path.expanduser("~")
+        if self.working_directory.startswith("$PWD"):
+            return self.working_directory.replace("$PWD", os.getcwd(), 1)
+        elif self.working_directory.startswith("~"):
+            return self.working_directory.replace("~", os.path.expanduser("~"), 1)
         else:
             return self.working_directory
 

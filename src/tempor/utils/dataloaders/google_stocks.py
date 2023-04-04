@@ -11,8 +11,8 @@ from tempor.data import dataloader, dataset
 
 # TODO: Docstring to explain the dataset.
 class GoogleStocksDataLoader(dataloader.OneOffPredictionDataLoader):
-    def __init__(self, *args, seq_len: int = 10, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, seq_len: int = 10, **kwargs) -> None:
+        super().__init__(**kwargs)
 
         self.seq_len = seq_len
         self.df_path = Path(self.dataset_dir()) / "goog.csv"
@@ -37,7 +37,7 @@ class GoogleStocksDataLoader(dataloader.OneOffPredictionDataLoader):
 
         # Flip the data to make chronological data
         df = pd.DataFrame(df.values[::-1], columns=df.columns)
-        T = pd.to_datetime(df["Date"], infer_datetime_format=True).astype(np.int64).astype(np.float64) / 10**9
+        T = pd.to_datetime(df["Date"]).astype(np.int64).astype(np.float64) / 10**9
         T = pd.Series(MinMaxScaler().fit_transform(T.values.reshape(-1, 1)).squeeze())  # pyright: ignore
 
         df = df.drop(columns=["Date"])

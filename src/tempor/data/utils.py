@@ -5,6 +5,7 @@ from typing import Any, ClassVar, List, Optional, Sequence, Tuple, Union
 import numpy as np
 import pandas as pd
 import pydantic
+from packaging.version import Version
 
 import tempor.core.utils
 
@@ -30,8 +31,7 @@ def value_in_df(df: pd.DataFrame, *, value: Any) -> bool:
 
 
 def set_df_column_names_inplace(df: pd.DataFrame, names: Sequence) -> pd.DataFrame:
-    pd_major, pd_minor, *_ = tempor.core.utils.get_version(pd.__version__)
-    if tempor.core.utils.version_below_excl(version=(pd_major, pd_minor), below_excl=(1, 5)):
+    if Version(pd.__version__) < Version("1.5"):
         df.set_axis(names, axis="columns", inplace=True)  # pyright: ignore
         return df
     else:

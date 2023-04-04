@@ -3,6 +3,9 @@
 branch = True
 source = tempor
 # omit = bad_file.py
+disable_warnings =
+    # pytest-xdist occasionally raises rogue module-not-measured warnings, ignore:
+    module-not-measured
 
 [paths]
 source =

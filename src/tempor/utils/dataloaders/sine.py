@@ -7,7 +7,6 @@ from tempor.data import dataloader, dataset
 class SineDataLoader(dataloader.OneOffPredictionDataLoader):
     def __init__(
         self,
-        *args,
         no: int = 100,
         seq_len: int = 10,
         temporal_dim: int = 5,
@@ -17,6 +16,7 @@ class SineDataLoader(dataloader.OneOffPredictionDataLoader):
         miss_ratio: float = 0.1,
         static_scale: float = 1.0,
         ts_scale: float = 1.0,
+        random_state: int = 42,
         **kwargs,
     ) -> None:
         """Sine data generation.
@@ -41,8 +41,10 @@ class SineDataLoader(dataloader.OneOffPredictionDataLoader):
                 The scaling factor to apply to the static data. Defaults to ``1.0``.
             ts_scale (float, optional):
                 The scaling factor to apply to the time series data. Defaults to ``1.0``.
+            random_state (int, optional):
+                The random seed to set for `numpy.random.seed`. Defaults to ``42``.
         """
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
 
         self.no = no
         self.seq_len = seq_len
@@ -53,6 +55,7 @@ class SineDataLoader(dataloader.OneOffPredictionDataLoader):
         self.miss_ratio = miss_ratio
         self.static_scale = static_scale
         self.ts_scale = ts_scale
+        self.random_state = random_state
 
     @staticmethod
     def url() -> None:
@@ -64,9 +67,10 @@ class SineDataLoader(dataloader.OneOffPredictionDataLoader):
 
     def load(self, **kwargs) -> dataset.OneOffPredictionDataset:
         # Initialize the output.
+        np.random.seed(self.random_state)
 
         static_data = pd.DataFrame(np.random.rand(self.no, self.static_dim) * self.static_scale)
-        static_data["sample_idx"] = [str(i) for i in range(self.no)]
+        static_data["sample_idx"] = [i for i in range(self.no)]
         static_data.set_index(keys=["sample_idx"], drop=True, inplace=True)
 
         static_data.columns = static_data.columns.astype(str)
@@ -77,7 +81,7 @@ class SineDataLoader(dataloader.OneOffPredictionDataLoader):
         temporal_data = []
 
         outcome = pd.DataFrame(np.random.randint(0, 2, self.no))
-        outcome["sample_idx"] = [str(i) for i in range(self.no)]
+        outcome["sample_idx"] = [i for i in range(self.no)]
         outcome.columns = outcome.columns.astype(str)
 
         outcome.set_index(keys=["sample_idx"], drop=True, inplace=True)
@@ -113,7 +117,7 @@ class SineDataLoader(dataloader.OneOffPredictionDataLoader):
                     local_data.loc[local_data.sample(frac=self.miss_ratio).index, col] = np.nan
 
             # Stack the generated data:
-            local_data["sample_idx"] = str(i)
+            local_data["sample_idx"] = i
             local_data["time_idx"] = list(range(seq_len))
             temporal_data.append(local_data)
 

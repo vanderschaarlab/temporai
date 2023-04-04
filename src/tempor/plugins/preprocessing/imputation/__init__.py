@@ -1,16 +1,8 @@
-import tempor.plugins.core as plugins
+from . import static, temporal
+from ._base import BaseImputer
 
-
-class BaseImputer(plugins.BaseTransformer):
-    def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
-        super().__init__(**params)
-
-
-plugins.register_plugin_category("preprocessing.imputation", BaseImputer)
-
-plugins.importing.import_plugins(__file__)
-
-__all__ = [  # pyright: ignore
-    *plugins.importing.gather_modules_names(__file__),
+__all__ = [
     "BaseImputer",
+    "static",
+    "temporal",
 ]

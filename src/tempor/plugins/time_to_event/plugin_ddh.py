@@ -39,7 +39,6 @@ class DynamicDeepHitTimeToEventAnalysisParams:
     random_state: int = 0
 
 
-# TODO: Docstring.
 @plugins.register_plugin(name="dynamic_deephit", category="time_to_event")
 class DynamicDeepHitTimeToEventAnalysis(BaseTimeToEventAnalysis):
     ParamsDefinition = DynamicDeepHitTimeToEventAnalysisParams
@@ -51,6 +50,10 @@ class DynamicDeepHitTimeToEventAnalysis(BaseTimeToEventAnalysis):
         Args:
             **params:
                 Parameters and defaults as defined in :class:`DynamicDeepHitTimeToEventAnalysisParams`.
+
+        References:
+            "Dynamic-DeepHit: A Deep Learning Approach for Dynamic Survival Analysis With Competing Risks Based on
+            Longitudinal Data", Changhee Lee, Jinsung Yoon, Mihaela van der Schaar.
         """
         super().__init__(**params)
 

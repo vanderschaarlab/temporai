@@ -5,29 +5,30 @@ from typing import Any, List
 import pytest
 
 from tempor.plugins.pipeline import Pipeline, PipelineGroup, PipelineMeta
-from tempor.utils.dataloaders.sine import SineDataLoader
 from tempor.utils.serialization import load, save
+
+TEST_ON_DATASETS = ["sine_data_small"]
 
 
 @pytest.mark.parametrize(
     "plugins_str",
     [
         [
-            "preprocessing.imputation.bfill",
-            "preprocessing.scaling.static_minmax_scaler",
-            "preprocessing.scaling.ts_minmax_scaler",
-            "classification.nn_classifier",
+            "preprocessing.imputation.temporal.bfill",
+            "preprocessing.scaling.static.static_minmax_scaler",
+            "preprocessing.scaling.temporal.ts_minmax_scaler",
+            "prediction.one_off.classification.nn_classifier",
         ],
         [
-            "preprocessing.imputation.static_imputation",
-            "regression.nn_regressor",
+            "preprocessing.imputation.static.static_imputation",
+            "prediction.one_off.regression.nn_regressor",
         ],
         [
-            "classification.nn_classifier",
+            "prediction.one_off.classification.nn_classifier",
         ],
     ],
 )
-def test_pipeline_sanity(plugins_str: List[Any]) -> None:
+def test_sanity(plugins_str: List[Any]) -> None:
     dtype: PipelineMeta = Pipeline(plugins_str)
     plugins = PipelineGroup(plugins_str)
 
@@ -42,76 +43,77 @@ def test_pipeline_sanity(plugins_str: List[Any]) -> None:
     "plugins_str",
     [
         [
-            "classification.nn_classifier",
-            "preprocessing.imputation.bfill",
+            "prediction.one_off.classification.nn_classifier",
+            "preprocessing.imputation.temporal.bfill",
         ],
         [
-            "preprocessing.imputation.bfill",
-            "preprocessing.imputation.bfill",
-            "preprocessing.imputation.bfill",
-            "preprocessing.imputation.bfill",
+            "preprocessing.imputation.temporal.bfill",
+            "preprocessing.imputation.temporal.bfill",
+            "preprocessing.imputation.temporal.bfill",
+            "preprocessing.imputation.temporal.bfill",
         ],
         [
-            "regression.nn_regressor",
-            "regression.nn_regressor",
+            "prediction.one_off.regression.nn_regressor",
+            "prediction.one_off.regression.nn_regressor",
         ],
         [
-            "regression.nn_regressor",
-            "regression.nn_regressor",
-            "preprocessing.imputation.bfill",
+            "prediction.one_off.regression.nn_regressor",
+            "prediction.one_off.regression.nn_regressor",
+            "preprocessing.imputation.temporal.bfill",
         ],
         [
-            "regression.nn_regressor",
-            "preprocessing.imputation.bfill",
-            "preprocessing.imputation.bfill",
-            "preprocessing.imputation.bfill",
-            "preprocessing.scaling.ts_minmax_scaler",
+            "prediction.one_off.regression.nn_regressor",
+            "preprocessing.imputation.temporal.bfill",
+            "preprocessing.imputation.temporal.bfill",
+            "preprocessing.imputation.temporal.bfill",
+            "preprocessing.scaling.temporal.ts_minmax_scaler",
         ],
         [],
     ],
 )
-def test_pipeline_fails(plugins_str: List[Any]) -> None:
+def test_fails(plugins_str: List[Any]) -> None:
     with pytest.raises(RuntimeError):
         Pipeline(plugins_str)()
 
 
+@pytest.mark.filterwarnings("ignore:RNN.*contiguous.*:UserWarning")  # Expected: problem with current serialization.
 @pytest.mark.parametrize(
     "plugins_str",
     [
         [
-            "preprocessing.imputation.static_imputation",
-            "preprocessing.imputation.nop_imputer",
-            "preprocessing.imputation.bfill",
-            "preprocessing.scaling.static_minmax_scaler",
-            "preprocessing.scaling.ts_minmax_scaler",
-            "classification.nn_classifier",
+            "preprocessing.imputation.static.static_imputation",
+            "preprocessing.nop.nop_transformer",
+            "preprocessing.imputation.temporal.bfill",
+            "preprocessing.scaling.static.static_minmax_scaler",
+            "preprocessing.scaling.temporal.ts_minmax_scaler",
+            "prediction.one_off.classification.nn_classifier",
         ],
         [
-            "preprocessing.imputation.bfill",
-            "preprocessing.scaling.ts_minmax_scaler",
-            "regression.nn_regressor",
+            "preprocessing.imputation.temporal.bfill",
+            "preprocessing.scaling.temporal.ts_minmax_scaler",
+            "prediction.one_off.regression.nn_regressor",
         ],
         [
-            "preprocessing.imputation.ffill",
-            "preprocessing.scaling.static_minmax_scaler",
-            "preprocessing.scaling.ts_minmax_scaler",
-            "regression.nn_regressor",
+            "preprocessing.imputation.temporal.ffill",
+            "preprocessing.scaling.static.static_minmax_scaler",
+            "preprocessing.scaling.temporal.ts_minmax_scaler",
+            "prediction.one_off.regression.nn_regressor",
         ],
         [
-            "preprocessing.imputation.ffill",
-            "regression.nn_regressor",
+            "preprocessing.imputation.temporal.ffill",
+            "prediction.one_off.regression.nn_regressor",
         ],
         [
-            "classification.nn_classifier",
+            "prediction.one_off.classification.nn_classifier",
         ],
     ],
 )
 @pytest.mark.parametrize("serialize", [True, False])
-def test_pipeline_end2end(plugins_str, serialize: bool) -> None:
+def test_end2end(plugins_str, serialize: bool, sine_data_small, sine_data_missing_small) -> None:
     if len(plugins_str) > 1:
-        dataset = SineDataLoader(with_missing=True).load()
+        dataset = sine_data_missing_small
     else:
-        dataset = SineDataLoader(with_missing=False).load()
+        dataset = sine_data_small
 
     template: PipelineMeta = Pipeline(plugins_str)
     pipeline = template()

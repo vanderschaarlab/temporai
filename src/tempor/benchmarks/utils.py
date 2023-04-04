@@ -40,9 +40,6 @@ def evaluate_auc_multiclass(
 
     n_classes = len(set(np.ravel(y_test)))
     classes = sorted(set(np.ravel(y_test)))
-    log.debug(
-        "Warning: classes is none and more than two " f"(#{n_classes}), classes assumed to be an ordered set:{classes}"
-    )
 
     y_pred_proba_tmp = get_y_pred_proba_hlpr(y_pred_proba, n_classes)
 

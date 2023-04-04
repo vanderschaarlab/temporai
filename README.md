@@ -67,7 +67,7 @@ assert dataset.static.dataframe().isna().sum().sum() != 0
 assert dataset.time_series.dataframe().isna().sum().sum() != 0
 
 # load the model
-model = plugin_loader.get("preprocessing.imputation.bfill")
+model = plugin_loader.get("preprocessing.imputation.temporal.bfill")
 
 # train
 model.fit(dataset)
@@ -86,7 +86,7 @@ from tempor.plugins import plugin_loader
 dataset = SineDataLoader().load()
 
 # load the model
-model = plugin_loader.get("classification.nn_classifier", n_iter=50)
+model = plugin_loader.get("prediction.one_off.classification.nn_classifier", n_iter=50)
 
 # train
 model.fit(dataset)
@@ -103,7 +103,7 @@ from tempor.plugins import plugin_loader
 dataset = SineDataLoader().load()
 
 # load the model
-model = plugin_loader.get("regression.nn_regressor", n_iter=50)
+model = plugin_loader.get("prediction.one_off.regression.nn_regressor", n_iter=50)
 
 # train
 model.fit(dataset)
@@ -129,14 +129,14 @@ testcases = [
         "pipeline1",
         Pipeline(
             [
-                "preprocessing.scaling.static_minmax_scaler",
-                "classification.nn_classifier",
+                "preprocessing.scaling.static.static_minmax_scaler",
+                "prediction.one_off.classification.nn_classifier",
             ]
         )({"nn_classifier": {"n_iter": 10}}),
     ),
     (
         "plugin1",
-        plugin_loader.get("classification.nn_classifier", n_iter=10),
+        plugin_loader.get("prediction.one_off.classification.nn_classifier", n_iter=10),
     ),
 ]
 dataset = SineDataLoader().load()
@@ -152,13 +152,13 @@ aggr_score, per_test_score = benchmark_models(
 print(aggr_score)
 ```
 
-^ Serialization
+* Serialization
 ```python
 from tempor.utils.serialization import load, save
 from tempor.plugins import plugin_loader
 
 # load the model
-model = plugin_loader.get("classification.nn_classifier", n_iter=50)
+model = plugin_loader.get("prediction.one_off.classification.nn_classifier", n_iter=50)
 
 buff = save(model)  # save model to bytes
 reloaded = load(buff)  # reload model
@@ -168,28 +168,51 @@ reloaded = load(buff)  # reload model
 
 ## 🔑 Methods
 
+
+
 ### Prediction
-* Classification
+
+#### One-off
+Prediction where targets are static.
+
+* Classification (category: `prediction.one_off.classification`)
 
 | Name | Description| Reference |
 | --- | --- | --- |
-| `classification.nn_classifier` | Neural-net based classifier. Supports multiple recurrent models, like RNN, LSTM, Transformer etc.  | --- |
-| `classification.ode_classifier` | Classifier based on ordinary differential equation (ODE) solvers.  | --- |
-| `classification.cde_classifier` | Classifier based Neural Controlled Differential Equations for Irregular Time Series.  | [Paper](https://arxiv.org/abs/2005.08926) |
-| `classification.laplace_ode_classifier` | Classifier based Inverse Laplace Transform (ILT) algorithms implemented in PyTorch.  | [Paper](https://arxiv.org/abs/2206.04843) |
-| `classification.seq2seq_classifier` | Seq2Seq prediction  | --- |
+| `nn_classifier` | Neural-net based classifier. Supports multiple recurrent models, like RNN, LSTM, Transformer etc.  | --- |
+| `ode_classifier` | Classifier based on ordinary differential equation (ODE) solvers.  | --- |
+| `cde_classifier` | Classifier based Neural Controlled Differential Equations for Irregular Time Series.  | [Paper](https://arxiv.org/abs/2005.08926) |
+| `laplace_ode_classifier` | Classifier based Inverse Laplace Transform (ILT) algorithms implemented in PyTorch.  | [Paper](https://arxiv.org/abs/2206.04843) |
 
-* Regression
+* Regression (category: `prediction.one_off.regression`)
 
 | Name | Description| Reference |
 | --- | --- | --- |
-| `regression.nn_regressor` | Neural-net based regressor. Supports multiple recurrent models, like RNN, LSTM, Transformer etc.  | --- |
-| `regression.ode_regressor` | Regressor based on ordinary differential equation (ODE) solvers.  | --- |
-| `regression.cde_regressor` | Regressor based Neural Controlled Differential Equations for Irregular Time Series.  | [Paper](https://arxiv.org/abs/2005.08926)
-| `regression.laplace_ode_regressor` | Regressor based Inverse Laplace Transform (ILT) algorithms implemented in PyTorch.  | [Paper](https://arxiv.org/abs/2206.04843) |
-| `classification.seq2seq_regressor` | Seq2Seq prediction  | --- |
+| `nn_regressor` | Neural-net based regressor. Supports multiple recurrent models, like RNN, LSTM, Transformer etc.  | --- |
+| `ode_regressor` | Regressor based on ordinary differential equation (ODE) solvers.  | --- |
+| `cde_regressor` | Regressor based Neural Controlled Differential Equations for Irregular Time Series.  | [Paper](https://arxiv.org/abs/2005.08926)
+| `laplace_ode_regressor` | Regressor based Inverse Laplace Transform (ILT) algorithms implemented in PyTorch.  | [Paper](https://arxiv.org/abs/2206.04843) |
 
-* Time-to-Event
+#### Temporal
+Prediction where targets are temporal (time series).
+
+* Classification (category: `prediction.temporal.classification`)
+
+| Name | Description| Reference |
+| --- | --- | --- |
+| `seq2seq_classifier` | Seq2Seq prediction, classification | --- |
+
+* Regression (category: `prediction.temporal.regression`)
+
+| Name | Description| Reference |
+| --- | --- | --- |
+| `seq2seq_regressor` | Seq2Seq prediction, regression | --- |
+
+
+
+### Time-to-Event
+
+Risk estimation given event data (category: `time_to_event`)
 
 | Name | Description| Reference |
 | --- | --- | --- |
@@ -197,82 +220,74 @@ reloaded = load(buff)  # reload model
 | `ts_coxph` | Create embeddings from the time series and use a CoxPH model for predicting the survival function| --- |
 | `ts_xgb` | Create embeddings from the time series and use a SurvivalXGBoost model for predicting the survival function| --- |
 
-* Treatment effects
+
+
+### Treatment effects
+
+#### One-off
+Treatment effects estimation where treatments are a one-off event.
+
+<!--
+* Classification on the outcomes (category: `treatments.one_off.classification`)
+-->
+
+* Regression on the outcomes (category: `treatments.one_off.regression`)
+
+| Name | Description| Reference |
+| --- | --- | --- |
+| `synctwin_regressor` | SyncTwin is a treatment effect estimation method tailored for observational studies with longitudinal data, applied to the LIP setting: Longitudinal, Irregular and Point treatment.  | [Paper](https://proceedings.neurips.cc/paper/2021/hash/19485224d128528da1602ca47383f078-Abstract.html) |
+
+#### Temporal
+Treatment effects estimation where treatments are temporal (time series).
+
+* Classification on the outcomes (category: `treatments.temporal.classification`)
+
+| Name | Description| Reference |
+| --- | --- | --- |
+| `crn_classifier` | The Counterfactual Recurrent Network (CRN), a sequence-to-sequence model that leverages the available patient observational data to estimate treatment effects over time. | [Paper](https://arxiv.org/abs/2002.04083) |
+
+* Regression on the outcomes (category: `treatments.temporal.regression`)
 
 | Name | Description| Reference |
 | --- | --- | --- |
 | `crn_regressor` | The Counterfactual Recurrent Network (CRN), a sequence-to-sequence model that leverages the available patient observational data to estimate treatment effects over time. | [Paper](https://arxiv.org/abs/2002.04083) |
-| `crn_classifier` | The Counterfactual Recurrent Network (CRN), a sequence-to-sequence model that leverages the available patient observational data to estimate treatment effects over time. | [Paper](https://arxiv.org/abs/2002.04083) |
-| `synctwin_regressor` | SyncTwin is a treatment effect estimation method tailored for observational studies with longitudinal data, applied to the LIP setting: Longitudinal, Irregular and Point treatment.  | [Paper](https://proceedings.neurips.cc/paper/2021/hash/19485224d128528da1602ca47383f078-Abstract.html) |
 
 
 
 ### Preprocessing
-* Imputation
+
+#### Imputation
+
+* Static data (category: `preprocessing.imputation.static`)
 
 | Name | Description| Reference |
 | --- | --- | --- |
-| `preprocessing.imputation.ffill` | Propagate last valid observation forward to next valid  | --- |
-| `preprocessing.imputation.bfill` | Use next valid observation to fill gap | --- |
-| `preprocessing.imputation.static_imputation` | Use HyperImpute to impute both the static and temporal data | [Paper](https://arxiv.org/abs/2206.07769) |
+| `static_imputation` | Use HyperImpute to impute both the static and temporal data | [Paper](https://arxiv.org/abs/2206.07769) |
 
-* Scalers
+* Temporal data (category: `preprocessing.imputation.temporal`)
 
 | Name | Description| Reference |
 | --- | --- | --- |
-| `preprocessing.scaling.static_standard_scaler` | Scale the static features using a StandardScaler | --- |
-| `preprocessing.scaling.static_minmax_scaler` | Scale the static features using a MinMaxScaler | --- |
-| `preprocessing.scaling.ts_standard_scaler` | Scale the temporal features using a StandardScaler | --- |
-| `preprocessing.scaling.ts_minmax_scaler` | Scale the temporal features using a MinMaxScaler | --- |
+| `ffill` | Propagate last valid observation forward to next valid  | --- |
+| `bfill` | Use next valid observation to fill gap | --- |
 
-<!--
-## Models
+### Scaling
 
-**Time Series Prediction (Forecasting)**
+* Static data (category: `preprocessing.scaling.static`)
 
-| Model &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Affiliation &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; | Paper | Status &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; |
-| ----- | ----------- | ----- | ------ |
-| A version of LSTM | Classic method | [📄](https://ieeexplore.ieee.org/abstract/document/6795963) | ✔️ Available |
-| A version of GRU | Classic method | [📄](https://arxiv.org/abs/1409.1259) | ✔️ Available |
-| A version of Seq2Seq | Classic method | [📄](https://proceedings.neurips.cc/paper/2014/hash/a14ac55a4f27472c5d894ec1c3c743d2-Abstract.html) | ✔️ Available |
-| [NeuralLaplace](https://github.com/samholt/NeuralLaplace) | [van der Schaar Lab] | [📄](https://proceedings.mlr.press/v162/holt22a.html) | 🔵 Planned |
+| Name | Description| Reference |
+| --- | --- | --- |
+| `static_standard_scaler` | Scale the static features using a StandardScaler | --- |
+| `static_minmax_scaler` | Scale the static features using a MinMaxScaler | --- |
 
-**Time Series Imputation**
+* Temporal data (category: `preprocessing.scaling.temporal`)
 
-| Model &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Affiliation &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; | Paper | Status &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; |
-| ----- | ----------- | ----- | ------ |
-| `{f,b}fill` & Mean | Classic method(s) | N/A | ✔️ Available |
-| [HyperImpute](https://github.com/vanderschaarlab/HyperImpute) | [van der Schaar Lab] | [📄](https://proceedings.mlr.press/v162/jarrett22a/jarrett22a.pdf) | 🔵 Planned
+| Name | Description| Reference |
+| --- | --- | --- |
+| `ts_standard_scaler` | Scale the temporal features using a StandardScaler | --- |
+| `ts_minmax_scaler` | Scale the temporal features using a MinMaxScaler | --- |
 
-**Temporal Treatment Effects**
 
-| Model &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Affiliation &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; | Paper | Status &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; |
-| ----- | ----------- | ----- | ------ |
-| [CRN](https://github.com/vanderschaarlab/mlforhealthlabpub/tree/main/alg/counterfactual_recurrent_network) | [van der Schaar Lab] | [📄](https://openreview.net/forum?id=BJg866NFvB) | ✔️ Available |
-| [SyncTwin](https://github.com/vanderschaarlab/SyncTwin-NeurIPS-2021/) | [van der Schaar Lab] | [📄](https://proceedings.neurips.cc/paper/2021/hash/19485224d128528da1602ca47383f078-Abstract.html) | ➰ Experimental |
-| [TE-CDE](https://github.com/vanderschaarlab/TE-CDE/) | [van der Schaar Lab] | [📄](https://proceedings.mlr.press/v162/seedat22b/seedat22b.pdf) | 🔵 Planned |
-
-**Temporal Time-to-event Analysis**
-
-| Model &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Affiliation &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; | Paper | Status &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; |
-| ----- | ----------- | ----- | ------ |
-| [Dynamic DeepHit Lite](https://github.com/chl8856/prostate_temporal) | [van der Schaar Lab] | [📄](https://www.nature.com/articles/s41746-022-00659-w) | ➰ Experimental |
-| [Dynamic DeepHit](https://github.com/vanderschaarlab/mlforhealthlabpub/tree/main/alg/dynamic_deephit) | [van der Schaar Lab] | [📄](https://pubmed.ncbi.nlm.nih.gov/30951460/) | 🔵 Planned |
-
-**Interpretability**
-
-| Model &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Affiliation &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; | Paper | Status &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; |
-| ----- | ----------- | ----- | ------ |
-| [DynaMask](https://github.com/vanderschaarlab/Dynamask) | [van der Schaar Lab] | [📄](https://proceedings.mlr.press/v139/crabbe21a.html) | 🔵 Planned |
-
-**Temporal Clustering**
-
-| Model &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Affiliation &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; | Paper | Status &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; |
-| ----- | ----------- | ----- | ------ |
-| [AC-TPC](https://github.com/vanderschaarlab/mlforhealthlabpub/tree/main/alg/ac_tpc) | [van der Schaar Lab] | [📄](https://proceedings.mlr.press/v119/lee20h.html) | 🔵 Planned |
-
-\* `✔️ Available` & `➰ Experimental` may include some items still to be migrated from the [previous iteration of the project](https://github.com/vanderschaarlab/clairvoyance2).
--->
 
 ## TemporAI Pipeline
 The diagram below illustrates the structure of a *TemporAI* pipeline:

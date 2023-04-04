@@ -1,9 +1,7 @@
-import functools
 import glob
 import importlib
 import importlib.abc
 import importlib.util
-import inspect
 import os
 import os.path
 import sys
@@ -63,7 +61,7 @@ def _check_same_class(class_1, class_2) -> bool:
 
 
 def register_plugin(name: str, category: str):
-    def inner(cls: Callable[P, T]) -> Callable[P, T]:
+    def class_decorator(cls: Callable[P, T]) -> Callable[P, T]:
         # NOTE:
         # The Callable[<ParamSpec>, <TypeVar>] approach allows to preserve the type annotation of the parameters of the
         # wrapped class (its __init__ method, specifically). See resources:
@@ -71,6 +69,8 @@ def register_plugin(name: str, category: str):
         #     * https://docs.python.org/3/library/typing.html#typing.ParamSpec
 
         if TYPE_CHECKING:  # pragma: no cover
+            # Note that cls is in fact `Type[Plugin]`, but this allows to
+            # silence static type-checker warnings inside this function.
             assert isinstance(cls, Plugin)  # nosec B101
 
         logger.debug(f"Registering plugin of class {cls}")
@@ -98,23 +98,19 @@ def register_plugin(name: str, category: str):
             else:
                 # The same class is being reimported, do not raise error.
                 pass
+
         PLUGIN_REGISTRY[cls.fqn()] = cls
 
-        @functools.wraps(cls)
-        def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:  # See NOTE above.
-            return cls(*args, **kwargs)
+        return cls
 
-        # Set attributes.
-        setattr(wrapper, "_cls", cls)  # To access the class directly if required.
-        setattr(wrapper, "_tempor_plugin_", True)
-
-        return wrapper
-
-    return inner
+    return class_decorator
 
 
 class PluginLoader:
     def __init__(self) -> None:
+        self._refresh()
+
+    def _refresh(self):
         self._plugin_registry: Dict[str, Type[Plugin]] = PLUGIN_REGISTRY
 
         name_by_category: Dict = dict()
@@ -132,12 +128,15 @@ class PluginLoader:
         self._plugin_class_by_category = class_by_category
 
     def list(self) -> Dict:
+        self._refresh()
         return self._plugin_name_by_category
 
     def list_fqns(self) -> List[str]:
+        self._refresh()
         return list(self._plugin_registry.keys())
 
     def list_classes(self) -> Dict:
+        self._refresh()
         return self._plugin_class_by_category
 
     def _raise_plugin_does_not_exist_error(self, name: str):
@@ -145,10 +144,12 @@ class PluginLoader:
             raise ValueError(f"Plugin {name} does not exist.")
 
     def get(self, name: str, *args, **kwargs) -> Any:
+        self._refresh()
         self._raise_plugin_does_not_exist_error(name)
         return self._plugin_registry[name](*args, **kwargs)
 
     def get_class(self, name: str) -> Type:
+        self._refresh()
         self._raise_plugin_does_not_exist_error(name)
         return self._plugin_registry[name]
 
@@ -162,7 +163,7 @@ def _glob_plugin_paths(package_dir: str) -> List[str]:
 
 def _module_name_from_path(path: str) -> str:
     path = os.path.normpath(path)
-    split = path[path.rfind(tempor.import_name) :].split(os.sep)
+    split = path[path.rfind(f"{tempor.import_name}{os.sep}") :].split(os.sep)
     if split[-1][-3:] != ".py":
         raise ValueError(f"Path `{path}` is not a python file.")
     split[-1] = split[-1].replace(".py", "")
@@ -185,14 +186,6 @@ class importing:  # Functions as namespace, for clarity.
             module = importlib.util.module_from_spec(spec)
             sys.modules[module_name] = module
             spec.loader.exec_module(module)
-
-            # Ensure doctests of plugins are included.
-            # See: https://docs.python.org/3.8/library/doctest.html#which-docstrings-are-examined
-            for name, obj in inspect.getmembers(module):
-                if hasattr(obj, "_tempor_plugin_"):
-                    test_dict = getattr(module, "__test__", dict())
-                    test_dict[name] = getattr(obj, "_cls")
-                    setattr(module, "__test__", test_dict)
 
     @staticmethod
     def gather_modules_names(package_init_file: str) -> List[str]:

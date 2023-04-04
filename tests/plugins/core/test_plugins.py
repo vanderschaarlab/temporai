@@ -1,14 +1,11 @@
-# pylint: disable=redefined-outer-name, unused-argument
+# pylint: disable=unused-argument
 
-from typing import Dict, Type
 from unittest.mock import Mock
 
 import pytest
 
 import tempor.plugins.core._plugin as plugin_core
-
-DUMMY_PLUGIN_CATEGORY_REGISTRY: Dict[str, Type[plugin_core.Plugin]] = dict()
-DUMMY_PLUGIN_REGISTRY: Dict[str, Type[plugin_core.Plugin]] = dict()
+from tempor.plugins import plugin_loader
 
 
 class TestPluginClass:
@@ -25,28 +22,6 @@ class TestPluginClass:
 
         with pytest.raises(ValueError, match=".*category.*not set.*"):
             CategorylessPlugin()
-
-
-@pytest.fixture
-def patch_plugins_core_module(patch_module):
-    patch_module(
-        main_module=plugin_core,
-        module_vars=[
-            (
-                plugin_core,
-                plugin_core.PLUGIN_CATEGORY_REGISTRY,
-                "PLUGIN_CATEGORY_REGISTRY",
-                DUMMY_PLUGIN_CATEGORY_REGISTRY,
-            ),
-            (
-                plugin_core,
-                plugin_core.PLUGIN_REGISTRY,
-                "PLUGIN_REGISTRY",
-                DUMMY_PLUGIN_REGISTRY,
-            ),
-        ],
-        refresh_pydantic=False,
-    )
 
 
 class TestRegistration:
@@ -75,7 +50,7 @@ class TestRegistration:
         assert fqn in plugin_core.PLUGIN_REGISTRY
 
         assert plugin_core.PLUGIN_CATEGORY_REGISTRY["dummy_category"] == plugin_core.Plugin
-        assert plugin_core.PLUGIN_REGISTRY[fqn] == DummyPlugin._cls  # type: ignore  # pylint: disable=E,W
+        assert plugin_core.PLUGIN_REGISTRY[fqn] == DummyPlugin
 
     def test_register_multiple_plugins_and_categories_success(self):
         plugin_core.register_plugin_category("dummy_category_A", expected_class=plugin_core.Plugin)
@@ -100,9 +75,9 @@ class TestRegistration:
 
         assert plugin_core.PLUGIN_CATEGORY_REGISTRY["dummy_category_A"] == plugin_core.Plugin
         assert plugin_core.PLUGIN_CATEGORY_REGISTRY["dummy_category_B"] == plugin_core.Plugin
-        assert plugin_core.PLUGIN_REGISTRY[p_a1.fqn()] == DummyPluginA1._cls  # type: ignore  # pylint: disable=E,W
-        assert plugin_core.PLUGIN_REGISTRY[p_a2.fqn()] == DummyPluginA2._cls  # type: ignore  # pylint: disable=E,W
-        assert plugin_core.PLUGIN_REGISTRY[p_b1.fqn()] == DummyPluginB1._cls  # type: ignore  # pylint: disable=E,W
+        assert plugin_core.PLUGIN_REGISTRY[p_a1.fqn()] == DummyPluginA1
+        assert plugin_core.PLUGIN_REGISTRY[p_a2.fqn()] == DummyPluginA2
+        assert plugin_core.PLUGIN_REGISTRY[p_b1.fqn()] == DummyPluginB1
 
     def test_category_registration_fails_duplicate(self):
         plugin_core.register_plugin_category("same_category", expected_class=plugin_core.Plugin)
@@ -202,8 +177,8 @@ class TestPluginLoader:
             f"{PluginBY2.category}.{PluginBY2.name}": PluginBY2,
         }
 
-    def test_list(self):
-        loader = plugin_core.PluginLoader()
+    @pytest.mark.parametrize("loader", [plugin_core.PluginLoader(), plugin_loader])
+    def test_list(self, loader):
         listed = loader.list()
 
         assert listed == {
@@ -214,8 +189,8 @@ class TestPluginLoader:
             },
         }
 
-    def test_list_classes(self):
-        loader = plugin_core.PluginLoader()
+    @pytest.mark.parametrize("loader", [plugin_core.PluginLoader(), plugin_loader])
+    def test_list_classes(self, loader):
         listed = loader.list_classes()
 
         assert listed == {
@@ -226,8 +201,8 @@ class TestPluginLoader:
             },
         }
 
-    def test_list_fqns(self):
-        loader = plugin_core.PluginLoader()
+    @pytest.mark.parametrize("loader", [plugin_core.PluginLoader(), plugin_loader])
+    def test_list_fqns(self, loader):
         listed = loader.list_fqns()
 
         assert listed == [
@@ -239,30 +214,53 @@ class TestPluginLoader:
             "category_b.y.plugin_by2",
         ]
 
-    def test_get(self):
-        loader = plugin_core.PluginLoader()
-
+    @pytest.mark.parametrize("loader", [plugin_core.PluginLoader(), plugin_loader])
+    def test_get(self, loader):
         plugin_a2_instance = loader.get(  # pylint: disable=unused-variable  # noqa: F841
             "category_a.plugin_a2", "arg", kwarg="kwarg"
         )
         PluginA2.assert_called_once_with("arg", kwarg="kwarg")
+        PluginA2.reset_mock()
 
         plugin_by2_instance = loader.get(  # pylint: disable=unused-variable  # noqa: F841
             name="category_b.y.plugin_by2", kwarg="kwarg"
         )
         PluginBY2.assert_called_once_with(kwarg="kwarg")
+        PluginBY2.reset_mock()
 
-    def test_get_class(self):
-        loader = plugin_core.PluginLoader()
-
+    @pytest.mark.parametrize("loader", [plugin_core.PluginLoader(), plugin_loader])
+    def test_get_class(self, loader):
         plugin_a2_class = loader.get_class("category_a.plugin_a2")
         assert plugin_a2_class == PluginA2
 
         plugin_bx1_class = loader.get_class("category_b.x.plugin_bx1")
         assert plugin_bx1_class == PluginBX1
 
-    def test_get_fails_no_such_plugin(self):
-        loader = plugin_core.PluginLoader()
-
+    @pytest.mark.parametrize("loader", [plugin_core.PluginLoader(), plugin_loader])
+    def test_get_fails_no_such_plugin(self, loader):
         with pytest.raises(ValueError, match=".*[Pp]lugin.*not.*exist.*"):
             loader.get_class("category_a.no_such_plugin")
+
+    @pytest.mark.parametrize("loader", [plugin_core.PluginLoader(), plugin_loader])
+    def test_plugin_added_live(self, loader: plugin_core.PluginLoader):
+        plugin_core.register_plugin_category("category_c", expected_class=plugin_core.Plugin)
+
+        @plugin_core.register_plugin(name="plugin_c1", category="category_c")
+        class PluginC1(plugin_core.Plugin):  # pylint: disable=unused-variable
+            pass
+
+        listed = loader.list()
+        assert "category_c" in listed
+        assert "plugin_c1" in listed["category_c"]
+
+        listed_classes = loader.list_classes()
+        assert "category_c" in listed
+        assert PluginC1 in listed_classes["category_c"]
+
+        plugin_c1_class = loader.get_class("category_c.plugin_c1")
+        assert plugin_c1_class == PluginC1
+
+        plugin_c1_instance = loader.get(
+            "category_c.plugin_c1",
+        )
+        assert isinstance(plugin_c1_instance, PluginC1)  # type: ignore

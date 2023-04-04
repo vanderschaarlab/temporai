@@ -171,46 +171,7 @@ todo_emit_warnings = True
 
 autoclass_content = "both"
 
-from sphinx.ext.autodoc import ClassDocumenter
-
-
-class TemporPluginDocumenter(ClassDocumenter):
-    # Make sphinx/autodoc correctly document the TemporAI plugin classes by pointing it to the wrapped class,
-    # which is found in the `._cls` attribute.
-    # See:
-    #     - This StackOverflow answer: https://stackoverflow.com/a/33060970
-    #     - Sphinx autodoc extension, `ClassDocumenter` implementation: sphinx/ext/autodoc/__init__py
-
-    objtype = "tempor_plugin"
-    directivetype = "class"
-
-    _inner_class_attr = "_cls"
-    _tempor_plugin_indicator_attr = "_tempor_plugin_"
-
-    def import_object(self, raiseerror: bool = False) -> bool:
-        ret = super().import_object(raiseerror)
-
-        # The below does the trick.
-        self.object = getattr(self.object, self._inner_class_attr)
-        self.objpath.append(self._inner_class_attr)
-
-        return ret
-
-    def generate(self, more_content=None, real_modname=None, check_module=False, all_members=False) -> None:
-        # Remove the "_cls" from the actual generated directive.
-        super().generate(more_content, real_modname, check_module, all_members)
-        for i, s in enumerate(self.directive.result):
-            self.directive.result[i] = s.replace(f".{self._inner_class_attr}", "")
-
-    @classmethod
-    def can_document_member(cls, member, membername, isattr, parent):
-        # Trigger this custom Documenter if the object is a tempor plugin (has `_tempor_plugin_` attribute).
-        return hasattr(member, TemporPluginDocumenter._tempor_plugin_indicator_attr)
-
-
-def setup(app):
-    app.add_autodocumenter(TemporPluginDocumenter)
-
+autodoc_member_order = "bysource"
 
 # autodoc_mock_imports = ["sklearn"]  # Update as needed.
 

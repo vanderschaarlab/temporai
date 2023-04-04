@@ -21,7 +21,7 @@ class LinearLayer(nn.Module):
         n_units_out: int,
         dropout: float = 0,
         batch_norm: bool = False,
-        nonlin: Optional[str] = "relu",
+        nonlin: Optional[Nonlin] = "relu",
         device: Any = constants.DEVICE,
     ) -> None:
         super(LinearLayer, self).__init__()
@@ -54,7 +54,7 @@ class ResidualLayer(LinearLayer):
         n_units_out: int,
         dropout: float = 0,
         batch_norm: bool = False,
-        nonlin: Optional[str] = "relu",
+        nonlin: Optional[Nonlin] = "relu",
         device: Any = constants.DEVICE,
     ) -> None:
         super(ResidualLayer, self).__init__(

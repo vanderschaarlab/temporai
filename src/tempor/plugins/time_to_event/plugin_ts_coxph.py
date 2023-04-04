@@ -1,9 +1,12 @@
+import contextlib
 import dataclasses
 from typing import Any, Dict, List, Optional
 
+import lifelines
 import numpy as np
 import pandas as pd
 from lifelines import CoxPHFitter
+from packaging.version import Version
 from typing_extensions import Self
 
 import tempor.plugins.core as plugins
@@ -13,6 +16,42 @@ from tempor.plugins.core._params import FloatParams
 from tempor.plugins.time_to_event import BaseTimeToEventAnalysis
 
 from .helper_embedding import EmbTimeToEventAnalysis, OutputTimeToEventAnalysis
+
+
+@contextlib.contextmanager
+def monkeypatch_lifelines_pd2_compatibility():
+    """lifelines (at least as of 0.27.4) is not compatible with pandas 2.0.0+, due to
+    ``TypeError: describe() got an unexpected keyword argument 'datetime_is_numeric'`` thrown by pandas in e.g.
+    ``CoxPHFitter.fit``. This monkeypatch fixes this compatibility issue, until the problem is addressed by
+    `lifelines`.
+    """
+
+    def problem_versions() -> bool:
+        return (
+            Version(pd.__version__) >= Version("2.0.0rc0")
+            and Version(lifelines.__version__) <= Version("1.0")
+            # TODO: ^ Update here with the `lifelines` version which becomes `pandas` 2 compatible.
+        )
+
+    if problem_versions():
+        # Monkeypatch `pandas.DataFrame.describe`.
+
+        original_pd_df_describe = pd.DataFrame.describe
+
+        def monkeypatched_describe(*args, **kwargs):
+            # Remove the offending keyword argument (it is no longer needed to pass in).
+            kwargs.pop("datetime_is_numeric", None)
+            return original_pd_df_describe(*args, **kwargs)
+
+        pd.DataFrame.describe = monkeypatched_describe
+
+    try:
+        yield
+
+    finally:
+        if problem_versions():
+            # Restore `pandas.DataFrame.describe`.
+            pd.DataFrame.describe = original_pd_df_describe  # pyright: ignore
 
 
 @dataclasses.dataclass
@@ -79,7 +118,8 @@ class CoxPHSurvivalAnalysis(OutputTimeToEventAnalysis):
         df["event"] = Y
         df["time"] = T
 
-        self.model.fit(df, "time", "event", fit_options=self.fit_options)
+        with monkeypatch_lifelines_pd2_compatibility():
+            self.model.fit(df, "time", "event", fit_options=self.fit_options)
 
         return self
 

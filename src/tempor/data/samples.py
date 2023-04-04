@@ -185,7 +185,7 @@ class StaticSamples(DataSamples):
         return data_typing.DataModality.STATIC
 
     def _validate(self) -> None:
-        schema = pa.infer_schema(self._data)
+        schema = pandera_utils.init_schema(self._data, coerce=False)
         if TYPE_CHECKING:  # pragma: no cover
             assert isinstance(schema, pa.DataFrameSchema)  # nosec B101
         logger.debug(f"Inferred schema:\n{schema}")
@@ -196,8 +196,9 @@ class StaticSamples(DataSamples):
             checks_list=[
                 pandera_utils.checks.forbid_multiindex_index,
                 pandera_utils.checks.forbid_multiindex_columns,
-                pandera_utils.checks.configurable.column_index_satisfies_dtypes(
-                    DATA_SETTINGS.feature_index_dtypes, nullable=DATA_SETTINGS.feature_index_nullable
+                pandera_utils.checks.configurable.column_index_satisfies_dtype(
+                    pandera_utils.UnionDtype[DATA_SETTINGS.feature_index_dtypes],  # type: ignore
+                    nullable=DATA_SETTINGS.feature_index_nullable,
                 ),
             ],
         )
@@ -207,9 +208,8 @@ class StaticSamples(DataSamples):
         schema = pandera_utils.add_regex_column_checks(
             schema,
             regex=".*",
-            dtype=None,
+            dtype=pandera_utils.UnionDtype[DATA_SETTINGS.static_value_dtypes],  # type: ignore
             nullable=DATA_SETTINGS.static_values_nullable,
-            checks_list=[pandera_utils.checks.configurable.values_satisfy_dtypes(DATA_SETTINGS.static_value_dtypes)],
         )
         self._data = schema.validate(self._data)
 
@@ -217,10 +217,11 @@ class StaticSamples(DataSamples):
         schema, data = pandera_utils.set_up_index(
             schema,
             self._data,
+            dtype=pandera_utils.UnionDtype[DATA_SETTINGS.sample_index_dtypes],  # type: ignore
             name=DATA_SETTINGS.sample_index_name,
             nullable=DATA_SETTINGS.sample_index_nullable,
+            coerce=False,
             unique=DATA_SETTINGS.sample_index_unique,
-            checks_list=[pandera_utils.checks.configurable.index_satisfies_dtypes(DATA_SETTINGS.sample_index_dtypes)],
         )
         self._data = schema.validate(data)
 
@@ -344,7 +345,7 @@ class TimeSeriesSamples(DataSamples):
         super().__init__(data, **kwargs)
 
     def _validate(self) -> None:
-        schema = pa.infer_schema(self._data)
+        schema = pandera_utils.init_schema(self._data, coerce=False)
         if TYPE_CHECKING:  # pragma: no cover
             assert isinstance(schema, pa.DataFrameSchema)  # nosec B101
         logger.debug(f"Inferred schema:\n{schema}")
@@ -355,8 +356,9 @@ class TimeSeriesSamples(DataSamples):
             checks_list=[
                 pandera_utils.checks.forbid_multiindex_columns,
                 pandera_utils.checks.require_2level_multiindex_index,
-                pandera_utils.checks.configurable.column_index_satisfies_dtypes(
-                    DATA_SETTINGS.feature_index_dtypes, nullable=DATA_SETTINGS.feature_index_nullable
+                pandera_utils.checks.configurable.column_index_satisfies_dtype(
+                    pandera_utils.UnionDtype[DATA_SETTINGS.feature_index_dtypes],  # type: ignore
+                    nullable=DATA_SETTINGS.feature_index_nullable,
                 ),
             ],
         )
@@ -366,11 +368,8 @@ class TimeSeriesSamples(DataSamples):
         schema = pandera_utils.add_regex_column_checks(
             schema,
             regex=".*",
-            dtype=None,
+            dtype=pandera_utils.UnionDtype[DATA_SETTINGS.time_series_value_dtypes],  # type: ignore
             nullable=DATA_SETTINGS.time_series_values_nullable,
-            checks_list=[
-                pandera_utils.checks.configurable.values_satisfy_dtypes(DATA_SETTINGS.time_series_value_dtypes)
-            ],
         )
         self._data = schema.validate(self._data)
 
@@ -381,13 +380,14 @@ class TimeSeriesSamples(DataSamples):
         schema, data = pandera_utils.set_up_2level_multiindex(
             schema,
             self._data,
+            dtypes=(
+                pandera_utils.UnionDtype[DATA_SETTINGS.sample_index_dtypes],  # type: ignore
+                pandera_utils.UnionDtype[DATA_SETTINGS.time_index_dtypes],  # type: ignore
+            ),
             names=(DATA_SETTINGS.sample_index_name, DATA_SETTINGS.time_index_name),
             nullable=(DATA_SETTINGS.sample_index_nullable, DATA_SETTINGS.time_index_nullable),
+            coerce=False,
             unique=multiindex_unique_def,
-            checks_list=(
-                [pandera_utils.checks.configurable.index_satisfies_dtypes(DATA_SETTINGS.sample_index_dtypes)],
-                [pandera_utils.checks.configurable.index_satisfies_dtypes(DATA_SETTINGS.time_index_dtypes)],
-            ),
         )
         self._data = schema.validate(data)
 
@@ -530,7 +530,7 @@ class TimeSeriesSamples(DataSamples):
 
     @property
     def num_samples(self) -> int:
-        sample_ids = self._data.index.levels[0]  # pyright: ignore
+        sample_ids = utils.get_df_index_level0_unique(self._data)
         return len(sample_ids)
 
     @property
@@ -592,7 +592,7 @@ class EventSamples(DataSamples):
         super().__init__(data, **kwargs)
 
     def _validate(self) -> None:
-        schema = pa.infer_schema(self._data)
+        schema = pandera_utils.init_schema(self._data, coerce=False)
         if TYPE_CHECKING:  # pragma: no cover
             assert isinstance(schema, pa.DataFrameSchema)  # nosec B101
         logger.debug(f"Inferred schema:\n{schema}")
@@ -603,8 +603,9 @@ class EventSamples(DataSamples):
             checks_list=[
                 pandera_utils.checks.forbid_multiindex_index,
                 pandera_utils.checks.forbid_multiindex_columns,
-                pandera_utils.checks.configurable.column_index_satisfies_dtypes(
-                    DATA_SETTINGS.feature_index_dtypes, nullable=DATA_SETTINGS.feature_index_nullable
+                pandera_utils.checks.configurable.column_index_satisfies_dtype(
+                    pandera_utils.UnionDtype[DATA_SETTINGS.feature_index_dtypes],  # type: ignore
+                    nullable=DATA_SETTINGS.feature_index_nullable,
                 ),
             ],
         )
@@ -622,20 +623,18 @@ class EventSamples(DataSamples):
         # Validate event time and value components:
         suffix = _DEFAULT_EVENTS_TIME_FEATURE_SUFFIX
         data_split = self.split(time_feature_suffix=suffix)
-        schema_split = pa.infer_schema(data_split)
+        schema_split = pandera_utils.init_schema(data_split, coerce=False)
         schema_split = pandera_utils.add_regex_column_checks(
             schema_split,
             regex=f".*{suffix}$",  # Event time columns, end in "_time".
-            dtype=None,
+            dtype=pandera_utils.UnionDtype[DATA_SETTINGS.time_index_dtypes],  # type: ignore
             nullable=DATA_SETTINGS.time_index_nullable,
-            checks_list=[pandera_utils.checks.configurable.values_satisfy_dtypes(DATA_SETTINGS.time_index_dtypes)],
         )
         schema_split = pandera_utils.add_regex_column_checks(
             schema_split,
             regex=f"^((?!{suffix}$).)*$",  # Event value columns, do not end in "_time".
-            dtype=None,
+            dtype=pandera_utils.UnionDtype[DATA_SETTINGS.event_value_dtypes],  # type: ignore
             nullable=DATA_SETTINGS.event_values_nullable,
-            checks_list=[pandera_utils.checks.configurable.values_satisfy_dtypes(DATA_SETTINGS.event_value_dtypes)],
         )
         logger.debug(f"Time split-off schema (checks event time and values separately):\n{schema_split}")
         schema_split.validate(data_split)
@@ -645,10 +644,11 @@ class EventSamples(DataSamples):
         schema, data = pandera_utils.set_up_index(
             schema,
             self._data,
+            dtype=pandera_utils.UnionDtype[DATA_SETTINGS.sample_index_dtypes],  # type: ignore
             name=DATA_SETTINGS.sample_index_name,
             nullable=DATA_SETTINGS.sample_index_nullable,
+            coerce=False,
             unique=DATA_SETTINGS.sample_index_unique,
-            checks_list=[pandera_utils.checks.configurable.index_satisfies_dtypes(DATA_SETTINGS.sample_index_dtypes)],
         )
         self._data = schema.validate(data)
 
