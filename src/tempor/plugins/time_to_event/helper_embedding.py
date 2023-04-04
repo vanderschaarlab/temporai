@@ -159,7 +159,7 @@ class EmbTimeToEventAnalysis:
 
     def fit(
         self,
-        data: dataset.PredictiveDataset,
+        data: dataset.BaseDataset,
         *args,  # pylint: disable=unused-argument
         **kwargs,  # pylint: disable=unused-argument
     ) -> Self:

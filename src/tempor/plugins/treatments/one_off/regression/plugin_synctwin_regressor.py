@@ -60,7 +60,7 @@ class SyncTwinTreatmentsRegressor(BaseOneOffTreatmentEffects):
 
     def _fit(
         self,
-        data: dataset.PredictiveDataset,
+        data: dataset.BaseDataset,
         *args,
         **kwargs,
     ) -> "SyncTwinTreatmentsRegressor":  # pyright: ignore

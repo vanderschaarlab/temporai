@@ -129,7 +129,7 @@ class DynamicDeepHitTimeToEventAnalysis(BaseTimeToEventAnalysis):
 
     def _fit(
         self,
-        data: dataset.PredictiveDataset,
+        data: dataset.BaseDataset,
         *args,
         **kwargs,
     ) -> Self:

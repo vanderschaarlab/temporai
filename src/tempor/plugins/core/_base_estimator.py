@@ -82,7 +82,7 @@ class BaseEstimator(Plugin, abc.ABC):
     @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def fit(
         self,
-        data: dataset.PredictiveDataset,
+        data: dataset.BaseDataset,
         *args,
         **kwargs,
     ) -> Self:
@@ -93,7 +93,7 @@ class BaseEstimator(Plugin, abc.ABC):
         return fitted_model
 
     @abc.abstractmethod
-    def _fit(self, data: dataset.PredictiveDataset, *args, **kwargs) -> Self:
+    def _fit(self, data: dataset.BaseDataset, *args, **kwargs) -> Self:
         ...
 
     @staticmethod

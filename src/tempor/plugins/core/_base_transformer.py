@@ -15,7 +15,7 @@ class BaseTransformer(estimator.BaseEstimator):
 
     def transform(
         self,
-        data: dataset.PredictiveDataset,
+        data: dataset.BaseDataset,
         *args,
         **kwargs,
     ) -> Any:
@@ -27,15 +27,13 @@ class BaseTransformer(estimator.BaseEstimator):
     @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def fit_transform(
         self,
-        data: dataset.PredictiveDataset,
+        data: dataset.BaseDataset,
         *args,
         **kwargs,
-    ) -> dataset.PredictiveDataset:
+    ) -> dataset.BaseDataset:
         self.fit(data, *args, **kwargs)
         return self.transform(data, *args, **kwargs)
 
     @abc.abstractmethod
-    def _transform(
-        self, data: dataset.PredictiveDataset, *args, **kwargs
-    ) -> dataset.PredictiveDataset:  # pragma: no cover
+    def _transform(self, data: dataset.BaseDataset, *args, **kwargs) -> dataset.BaseDataset:  # pragma: no cover
         ...
