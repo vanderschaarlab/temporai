@@ -162,6 +162,12 @@ class BaseDataset(abc.ABC):
         self._static = value
         self.validate()
 
+    @property
+    @abc.abstractmethod
+    def fit_ready(self) -> bool:  # pragma: no cover
+        """Returns whether the :class:`BaseDataset` is in a state ready to be ``fit`` on."""
+        ...
+
     def __len__(self) -> int:
         return self.time_series.num_samples
 
@@ -268,6 +274,10 @@ class CovariatesDataset(BaseDataset):
             raise ValueError(f"`treatments` must not be set for a {self.__class__.__name__}.")
         self.predictive = None
 
+    @property
+    def fit_ready(self) -> bool:
+        return True
+
 
 class PredictiveDataset(BaseDataset):
     def __init__(
@@ -285,12 +295,6 @@ class PredictiveDataset(BaseDataset):
         This is an abstract class, to be derived from for different predictive task -specific ``Dataset`` s.
         """
         super().__init__(time_series=time_series, static=static, targets=targets, treatments=treatments, **kwargs)
-
-    @property
-    @abc.abstractmethod
-    def fit_ready(self) -> bool:  # pragma: no cover
-        """Returns whether the :class:`PredictiveDataset` is in a state ready to be ``fit`` on."""
-        ...
 
     @property
     @abc.abstractmethod

@@ -107,6 +107,10 @@ class MockedBaseDataset(dataset.BaseDataset):
     def _validate(self) -> None:
         self.mock_validate_call()
 
+    @property
+    def fit_ready(self) -> bool:
+        return True
+
 
 @pytest.fixture
 def mock_dataset_cls():
