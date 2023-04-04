@@ -42,7 +42,7 @@ class DataSamples(abc.ABC):
     def _repr_html_(self) -> str:
         repr_ = (
             # pylint: disable-next=protected-access
-            f'<p><span style="font-family: monospace;">{self.__class__.__name__} with data:</span> with data:</p>'
+            f'<p><span style="font-family: monospace;">{self.__class__.__name__}</span> with data:</p>'
             f"{self.dataframe()._repr_html_()}"  # pyright: ignore
         )
         return repr_
