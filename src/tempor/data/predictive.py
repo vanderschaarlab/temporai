@@ -52,7 +52,7 @@ class PredictiveTaskData(abc.ABC):
         return self._targets
 
     @targets.setter
-    def targets(self, value: samples.DataSamples) -> None:
+    def targets(self, value: Optional[samples.DataSamples]) -> None:
         self._targets = value
         self.parent_dataset.validate()
 

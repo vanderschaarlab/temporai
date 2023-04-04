@@ -284,6 +284,8 @@ class CovariatesDataset(BaseDataset):
 
 
 class PredictiveDataset(BaseDataset):
+    predictive: pred.PredictiveTaskData
+
     def __init__(
         self,
         time_series: data_typing.DataContainer,

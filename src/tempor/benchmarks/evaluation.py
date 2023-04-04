@@ -380,8 +380,6 @@ def evaluate_classifier(  # pylint: disable=unused-argument
         results.metrics[metric] = np.zeros(n_splits)
 
     splitter = sklearn.model_selection.StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_state)
-    if data.predictive is None:
-        raise ValueError("No targets to use for train/test")
 
     if data.predictive.targets is None:
         raise ValueError("The dataset for evaluation needs to contain targets but did not")
@@ -395,9 +393,6 @@ def evaluate_classifier(  # pylint: disable=unused-argument
         start = time()
         try:
             model.fit(train_data)
-
-            if test_data.predictive is None:
-                raise ValueError("No targets to use for testing")
 
             if TYPE_CHECKING:  # pragma: no cover
                 assert test_data.predictive.targets is not None  # nosec B101
@@ -467,9 +462,6 @@ def evaluate_regressor(  # pylint: disable=unused-argument
         start = time()
         try:
             model.fit(train_data)
-
-            if test_data.predictive is None:
-                raise ValueError("Missing targets for evaluation")
 
             if TYPE_CHECKING:  # pragma: no cover
                 assert test_data.predictive.targets is not None  # nosec B101
