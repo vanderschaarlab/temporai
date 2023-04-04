@@ -9,6 +9,8 @@ from tempor.plugins.preprocessing.imputation.temporal.plugin_ffill import (
 )
 from tempor.utils.serialization import load, save
 
+from ...helpers_preprocessing import as_covariates_dataset
+
 train_kwargs = {"random_state": 123}
 
 TEST_ON_DATASETS = ["sine_data_missing_small"]
@@ -56,8 +58,21 @@ def test_fit(test_plugin: BaseImputer, data: str, request: pytest.FixtureRequest
     ],
 )
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
-def test_transform(test_plugin: BaseImputer, data: str, request: pytest.FixtureRequest) -> None:
+@pytest.mark.parametrize(
+    "covariates_dataset",
+    [
+        False,
+        pytest.param(True, marks=pytest.mark.extra),
+    ],
+)
+def test_transform(
+    test_plugin: BaseImputer, covariates_dataset: bool, data: str, request: pytest.FixtureRequest
+) -> None:
     dataset = request.getfixturevalue(data)
+
+    if covariates_dataset:
+        dataset = as_covariates_dataset(dataset)
+
     if TYPE_CHECKING:  # pragma: no cover
         assert dataset.static is not None  # nosec B101
 

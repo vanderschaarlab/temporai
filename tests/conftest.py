@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 if TYPE_CHECKING:
-    from tempor.data import dataset  # nosec B101
+    from tempor.data import dataset
 
 # --- Test utilities. ---
 
@@ -89,6 +89,8 @@ def patch_module(monkeypatch, request):
 @pytest.fixture
 def get_event0_time_percentiles():
     def func(data: "dataset.TimeToEventAnalysisDataset", horizon_percentiles: List):
+        if TYPE_CHECKING:
+            assert data.predictive.targets is not None  # nosec B101
         event0_times = data.predictive.targets.split_as_two_dataframes()[0].to_numpy().reshape((-1,))
         return np.quantile(event0_times, horizon_percentiles).tolist()
 
@@ -129,6 +131,8 @@ def sine_data_missing_full(
 # Sine data: small.
 @pytest.fixture(scope="session")
 def _sine_data_small(_sine_data_full: "dataset.OneOffPredictionDataset") -> "dataset.OneOffPredictionDataset":
+    if TYPE_CHECKING:
+        assert _sine_data_full.predictive.targets is not None  # nosec B101
     data, _ = copy.deepcopy(_sine_data_full).train_test_split(
         train_size=6,
         stratify=_sine_data_full.predictive.targets.numpy(),
@@ -147,6 +151,8 @@ def sine_data_small(_sine_data_small: "dataset.OneOffPredictionDataset") -> "dat
 def _sine_data_missing_small(
     _sine_data_missing_full: "dataset.OneOffPredictionDataset",
 ) -> "dataset.OneOffPredictionDataset":
+    if TYPE_CHECKING:
+        assert _sine_data_missing_full.predictive.targets is not None  # nosec B101
     data, _ = copy.deepcopy(_sine_data_missing_full).train_test_split(
         train_size=6,
         stratify=_sine_data_missing_full.predictive.targets.numpy(),
@@ -167,6 +173,8 @@ def sine_data_missing_small(
 def _sine_data_temporal(_sine_data_full: "dataset.OneOffPredictionDataset") -> "dataset.TemporalPredictionDataset":
     from tempor.data import dataset
 
+    if TYPE_CHECKING:
+        assert _sine_data_full.predictive.targets is not None  # nosec B101
     raw_data, _ = copy.deepcopy(_sine_data_full).train_test_split(
         train_size=6,
         stratify=_sine_data_full.predictive.targets.numpy(),

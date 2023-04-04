@@ -274,6 +274,10 @@ class CovariatesDataset(BaseDataset):
             raise ValueError(f"`treatments` must not be set for a {self.__class__.__name__}.")
         self.predictive = None
 
+    def _validate(self) -> None:
+        # No additional checks needed.
+        pass
+
     @property
     def fit_ready(self) -> bool:
         return True
