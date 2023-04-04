@@ -19,6 +19,11 @@ class BasePredictor(estimator.BaseEstimator):
         *args,
         **kwargs,
     ) -> Any:  # TODO: Narrow down output formats later.
+        if not data.predict_ready:
+            raise ValueError(
+                f"The dataset was not predict-ready, check that all necessary data components are present:\n{data}"
+            )
+
         logger.debug(f"Calling _predict() implementation on {self.__class__.__name__}")
         prediction = self._predict(data, *args, **kwargs)
 
@@ -30,6 +35,11 @@ class BasePredictor(estimator.BaseEstimator):
         *args,
         **kwargs,
     ) -> Any:  # TODO: Narrow down output formats later.
+        if not data.predict_ready:
+            raise ValueError(
+                f"The dataset was not predict-ready, check that all necessary data components are present:\n{data}"
+            )
+
         logger.debug(f"Calling _predict_proba() implementation on {self.__class__.__name__}")
         prediction = self._predict_proba(data, *args, **kwargs)
 
@@ -41,6 +51,11 @@ class BasePredictor(estimator.BaseEstimator):
         *args,
         **kwargs,
     ) -> Any:  # TODO: Narrow down output formats later.
+        if not data.predict_ready:
+            raise ValueError(
+                f"The dataset was not predict-ready, check that all necessary data components are present:\n{data}"
+            )
+
         logger.debug(f"Calling _predict_counterfactuals() implementation on {self.__class__.__name__}")
         prediction = self._predict_counterfactuals(data, *args, **kwargs)
 
@@ -60,8 +75,8 @@ class BasePredictor(estimator.BaseEstimator):
     def _predict(self, data: dataset.PredictiveDataset, *args, **kwargs) -> Any:  # pragma: no cover
         ...
 
-    def _predict_proba(self, data: dataset.PredictiveDataset, *args, **kwargs) -> Any:  # pragma: no cover
+    def _predict_proba(self, data: dataset.PredictiveDataset, *args, **kwargs) -> Any:
         raise NotImplementedError("`predict_proba` is supported only for classification tasks")
 
-    def _predict_counterfactuals(self, data: dataset.PredictiveDataset, *args, **kwargs) -> Any:  # pragma: no cover
-        raise NotImplementedError("`predict_proba` is supported only for treatments tasks")
+    def _predict_counterfactuals(self, data: dataset.PredictiveDataset, *args, **kwargs) -> Any:
+        raise NotImplementedError("`predict_counterfactuals` is supported only for treatments tasks")

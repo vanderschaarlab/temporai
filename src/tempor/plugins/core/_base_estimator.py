@@ -86,6 +86,11 @@ class BaseEstimator(Plugin, abc.ABC):
         *args,
         **kwargs,
     ) -> Self:
+        if not data.fit_ready:
+            raise ValueError(
+                f"The dataset was not fit-ready, check that all necessary data components are present:\n{data}"
+            )
+
         logger.debug(f"Calling _fit() implementation on {self.__class__.__name__}")
         fitted_model = self._fit(data, *args, **kwargs)
 
