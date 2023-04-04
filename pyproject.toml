@@ -11,7 +11,7 @@ version_scheme = "no-guess-dev"
 [tool.black]
 line-length = 120
 target-version = ['py37', 'py38', 'py39', 'py310']
-include = '\.pyi?$'
+include = '\.(pyi?|ipynb)$'
 # extend-exclude = '''
 # ^/(
 #     docs/conf.py
