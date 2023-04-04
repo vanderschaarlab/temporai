@@ -49,7 +49,14 @@ def test_fit(test_plugin: BaseOneOffRegressor, data: str, request: pytest.Fixtur
     ],
 )
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
-def test_predict(test_plugin: BaseOneOffRegressor, data: str, request: pytest.FixtureRequest) -> None:
+@pytest.mark.parametrize(
+    "no_targets",
+    [
+        False,
+        pytest.param(True, marks=pytest.mark.extra),
+    ],
+)
+def test_predict(test_plugin: BaseOneOffRegressor, no_targets: bool, data: str, request: pytest.FixtureRequest) -> None:
     dataset = request.getfixturevalue(data)
 
     dump = save(test_plugin)
@@ -59,6 +66,9 @@ def test_predict(test_plugin: BaseOneOffRegressor, data: str, request: pytest.Fi
 
     dump = save(reloaded)
     reloaded = load(dump)
+
+    if no_targets:
+        dataset.predictive.targets = None
 
     output = reloaded.predict(dataset)
 

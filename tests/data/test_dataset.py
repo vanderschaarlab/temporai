@@ -1,7 +1,7 @@
 # pylint: disable=redefined-outer-name, unused-argument, protected-access
 
 import dataclasses
-from typing import Tuple, Type
+from typing import TYPE_CHECKING, Tuple, Type
 from unittest.mock import Mock
 
 import numpy as np
@@ -93,7 +93,7 @@ def mock_predictive_data_indexes(
 # --- Dataset base class. ---
 
 
-class MockedDataset(dataset.Dataset):
+class MockedBaseDataset(dataset.BaseDataset):
     mock_validate_call: Mock
     mock_init_predictive: Mock
 
@@ -107,16 +107,20 @@ class MockedDataset(dataset.Dataset):
     def _validate(self) -> None:
         self.mock_validate_call()
 
+    @property
+    def fit_ready(self) -> bool:
+        return True
+
 
 @pytest.fixture
 def mock_dataset_cls():
-    MockedDataset.mock_validate_call = Mock()
-    MockedDataset.mock_init_predictive = Mock()
-    return MockedDataset
+    MockedBaseDataset.mock_validate_call = Mock()
+    MockedBaseDataset.mock_init_predictive = Mock()
+    return MockedBaseDataset
 
 
-class TestDataset:
-    def test_init(self, mock_dataset_cls: Type[MockedDataset], mocked_depends: MockedDepends):
+class TestBaseDataset:
+    def test_init(self, mock_dataset_cls: Type[MockedBaseDataset], mocked_depends: MockedDepends):
         data_time_series = Mock()
         data_static = Mock()
         data_targets = Mock()
@@ -137,7 +141,7 @@ class TestDataset:
         )
         dummy_dataset.mock_validate_call.assert_called_once()
 
-    def test_init_no_targets_provided(self, mock_dataset_cls: Type[MockedDataset], mocked_depends: MockedDepends):
+    def test_init_no_targets_provided(self, mock_dataset_cls: Type[MockedBaseDataset], mocked_depends: MockedDepends):
         data_time_series = Mock()
         data_static = Mock()
         data_targets = None
@@ -146,11 +150,12 @@ class TestDataset:
             time_series=data_time_series,
             static=data_static,
             targets=data_targets,
+            **{"dummy": "kwarg"},
         )
 
         mocked_depends.TimeSeriesSamples.assert_called_once_with(data_time_series)
         mocked_depends.StaticSamples.assert_called_once_with(data_static)
-        dummy_dataset.mock_init_predictive.assert_not_called()
+        dummy_dataset.mock_init_predictive.assert_called_once_with(targets=None, treatments=None, dummy="kwarg")
         dummy_dataset.mock_validate_call.assert_called_once()
 
     @pytest.mark.parametrize(
@@ -161,7 +166,7 @@ class TestDataset:
         ],
     )
     def test_has_static(
-        self, static, expected: bool, mock_dataset_cls: Type[MockedDataset], mocked_depends: MockedDepends
+        self, static, expected: bool, mock_dataset_cls: Type[MockedBaseDataset], mocked_depends: MockedDepends
     ):
         data_time_series = Mock()
         data_targets = None
@@ -178,7 +183,7 @@ class TestDataset:
         "targets, expected_has_predictive_data, expected_predictive_task",
         [
             (Mock(), True, "dummy_task"),
-            (None, False, None),
+            (None, True, "dummy_task"),
         ],
     )
     def test_has_predictive_data_and_predictive_task(
@@ -186,7 +191,7 @@ class TestDataset:
         targets,
         expected_has_predictive_data: bool,
         expected_predictive_task,
-        mock_dataset_cls: Type[MockedDataset],
+        mock_dataset_cls: Type[MockedBaseDataset],
         mocked_depends: MockedDepends,
     ):
         data_time_series = Mock()
@@ -202,7 +207,7 @@ class TestDataset:
         assert dummy_dataset.predictive_task is expected_predictive_task
 
     @pytest.mark.parametrize("static", [Mock(), None])
-    def test_validate_passes(self, static, mock_dataset_cls: Type[MockedDataset], monkeypatch):
+    def test_validate_passes(self, static, mock_dataset_cls: Type[MockedBaseDataset], monkeypatch):
         data_time_series = Mock()
         mock_indexes(
             monkeypatch,
@@ -217,7 +222,7 @@ class TestDataset:
             time_indexes=[[1, 2, 3], [1, 2]],
         )
 
-        mock_dataset_cls.validate = dataset.Dataset.validate  # type: ignore  # Enable validation code.
+        mock_dataset_cls.validate = dataset.BaseDataset.validate  # type: ignore  # Enable validation code.
 
         dummy_dataset = mock_dataset_cls(
             time_series=data_time_series,
@@ -227,7 +232,7 @@ class TestDataset:
 
         dummy_dataset.mock_validate_call.assert_called_once()
 
-    def test_validate_fails_sample_index_mismatch(self, mock_dataset_cls: Type[MockedDataset], monkeypatch):
+    def test_validate_fails_sample_index_mismatch(self, mock_dataset_cls: Type[MockedBaseDataset], monkeypatch):
         data_time_series = Mock()
         data_static = Mock()
         mock_indexes(
@@ -243,7 +248,7 @@ class TestDataset:
             time_indexes=[[1, 2, 3], [1, 2]],
         )
 
-        mock_dataset_cls.validate = dataset.Dataset.validate  # type: ignore  # Enable validation code.
+        mock_dataset_cls.validate = dataset.BaseDataset.validate  # type: ignore  # Enable validation code.
 
         with pytest.raises(ValueError, match=".*sample_index.*static.*time series.*"):
             mock_dataset_cls(
@@ -293,6 +298,9 @@ class TestOneOffPredictionDataset:
             parent_dataset=dummy_dataset, targets=data_targets, dummy="kwarg"
         )
         dummy_dataset.mock_validate_call.assert_called_once()
+
+        assert dummy_dataset.fit_ready
+        assert dummy_dataset.predict_ready
 
     def test_validate_passes(
         self, mock_one_off_prediction_dataset_cls: Type[MockedOneOffPredictionDataset], monkeypatch
@@ -392,6 +400,9 @@ class TestTemporalPredictionDataset:
             parent_dataset=dummy_dataset, targets=data_targets, dummy="kwarg"
         )
         dummy_dataset.mock_validate_call.assert_called_once()
+
+        assert dummy_dataset.fit_ready
+        assert dummy_dataset.predict_ready
 
     def test_validate_passes(
         self, mock_temporal_prediction_dataset_cls: Type[MockedTemporalPredictionDataset], monkeypatch
@@ -529,6 +540,9 @@ class TestTimeToEventAnalysisDataset:
         )
         dummy_dataset.mock_validate_call.assert_called_once()
 
+        assert dummy_dataset.fit_ready
+        assert dummy_dataset.predict_ready
+
     def test_validate_passes(
         self, mock_time_to_event_analysis_dataset_cls: Type[MockedTimeToEventAnalysisDataset], monkeypatch
     ):
@@ -631,6 +645,9 @@ class TestOneOffTreatmentEffectsDataset:
             parent_dataset=dummy_dataset, targets=data_targets, treatments=data_treatments, dummy="kwarg"
         )
         dummy_dataset.mock_validate_call.assert_called_once()
+
+        assert dummy_dataset.fit_ready
+        assert dummy_dataset.predict_ready
 
     def test_init_fails_treatment_not_set(
         self,
@@ -810,6 +827,9 @@ class TestTemporalTreatmentEffectsDataset:
             parent_dataset=dummy_dataset, targets=data_targets, treatments=data_treatments, dummy="kwarg"
         )
         dummy_dataset.mock_validate_call.assert_called_once()
+
+        assert dummy_dataset.fit_ready
+        assert dummy_dataset.predict_ready
 
     def test_init_fails_treatment_not_set(
         self,
@@ -1062,11 +1082,29 @@ class TestWithConcreteData:
         ],
     )
     def test_init_one_off_prediction_dataset(self, time_series, static, target):
-        dataset.OneOffPredictionDataset(
+        data = dataset.OneOffPredictionDataset(
             time_series=time_series,
             static=static,
             targets=target,
         )
+        assert data.fit_ready
+        assert data.predict_ready
+
+    @pytest.mark.parametrize(
+        "time_series, static",
+        [
+            (test_dfs.df_time_series, test_dfs.df_static),
+            (test_dfs.df_time_series, None),
+        ],
+    )
+    def test_init_one_off_prediction_dataset_not_fit_ready(self, time_series, static):
+        data = dataset.OneOffPredictionDataset(
+            time_series=time_series,
+            static=static,
+            targets=None,
+        )
+        assert not data.fit_ready
+        assert data.predict_ready
 
     @pytest.mark.parametrize(
         "time_series, static, target",
@@ -1084,11 +1122,29 @@ class TestWithConcreteData:
         ],
     )
     def test_init_temporal_prediction_dataset(self, time_series, static, target):
-        dataset.TemporalPredictionDataset(
+        data = dataset.TemporalPredictionDataset(
             time_series=time_series,
             static=static,
             targets=target,
         )
+        assert data.fit_ready
+        assert data.predict_ready
+
+    @pytest.mark.parametrize(
+        "time_series, static",
+        [
+            (test_dfs.df_time_series.copy(), test_dfs.df_static.copy()),
+            (test_dfs.df_time_series.copy(), None),
+        ],
+    )
+    def test_init_temporal_prediction_dataset_not_fit_ready(self, time_series, static):
+        data = dataset.TemporalPredictionDataset(
+            time_series=time_series,
+            static=static,
+            targets=None,
+        )
+        assert not data.fit_ready
+        assert data.predict_ready
 
     @pytest.mark.parametrize(
         "time_series, static, target",
@@ -1106,11 +1162,29 @@ class TestWithConcreteData:
         ],
     )
     def test_init_time_to_event_analysis_dataset(self, time_series, static, target):
-        dataset.TimeToEventAnalysisDataset(
+        data = dataset.TimeToEventAnalysisDataset(
             time_series=time_series,
             static=static,
             targets=target,
         )
+        assert data.fit_ready
+        assert data.predict_ready
+
+    @pytest.mark.parametrize(
+        "time_series, static",
+        [
+            (test_dfs.df_time_series.copy(), test_dfs.df_static.copy()),
+            (test_dfs.df_time_series.copy(), None),
+        ],
+    )
+    def test_init_time_to_event_analysis_dataset_not_fit_ready(self, time_series, static):
+        data = dataset.TimeToEventAnalysisDataset(
+            time_series=time_series,
+            static=static,
+            targets=None,
+        )
+        assert not data.fit_ready
+        assert data.predict_ready
 
     @pytest.mark.parametrize(
         "time_series, static, target, treatment",
@@ -1130,12 +1204,55 @@ class TestWithConcreteData:
         ],
     )
     def test_init_one_off_treatment_effects_dataset(self, time_series, static, target, treatment):
-        dataset.OneOffTreatmentEffectsDataset(
+        data = dataset.OneOffTreatmentEffectsDataset(
             time_series=time_series,
             static=static,
             targets=target,
             treatments=treatment,
         )
+        assert data.fit_ready
+        assert data.predict_ready
+
+    @pytest.mark.parametrize(
+        "time_series, static, treatment",
+        [
+            (
+                test_dfs.df_time_series.copy(),
+                test_dfs.df_static.copy(),
+                test_dfs.df_event.copy(),
+            ),
+            (
+                test_dfs.df_time_series.copy(),
+                None,
+                test_dfs.df_event.copy(),
+            ),
+        ],
+    )
+    def test_init_one_off_treatment_effects_dataset_not_fit_ready(self, time_series, static, treatment):
+        data = dataset.OneOffTreatmentEffectsDataset(
+            time_series=time_series,
+            static=static,
+            targets=None,
+            treatments=treatment,
+        )
+        assert not data.fit_ready
+        assert data.predict_ready
+
+    @pytest.mark.parametrize(
+        "time_series, static",
+        [
+            (test_dfs.df_time_series.copy(), test_dfs.df_static.copy()),
+            (test_dfs.df_time_series.copy(), None),
+        ],
+    )
+    def test_init_one_off_treatment_effects_dataset_fails_validation_no_treatment(self, time_series, static):
+        with pytest.raises(ValueError, match=".*treatment.*"):
+            dataset.OneOffTreatmentEffectsDataset(
+                time_series=time_series,
+                static=static,
+                targets=None,
+                treatments=None,  # type: ignore
+            )
 
     @pytest.mark.parametrize(
         "time_series, static, target, treatment",
@@ -1155,12 +1272,55 @@ class TestWithConcreteData:
         ],
     )
     def test_init_temporal_treatment_effects_dataset(self, time_series, static, target, treatment):
-        dataset.TemporalTreatmentEffectsDataset(
+        data = dataset.TemporalTreatmentEffectsDataset(
             time_series=time_series,
             static=static,
             targets=target,
             treatments=treatment,
         )
+        assert data.fit_ready
+        assert data.predict_ready
+
+    @pytest.mark.parametrize(
+        "time_series, static, treatment",
+        [
+            (
+                test_dfs.df_time_series.copy(),
+                test_dfs.df_static.copy(),
+                test_dfs.df_time_series.copy(),
+            ),
+            (
+                test_dfs.df_time_series.copy(),
+                None,
+                test_dfs.df_time_series.copy(),
+            ),
+        ],
+    )
+    def test_init_temporal_treatment_effects_dataset_not_fit_ready(self, time_series, static, treatment):
+        data = dataset.TemporalTreatmentEffectsDataset(
+            time_series=time_series,
+            static=static,
+            targets=None,
+            treatments=treatment,
+        )
+        assert not data.fit_ready
+        assert data.predict_ready
+
+    @pytest.mark.parametrize(
+        "time_series, static",
+        [
+            (test_dfs.df_time_series.copy(), test_dfs.df_static.copy()),
+            (test_dfs.df_time_series.copy(), None),
+        ],
+    )
+    def test_init_temporal_treatment_effects_dataset_fails_validation_no_treatment(self, time_series, static):
+        with pytest.raises(ValueError, match=".*treatment.*"):
+            dataset.TemporalTreatmentEffectsDataset(
+                time_series=time_series,
+                static=static,
+                targets=None,
+                treatments=None,  # type: ignore
+            )
 
     def test_set_properties(self):
         data = dataset.TemporalTreatmentEffectsDataset(
@@ -1219,6 +1379,8 @@ class TestWithConcreteData:
     def test_stratified_kfold_split(self, dummy_dfs_for_split_tests):
         df_t, df_s, df_s_target = dummy_dfs_for_split_tests
         data = dataset.OneOffPredictionDataset(time_series=df_t, static=df_s, targets=df_s_target)
+        if TYPE_CHECKING:
+            assert data.predictive.targets is not None  # nosec B101
         strat = data.predictive.targets.numpy().reshape((-1,))
 
         kfold = sklearn.model_selection.StratifiedKFold(n_splits=5, shuffle=True, random_state=12345)

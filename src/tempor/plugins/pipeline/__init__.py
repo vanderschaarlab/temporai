@@ -54,13 +54,13 @@ class PipelineMeta(type):
     def get_args(*args: Any, **kwargs: Any) -> Dict:  # pylint: disable=no-method-argument
         raise NotImplementedError("Not implemented")
 
-    def fit(self: Any, X: dataset.Dataset, *args: Any, **kwargs: Any) -> Any:
+    def fit(self: Any, X: dataset.PredictiveDataset, *args: Any, **kwargs: Any) -> Any:
         raise NotImplementedError("Not implemented")
 
-    def predict(*args: Any, **kwargs: Any) -> dataset.Dataset:  # pylint: disable=no-method-argument
+    def predict(*args: Any, **kwargs: Any) -> dataset.PredictiveDataset:  # pylint: disable=no-method-argument
         raise NotImplementedError("Not implemented")
 
-    def predict_proba(*args: Any, **kwargs: Any) -> dataset.Dataset:  # pylint: disable=no-method-argument
+    def predict_proba(*args: Any, **kwargs: Any) -> dataset.PredictiveDataset:  # pylint: disable=no-method-argument
         raise NotImplementedError("Not implemented")
 
 

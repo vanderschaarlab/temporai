@@ -93,7 +93,7 @@ class NeuralNetRegressor(BaseOneOffRegressor):
 
     def _fit(
         self,
-        data: dataset.Dataset,
+        data: dataset.BaseDataset,
         *args,
         **kwargs,
     ) -> Self:
@@ -132,7 +132,7 @@ class NeuralNetRegressor(BaseOneOffRegressor):
 
     def _predict(
         self,
-        data: dataset.Dataset,
+        data: dataset.PredictiveDataset,
         *args,
         **kwargs,
     ) -> samples.StaticSamples:

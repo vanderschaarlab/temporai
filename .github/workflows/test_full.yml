@@ -59,7 +59,7 @@ jobs:
       - name: Test with pytest
         # Avoid xdist on 'ubuntu-latest', as this has worse performance.
         if: matrix.os == 'ubuntu-latest'
-        run: pytest -vvvx -m --durations=50
+        run: pytest -vvvx --durations=50
       - name: Run doctests with pytest (xdist)
         if: matrix.os != 'ubuntu-latest'
         run: pytest -vvvx -n auto src/ --doctest-modules --durations=50

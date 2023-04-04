@@ -3,7 +3,7 @@ from typing import Type
 import pytest
 
 from tempor.data.dataloader import DataLoader
-from tempor.data.dataset import Dataset
+from tempor.data.dataset import PredictiveDataset
 from tempor.utils import dataloaders
 
 
@@ -27,7 +27,7 @@ def test_init_load_and_basic_methods(dataloader_cls: Type[DataLoader]):
 
     assert isinstance(url, (str, type(None)))
     assert isinstance(dataset_dir, (str, type(None)))
-    assert isinstance(dataset, Dataset)
+    assert isinstance(dataset, PredictiveDataset)
 
     # Assert the right type of dataset for the dataloader has been returned.
     return_type = dataloader_cls.load.__annotations__["return"]

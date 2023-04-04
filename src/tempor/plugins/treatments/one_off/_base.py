@@ -20,7 +20,7 @@ class BaseOneOffTreatmentEffects(plugins.BasePredictor):
     def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
         super().__init__(**params)
 
-    def fit(self, data: dataset.Dataset, *args, **kwargs) -> Self:
+    def fit(self, data: dataset.BaseDataset, *args, **kwargs) -> Self:
         check_data_class(data)
         super().fit(data, *args, **kwargs)
         return self
@@ -28,7 +28,7 @@ class BaseOneOffTreatmentEffects(plugins.BasePredictor):
     @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def predict(
         self,
-        data: dataset.Dataset,
+        data: dataset.PredictiveDataset,
         *args,
         **kwargs,
     ) -> samples.StaticSamples:
@@ -36,13 +36,13 @@ class BaseOneOffTreatmentEffects(plugins.BasePredictor):
         return super().predict(data, *args, **kwargs)
 
     @abc.abstractmethod
-    def _predict(self, data: dataset.Dataset, *args, **kwargs) -> samples.StaticSamples:
+    def _predict(self, data: dataset.PredictiveDataset, *args, **kwargs) -> samples.StaticSamples:
         ...
 
     @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def predict_counterfactuals(
         self,
-        data: dataset.Dataset,
+        data: dataset.PredictiveDataset,
         *args,
         **kwargs,
     ) -> List:
@@ -50,5 +50,5 @@ class BaseOneOffTreatmentEffects(plugins.BasePredictor):
         return super().predict_counterfactuals(data, *args, **kwargs)
 
     @abc.abstractmethod
-    def _predict_counterfactuals(self, data: dataset.Dataset, *args, **kwargs) -> List:
+    def _predict_counterfactuals(self, data: dataset.PredictiveDataset, *args, **kwargs) -> List:
         ...

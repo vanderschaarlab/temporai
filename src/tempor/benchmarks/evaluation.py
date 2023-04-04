@@ -340,7 +340,7 @@ class ClassifierMetrics:
 @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
 def evaluate_classifier(  # pylint: disable=unused-argument
     estimator: Any,
-    data: dataset.Dataset,
+    data: dataset.PredictiveDataset,
     *args: Any,
     n_splits: int = 3,
     random_state: int = 0,
@@ -380,9 +380,9 @@ def evaluate_classifier(  # pylint: disable=unused-argument
         results.metrics[metric] = np.zeros(n_splits)
 
     splitter = sklearn.model_selection.StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_state)
-    if data.predictive is None:
-        raise ValueError("No targets to use for train/test")
 
+    if data.predictive.targets is None:
+        raise ValueError("The dataset for evaluation needs to contain targets but did not")
     labels = data.predictive.targets.numpy().squeeze()
     if len(labels.shape) > 1:
         raise ValueError("Classifier evaluation expects 1D output")
@@ -394,9 +394,8 @@ def evaluate_classifier(  # pylint: disable=unused-argument
         try:
             model.fit(train_data)
 
-            if test_data.predictive is None:
-                raise ValueError("No targets to use for testing")
-
+            if TYPE_CHECKING:  # pragma: no cover
+                assert test_data.predictive.targets is not None  # nosec B101
             test_labels = test_data.predictive.targets.numpy()
             preds = model.predict_proba(test_data).numpy()
 
@@ -417,7 +416,7 @@ def evaluate_classifier(  # pylint: disable=unused-argument
 @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
 def evaluate_regressor(  # pylint: disable=unused-argument
     estimator: Any,
-    data: dataset.Dataset,
+    data: dataset.PredictiveDataset,
     *args: Any,
     n_splits: int = 3,
     random_state: int = 0,
@@ -464,9 +463,8 @@ def evaluate_regressor(  # pylint: disable=unused-argument
         try:
             model.fit(train_data)
 
-            if test_data.predictive is None:
-                raise ValueError("Missing targets for evaluation")
-
+            if TYPE_CHECKING:  # pragma: no cover
+                assert test_data.predictive.targets is not None  # nosec B101
             targets = test_data.predictive.targets.numpy().squeeze()
             preds = model.predict(test_data).numpy().squeeze()
 
@@ -533,6 +531,8 @@ def _compute_time_to_event_metric(
             f"Expected time to event prediction values for horizons {horizons} all to have equal number of time steps "
             f"({len(horizons)} but different lengths found {predictions.num_timesteps()}"
         )
+    if train_data.predictive.targets is None or test_data.predictive.targets is None:
+        raise ValueError("Expected data to have targets but did not")
     for data, name in zip(
         (predictions, train_data.predictive.targets, test_data.predictive.targets),
         ("predictions", "training data targets", "testing data targets"),

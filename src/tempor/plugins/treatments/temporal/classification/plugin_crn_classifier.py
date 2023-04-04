@@ -84,7 +84,7 @@ class CRNTreatmentsClassifier(BaseTemporalTreatmentEffects):
 
     def _fit(
         self,
-        data: dataset.Dataset,
+        data: dataset.BaseDataset,
         *args,
         **kwargs,
     ) -> Self:
@@ -99,7 +99,7 @@ class CRNTreatmentsClassifier(BaseTemporalTreatmentEffects):
 
     def _predict(  # type: ignore[override]  # pylint: disable=arguments-differ
         self,
-        data: dataset.Dataset,
+        data: dataset.PredictiveDataset,
         horizons: List[List[float]],
         *args,
         **kwargs,
@@ -122,7 +122,7 @@ class CRNTreatmentsClassifier(BaseTemporalTreatmentEffects):
 
     def _predict_counterfactuals(  # type: ignore[override]  # pylint: disable=arguments-differ
         self,
-        data: dataset.Dataset,
+        data: dataset.PredictiveDataset,
         horizons: List[List[float]],
         treatment_scenarios: List[List[int]],
         *args,
