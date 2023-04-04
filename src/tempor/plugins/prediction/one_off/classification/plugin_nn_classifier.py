@@ -94,7 +94,7 @@ class NeuralNetClassifier(BaseOneOffClassifier):
 
     def _fit(
         self,
-        data: dataset.BaseDataset,
+        data: dataset.PredictiveDataset,
         *args,
         **kwargs,
     ) -> Self:

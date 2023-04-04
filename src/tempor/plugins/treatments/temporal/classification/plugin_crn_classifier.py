@@ -84,7 +84,7 @@ class CRNTreatmentsClassifier(BaseTemporalTreatmentEffects):
 
     def _fit(
         self,
-        data: dataset.BaseDataset,
+        data: dataset.PredictiveDataset,
         *args,
         **kwargs,
     ) -> Self:

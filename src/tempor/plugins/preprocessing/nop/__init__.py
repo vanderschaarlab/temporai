@@ -13,13 +13,13 @@ class NopTransformer(plugins.BaseTransformer):
 
     def _fit(
         self,
-        data: dataset.BaseDataset,
+        data: dataset.PredictiveDataset,
         *args,
         **kwargs,
     ) -> Self:
         return self
 
-    def _transform(self, data: dataset.BaseDataset, *args, **kwargs) -> dataset.BaseDataset:
+    def _transform(self, data: dataset.PredictiveDataset, *args, **kwargs) -> dataset.PredictiveDataset:
         return data
 
     @staticmethod

@@ -37,7 +37,7 @@ class StaticStandardScaler(BaseScaler):
 
     def _fit(
         self,
-        data: dataset.BaseDataset,
+        data: dataset.PredictiveDataset,
         *args,
         **kwargs,
     ) -> Self:
@@ -47,7 +47,7 @@ class StaticStandardScaler(BaseScaler):
         self.model.fit(data.static.dataframe())
         return self
 
-    def _transform(self, data: dataset.BaseDataset, *args, **kwargs) -> dataset.BaseDataset:
+    def _transform(self, data: dataset.PredictiveDataset, *args, **kwargs) -> dataset.PredictiveDataset:
         if data.static is None:
             return data
 

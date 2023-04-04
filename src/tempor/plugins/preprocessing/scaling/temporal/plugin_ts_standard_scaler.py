@@ -37,14 +37,14 @@ class TimeSeriesStandardScaler(BaseScaler):
 
     def _fit(
         self,
-        data: dataset.BaseDataset,
+        data: dataset.PredictiveDataset,
         *args,
         **kwargs,
     ) -> Self:
         self.model.fit(data.time_series.dataframe())
         return self
 
-    def _transform(self, data: dataset.BaseDataset, *args, **kwargs) -> dataset.BaseDataset:
+    def _transform(self, data: dataset.PredictiveDataset, *args, **kwargs) -> dataset.PredictiveDataset:
         temporal_data = data.time_series.dataframe()
         scaled = pd.DataFrame(self.model.transform(temporal_data))
         scaled.columns = temporal_data.columns

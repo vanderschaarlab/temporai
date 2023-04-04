@@ -20,7 +20,7 @@ class BaseTimeToEventAnalysis(plugins.BasePredictor):
     def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
         super().__init__(**params)
 
-    def fit(self, data: dataset.BaseDataset, *args, **kwargs) -> Self:
+    def fit(self, data: dataset.PredictiveDataset, *args, **kwargs) -> Self:
         check_data_class(data)
         super().fit(data, *args, **kwargs)
         return self

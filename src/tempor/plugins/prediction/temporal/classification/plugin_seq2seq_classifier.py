@@ -100,7 +100,7 @@ class Seq2seqClassifier(BaseTemporalClassifier):
 
     def _fit(
         self,
-        data: dataset.BaseDataset,
+        data: dataset.PredictiveDataset,
         *args,
         **kwargs,
     ) -> Self:
