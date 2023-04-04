@@ -31,7 +31,7 @@ def _from_clv2_event(df: pd.DataFrame) -> pd.DataFrame:
     return df_out
 
 
-def clairvoyance2_dataset_to_tempor_dataset(data: Clairvoyance2Dataset) -> dataset.PredictiveDataset:
+def clairvoyance2_dataset_to_tempor_dataset(data: Clairvoyance2Dataset) -> dataset.BaseDataset:
     if (
         data.temporal_targets is None
         and data.temporal_treatments is None
@@ -88,7 +88,7 @@ def clairvoyance2_dataset_to_tempor_dataset(data: Clairvoyance2Dataset) -> datas
 
     # Determine tempor.Dataset subclass.
     if data.temporal_targets is not None and data.temporal_treatments is None and data.event_treatments is None:
-        TemporDatasetCls: Type[dataset.PredictiveDataset] = dataset.TemporalPredictionDataset
+        TemporDatasetCls: Type[dataset.BaseDataset] = dataset.TemporalPredictionDataset
     elif data.event_targets is not None and data.temporal_treatments is None and data.event_treatments is None:
         TemporDatasetCls = dataset.TimeToEventAnalysisDataset
     elif data.temporal_targets is not None and data.event_treatments is not None:
@@ -137,31 +137,31 @@ def _to_clv2_event(s: samples.EventSamples) -> pd.DataFrame:
     return df
 
 
-def tempor_dataset_to_clairvoyance2_dataset(data: dataset.PredictiveDataset) -> Clairvoyance2Dataset:
+def tempor_dataset_to_clairvoyance2_dataset(data: dataset.BaseDataset) -> Clairvoyance2Dataset:
     if isinstance(data, dataset.OneOffPredictionDataset):
         raise ValueError(
             "Cannot convert a `OneOffPredictionDataset` to a clairvoyance2 dataset, as this setting is not supported"
         )
 
-    def has_temporal_targets(d: dataset.PredictiveDataset) -> bool:
+    def has_temporal_targets(d: dataset.BaseDataset) -> bool:
         if d.predictive is not None:
             return isinstance(d.predictive.targets, samples.TimeSeriesSamples)
         else:
             return False
 
-    def has_temporal_treatments(d: dataset.PredictiveDataset) -> bool:
+    def has_temporal_treatments(d: dataset.BaseDataset) -> bool:
         if d.predictive is not None:
             return isinstance(d.predictive.treatments, samples.TimeSeriesSamples)
         else:
             return False
 
-    def has_event_targets(d: dataset.PredictiveDataset) -> bool:
+    def has_event_targets(d: dataset.BaseDataset) -> bool:
         if d.predictive is not None:
             return isinstance(d.predictive.targets, samples.EventSamples)
         else:
             return False
 
-    def has_event_treatments(d: dataset.PredictiveDataset) -> bool:
+    def has_event_treatments(d: dataset.BaseDataset) -> bool:
         if d.predictive is not None:
             return isinstance(d.predictive.treatments, samples.EventSamples)
         else:
