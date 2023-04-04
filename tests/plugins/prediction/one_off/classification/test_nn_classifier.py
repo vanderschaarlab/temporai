@@ -49,9 +49,21 @@ def test_fit(test_plugin: BaseOneOffClassifier, data: str, request: pytest.Fixtu
     ],
 )
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
-def test_predict(test_plugin: BaseOneOffClassifier, data: str, request: pytest.FixtureRequest) -> None:
+@pytest.mark.parametrize(
+    "no_targets",
+    [
+        False,
+        pytest.param(True, marks=pytest.mark.extra),
+    ],
+)
+def test_predict(
+    test_plugin: BaseOneOffClassifier, no_targets: bool, data: str, request: pytest.FixtureRequest
+) -> None:
     dataset = request.getfixturevalue(data)
-    output = test_plugin.fit(dataset).predict(dataset)
+    test_plugin.fit(dataset)
+    if no_targets:
+        dataset.predictive.targets = None
+    output = test_plugin.predict(dataset)
     assert output.numpy().shape == (len(dataset.time_series), 1)
 
 
