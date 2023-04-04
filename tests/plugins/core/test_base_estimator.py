@@ -10,7 +10,7 @@ import pytest
 import tempor.plugins.core
 
 
-class TestEstimator:
+class TestBaseEstimator:
     @dataclasses.dataclass
     class MyModelParams:
         foo: float = 1.5
@@ -157,3 +157,49 @@ class TestEstimator:
         repr_ = repr(my_model)
 
         assert re.search(r"^MyModel\(.*name='my_model'.*category='my_category'.*params=.?\{.*\}.*\)", repr_, re.S)
+
+    def test_fit(self):
+        from tempor.data.dataset import BaseDataset
+
+        # ^ Import in this test only so others don't fail from problems in dataset.
+
+        class MyModel(tempor.plugins.core.BaseEstimator):
+            name = "my_model"
+            category = "my_category"
+            ParamsDefinition = self.MyModelParams
+
+            @staticmethod
+            def hyperparameter_space(*args: Any, **kwargs: Any):
+                return MagicMock()
+
+            def _fit(self, data, *args, **kwargs):
+                pass
+
+        my_model = MyModel()
+        data = Mock(spec=BaseDataset)
+
+        my_model.fit(data)
+
+    def test_fit_fails_data_not_fit_ready(self):
+        from tempor.data.dataset import BaseDataset
+
+        # ^ Import in this test only so others don't fail from problems in dataset.
+
+        class MyModel(tempor.plugins.core.BaseEstimator):
+            name = "my_model"
+            category = "my_category"
+            ParamsDefinition = self.MyModelParams
+
+            @staticmethod
+            def hyperparameter_space(*args: Any, **kwargs: Any):
+                return MagicMock()
+
+            def _fit(self, data, *args, **kwargs):
+                pass
+
+        my_model = MyModel()
+        data = Mock(spec=BaseDataset)
+        data.fit_ready = False
+
+        with pytest.raises(ValueError, match=".*not fit-ready.*"):
+            my_model.fit(data)
