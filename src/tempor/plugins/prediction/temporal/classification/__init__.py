@@ -21,7 +21,7 @@ class BaseTemporalClassifier(plugins.BasePredictor):
     def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
         super().__init__(**params)
 
-    def fit(self, data: dataset.Dataset, *args, **kwargs) -> Self:
+    def fit(self, data: dataset.BaseDataset, *args, **kwargs) -> Self:
         check_data_class(data)
         super().fit(data, *args, **kwargs)
         return self
@@ -29,7 +29,7 @@ class BaseTemporalClassifier(plugins.BasePredictor):
     @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def predict(  # type: ignore[override]  # pylint: disable=arguments-differ
         self,
-        data: dataset.Dataset,
+        data: dataset.BaseDataset,
         n_future_steps: int,
         *args,
         time_delta: int = 1,
@@ -41,7 +41,7 @@ class BaseTemporalClassifier(plugins.BasePredictor):
     @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def predict_proba(  # type: ignore[override]  # pylint: disable=arguments-differ
         self,
-        data: dataset.Dataset,
+        data: dataset.BaseDataset,
         n_future_steps: int,
         *args,
         time_delta: int = 1,
@@ -52,13 +52,13 @@ class BaseTemporalClassifier(plugins.BasePredictor):
 
     @abc.abstractmethod
     def _predict(  # type: ignore[override]  # pylint: disable=arguments-differ
-        self, data: dataset.Dataset, n_future_steps: int, *args, time_delta: int = 1, **kwargs
+        self, data: dataset.BaseDataset, n_future_steps: int, *args, time_delta: int = 1, **kwargs
     ) -> samples.TimeSeriesSamples:
         ...
 
     @abc.abstractmethod
     def _predict_proba(  # type: ignore[override]  # pylint: disable=arguments-differ
-        self, data: dataset.Dataset, n_future_steps: int, *args, time_delta: int = 1, **kwargs
+        self, data: dataset.BaseDataset, n_future_steps: int, *args, time_delta: int = 1, **kwargs
     ) -> samples.TimeSeriesSamples:
         ...
 

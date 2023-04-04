@@ -100,7 +100,7 @@ class Seq2seqClassifier(BaseTemporalClassifier):
 
     def _fit(
         self,
-        data: dataset.Dataset,
+        data: dataset.BaseDataset,
         *args,
         **kwargs,
     ) -> Self:
@@ -110,7 +110,7 @@ class Seq2seqClassifier(BaseTemporalClassifier):
 
     def _predict(  # type: ignore[override]
         self,
-        data: dataset.Dataset,
+        data: dataset.BaseDataset,
         n_future_steps: int,
         *args,
         time_delta: int = 1,
@@ -132,7 +132,7 @@ class Seq2seqClassifier(BaseTemporalClassifier):
 
     def _predict_proba(
         self,
-        data: dataset.Dataset,
+        data: dataset.BaseDataset,
         *args,
         **kwargs,
     ) -> samples.TimeSeriesSamples:

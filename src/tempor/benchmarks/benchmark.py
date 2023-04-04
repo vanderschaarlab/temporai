@@ -24,7 +24,7 @@ def print_score(mean: pd.Series, std: pd.Series) -> pd.Series:
 def benchmark_models(
     task_type: str,
     tests: List[Tuple[str, Any]],  # [ ( Test name, Model to evaluate (unfitted) ), ... ]
-    data: dataset.Dataset,
+    data: dataset.BaseDataset,
     n_splits: int = 3,
     random_state: int = 0,
     horizons: Optional[data_typing.TimeIndex] = None,

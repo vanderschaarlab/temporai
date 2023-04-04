@@ -94,7 +94,7 @@ class NeuralNetClassifier(BaseOneOffClassifier):
 
     def _fit(
         self,
-        data: dataset.Dataset,
+        data: dataset.BaseDataset,
         *args,
         **kwargs,
     ) -> Self:
@@ -135,7 +135,7 @@ class NeuralNetClassifier(BaseOneOffClassifier):
 
     def _predict(
         self,
-        data: dataset.Dataset,
+        data: dataset.BaseDataset,
         *args,
         **kwargs,
     ) -> samples.StaticSamples:
@@ -151,7 +151,7 @@ class NeuralNetClassifier(BaseOneOffClassifier):
 
     def _predict_proba(
         self,
-        data: dataset.Dataset,
+        data: dataset.BaseDataset,
         *args,
         **kwargs,
     ) -> samples.StaticSamples:

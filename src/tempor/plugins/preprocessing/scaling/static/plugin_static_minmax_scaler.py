@@ -39,7 +39,7 @@ class StaticMinMaxScaler(BaseScaler):
 
     def _fit(
         self,
-        data: dataset.Dataset,
+        data: dataset.BaseDataset,
         *args,
         **kwargs,
     ) -> Self:
@@ -49,7 +49,7 @@ class StaticMinMaxScaler(BaseScaler):
         self.model.fit(data.static.dataframe())
         return self
 
-    def _transform(self, data: dataset.Dataset, *args, **kwargs) -> dataset.Dataset:
+    def _transform(self, data: dataset.BaseDataset, *args, **kwargs) -> dataset.BaseDataset:
         if data.static is None:
             return data
 

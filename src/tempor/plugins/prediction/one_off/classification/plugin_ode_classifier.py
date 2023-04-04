@@ -100,7 +100,7 @@ class ODEClassifier(BaseOneOffClassifier):
 
     def _fit(
         self,
-        data: dataset.Dataset,
+        data: dataset.BaseDataset,
         *args,
         **kwargs,
     ) -> Self:
@@ -142,7 +142,7 @@ class ODEClassifier(BaseOneOffClassifier):
 
     def _predict(
         self,
-        data: dataset.Dataset,
+        data: dataset.BaseDataset,
         *args,
         **kwargs,
     ) -> samples.StaticSamples:
@@ -158,7 +158,7 @@ class ODEClassifier(BaseOneOffClassifier):
 
     def _predict_proba(
         self,
-        data: dataset.Dataset,
+        data: dataset.BaseDataset,
         *args,
         **kwargs,
     ) -> samples.StaticSamples:

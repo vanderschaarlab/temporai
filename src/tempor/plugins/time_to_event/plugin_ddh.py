@@ -100,7 +100,7 @@ class DynamicDeepHitTimeToEventAnalysis(BaseTimeToEventAnalysis):
         return np.array(merged, dtype=object)
 
     def _validate_data(self, data: dataset.TimeToEventAnalysisDataset) -> None:
-        if data.predictive.targets.num_features > 1:
+        if data.predictive.targets is not None and data.predictive.targets.num_features > 1:
             raise tempor.exc.UnsupportedSetupException(
                 f"{self.__class__.__name__} does not currently support more than one event feature, "
                 f"but features found were: {data.predictive.targets.dataframe().columns}"
@@ -119,7 +119,7 @@ class DynamicDeepHitTimeToEventAnalysis(BaseTimeToEventAnalysis):
             static = np.zeros((data.time_series.num_samples, 0))
         temporal = [df.to_numpy() for df in data.time_series.list_of_dataframes()]
         observation_times = data.time_series.time_indexes_float()
-        if data.predictive is not None:
+        if data.predictive is not None and data.predictive.targets is not None:
             event_times, event_values = (
                 df.to_numpy().reshape((-1,)) for df in data.predictive.targets.split_as_two_dataframes()
             )
@@ -129,7 +129,7 @@ class DynamicDeepHitTimeToEventAnalysis(BaseTimeToEventAnalysis):
 
     def _fit(
         self,
-        data: dataset.Dataset,
+        data: dataset.BaseDataset,
         *args,
         **kwargs,
     ) -> Self:
@@ -148,7 +148,7 @@ class DynamicDeepHitTimeToEventAnalysis(BaseTimeToEventAnalysis):
 
     def _predict(  # type: ignore[override]
         self,
-        data: dataset.Dataset,
+        data: dataset.BaseDataset,
         horizons: data_typing.TimeIndex,
         *args,
         **kwargs,

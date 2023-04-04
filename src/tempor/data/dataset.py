@@ -9,7 +9,7 @@ import sklearn.model_selection
 from typing_extensions import Self
 
 from tempor.core.utils import RichReprStrPassthrough
-from tempor.log import log_helpers
+from tempor.log import log_helpers, logger
 
 from . import data_typing
 from . import predictive as pred
@@ -54,7 +54,7 @@ EXCEPTION_MESSAGES = _ExceptionMessages()
 """Reusable error messages for the module."""
 
 
-class Dataset(abc.ABC):
+class BaseDataset(abc.ABC):
     _time_series: samples.TimeSeriesSamples
     _static: Optional[samples.StaticSamples]
     predictive: Optional[pred.PredictiveTaskData]
@@ -68,7 +68,7 @@ class Dataset(abc.ABC):
         treatments: Optional[data_typing.DataContainer] = None,
         **kwargs,  # pylint: disable=unused-argument
     ) -> None:
-        """Base class representing a dataset used by TemporAI.
+        """Abstract base class representing a dataset used by TemporAI.
 
         Initialize one of its derived classes (e.g. :class:`OneOffPredictionDataset`,
         :class:`TimeToEventAnalysisDataset` etc.) depending on the type of task.
@@ -93,10 +93,7 @@ class Dataset(abc.ABC):
         self._time_series = samples.TimeSeriesSamples(time_series)
         self._static = samples.StaticSamples(static) if static is not None else None
 
-        if targets is not None:
-            self._init_predictive(targets=targets, treatments=treatments, **kwargs)
-        else:
-            self.predictive = None
+        self._init_predictive(targets=targets, treatments=treatments, **kwargs)
 
         self.validate()
 
@@ -113,8 +110,8 @@ class Dataset(abc.ABC):
     @abc.abstractmethod
     def _init_predictive(
         self,
-        targets: data_typing.DataContainer,
-        treatments: Optional[data_typing.DataContainer] = None,
+        targets: Optional[data_typing.DataContainer],
+        treatments: Optional[data_typing.DataContainer],
         **kwargs,
     ) -> None:  # pragma: no cover
         """A method to initialize ``self.predictive`` in derived classes."""
@@ -243,181 +240,295 @@ class Dataset(abc.ABC):
 
 # `Dataset`s corresponding to different tasks follow. More can be added to handle new Tasks.
 
-
-class OneOffPredictionDataset(Dataset):
-    predictive: pred.OneOffPredictionTaskData
-
-    def __init__(  # pylint: disable=useless-super-delegation
+# TODO: unit test CovariatesDataset.
+class CovariatesDataset(BaseDataset):
+    def __init__(
         self,
         time_series: data_typing.DataContainer,
         *,
-        targets: data_typing.DataContainer,
         static: Optional[data_typing.DataContainer] = None,
+        targets: Optional[data_typing.DataContainer] = None,
         treatments: Optional[data_typing.DataContainer] = None,
         **kwargs,
     ) -> None:
-        """A :class:`Dataset` subclass for the one-off prediction problem setting, see :class:`Dataset` docs.
-
-        In this setting: ``targets`` are required, will be initialized as `StaticSamples`.
+        """A :class:`BaseDataset` subclass for a dataset that does not contain any predictive data
+        (``targets`` or ``treatments``).
         """
         super().__init__(time_series=time_series, static=static, targets=targets, treatments=treatments, **kwargs)
 
     def _init_predictive(
         self,
-        targets: data_typing.DataContainer,
+        targets: Optional[data_typing.DataContainer],
+        treatments: Optional[data_typing.DataContainer],
+        **kwargs,
+    ) -> None:
+        if targets is not None:
+            raise ValueError(f"`targets` must not be set for a {self.__class__.__name__}.")
+        if treatments is not None:
+            raise ValueError(f"`treatments` must not be set for a {self.__class__.__name__}.")
+        self.predictive = None
+
+
+class PredictiveDataset(BaseDataset):
+    def __init__(
+        self,
+        time_series: data_typing.DataContainer,
+        *,
+        targets: Optional[data_typing.DataContainer],
+        static: Optional[data_typing.DataContainer] = None,
         treatments: Optional[data_typing.DataContainer] = None,
         **kwargs,
     ) -> None:
+        """A :class:`BaseDataset` subclass for a dataset that can contain predictive data
+        (``targets`` or ``treatments``).
+
+        This is an abstract class, to be derived from for different predictive task -specific ``Dataset`` s.
+        """
+        super().__init__(time_series=time_series, static=static, targets=targets, treatments=treatments, **kwargs)
+
+    @property
+    @abc.abstractmethod
+    def fit_ready(self) -> bool:  # pragma: no cover
+        """Returns whether the :class:`PredictiveDataset` is in a state ready to be ``fit`` on."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def predict_ready(self) -> bool:  # pragma: no cover
+        """Returns whether the :class:`PredictiveDataset` is in a state ready to be ``predict``ed on."""
+        ...
+
+
+class OneOffPredictionDataset(PredictiveDataset):
+    predictive: pred.OneOffPredictionTaskData
+
+    def __init__(
+        self,
+        time_series: data_typing.DataContainer,
+        *,
+        targets: Optional[data_typing.DataContainer],
+        static: Optional[data_typing.DataContainer] = None,
+        treatments: Optional[data_typing.DataContainer] = None,
+        **kwargs,
+    ) -> None:
+        """A :class:`PredictiveDataset` subclass for the one-off prediction problem setting,
+        see :class:`BaseDataset` docs.
+
+        In this setting: ``targets`` are required for fitting, will be initialized as `StaticSamples`.
+        """
+        super().__init__(time_series=time_series, static=static, targets=targets, treatments=treatments, **kwargs)
+
+    def _init_predictive(
+        self,
+        targets: Optional[data_typing.DataContainer],
+        treatments: Optional[data_typing.DataContainer],
+        **kwargs,
+    ) -> None:
         if targets is None:
-            raise ValueError("One-off prediction task requires `targets`")
+            logger.debug(
+                f"`targets` provided was None for {self.__class__.__name__}, "
+                "this Dataset can only be used for prediction not fitting"
+            )
         self.predictive = pred.OneOffPredictionTaskData(parent_dataset=self, targets=targets, **kwargs)
 
     def _validate(self) -> None:
-        if self.predictive.targets.sample_index() != self.time_series.sample_index():
-            raise ValueError(EXCEPTION_MESSAGES.sample_index_mismatch.targets)
+        if self.predictive.targets is not None:
+            if self.predictive.targets.sample_index() != self.time_series.sample_index():
+                raise ValueError(EXCEPTION_MESSAGES.sample_index_mismatch.targets)
+
+    @property
+    def fit_ready(self) -> bool:
+        return self.predictive.targets is not None
+
+    @property
+    def predict_ready(self) -> bool:
+        return True
 
 
-class TemporalPredictionDataset(Dataset):
+class TemporalPredictionDataset(PredictiveDataset):
     predictive: pred.TemporalPredictionTaskData
 
-    def __init__(  # pylint: disable=useless-super-delegation
+    def __init__(
         self,
         time_series: data_typing.DataContainer,
         *,
-        targets: data_typing.DataContainer,
+        targets: Optional[data_typing.DataContainer],
         static: Optional[data_typing.DataContainer] = None,
         treatments: Optional[data_typing.DataContainer] = None,
         **kwargs,
     ) -> None:
-        """A :class:`Dataset` subclass for the temporal prediction problem setting, see :class:`Dataset` docs.
+        """A :class:`PredictiveDataset` subclass for the temporal prediction problem setting,
+        see :class:`BaseDataset` docs.
 
-        In this setting: ``targets`` are required, will be initialized as `TimeSeriesSamples`.
+        In this setting: ``targets`` are required for fitting, will be initialized as `TimeSeriesSamples`.
         """
         super().__init__(time_series=time_series, static=static, targets=targets, treatments=treatments, **kwargs)
 
     def _init_predictive(
         self,
-        targets: data_typing.DataContainer,
-        treatments: Optional[data_typing.DataContainer] = None,
+        targets: Optional[data_typing.DataContainer],
+        treatments: Optional[data_typing.DataContainer],
         **kwargs,
     ) -> None:
         if targets is None:
-            raise ValueError("Temporal prediction task requires `targets`")
+            logger.debug(
+                f"`targets` provided was None for {self.__class__.__name__}, "
+                "this Dataset can only be used for prediction not fitting"
+            )
         self.predictive = pred.TemporalPredictionTaskData(parent_dataset=self, targets=targets, **kwargs)
 
     def _validate(self) -> None:
-        if self.predictive.targets.sample_index() != self.time_series.sample_index():
-            raise ValueError(EXCEPTION_MESSAGES.sample_index_mismatch.targets)
-        if self.time_series.time_indexes() != self.predictive.targets.time_indexes():
-            raise ValueError(EXCEPTION_MESSAGES.time_indexes_mismatch.targets)
+        if self.predictive.targets is not None:
+            if self.predictive.targets.sample_index() != self.time_series.sample_index():
+                raise ValueError(EXCEPTION_MESSAGES.sample_index_mismatch.targets)
+            if self.predictive.targets.time_indexes() != self.time_series.time_indexes():
+                raise ValueError(EXCEPTION_MESSAGES.time_indexes_mismatch.targets)
+
+    @property
+    def fit_ready(self) -> bool:
+        return self.predictive.targets is not None
+
+    @property
+    def predict_ready(self) -> bool:
+        return True
 
 
-class TimeToEventAnalysisDataset(Dataset):
+class TimeToEventAnalysisDataset(PredictiveDataset):
     predictive: pred.TimeToEventAnalysisTaskData
 
-    def __init__(  # pylint: disable=useless-super-delegation
+    def __init__(
         self,
         time_series: data_typing.DataContainer,
         *,
-        targets: data_typing.DataContainer,
+        targets: Optional[data_typing.DataContainer],
         static: Optional[data_typing.DataContainer] = None,
         treatments: Optional[data_typing.DataContainer] = None,
         **kwargs,
     ) -> None:
-        """A :class:`Dataset` subclass for the time-to-event analysis problem setting, see :class:`Dataset` docs.
+        """A :class:`PredictiveDataset` subclass for the time-to-event analysis problem setting,
+        see :class:`BaseDataset` docs.
 
-        In this setting: ``targets`` are required, will be initialized as `EventSamples`.
+        In this setting: ``targets`` are required for fitting, will be initialized as `EventSamples`.
         """
         super().__init__(time_series=time_series, static=static, targets=targets, treatments=treatments, **kwargs)
 
-    def _init_predictive(  # pylint: disable=useless-super-delegation
+    def _init_predictive(
         self,
-        targets: data_typing.DataContainer,
-        treatments: Optional[data_typing.DataContainer] = None,
+        targets: Optional[data_typing.DataContainer],
+        treatments: Optional[data_typing.DataContainer],
         **kwargs,
     ) -> None:
         if targets is None:
-            raise ValueError("Time-to-event analysis task requires `targets`")
+            logger.debug(
+                f"`targets` provided was None for {self.__class__.__name__}, "
+                "this Dataset can only be used for prediction not fitting"
+            )
         self.predictive = pred.TimeToEventAnalysisTaskData(parent_dataset=self, targets=targets, **kwargs)
 
     def _validate(self) -> None:
-        if self.predictive.targets.sample_index() != self.time_series.sample_index():
-            raise ValueError(EXCEPTION_MESSAGES.sample_index_mismatch.targets)
+        if self.predictive.targets is not None:
+            if self.predictive.targets.sample_index() != self.time_series.sample_index():
+                raise ValueError(EXCEPTION_MESSAGES.sample_index_mismatch.targets)
         # TODO: Possible checks - some checks on .time_series and .predictive.targets in terms of
         # their relative position in time?
 
+    @property
+    def fit_ready(self) -> bool:
+        return self.predictive.targets is not None
 
-class OneOffTreatmentEffectsDataset(Dataset):
+    @property
+    def predict_ready(self) -> bool:
+        return True
+
+
+class OneOffTreatmentEffectsDataset(PredictiveDataset):
     predictive: pred.OneOffTreatmentEffectsTaskData
 
-    def __init__(  # pylint: disable=useless-super-delegation
+    def __init__(
         self,
         time_series: data_typing.DataContainer,
         *,
-        targets: data_typing.DataContainer,
+        targets: Optional[data_typing.DataContainer],
         treatments: data_typing.DataContainer,
         static: Optional[data_typing.DataContainer] = None,
         **kwargs,
     ) -> None:
-        """A :class:`Dataset` subclass for the one-off treatment effects problem setting, see :class:`Dataset` docs.
+        """A :class:`PredictiveDataset` subclass for the one-off treatment effects problem setting,
+        see :class:`BaseDataset` docs.
 
-        In this setting: ``targets`` are required, will be initialized as `TimeSeriesSamples`; ``treatments`` are
-        required, will be initialized as `EventSamples`.
+        In this setting: ``targets`` are required for fitting, will be initialized as `TimeSeriesSamples`;
+        ``treatments`` are required for both fitting and prediction, will be initialized as `EventSamples`.
         """
         super().__init__(time_series=time_series, static=static, targets=targets, treatments=treatments, **kwargs)
 
     def _init_predictive(
         self,
-        targets: data_typing.DataContainer,
-        treatments: Optional[data_typing.DataContainer] = None,
+        targets: Optional[data_typing.DataContainer],
+        treatments: Optional[data_typing.DataContainer],
         **kwargs,
     ) -> None:
         if targets is None:
-            raise ValueError("On-off treatment effects task requires `targets`")
+            logger.debug(
+                f"`targets` provided was None for {self.__class__.__name__}, "
+                "this Dataset can only be used for prediction not fitting"
+            )
         if treatments is None:
-            raise ValueError("On-off treatment effects task requires `treatments`")
+            raise ValueError("One-off treatment effects task requires `treatments`")
         self.predictive = pred.OneOffTreatmentEffectsTaskData(
             parent_dataset=self, targets=targets, treatments=treatments, **kwargs
         )
 
     def _validate(self) -> None:
-        if self.predictive.targets.sample_index() != self.time_series.sample_index():
-            raise ValueError(EXCEPTION_MESSAGES.sample_index_mismatch.targets)
+        if self.predictive.targets is not None:
+            if self.predictive.targets.sample_index() != self.time_series.sample_index():
+                raise ValueError(EXCEPTION_MESSAGES.sample_index_mismatch.targets)
+            if self.predictive.targets.time_indexes() != self.time_series.time_indexes():
+                raise ValueError(EXCEPTION_MESSAGES.time_indexes_mismatch.targets)
         if self.predictive.treatments.sample_index() != self.time_series.sample_index():
             raise ValueError(EXCEPTION_MESSAGES.sample_index_mismatch.treatments)
-        if self.time_series.time_indexes() != self.predictive.targets.time_indexes():
-            raise ValueError(EXCEPTION_MESSAGES.time_indexes_mismatch.targets)
         # TODO: Possible checks - some checks on .time_series and .predictive.treatments in terms of
         # their relative position in time?
 
+    @property
+    def fit_ready(self) -> bool:
+        return self.predictive.targets is not None and self.predictive.treatments is not None
 
-class TemporalTreatmentEffectsDataset(Dataset):
+    @property
+    def predict_ready(self) -> bool:
+        return self.predictive.treatments is not None
+
+
+class TemporalTreatmentEffectsDataset(PredictiveDataset):
     predictive: pred.TemporalTreatmentEffectsTaskData
 
-    def __init__(  # pylint: disable=useless-super-delegation
+    def __init__(
         self,
         time_series: data_typing.DataContainer,
         *,
-        targets: data_typing.DataContainer,
+        targets: Optional[data_typing.DataContainer],
         treatments: data_typing.DataContainer,
         static: Optional[data_typing.DataContainer] = None,
         **kwargs,
     ) -> None:
-        """A :class:`Dataset` subclass for the temporal treatment effects problem setting, see :class:`Dataset` docs.
+        """A :class:`PredictiveDataset` subclass for the temporal treatment effects problem setting,
+        see :class:`BaseDataset` docs.
 
-        In this setting: ``targets`` are required, will be initialized as `TimeSeriesSamples`; ``treatments`` are
-        required, will be initialized as `TimeSeriesSamples`.
+        In this setting: ``targets`` are required for fitting, will be initialized as `TimeSeriesSamples`;
+        ``treatments`` are required for both fitting and prediction, will be initialized as `TimeSeriesSamples`.
         """
         super().__init__(time_series=time_series, static=static, targets=targets, treatments=treatments, **kwargs)
 
     def _init_predictive(
         self,
-        targets: data_typing.DataContainer,
-        treatments: Optional[data_typing.DataContainer] = None,
+        targets: Optional[data_typing.DataContainer],
+        treatments: Optional[data_typing.DataContainer],
         **kwargs,
     ) -> None:
         if targets is None:
-            raise ValueError("Temporal treatment effects task requires `targets`")
+            logger.debug(
+                f"`targets` provided was None for {self.__class__.__name__}, "
+                "this Dataset can only be used for prediction not fitting"
+            )
         if treatments is None:
             raise ValueError("Temporal treatment effects task requires `treatments`")
         self.predictive = pred.TemporalTreatmentEffectsTaskData(
@@ -425,11 +536,20 @@ class TemporalTreatmentEffectsDataset(Dataset):
         )
 
     def _validate(self) -> None:
-        if self.predictive.targets.sample_index() != self.time_series.sample_index():
-            raise ValueError(EXCEPTION_MESSAGES.sample_index_mismatch.targets)
+        if self.predictive.targets is not None:
+            if self.predictive.targets.sample_index() != self.time_series.sample_index():
+                raise ValueError(EXCEPTION_MESSAGES.sample_index_mismatch.targets)
+            if self.predictive.targets.time_indexes() != self.time_series.time_indexes():
+                raise ValueError(EXCEPTION_MESSAGES.time_indexes_mismatch.targets)
         if self.predictive.treatments.sample_index() != self.time_series.sample_index():
             raise ValueError(EXCEPTION_MESSAGES.sample_index_mismatch.treatments)
-        if self.time_series.time_indexes() != self.predictive.targets.time_indexes():
-            raise ValueError(EXCEPTION_MESSAGES.time_indexes_mismatch.targets)
-        if self.time_series.time_indexes() != self.predictive.treatments.time_indexes():
+        if self.predictive.treatments.time_indexes() != self.time_series.time_indexes():
             raise ValueError(EXCEPTION_MESSAGES.time_indexes_mismatch.treatments)
+
+    @property
+    def fit_ready(self) -> bool:
+        return self.predictive.targets is not None and self.predictive.treatments is not None
+
+    @property
+    def predict_ready(self) -> bool:
+        return self.predictive.treatments is not None

@@ -20,7 +20,7 @@ class BaseTimeToEventAnalysis(plugins.BasePredictor):
     def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
         super().__init__(**params)
 
-    def fit(self, data: dataset.Dataset, *args, **kwargs) -> Self:
+    def fit(self, data: dataset.BaseDataset, *args, **kwargs) -> Self:
         check_data_class(data)
         super().fit(data, *args, **kwargs)
         return self
@@ -28,7 +28,7 @@ class BaseTimeToEventAnalysis(plugins.BasePredictor):
     @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def predict(  # type: ignore[override]  # pylint: disable=arguments-differ
         self,
-        data: dataset.Dataset,
+        data: dataset.BaseDataset,
         horizons: data_typing.TimeIndex,
         *args,
         **kwargs,
@@ -36,14 +36,14 @@ class BaseTimeToEventAnalysis(plugins.BasePredictor):
         check_data_class(data)
         return super().predict(data, horizons, *args, **kwargs)
 
-    def predict_proba(self, data: dataset.Dataset, *args, **kwargs) -> Any:
+    def predict_proba(self, data: dataset.BaseDataset, *args, **kwargs) -> Any:
         raise tempor.exc.UnsupportedSetupException(
             "`predict_proba` method is not supported in the time-to-event analysis setting"
         )
 
     @abc.abstractmethod
     def _predict(  # type: ignore[override]  # pylint: disable=arguments-differ
-        self, data: dataset.Dataset, horizons: data_typing.TimeIndex, *args, **kwargs
+        self, data: dataset.BaseDataset, horizons: data_typing.TimeIndex, *args, **kwargs
     ) -> samples.TimeSeriesSamples:  # pragma: no cover
         ...
 

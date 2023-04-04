@@ -15,7 +15,7 @@ class BasePredictor(estimator.BaseEstimator):
 
     def predict(
         self,
-        data: dataset.Dataset,
+        data: dataset.BaseDataset,
         *args,
         **kwargs,
     ) -> Any:  # TODO: Narrow down output formats later.
@@ -26,7 +26,7 @@ class BasePredictor(estimator.BaseEstimator):
 
     def predict_proba(
         self,
-        data: dataset.Dataset,
+        data: dataset.BaseDataset,
         *args,
         **kwargs,
     ) -> Any:  # TODO: Narrow down output formats later.
@@ -37,7 +37,7 @@ class BasePredictor(estimator.BaseEstimator):
 
     def predict_counterfactuals(
         self,
-        data: dataset.Dataset,
+        data: dataset.BaseDataset,
         *args,
         **kwargs,
     ) -> Any:  # TODO: Narrow down output formats later.
@@ -49,7 +49,7 @@ class BasePredictor(estimator.BaseEstimator):
     @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def fit_predict(
         self,
-        data: dataset.Dataset,
+        data: dataset.BaseDataset,
         *args,
         **kwargs,
     ) -> Any:
@@ -57,11 +57,11 @@ class BasePredictor(estimator.BaseEstimator):
         return self.predict(data, *args, **kwargs)
 
     @abc.abstractmethod
-    def _predict(self, data: dataset.Dataset, *args, **kwargs) -> Any:  # pragma: no cover
+    def _predict(self, data: dataset.BaseDataset, *args, **kwargs) -> Any:  # pragma: no cover
         ...
 
-    def _predict_proba(self, data: dataset.Dataset, *args, **kwargs) -> Any:  # pragma: no cover
+    def _predict_proba(self, data: dataset.BaseDataset, *args, **kwargs) -> Any:  # pragma: no cover
         raise NotImplementedError("`predict_proba` is supported only for classification tasks")
 
-    def _predict_counterfactuals(self, data: dataset.Dataset, *args, **kwargs) -> Any:  # pragma: no cover
+    def _predict_counterfactuals(self, data: dataset.BaseDataset, *args, **kwargs) -> Any:  # pragma: no cover
         raise NotImplementedError("`predict_proba` is supported only for treatments tasks")

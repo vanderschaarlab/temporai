@@ -39,14 +39,14 @@ class TimeSeriesMinMaxScaler(BaseScaler):
 
     def _fit(
         self,
-        data: dataset.Dataset,
+        data: dataset.BaseDataset,
         *args,
         **kwargs,
     ) -> Self:
         self.model.fit(data.time_series.dataframe())
         return self
 
-    def _transform(self, data: dataset.Dataset, *args, **kwargs) -> dataset.Dataset:
+    def _transform(self, data: dataset.BaseDataset, *args, **kwargs) -> dataset.BaseDataset:
         temporal_data = data.time_series.dataframe()
         scaled = pd.DataFrame(self.model.transform(temporal_data))
         scaled.columns = temporal_data.columns
