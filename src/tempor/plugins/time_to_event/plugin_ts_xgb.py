@@ -226,7 +226,7 @@ class XGBTimeToEventAnalysis(BaseTimeToEventAnalysis):
 
     def _fit(
         self,
-        data: dataset.BaseDataset,
+        data: dataset.PredictiveDataset,
         *args,
         **kwargs,
     ) -> Self:
@@ -235,7 +235,7 @@ class XGBTimeToEventAnalysis(BaseTimeToEventAnalysis):
 
     def _predict(  # type: ignore[override]
         self,
-        data: dataset.BaseDataset,
+        data: dataset.PredictiveDataset,
         horizons: data_typing.TimeIndex,
         *args,
         **kwargs,

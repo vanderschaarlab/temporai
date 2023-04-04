@@ -21,7 +21,7 @@ class BaseOneOffRegressor(plugins.BasePredictor):
     def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
         super().__init__(**params)
 
-    def fit(self, data: dataset.BaseDataset, *args, **kwargs) -> Self:
+    def fit(self, data: dataset.PredictiveDataset, *args, **kwargs) -> Self:
         check_data_class(data)
         super().fit(data, *args, **kwargs)
         return self
@@ -29,7 +29,7 @@ class BaseOneOffRegressor(plugins.BasePredictor):
     @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def predict(
         self,
-        data: dataset.BaseDataset,
+        data: dataset.PredictiveDataset,
         *args,
         **kwargs,
     ) -> samples.StaticSamples:
@@ -37,10 +37,10 @@ class BaseOneOffRegressor(plugins.BasePredictor):
         return super().predict(data, *args, **kwargs)
 
     @abc.abstractmethod
-    def _predict(self, data: dataset.BaseDataset, *args, **kwargs) -> samples.StaticSamples:
+    def _predict(self, data: dataset.PredictiveDataset, *args, **kwargs) -> samples.StaticSamples:
         ...
 
-    def _unpack_dataset(self, data: dataset.BaseDataset) -> Tuple:
+    def _unpack_dataset(self, data: dataset.PredictiveDataset) -> Tuple:
         temporal = data.time_series.numpy()
         observation_times = data.time_series.time_indexes()
         if data.predictive is not None and data.predictive.targets is not None:

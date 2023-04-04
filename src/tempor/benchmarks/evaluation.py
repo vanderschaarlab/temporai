@@ -340,7 +340,7 @@ class ClassifierMetrics:
 @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
 def evaluate_classifier(  # pylint: disable=unused-argument
     estimator: Any,
-    data: dataset.BaseDataset,
+    data: dataset.PredictiveDataset,
     *args: Any,
     n_splits: int = 3,
     random_state: int = 0,
@@ -421,7 +421,7 @@ def evaluate_classifier(  # pylint: disable=unused-argument
 @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
 def evaluate_regressor(  # pylint: disable=unused-argument
     estimator: Any,
-    data: dataset.BaseDataset,
+    data: dataset.PredictiveDataset,
     *args: Any,
     n_splits: int = 3,
     random_state: int = 0,

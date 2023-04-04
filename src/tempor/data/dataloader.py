@@ -86,7 +86,7 @@ class DataLoader(abc.ABC):
         ...  # pylint: disable=unnecessary-ellipsis
 
     @abc.abstractmethod
-    def load(self, **kwargs) -> dataset.BaseDataset:  # pragma: no cover
+    def load(self, **kwargs) -> dataset.PredictiveDataset:  # pragma: no cover
         """The method that should return the loaded `~tempor.data.dataset.DataSet` for the appropriate
         ``predictive_task``.
 

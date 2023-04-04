@@ -159,7 +159,7 @@ class EmbTimeToEventAnalysis:
 
     def fit(
         self,
-        data: dataset.BaseDataset,
+        data: dataset.PredictiveDataset,
         *args,  # pylint: disable=unused-argument
         **kwargs,  # pylint: disable=unused-argument
     ) -> Self:
@@ -182,7 +182,7 @@ class EmbTimeToEventAnalysis:
 
     def predict(
         self,
-        data: dataset.BaseDataset,
+        data: dataset.PredictiveDataset,
         horizons: data_typing.TimeIndex,
         *args,  # pylint: disable=unused-argument
         **kwargs,  # pylint: disable=unused-argument

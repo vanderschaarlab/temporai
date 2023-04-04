@@ -76,7 +76,7 @@ def _generate_get_args() -> Callable:
 
 
 def _generate_fit() -> Callable:
-    def fit_impl(self: Any, X: dataset.BaseDataset, *args: Any, **kwargs: Any) -> dataset.BaseDataset:
+    def fit_impl(self: Any, X: dataset.PredictiveDataset, *args: Any, **kwargs: Any) -> dataset.PredictiveDataset:
         local_X = X
         for stage in self.stages[:-1]:
             local_X = stage.fit_transform(local_X)
@@ -89,7 +89,7 @@ def _generate_fit() -> Callable:
 
 
 def _generate_predict() -> Callable:
-    def predict_impl(self: Any, X: dataset.BaseDataset, *args: Any, **kwargs: Any) -> dataset.BaseDataset:
+    def predict_impl(self: Any, X: dataset.PredictiveDataset, *args: Any, **kwargs: Any) -> dataset.PredictiveDataset:
         local_X = X
         for stage in self.stages[:-1]:
             local_X = stage.transform(local_X)
@@ -100,7 +100,9 @@ def _generate_predict() -> Callable:
 
 
 def _generate_predict_proba() -> Callable:
-    def predict_proba_impl(self: Any, X: dataset.BaseDataset, *args: Any, **kwargs: Any) -> dataset.BaseDataset:
+    def predict_proba_impl(
+        self: Any, X: dataset.PredictiveDataset, *args: Any, **kwargs: Any
+    ) -> dataset.PredictiveDataset:
         local_X = X
         for stage in self.stages[:-1]:
             local_X = stage.transform(local_X, *args, **kwargs)

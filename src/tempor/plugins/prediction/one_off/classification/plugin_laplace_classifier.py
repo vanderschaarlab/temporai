@@ -104,7 +104,7 @@ class LaplaceODEClassifier(BaseOneOffClassifier):
 
     def _fit(
         self,
-        data: dataset.BaseDataset,
+        data: dataset.PredictiveDataset,
         *args,
         **kwargs,
     ) -> Self:
@@ -145,7 +145,7 @@ class LaplaceODEClassifier(BaseOneOffClassifier):
 
     def _predict(
         self,
-        data: dataset.BaseDataset,
+        data: dataset.PredictiveDataset,
         *args,
         **kwargs,
     ) -> samples.StaticSamples:
@@ -161,7 +161,7 @@ class LaplaceODEClassifier(BaseOneOffClassifier):
 
     def _predict_proba(
         self,
-        data: dataset.BaseDataset,
+        data: dataset.PredictiveDataset,
         *args,
         **kwargs,
     ) -> samples.StaticSamples:

@@ -99,7 +99,7 @@ class CDERegressor(BaseOneOffRegressor):
 
     def _fit(
         self,
-        data: dataset.BaseDataset,
+        data: dataset.PredictiveDataset,
         *args,
         **kwargs,
     ) -> Self:
@@ -139,7 +139,7 @@ class CDERegressor(BaseOneOffRegressor):
 
     def _predict(
         self,
-        data: dataset.BaseDataset,
+        data: dataset.PredictiveDataset,
         *args,
         **kwargs,
     ) -> samples.StaticSamples:
@@ -155,7 +155,7 @@ class CDERegressor(BaseOneOffRegressor):
 
     def _predict_proba(
         self,
-        data: dataset.BaseDataset,
+        data: dataset.PredictiveDataset,
         *args,
         **kwargs,
     ) -> samples.StaticSamples:

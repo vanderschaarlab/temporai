@@ -60,7 +60,7 @@ class SyncTwinTreatmentsRegressor(BaseOneOffTreatmentEffects):
 
     def _fit(
         self,
-        data: dataset.BaseDataset,
+        data: dataset.PredictiveDataset,
         *args,
         **kwargs,
     ) -> "SyncTwinTreatmentsRegressor":  # pyright: ignore
@@ -70,7 +70,7 @@ class SyncTwinTreatmentsRegressor(BaseOneOffTreatmentEffects):
 
     def _predict(  # type: ignore[override]  # pylint: disable=arguments-differ
         self,
-        data: dataset.BaseDataset,
+        data: dataset.PredictiveDataset,
         horizons: List[List[float]],
         *args,
         **kwargs,
@@ -81,7 +81,7 @@ class SyncTwinTreatmentsRegressor(BaseOneOffTreatmentEffects):
 
     def _predict_counterfactuals(  # type: ignore[override]  # pylint: disable=arguments-differ
         self,
-        data: dataset.BaseDataset,
+        data: dataset.PredictiveDataset,
         # horizons: SyncTwin can only handle the same time horizon as targets in the data.
         # treatment_scenarios: SyncTwin can only handle the one alternative treatment case.
         *args,

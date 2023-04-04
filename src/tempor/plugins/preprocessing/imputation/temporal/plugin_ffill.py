@@ -48,13 +48,13 @@ class FFillImputer(BaseImputer):
         self.static_imputer = StaticImputers().get(static_imputer, random_state=random_state)
         self.random_state = random_state
 
-    def _fit(self, data: dataset.BaseDataset, *args, **kwargs) -> Self:
+    def _fit(self, data: dataset.PredictiveDataset, *args, **kwargs) -> Self:
         if data.static is not None:
             self.static_imputer.fit(data.static.dataframe())
 
         return self
 
-    def _transform(self, data: dataset.BaseDataset, *args, **kwargs) -> dataset.BaseDataset:
+    def _transform(self, data: dataset.PredictiveDataset, *args, **kwargs) -> dataset.PredictiveDataset:
         # impute static data
         if data.static is not None:
             static_data = data.static.dataframe()
