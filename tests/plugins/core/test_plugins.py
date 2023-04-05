@@ -218,11 +218,11 @@ class TestPluginLoader:
     def test_list_categories(self, loader):
         listed = loader.list_categories()
 
-        assert listed == [
-            "category_a",
-            "category_b.x",
-            "category_b.y",
-        ]
+        assert listed == {
+            "category_a": CategoryAExpectedClass,
+            "category_b.x": CategoryBXExpectedClass,
+            "category_b.y": CategoryBYExpectedClass,
+        }
 
     @pytest.mark.parametrize("loader", [plugin_core.PluginLoader(), plugin_loader])
     def test_get(self, loader):
