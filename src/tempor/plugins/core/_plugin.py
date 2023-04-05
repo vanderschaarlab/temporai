@@ -139,6 +139,10 @@ class PluginLoader:
         self._refresh()
         return self._plugin_class_by_category
 
+    def list_categories(self) -> List[str]:
+        self._refresh()
+        return list(PLUGIN_CATEGORY_REGISTRY.keys())
+
     def _raise_plugin_does_not_exist_error(self, name: str):
         if name not in self._plugin_registry:
             raise ValueError(f"Plugin {name} does not exist.")
