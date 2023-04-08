@@ -1,4 +1,4 @@
-name: Run full set of tests (slow)
+name: "Tests: Full"
 
 on:
   schedule:
