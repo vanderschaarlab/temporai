@@ -305,7 +305,7 @@ class PredictiveDataset(BaseDataset):
     @property
     @abc.abstractmethod
     def predict_ready(self) -> bool:  # pragma: no cover
-        """Returns whether the :class:`PredictiveDataset` is in a state ready to be ``predict``ed on."""
+        """Returns whether the :class:`PredictiveDataset` is in a state ready to be ``predict`` ed on."""
         ...
 
 
