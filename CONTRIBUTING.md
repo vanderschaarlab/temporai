@@ -182,7 +182,8 @@ conda activate temporai
 
    # Run unit tests on different tox python environments (this may be slow).
    # The tests will also include doctests, and a check that all notebooks execute without errors.
-   tox -r
+   tox
+   # If your code introduces new dependencies, use `tox -r`.
    ```
 
    (after having installed [tox] with `pip install tox`).
@@ -192,7 +193,8 @@ conda activate temporai
 
 1. It is also useful to check that documentation generation succeeds after your changes, run this with the following command, and make sure you do not see any [Sphinx] `WARNING`s or errors.
    ```sh
-   tox -r -e docs
+   tox -e docs
+   tox -e doctests
    ```
 
 ### Submit your contribution
