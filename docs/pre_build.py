@@ -16,7 +16,7 @@ with open(DOCS_REQS_FILE, "r", encoding="utf8") as file:
     docs_req_content = file.read()
 found = re.findall(r"# ----- auto_update -----.*# ----- auto_update -----", docs_req_content, re.DOTALL)[0]
 new = "# ----- auto_update -----\n" + "\n".join(sorted(list_dep_specs)) + "\n# ----- auto_update -----"
-docs_req_content = docs_req_content.replace(found, new)
+docs_req_content = docs_req_content.replace(found, new)  # type: ignore
 
 with open(DOCS_REQS_FILE, "w", encoding="utf8") as file:
     file.write(docs_req_content)
