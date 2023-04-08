@@ -14,6 +14,7 @@ authors:
 url: 'https://github.com/vanderschaarlab/temporai/'
 preferred-citation:
   type: article
+  title: "TemporAI: Facilitating Machine Learning Innovation in Time Domain Tasks for Medicine"
   authors:
   - given-names: Evgeny S.
     family-names: Saveliev
