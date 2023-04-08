@@ -1,0 +1,41 @@
+cff-version: 1.2.0
+title: "TemporAI: ML-centric Toolkit for Medical Time Series"
+message: "If you use this software, please cite it using the metadata from this file."
+type: software
+authors:
+  - given-names: Evgeny S.
+    family-names: Saveliev
+    affiliation: 'DAMTP, University of Cambridge'
+    orcid: 'https://orcid.org/0000-0003-2887-0342'
+  - given-names: Mihaela
+    family-names: Schaar
+    name-suffix: van der
+    affiliation: 'DAMTP, University of Cambridge'
+    orcid: 'https://orcid.org/0000-0003-3933-6049'
+identifiers:
+  - type: url
+    value: 'https://arxiv.org/abs/2301.12260'
+repository-code: 'https://github.com/vanderschaarlab/temporai/'
+url: 'https://www.temporai.vanderschaar-lab.com/'
+repository: 'https://temporai.readthedocs.io/'
+abstract: "TemporAI is a Machine Learning-centric time-series library for medicine."
+keywords:
+  - machine-learning
+  - medicine
+  - time-series
+license: Apache-2.0
+preferred-citation:
+  type: article
+  authors:
+    - given-names: Evgeny S.
+      family-names: Saveliev
+      affiliation: 'DAMTP, University of Cambridge'
+      orcid: 'https://orcid.org/0000-0003-2887-0342'
+    - given-names: Mihaela
+      family-names: Schaar
+      name-suffix: van der
+      affiliation: 'DAMTP, University of Cambridge'
+      orcid: 'https://orcid.org/0000-0003-3933-6049'
+  identifiers:
+    - type: url
+      value: 'https://arxiv.org/abs/2301.12260'
