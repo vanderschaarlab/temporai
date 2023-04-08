@@ -40,10 +40,20 @@ with open(README_PATH, "r", encoding="utf8") as file:
 # Replace:
 for k, v in REPLACE.items():
     readme_content = readme_content.replace(k, v)
+
 # Remove parts that should only be in repo `README.md`.
 readme_content = re.sub(r"\n<!-- exclude_docs -->.*?<!-- exclude_docs_end -->", "", readme_content, flags=re.DOTALL)
+
+# Make ```python ... ``` into doctest blocks. Redirect output to devnull in order to skip output checking here.
+readme_content = re.sub(
+    r"```python(.*?)```",
+    r"```{testcode}\nimport os; import sys; f = open(os.devnull, 'w'); sys.stdout = f\1```",
+    readme_content,
+    flags=re.DOTALL,
+)
+
 # Make emoji representations compatible with sphinxemoji, e.g. :key: --> |:key:|
-readme_content = re.sub(r"\:[a-z1-9+\-_]{0,100}\:", (lambda x: f"|{x.group(0)}|"), readme_content)
+# readme_content = re.sub(r"\:[a-z1-9+\-_]{0,100}\:", (lambda x: f"|{x.group(0)}|"), readme_content)
 
 with open(OVERVIEW_PATH, "w", encoding="utf8") as file:
     file.write(readme_content)

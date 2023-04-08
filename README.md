@@ -69,19 +69,27 @@ from tempor.utils.dataloaders import SineDataLoader
 from tempor.plugins import plugin_loader
 
 dataset = SineDataLoader(with_missing=True).load()
-assert dataset.static.dataframe().isna().sum().sum() != 0
-assert dataset.time_series.dataframe().isna().sum().sum() != 0
+static_data_n_missing = dataset.static.dataframe().isna().sum().sum()
+temporal_data_n_missing = dataset.time_series.dataframe().isna().sum().sum()
 
-# load the model
+print(static_data_n_missing, temporal_data_n_missing)
+assert static_data_n_missing > 0
+assert temporal_data_n_missing > 0
+
+# Load the model:
 model = plugin_loader.get("preprocessing.imputation.temporal.bfill")
 
-# train
+# Train:
 model.fit(dataset)
 
-# impute
+# Impute:
 imputed = model.transform(dataset)
-assert imputed.static.dataframe().isna().sum().sum() == 0
-assert imputed.time_series.dataframe().isna().sum().sum() == 0
+static_data_n_missing = imputed.static.dataframe().isna().sum().sum()
+temporal_data_n_missing = imputed.time_series.dataframe().isna().sum().sum()
+
+print(static_data_n_missing, temporal_data_n_missing)
+assert static_data_n_missing == 0
+assert temporal_data_n_missing == 0
 ```
 
 * Use a classifier
@@ -91,14 +99,14 @@ from tempor.plugins import plugin_loader
 
 dataset = SineDataLoader().load()
 
-# load the model
+# Load the model:
 model = plugin_loader.get("prediction.one_off.classification.nn_classifier", n_iter=50)
 
-# train
+# Train:
 model.fit(dataset)
 
-# predict
-assert model.predict(dataset).numpy().shape == (len(dataset), 1)
+# Predict:
+prediction = model.predict(dataset)
 ```
 
 * Use a regressor
@@ -108,27 +116,23 @@ from tempor.plugins import plugin_loader
 
 dataset = SineDataLoader().load()
 
-# load the model
+# Load the model:
 model = plugin_loader.get("prediction.one_off.regression.nn_regressor", n_iter=50)
 
-# train
+# Train:
 model.fit(dataset)
 
-# predict
-assert model.predict(dataset).numpy().shape == (len(dataset), 1)
+# Predict:
+prediction = model.predict(dataset)
 ```
 
 * Benchmark models
 Classification task
 ```python
-from tempor.benchmarks import (
-    benchmark_models,
-)
+from tempor.benchmarks import benchmark_models
 from tempor.plugins import plugin_loader
 from tempor.plugins.pipeline import Pipeline
-from tempor.utils.dataloaders import (
-    SineDataLoader,
-)
+from tempor.utils.dataloaders import SineDataLoader
 
 testcases = [
     (
@@ -163,13 +167,13 @@ print(aggr_score)
 from tempor.utils.serialization import load, save
 from tempor.plugins import plugin_loader
 
-# load the model
+# Load the model:
 model = plugin_loader.get("prediction.one_off.classification.nn_classifier", n_iter=50)
 
-buff = save(model)  # save model to bytes
-reloaded = load(buff)  # reload model
+buff = save(model)  # Save model to bytes.
+reloaded = load(buff)  # Reload model.
 
-# save_to_file. load_from_file also available in the serialization module
+# `save_to_file`, `load_from_file` also available in the serialization module.
 ```
 
 ## 🔑 Methods
