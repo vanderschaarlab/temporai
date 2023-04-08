@@ -9,7 +9,6 @@
 -->
 
 <!-- exclude_docs -->
-<!-- [![ReadTheDocs](https://readthedocs.org/projects/temporai/badge/?version=latest)][docs] -->
 [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial04_prediction.ipynb)
 [![Documentation Status](https://readthedocs.org/projects/temporai/badge/?version=latest)](https://temporai.readthedocs.io/en/latest/?badge=latest)
 
@@ -23,7 +22,6 @@
 [![arXiv](https://img.shields.io/badge/arXiv-2301.12260-b31b1b.svg)](https://arxiv.org/abs/2301.12260)
 [![about](https://img.shields.io/badge/about-The%20van%20der%20Schaar%20Lab-blue)](https://www.vanderschaar-lab.com/)
 [![slack](https://img.shields.io/badge/chat-on%20slack-purple?logo=slack)](https://vanderschaarlab.slack.com)
-
 <!-- exclude_docs_end -->
 
 # <img src="docs/assets/TemporAI_Logo_Icon.png" height=25> TemporAI

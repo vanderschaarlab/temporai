@@ -3,7 +3,6 @@
 
 [![Built Status](https://api.cirrus-ci.com/github/<USER>/temporai.svg?branch=main)](https://cirrus-ci.com/github/<USER>/temporai)
 [![Coveralls](https://img.shields.io/coveralls/github/<USER>/temporai/main.svg)](https://coveralls.io/r/<USER>/temporai)
-[![PyPI-Server](https://img.shields.io/pypi/v/temporai.svg)](https://pypi.org/project/temporai/)
 [![Conda-Forge](https://img.shields.io/conda/vn/conda-forge/temporai.svg)](https://anaconda.org/conda-forge/temporai)
 [![Monthly Downloads](https://pepy.tech/badge/temporai/month)](https://pepy.tech/project/temporai)
 [![Twitter](https://img.shields.io/twitter/url/http/shields.io.svg?style=social&label=Twitter)](https://twitter.com/temporai)
@@ -12,7 +11,11 @@
 
 # <img src="assets/TemporAI_Logo_Icon.png" height=25> TemporAI
 
-*TemporAI* is a Machine Learning-centric time-series library for medicine.  The tasks that are currently of focus in TemporAI are: time-series prediction, time-to-event (a.k.a. survival) analysis with time-series data, and counterfactual inference (i.e. \[individualized\] treatment effects).  The library also aims to provide the user with understanding of their data, model, and problem, through e.g. integration with interpretability methods.
+> **⚗️ Status:** This project is still in *alpha*, and the API may change without warning.  
+
+*TemporAI* is a Machine Learning-centric time-series library for medicine.  The tasks that are currently of focus in TemporAI are: time-series prediction, time-to-event (a.k.a. survival) analysis with time-series data, and counterfactual inference (i.e. \[individualized\] treatment effects).
+
+In future versions, the library also aims to provide the user with understanding of their data, model, and problem, through e.g. integration with interpretability methods.
 
 Key concepts:
 
@@ -319,5 +322,10 @@ pytest -vsx
 
 If you use this code, please cite the associated paper:
 ```
-TODO
+@article{saveliev2023temporai,
+  title={TemporAI: Facilitating Machine Learning Innovation in Time Domain Tasks for Medicine},
+  author={Saveliev, Evgeny S and van der Schaar, Mihaela},
+  journal={arXiv preprint arXiv:2301.12260},
+  year={2023}
+}
 ```
