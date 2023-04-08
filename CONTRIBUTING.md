@@ -129,8 +129,8 @@ conda activate temporai
    pre-commit install
    ```
 
-   *TemporAI* comes with a lot of [pre-commit hooks](./..pre-commit-config.yaml) configured to automatically help the
-   developer to check the code being written.
+   *TemporAI* comes with a lot of [pre-commit hooks] configured to automatically help the developer to
+   check the code being written.
 
 ### Implement your changes
 
@@ -160,7 +160,7 @@ conda activate temporai
    any eventual issues.
    This should, among other things, automatically use [flake8]/[black] to check/fix the code style
    in a way that is compatible with the project.
-   See also the full list of the configured [pre-commit hooks](./..pre-commit-config.yaml).
+   See also the full list of the configured [pre-commit hooks].
 
    **Don't forget to add unit tests and documentation in case your
    contribution adds an additional feature and is not just a bugfix.**
@@ -276,7 +276,7 @@ package:
 
 ### Releases
 
-We now use [GitHub workflows] for releases, see [`release.yml`](.github/workflows/release.yml).
+We now use [GitHub workflows] for releases, see [`release.yml`](https://github.com/vanderschaarlab/temporai/blob/main/.github/workflows/release.yml).
 
 
 
@@ -300,6 +300,7 @@ We now use [GitHub workflows] for releases, see [`release.yml`](.github/workflow
 [PR template]: https://github.com/vanderschaarlab/.github/blob/main/.github/pull_request_template.md
 [other kinds of contributions]: https://opensource.guide/how-to-contribute
 [pre-commit]: https://pre-commit.com/
+[pre-commit hooks]: https://github.com/vanderschaarlab/temporai/blob/main//.pre-commit-config.yaml
 [pypi]: https://pypi.org/
 [PyScaffold contributor's guide template]: https://github.com/pyscaffold/pyscaffold/blob/835eb4f986e37409d33fdb3f4d150e41ee07a111/src/pyscaffold/templates/contributing.template
 [pyscaffold]: https://pyscaffold.org/
