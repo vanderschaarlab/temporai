@@ -20,5 +20,11 @@ sphinx:
 
 python:
   install:
+    # This should match `prereq.txt`:
+    - method: pip
+      path: torch
+    - method: pip
+      path: numpy
+    # -------------------------------
     - requirements: docs/requirements.txt
     - {path: ., method: pip}
