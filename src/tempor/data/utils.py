@@ -95,6 +95,8 @@ def check_bool_array1d_trues_consecutive(array: np.ndarray, at_beginning: bool =
 
     Examples:
         >>> import numpy as np
+        >>> from tempor.data.utils import *
+        >>>
         >>> check_bool_array1d_trues_consecutive(np.asarray([False, True, True, True, False]))
         True
         >>> check_bool_array1d_trues_consecutive(np.asarray([False, True, False, True, False]))
@@ -127,6 +129,8 @@ def check_bool_array2d_identical_along_dim1(array: np.ndarray) -> bool:
 
     Examples:
         >>> import numpy as np
+        >>> from tempor.data.utils import *
+        >>>
         >>> check_bool_array2d_identical_along_dim1(np.asarray([[True, True, False], [True, True, False]]).T)
         True
         >>> check_bool_array2d_identical_along_dim1(np.asarray([[True, True, False], [False, True, False]]).T)
@@ -145,6 +149,8 @@ def get_array1d_length_until_padding(array: np.ndarray, padding_indicator: Any =
 
     Examples:
         >>> import numpy as np
+        >>> from tempor.data.utils import *
+        >>>
         >>> pad = 999.0
         >>> get_array1d_length_until_padding(np.asarray([1, 8, -3, 9, pad]), padding_indicator=pad)
         4
@@ -183,6 +189,8 @@ def get_seq_lengths_timeseries_array3d(array: np.ndarray, padding_indicator: Any
 
     Example:
         >>> import numpy as np
+        >>> from tempor.data.utils import *
+        >>>
         >>> pad = 999.0
         >>> array = np.asarray(  # Array with two samples, with two timeseries features.
         ...     [
@@ -247,6 +255,8 @@ def make_sample_time_index_tuples(
     ``[(<sample ID>, <timestep>), ...]``.
 
     Example:
+        >>> from tempor.data.utils import *
+        >>>
         >>> sample_index = ["s1", "s2"]
         >>> time_indexes = [[1, 2, 3], [1, 5, 9, 10]]
         >>> make_sample_time_index_tuples(sample_index, time_indexes)
@@ -389,6 +399,8 @@ def event_time_value_pairs_to_event_dataframe(
             List of feature names, to be set as dataframe column names.
 
     Example:
+        >>> from tempor.data.utils import *
+        >>>
         >>> sample_index = ["s1", "s2", "s3"]
         >>> feature_names = ["feature_1", "feature_2"]
         >>> event_feature_1 = ([1.1, 1.2, 1.3], [True, True, False])

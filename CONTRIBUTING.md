@@ -1,6 +1,8 @@
 # Contributing
 
-Welcome to *TemporAI* contributor's guide. This is adapted from [PyScaffold] contributor's guide template.
+Welcome to *TemporAI* contributor's guide.
+
+> This guide is adapted from [PyScaffold] contributor's guide template.
 
 This document focuses on getting any potential contributor familiarized with
 the development processes, but [other kinds of contributions] are also appreciated.
@@ -13,6 +15,8 @@ Please notice, all users and contributors are expected to be **open,
 considerate, reasonable, and respectful**. When in doubt,
 [Python Software Foundation's Code of Conduct] is a good reference in terms of
 behavior guidelines.
+
+> 🕮 Please also make sure to first familiarize yourself with the [`vanderschaarlab` Code of Conduct](https://github.com/vanderschaarlab/.github/blob/main/CODE_OF_CONDUCT.md).
 
 ## Issue Reports
 
@@ -70,7 +74,7 @@ python3 -m http.server --directory 'docs/_build/html'
 
 ## Code Contributions
 
-TBC: An architecture description, design principles or at least a summary of the main concepts.
+`TBC: Developer Guide`
 
 ### Submit an issue
 
@@ -113,7 +117,9 @@ conda activate temporai
 1. Run the following to install the package and all requirements, including dev requirements:
 
    ```sh
-   pip install -U pip -e .[dev]
+   pip install -U pip         # Update pip.
+   pip install -r prereq.txt  # Install prerequisite dependencies.
+   pip install -e .[dev]      # Install TemporAI in editable mode, with the `dev` extra.
    ```
 
 1. Install [pre-commit]:
@@ -123,8 +129,8 @@ conda activate temporai
    pre-commit install
    ```
 
-   *TemporAI* comes with a lot of hooks configured to automatically help the
-   developer to check the code being written.
+   *TemporAI* comes with a lot of [pre-commit hooks] configured to automatically help the developer to
+   check the code being written.
 
 ### Implement your changes
 
@@ -152,8 +158,9 @@ conda activate temporai
 
    Please make sure to see the validation messages from [pre-commit] and fix
    any eventual issues.
-   This should automatically use [flake8]/[black] to check/fix the code style
+   This should, among other things, automatically use [flake8]/[black] to check/fix the code style
    in a way that is compatible with the project.
+   See also the full list of the configured [pre-commit hooks].
 
    **Don't forget to add unit tests and documentation in case your
    contribution adds an additional feature and is not just a bugfix.**
@@ -166,23 +173,29 @@ conda activate temporai
    ```
 
    to look for recurring communication patterns.
-   :::
 
-1. Please check that your changes don't break any unit tests with:
+1. Please locally check that your changes don't break any tests. The same set of tests will be executed via [GitHub workflows] when you submit your PR.
 
    ```sh
-   # Run tests on different tox python environments:
-   tox -r
-   # Run doctests, similarly:
-   tox -r -- src/ --doctest-modules
-   # Run notebook tests:
-   tox -r -e testnb
+   # Run unit tests on your current environment.
+   pytest
+
+   # Run unit tests on different tox python environments (this may be slow).
+   # The tests will also include doctests, and a check that all notebooks execute without errors.
+   tox
+   # If your code introduces new dependencies, use `tox -r`.
    ```
 
-   (after having installed [tox] with `pip install tox` or `pipx`).
+   (after having installed [tox] with `pip install tox`).
 
    You can also use [tox] to run several other pre-configured tasks in the
    repository. Try `tox -av` to see a list of the available checks.
+
+1. It is also useful to check that documentation generation succeeds after your changes, run this with the following command, and make sure you do not see any [Sphinx] `WARNING`s or errors.
+   ```sh
+   tox -e docs
+   tox -e doctests
+   ```
 
 ### Submit your contribution
 
@@ -259,29 +272,13 @@ package:
    running `tox -- -k <NAME OF THE FALLING TEST> --pdb`).
    You can also setup breakpoints manually instead of using the `--pdb` option.
 
+
+
 ## Maintainer tasks
 
 ### Releases
 
-> 	⚠️ This section is out of date, we now use [GitHub workflows] for releases.
-
-If you are part of the group of maintainers and have correct user permissions
-on [PyPI], the following steps can be used to release a new version for
-*TemporAI*:
-
-1. Make sure all unit tests are successful.
-2. Tag the current commit on the main branch with a release tag, e.g., `v1.2.3`.
-3. Push the new tag to the upstream [repository],
-   e.g., `git push upstream v1.2.3`
-4. Clean up the `dist` and `build` folders with `tox -e clean`
-   (or `rm -rf dist build`)
-   to avoid confusion with old builds and Sphinx docs.
-5. Run `tox -e build` and check that the files in `dist` have
-   the correct version (no `.dirty` or [git] hash) according to the [git] tag.
-   Also check the sizes of the distributions, if they are too big (e.g., >
-   500KB), unwanted clutter may have been accidentally included.
-6. Run `tox -e publish -- --repository pypi` and check that everything was
-   uploaded to [PyPI] correctly.
+We now use [GitHub workflows] for releases, see [`release.yml`](https://github.com/vanderschaarlab/temporai/blob/main/.github/workflows/release.yml).
 
 
 
@@ -305,6 +302,7 @@ on [PyPI], the following steps can be used to release a new version for
 [PR template]: https://github.com/vanderschaarlab/.github/blob/main/.github/pull_request_template.md
 [other kinds of contributions]: https://opensource.guide/how-to-contribute
 [pre-commit]: https://pre-commit.com/
+[pre-commit hooks]: https://github.com/vanderschaarlab/temporai/blob/main//.pre-commit-config.yaml
 [pypi]: https://pypi.org/
 [PyScaffold contributor's guide template]: https://github.com/pyscaffold/pyscaffold/blob/835eb4f986e37409d33fdb3f4d150e41ee07a111/src/pyscaffold/templates/contributing.template
 [pyscaffold]: https://pyscaffold.org/

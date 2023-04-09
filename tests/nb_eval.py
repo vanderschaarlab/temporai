@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 from time import time
 
@@ -9,11 +10,17 @@ workspace = Path(__file__).parents[0] / "workspace"
 workspace.mkdir(parents=True, exist_ok=True)
 
 
-def run_notebook(notebook_path: Path) -> None:
+def run_notebook(notebook_path: Path, skip_pip_install: bool = True) -> None:
     with open(notebook_path, encoding="utf8") as f:
-        nb = nbformat.read(f, as_version=4)
+        f_str = f.read()
 
+    if skip_pip_install:
+        # Comment out `pip install` commands, as do not need to run those in test.
+        f_str = re.sub(r"[%!]\s*pip", "#pip", f_str, flags=re.DOTALL)
+
+    nb = nbformat.reads(f_str, as_version=4)
     proc = ExecutePreprocessor(timeout=1800)
+
     # Will raise on cell error:
     proc.preprocess(nb, {"metadata": {"path": workspace}})
 

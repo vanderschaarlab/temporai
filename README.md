@@ -3,35 +3,41 @@
 
 [![Built Status](https://api.cirrus-ci.com/github/<USER>/temporai.svg?branch=main)](https://cirrus-ci.com/github/<USER>/temporai)
 [![Coveralls](https://img.shields.io/coveralls/github/<USER>/temporai/main.svg)](https://coveralls.io/r/<USER>/temporai)
-[![PyPI-Server](https://img.shields.io/pypi/v/temporai.svg)](https://pypi.org/project/temporai/)
 [![Conda-Forge](https://img.shields.io/conda/vn/conda-forge/temporai.svg)](https://anaconda.org/conda-forge/temporai)
 [![Monthly Downloads](https://pepy.tech/badge/temporai/month)](https://pepy.tech/project/temporai)
 [![Twitter](https://img.shields.io/twitter/url/http/shields.io.svg?style=social&label=Twitter)](https://twitter.com/temporai)
 -->
 
 <!-- exclude_docs -->
-<!-- [![ReadTheDocs](https://readthedocs.org/projects/temporai/badge/?version=latest)][docs] -->
-[![Tests](https://github.com/vanderschaarlab/temporai/actions/workflows/test.yml/badge.svg)](https://github.com/vanderschaarlab/temporai/actions/workflows/test.yml)
-[![](https://pepy.tech/badge/temporai)](https://pypi.org/project/temporai/)
+[![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial04_prediction.ipynb)
+[![Documentation Status](https://readthedocs.org/projects/temporai/badge/?version=latest)](https://temporai.readthedocs.io/en/latest/?badge=latest)
+
 [![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/release/python-370/)
-[![License](https://img.shields.io/github/license/vanderschaarlab/temporai)](./LICENSE.txt)
+[![PyPI-Server](https://img.shields.io/pypi/v/temporai.svg)](https://pypi.org/project/temporai/)
+[![](https://pepy.tech/badge/temporai)](https://pypi.org/project/temporai/)
+[![Tests](https://github.com/vanderschaarlab/temporai/actions/workflows/test.yml/badge.svg)](https://github.com/vanderschaarlab/temporai/actions/workflows/test.yml)
+[![Tests](https://github.com/vanderschaarlab/temporai/actions/workflows/test_full.yml/badge.svg)](https://github.com/vanderschaarlab/temporai/actions/workflows/test.yml)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](./LICENSE.txt)
+
+[![arXiv](https://img.shields.io/badge/arXiv-2301.12260-b31b1b.svg)](https://arxiv.org/abs/2301.12260)
 [![about](https://img.shields.io/badge/about-The%20van%20der%20Schaar%20Lab-blue)](https://www.vanderschaar-lab.com/)
 [![slack](https://img.shields.io/badge/chat-on%20slack-purple?logo=slack)](https://vanderschaarlab.slack.com)
-
 <!-- exclude_docs_end -->
 
 # <img src="docs/assets/TemporAI_Logo_Icon.png" height=25> TemporAI
 
-> **⚠️ Status**: **Work in progress, please come back at a later date.** We are migrating from a [previous iteration of the project](https://github.com/vanderschaarlab/clairvoyance).
+> **⚗️ Status:** This project is still in *alpha*, and the API may change without warning.  
 
-*TemporAI* is a Machine Learning-centric time-series library for medicine.  The tasks that are currently of focus in TemporAI are: time-series prediction, time-to-event (a.k.a. survival) analysis with time-series data, and counterfactual inference (i.e. \[individualized\] treatment effects).  The library also aims to provide the user with understanding of their data, model, and problem, through e.g. integration with interpretability methods.
+*TemporAI* is a Machine Learning-centric time-series library for medicine.  The tasks that are currently of focus in TemporAI are: time-series prediction, time-to-event (a.k.a. survival) analysis with time-series data, and counterfactual inference (i.e. \[individualized\] treatment effects).
+
+In future versions, the library also aims to provide the user with understanding of their data, model, and problem, through e.g. integration with interpretability methods.
 
 Key concepts:
 
 <div align="center">
 
 <!-- exclude_docs -->
-<img src="docs/assets/Conceptual.png" width="600" alt="key concepts">
+<img src="docs/assets/Conceptual.png" width="650" alt="key concepts">
 <!-- exclude_docs_end -->
 <!-- include_docs
 <img src="docs/assets/Conceptual.png" width="750" alt="key concepts">
@@ -63,19 +69,27 @@ from tempor.utils.dataloaders import SineDataLoader
 from tempor.plugins import plugin_loader
 
 dataset = SineDataLoader(with_missing=True).load()
-assert dataset.static.dataframe().isna().sum().sum() != 0
-assert dataset.time_series.dataframe().isna().sum().sum() != 0
+static_data_n_missing = dataset.static.dataframe().isna().sum().sum()
+temporal_data_n_missing = dataset.time_series.dataframe().isna().sum().sum()
 
-# load the model
+print(static_data_n_missing, temporal_data_n_missing)
+assert static_data_n_missing > 0
+assert temporal_data_n_missing > 0
+
+# Load the model:
 model = plugin_loader.get("preprocessing.imputation.temporal.bfill")
 
-# train
+# Train:
 model.fit(dataset)
 
-# impute
+# Impute:
 imputed = model.transform(dataset)
-assert imputed.static.dataframe().isna().sum().sum() == 0
-assert imputed.time_series.dataframe().isna().sum().sum() == 0
+static_data_n_missing = imputed.static.dataframe().isna().sum().sum()
+temporal_data_n_missing = imputed.time_series.dataframe().isna().sum().sum()
+
+print(static_data_n_missing, temporal_data_n_missing)
+assert static_data_n_missing == 0
+assert temporal_data_n_missing == 0
 ```
 
 * Use a classifier
@@ -85,14 +99,14 @@ from tempor.plugins import plugin_loader
 
 dataset = SineDataLoader().load()
 
-# load the model
+# Load the model:
 model = plugin_loader.get("prediction.one_off.classification.nn_classifier", n_iter=50)
 
-# train
+# Train:
 model.fit(dataset)
 
-# predict
-assert model.predict(dataset).numpy().shape == (len(dataset), 1)
+# Predict:
+prediction = model.predict(dataset)
 ```
 
 * Use a regressor
@@ -102,27 +116,23 @@ from tempor.plugins import plugin_loader
 
 dataset = SineDataLoader().load()
 
-# load the model
+# Load the model:
 model = plugin_loader.get("prediction.one_off.regression.nn_regressor", n_iter=50)
 
-# train
+# Train:
 model.fit(dataset)
 
-# predict
-assert model.predict(dataset).numpy().shape == (len(dataset), 1)
+# Predict:
+prediction = model.predict(dataset)
 ```
 
 * Benchmark models
 Classification task
 ```python
-from tempor.benchmarks import (
-    benchmark_models,
-)
+from tempor.benchmarks import benchmark_models
 from tempor.plugins import plugin_loader
 from tempor.plugins.pipeline import Pipeline
-from tempor.utils.dataloaders import (
-    SineDataLoader,
-)
+from tempor.utils.dataloaders import SineDataLoader
 
 testcases = [
     (
@@ -157,13 +167,13 @@ print(aggr_score)
 from tempor.utils.serialization import load, save
 from tempor.plugins import plugin_loader
 
-# load the model
+# Load the model:
 model = plugin_loader.get("prediction.one_off.classification.nn_classifier", n_iter=50)
 
-buff = save(model)  # save model to bytes
-reloaded = load(buff)  # reload model
+buff = save(model)  # Save model to bytes.
+reloaded = load(buff)  # Reload model.
 
-# save_to_file. load_from_file also available in the serialization module
+# `save_to_file`, `load_from_file` also available in the serialization module.
 ```
 
 ## 🔑 Methods
@@ -289,21 +299,33 @@ Treatment effects estimation where treatments are temporal (time series).
 
 
 
-## TemporAI Pipeline
-The diagram below illustrates the structure of a *TemporAI* pipeline:
+## Tutorials
 
-<img src="docs/assets/Pipeline.png" alt="pipeline diagram">
+### Data
 
-<!--
-See [User Guide][docs/user_guide] for tutorials/examples.
--->
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/data/tutorial01_data_format.ipynb) - [Data Format](./tutorials/data/tutorial01_data_format.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/data/tutorial02_datasets.ipynb) - [Datasets](./tutorials/data/tutorial02_datasets.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/data/tutorial03_dataloaders.ipynb) - [Data Loaders](./tutorials/data/tutorial03_dataloaders.ipynb)
+
+### User Guide
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial01_plugins.ipynb) - [Plugins](./tutorials/user_guide/tutorial01_plugins.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial02_imputation.ipynb) - [Imputation](./tutorials/user_guide/tutorial02_imputation.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial03_scaling.ipynb) - [Scaling](./tutorials/user_guide/tutorial03_scaling.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial04_prediction.ipynb) - [Prediction](./tutorials/user_guide/tutorial04_prediction.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial05_time_to_event.ipynb) - [Time-to-event Analysis](./tutorials/user_guide/tutorial05_time_to_event.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial06_treatments.ipynb) - [Treatment Effects](./tutorials/user_guide/tutorial06_treatments.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial07_pipeline.ipynb) - [Pipeline](./tutorials/user_guide/tutorial07_pipeline.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial08_benchmarks.ipynb) - [Plugins](./tutorials/user_guide/tutorial08_benchmarks.ipynb)
+
+### Extending TemporAI
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/extending/tutorial01_custom_plugin.ipynb) - [Writing a Custom Plugin](./tutorials/extending/tutorial01_custom_plugin.ipynb)
+
+
 
 <!-- exclude_docs -->
-<!--
-## Documentation
+## 📘 Documentation
 
-📖 See the project documentation [here](https://temporai.readthedocs.io/en/latest/).
--->
+See the project documentation [here](https://temporai.readthedocs.io/en/latest/).
 <!-- exclude_docs_end -->
 
 
@@ -330,5 +352,10 @@ pytest -vsx
 
 If you use this code, please cite the associated paper:
 ```
-TODO
+@article{saveliev2023temporai,
+  title={TemporAI: Facilitating Machine Learning Innovation in Time Domain Tasks for Medicine},
+  author={Saveliev, Evgeny S and van der Schaar, Mihaela},
+  journal={arXiv preprint arXiv:2301.12260},
+  year={2023}
+}
 ```

@@ -215,6 +215,16 @@ class TestPluginLoader:
         ]
 
     @pytest.mark.parametrize("loader", [plugin_core.PluginLoader(), plugin_loader])
+    def test_list_categories(self, loader):
+        listed = loader.list_categories()
+
+        assert listed == {
+            "category_a": CategoryAExpectedClass,
+            "category_b.x": CategoryBXExpectedClass,
+            "category_b.y": CategoryBYExpectedClass,
+        }
+
+    @pytest.mark.parametrize("loader", [plugin_core.PluginLoader(), plugin_loader])
     def test_get(self, loader):
         plugin_a2_instance = loader.get(  # pylint: disable=unused-variable  # noqa: F841
             "category_a.plugin_a2", "arg", kwarg="kwarg"
