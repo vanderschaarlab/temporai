@@ -1,6 +1,7 @@
 # To build the module reference correctly, make sure every external package
 # under `install_requires` in `setup.cfg` is also listed here!
 # ----- auto_update -----
+# install_requires:
 clairvoyance2 >=0.0.2
 cloudpickle
 hydra-core >=1.3
@@ -24,4 +25,27 @@ torchlaplace >= 0.0.4
 tsai
 typing-extensions
 xgbse
+# dev:
+black[jupyter]
+blacken-docs
+build
+flake8
+isort
+jupyter
+mypy >= 1.0.0
+myst-parser
+pre-commit
+pylint
+pyscaffold
+pyscaffoldext-markdown >= 0.5
+pytest
+pytest-cov
+pytest-xdist
+setuptools
+setuptools-scm
+sphinx >=5, !=5.1.0  # Bug in version 5.1.0.
+sphinx-material
+tox
+twine
+types-requests
 # ----- auto_update -----

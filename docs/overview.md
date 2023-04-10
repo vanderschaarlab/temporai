@@ -40,7 +40,14 @@ $ pip install .
 ## 💥 Sample Usage
 * List the available plugins
 ```{testcode}
+:hide:
 import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
+
+from tempor.plugins import plugin_loader
+
+print(plugin_loader.list())
+```
+```python
 from tempor.plugins import plugin_loader
 
 print(plugin_loader.list())
@@ -48,7 +55,36 @@ print(plugin_loader.list())
 
 * Use an imputer
 ```{testcode}
+:hide:
 import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
+
+from tempor.utils.dataloaders import SineDataLoader
+from tempor.plugins import plugin_loader
+
+dataset = SineDataLoader(with_missing=True).load()
+static_data_n_missing = dataset.static.dataframe().isna().sum().sum()
+temporal_data_n_missing = dataset.time_series.dataframe().isna().sum().sum()
+
+print(static_data_n_missing, temporal_data_n_missing)
+assert static_data_n_missing > 0
+assert temporal_data_n_missing > 0
+
+# Load the model:
+model = plugin_loader.get("preprocessing.imputation.temporal.bfill")
+
+# Train:
+model.fit(dataset)
+
+# Impute:
+imputed = model.transform(dataset)
+static_data_n_missing = imputed.static.dataframe().isna().sum().sum()
+temporal_data_n_missing = imputed.time_series.dataframe().isna().sum().sum()
+
+print(static_data_n_missing, temporal_data_n_missing)
+assert static_data_n_missing == 0
+assert temporal_data_n_missing == 0
+```
+```python
 from tempor.utils.dataloaders import SineDataLoader
 from tempor.plugins import plugin_loader
 
@@ -78,7 +114,24 @@ assert temporal_data_n_missing == 0
 
 * Use a classifier
 ```{testcode}
+:hide:
 import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
+
+from tempor.utils.dataloaders import SineDataLoader
+from tempor.plugins import plugin_loader
+
+dataset = SineDataLoader().load()
+
+# Load the model:
+model = plugin_loader.get("prediction.one_off.classification.nn_classifier", n_iter=50)
+
+# Train:
+model.fit(dataset)
+
+# Predict:
+prediction = model.predict(dataset)
+```
+```python
 from tempor.utils.dataloaders import SineDataLoader
 from tempor.plugins import plugin_loader
 
@@ -96,7 +149,24 @@ prediction = model.predict(dataset)
 
 * Use a regressor
 ```{testcode}
+:hide:
 import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
+
+from tempor.utils.dataloaders import SineDataLoader
+from tempor.plugins import plugin_loader
+
+dataset = SineDataLoader().load()
+
+# Load the model:
+model = plugin_loader.get("prediction.one_off.regression.nn_regressor", n_iter=50)
+
+# Train:
+model.fit(dataset)
+
+# Predict:
+prediction = model.predict(dataset)
+```
+```python
 from tempor.utils.dataloaders import SineDataLoader
 from tempor.plugins import plugin_loader
 
@@ -115,7 +185,42 @@ prediction = model.predict(dataset)
 * Benchmark models
 Classification task
 ```{testcode}
+:hide:
 import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
+
+from tempor.benchmarks import benchmark_models
+from tempor.plugins import plugin_loader
+from tempor.plugins.pipeline import Pipeline
+from tempor.utils.dataloaders import SineDataLoader
+
+testcases = [
+    (
+        "pipeline1",
+        Pipeline(
+            [
+                "preprocessing.scaling.static.static_minmax_scaler",
+                "prediction.one_off.classification.nn_classifier",
+            ]
+        )({"nn_classifier": {"n_iter": 10}}),
+    ),
+    (
+        "plugin1",
+        plugin_loader.get("prediction.one_off.classification.nn_classifier", n_iter=10),
+    ),
+]
+dataset = SineDataLoader().load()
+
+aggr_score, per_test_score = benchmark_models(
+    task_type="classification",
+    tests=testcases,
+    data=dataset,
+    n_splits=2,
+    random_state=0,
+)
+
+print(aggr_score)
+```
+```python
 from tempor.benchmarks import benchmark_models
 from tempor.plugins import plugin_loader
 from tempor.plugins.pipeline import Pipeline
@@ -151,7 +256,21 @@ print(aggr_score)
 
 * Serialization
 ```{testcode}
+:hide:
 import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
+
+from tempor.utils.serialization import load, save
+from tempor.plugins import plugin_loader
+
+# Load the model:
+model = plugin_loader.get("prediction.one_off.classification.nn_classifier", n_iter=50)
+
+buff = save(model)  # Save model to bytes.
+reloaded = load(buff)  # Reload model.
+
+# `save_to_file`, `load_from_file` also available in the serialization module.
+```
+```python
 from tempor.utils.serialization import load, save
 from tempor.plugins import plugin_loader
 

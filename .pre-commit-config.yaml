@@ -21,6 +21,7 @@ repos:
   - id: pretty-format-json
     args: ['--autofix', '--indent=4', '--no-sort-keys']
   - id: requirements-txt-fixer
+    exclude: docs/requirements.txt
   - id: mixed-line-ending
     args: ['--fix=auto']
 
