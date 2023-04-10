@@ -47,6 +47,11 @@ class DynamicDeepHitTimeToEventAnalysis(BaseTimeToEventAnalysis):
     def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
         """Dynamic DeepHit survival analysis model.
 
+        Note:
+            Current implementation has the following limitations:
+                - Only one output feature is supported (no competing risks).
+                - Risk prediction for time points beyond the last event time in the dataset may throw errors.
+
         Args:
             **params:
                 Parameters and defaults as defined in :class:`DynamicDeepHitTimeToEventAnalysisParams`.
