@@ -27,8 +27,8 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install pre-commit
+          python3 -m pip install --upgrade pip
+          python3 -m pip install pre-commit
       - name: Run pre-commit validation
         run: pre-commit run --all-files
 
@@ -52,11 +52,19 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: "pip" # Caching pip dependencies.
+      - name: Print versions
+        run: |
+          which python
+          python --version
+          which python3
+          python3 --version
+          python3 -m pip --version
+          python -m pip3 --version
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install -r prereq.txt
-          python -m pip install .[dev]
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -r prereq.txt
+          python3 -m pip install .[dev]
       - name: Test with pytest (xdist)
         if: matrix.os != 'ubuntu-latest'
         run: pytest -vvvx -n auto -m "not slow and not extra" --durations=50
