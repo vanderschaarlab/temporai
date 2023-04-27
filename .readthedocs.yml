@@ -20,6 +20,5 @@ sphinx:
 
 python:
   install:
-    - requirements: prereq.txt
     - requirements: docs/requirements.txt
     - {path: ., method: pip}

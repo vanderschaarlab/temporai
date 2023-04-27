@@ -118,7 +118,6 @@ conda activate temporai
 
    ```sh
    pip install -U pip         # Update pip.
-   pip install -r prereq.txt  # Install prerequisite dependencies.
    pip install -e .[dev]      # Install TemporAI in editable mode, with the `dev` extra.
    ```
 
