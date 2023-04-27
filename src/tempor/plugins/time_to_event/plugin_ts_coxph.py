@@ -20,18 +20,16 @@ from .helper_embedding import EmbTimeToEventAnalysis, OutputTimeToEventAnalysis
 
 @contextlib.contextmanager
 def monkeypatch_lifelines_pd2_compatibility():
-    """lifelines (at least as of 0.27.4) is not compatible with pandas 2.0.0+, due to
+    """lifelines (before 0.27.6) is not compatible with pandas 2.0.0+, due to
     ``TypeError: describe() got an unexpected keyword argument 'datetime_is_numeric'`` thrown by pandas in e.g.
     ``CoxPHFitter.fit``. This monkeypatch fixes this compatibility issue, until the problem is addressed by
     `lifelines`.
     """
 
     def problem_versions() -> bool:
-        return (
-            Version(pd.__version__) >= Version("2.0.0rc0")
-            and Version(lifelines.__version__) <= Version("1.0")
-            # TODO: ^ Update here with the `lifelines` version which becomes `pandas` 2 compatible.
-        )
+        # lifelines is compatible with pandas 2 version 0.27.6 onwards,
+        # so the workaround is needed for lifelines < 0.27.6.
+        return Version(pd.__version__) >= Version("2.0.0rc0") and Version(lifelines.__version__) < Version("0.27.6")
 
     if problem_versions():
         # Monkeypatch `pandas.DataFrame.describe`.
