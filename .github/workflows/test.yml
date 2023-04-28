@@ -55,7 +55,6 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install -r prereq.txt
           pip install .[dev]
       - name: Test with pytest (xdist)
         if: matrix.os != 'ubuntu-latest'

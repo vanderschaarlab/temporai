@@ -23,6 +23,7 @@ for name, block in zip(("install_requires", "dev"), (r"install_requires\s=.*?\n\
     found = re.findall(block, setup_cfg_content, re.DOTALL)
     list_dep_specs = found[0].split("\n    ")[1:]
     list_dep_specs[-1] = list_dep_specs[-1].replace("\n", "")
+    list_dep_specs = [dep for dep in list_dep_specs if dep[0] != "#"]  # Remove comment lines.
     final_specs += f"# {name}:\n" + "\n".join(sorted(list_dep_specs)) + "\n"
 with open(DOCS_REQS_FILE, "r", encoding="utf8") as file:
     docs_req_content = file.read()
