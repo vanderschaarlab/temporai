@@ -1,4 +1,3 @@
-import sys
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import numpy as np
@@ -131,13 +130,15 @@ def get_pa_dtypes(dtypes: Iterable[data_typing.Dtype]) -> List[pa.DataType]:
             except KeyError as ex:
                 raise KeyError(f"Mapping from `{dt}` to a pandera DataType not found") from ex
         pa_dtypes_.append(dt_add)
-        if sys.platform == "win32":
-            # Pandera .Int()/.Float() do not appear to correctly validate on Windows, unless one specifically
-            # provides the bytes.
-            if dt_add == pa.Int():
-                pa_dtypes_.extend([pa.Int8(), pa.Int16(), pa.Int32(), pa.Int64()])
-            if dt_add == pa.Float():
-                pa_dtypes_.extend([pa.Float16(), pa.Float32(), pa.Float64()])
+
+        # Allow for different bits of Int and Float, rather than just what pandera defaults to.
+        # Note: especially important on Windows, as pandera ends up with a different bit datatype on Windows than
+        # on other systems. See: https://github.com/unionai-oss/pandera/issues/726.
+        if dt_add == pa.Int():
+            pa_dtypes_.extend([pa.Int8(), pa.Int16(), pa.Int32(), pa.Int64()])
+        if dt_add == pa.Float():
+            pa_dtypes_.extend([pa.Float16(), pa.Float32(), pa.Float64()])
+
     return list(set(pa_dtypes_))
 
 
