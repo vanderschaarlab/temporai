@@ -415,6 +415,7 @@ Treatment effects estimation where treatments are temporal (time series).
 - [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/data/tutorial01_data_format.ipynb) - [Data Format](https://github.com/vanderschaarlab/temporai/tutorials/data/tutorial01_data_format.ipynb)
 - [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/data/tutorial02_datasets.ipynb) - [Datasets](https://github.com/vanderschaarlab/temporai/tutorials/data/tutorial02_datasets.ipynb)
 - [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/data/tutorial03_dataloaders.ipynb) - [Data Loaders](https://github.com/vanderschaarlab/temporai/tutorials/data/tutorial03_dataloaders.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/data/tutorial04_data_splitting.ipynb) - [Data Splitting](https://github.com/vanderschaarlab/temporai/tutorials/data/tutorial04_data_splitting.ipynb)
 
 ### User Guide
 - [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial01_plugins.ipynb) - [Plugins](https://github.com/vanderschaarlab/temporai/tutorials/user_guide/tutorial01_plugins.ipynb)
@@ -428,6 +429,7 @@ Treatment effects estimation where treatments are temporal (time series).
 
 ### Extending TemporAI
 - [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/extending/tutorial01_custom_plugin.ipynb) - [Writing a Custom Plugin](https://github.com/vanderschaarlab/temporai/tutorials/extending/tutorial01_custom_plugin.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/extending/tutorial02_testing_custom_plugin.ipynb) - [Testing a Custom Plugin](https://github.com/vanderschaarlab/temporai/tutorials/extending/tutorial02_testing_custom_plugin.ipynb)
 
 
 
@@ -438,16 +440,20 @@ Treatment effects estimation where treatments are temporal (time series).
   [van der Schaar Lab]:    https://www.vanderschaar-lab.com/
   [docs]:                  https://temporai.readthedocs.io/en/latest/
 
-## 🔨 Tests
+## 🔨 Tests and Development
 
-Install the testing dependencies using
+Install the testing dependencies using:
 ```bash
 pip install .[dev]
 ```
-The tests can be executed using
+The tests can be executed using:
 ```bash
 pytest -vsx
 ```
+
+For development and contribution to TemporAI, see:
+* 📓 [Extending TemporAI tutorials](https://github.com/vanderschaarlab/temporai/tutorials/extending/)
+* 📃 [Contribution guide](https://github.com/vanderschaarlab/temporai/CONTRIBUTING.md)
 
 ## Citing
 
