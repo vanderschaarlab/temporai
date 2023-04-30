@@ -29,6 +29,7 @@ def test_classifier_benchmark(data: str, request: pytest.FixtureRequest) -> None
             "pipeline1",
             Pipeline(
                 [
+                    "preprocessing.imputation.static.static_tabular_imputer",
                     "preprocessing.imputation.temporal.ffill",
                     PREDICTOR_CLASSIFICATION,
                 ]
@@ -67,6 +68,7 @@ def test_regressor_benchmark(data: str, request: pytest.FixtureRequest) -> None:
             "pipeline1",
             Pipeline(
                 [
+                    "preprocessing.imputation.static.static_tabular_imputer",
                     "preprocessing.imputation.temporal.ffill",
                     PREDICTOR_REGRESSION,
                 ]
@@ -107,6 +109,7 @@ def test_time_to_event_benchmark(
             "pipeline1",
             Pipeline(
                 [
+                    "preprocessing.imputation.static.static_tabular_imputer",
                     "preprocessing.imputation.temporal.ffill",
                     PREDICTOR_TIME_TO_EVENT,
                 ]

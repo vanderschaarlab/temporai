@@ -47,7 +47,6 @@ class TemporalTabularImputer(BaseImputer):
             >>> from tempor.plugins import plugin_loader
             >>>
             >>> dataset = SineDataLoader(with_missing = True).load()
-            >>> assert dataset.static.dataframe().isna().sum().sum() != 0
             >>> assert dataset.time_series.dataframe().isna().sum().sum() != 0
             >>>
             >>> # Load the model:

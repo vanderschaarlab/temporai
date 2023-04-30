@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import Any
 
 import pytest
 
@@ -11,7 +11,7 @@ from tempor.utils.serialization import load, save
 
 from ...helpers_preprocessing import as_covariates_dataset
 
-train_kwargs = {"random_state": 123}
+train_kwargs: Any = dict()
 
 TEST_ON_DATASETS = ["sine_data_missing_small"]
 
@@ -28,7 +28,7 @@ def from_module() -> BaseImputer:
 def test_sanity(test_plugin: BaseImputer) -> None:
     assert test_plugin is not None
     assert test_plugin.name == "bfill"
-    assert len(test_plugin.hyperparameter_space()) == 1
+    assert len(test_plugin.hyperparameter_space()) == 0
 
 
 @pytest.mark.parametrize(
@@ -41,15 +41,10 @@ def test_sanity(test_plugin: BaseImputer) -> None:
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
 def test_fit(test_plugin: BaseImputer, data: str, request: pytest.FixtureRequest) -> None:
     dataset = request.getfixturevalue(data)
-    if TYPE_CHECKING:  # pragma: no cover
-        assert dataset.static is not None  # nosec B101
-
     assert dataset.static.dataframe().isna().sum().sum() != 0
-
     test_plugin.fit(dataset)
 
 
-@pytest.mark.filterwarnings("ignore:RNN.*contiguous.*:UserWarning")  # Expected: problem with current serialization.
 @pytest.mark.parametrize(
     "test_plugin",
     [
@@ -73,11 +68,6 @@ def test_transform(
     if covariates_dataset:
         dataset = as_covariates_dataset(dataset)
 
-    if TYPE_CHECKING:  # pragma: no cover
-        assert dataset.static is not None  # nosec B101
-
-    assert dataset.static.dataframe().isna().sum().sum() != 0
-
     dump = save(test_plugin)
     reloaded = load(dump)
 
@@ -88,5 +78,4 @@ def test_transform(
 
     output = reloaded.transform(dataset)
 
-    assert output.static.dataframe().isna().sum().sum() == 0
     assert output.time_series.dataframe().isna().sum().sum() == 0

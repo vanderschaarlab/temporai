@@ -91,17 +91,20 @@ def test_fails(plugins_str: List[Any]) -> None:
             "prediction.one_off.classification.nn_classifier",
         ],
         [
+            "preprocessing.imputation.static.static_tabular_imputer",
             "preprocessing.imputation.temporal.bfill",
             "preprocessing.scaling.temporal.ts_minmax_scaler",
             "prediction.one_off.regression.nn_regressor",
         ],
         [
+            "preprocessing.imputation.static.static_tabular_imputer",
             "preprocessing.imputation.temporal.ffill",
             "preprocessing.scaling.static.static_minmax_scaler",
             "preprocessing.scaling.temporal.ts_minmax_scaler",
             "prediction.one_off.regression.nn_regressor",
         ],
         [
+            "preprocessing.imputation.static.static_tabular_imputer",
             "preprocessing.imputation.temporal.ffill",
             "prediction.one_off.regression.nn_regressor",
         ],

@@ -44,7 +44,6 @@ class StaticTabularImputer(BaseImputer):
             >>>
             >>> dataset = SineDataLoader(with_missing = True).load()
             >>> assert dataset.static.dataframe().isna().sum().sum() != 0
-            >>> assert dataset.time_series.dataframe().isna().sum().sum() != 0
             >>>
             >>> # Load the model:
             >>> model = plugin_loader.get("preprocessing.imputation.static.static_tabular_imputer")
