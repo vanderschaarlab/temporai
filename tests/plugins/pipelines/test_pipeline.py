@@ -20,7 +20,8 @@ TEST_ON_DATASETS = ["sine_data_small"]
             "prediction.one_off.classification.nn_classifier",
         ],
         [
-            "preprocessing.imputation.static.static_imputation",
+            "preprocessing.imputation.static.static_tabular_imputer",
+            "preprocessing.imputation.temporal.ts_tabular_imputer",
             "prediction.one_off.regression.nn_regressor",
         ],
         [
@@ -81,7 +82,8 @@ def test_fails(plugins_str: List[Any]) -> None:
     "plugins_str",
     [
         [
-            "preprocessing.imputation.static.static_imputation",
+            "preprocessing.imputation.static.static_tabular_imputer",
+            "preprocessing.imputation.temporal.ts_tabular_imputer",
             "preprocessing.nop.nop_transformer",
             "preprocessing.imputation.temporal.bfill",
             "preprocessing.scaling.static.static_minmax_scaler",

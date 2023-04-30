@@ -48,5 +48,4 @@ sphinx >=5, !=5.1.0  # Bug in version 5.1.0.
 sphinx-material
 tox
 twine
-types-requests
 # ----- auto_update -----
