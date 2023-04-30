@@ -387,8 +387,6 @@ Treatment effects estimation where treatments are temporal (time series).
 | --- | --- | --- |
 | `ffill` | Propagate last valid observation forward to next valid  | --- |
 | `bfill` | Use next valid observation to fill gap | --- |
-| Name | Description| Reference |
-| --- | --- | --- |
 | `ts_tabular_imputer` | Use any method from [HyperImpute](https://github.com/vanderschaarlab/hyperimpute) (HyperImpute, Mean, Median, Most-frequent, MissForest, ICE, MICE, SoftImpute, EM, Sinkhorn, GAIN, MIRACLE, MIWAE) to impute the time series data | [Paper](https://arxiv.org/abs/2206.07769) |
 
 
