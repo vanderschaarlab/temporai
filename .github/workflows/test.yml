@@ -58,11 +58,21 @@ jobs:
           pip install .[dev]
       - name: Test with pytest (xdist)
         if: matrix.os != 'ubuntu-latest'
-        run: pytest -vvvx -n auto -m "not slow and not extra" --durations=50
+        run: pytest -vvvx -n auto -m "not slow and not extra" --durations=50 --cov
       - name: Test with pytest
         # Avoid xdist on 'ubuntu-latest', as this has worse performance.
         if: matrix.os == 'ubuntu-latest'
-        run: pytest -vvvx -m "not slow and not extra" --durations=50
+        run: pytest -vvvx -m "not slow and not extra" --durations=50 --cov
+      - name: Upload coverage report to codecov
+        uses: codecov/codecov-action@v3
+        # Only need to upload in one of the matrix cases, choose ubuntu + py38:
+        if: (matrix.os == 'ubuntu-latest') && (matrix.python-version == '3.8')
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: test  # {test, test_full}
+          name: test-upload  # {test-upload, test_full-upload}
+          fail_ci_if_error: false  # Whether CI fails if this step fails.
+          verbose: true
       - name: Run doctests with pytest (xdist)
         if: matrix.os != 'ubuntu-latest'
         run: pytest -vvvx -n auto src/ --doctest-modules --durations=50
