@@ -2,6 +2,7 @@
 # under `install_requires` in `setup.cfg` is also listed here!
 # ----- auto_update -----
 # install_requires:
+catboost < 1.2  # 1.2+ currently has build errors.
 clairvoyance2 >=0.0.2
 cloudpickle
 geomloss>=0.2.6
