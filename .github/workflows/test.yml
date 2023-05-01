@@ -41,8 +41,8 @@ jobs:
         python-version: ["3.7", "3.8", "3.9", "3.10"]
         os: [macos-latest, ubuntu-latest, windows-latest]
     env:
-      OS: ${{ matrix.os }}
-      PYTHON: ${{ matrix.python-version }}
+      CODECOV_OS: ${{ matrix.os }}
+      CODECOV_PYTHON: ${{ matrix.python-version }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -73,7 +73,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: test  # {test,test_full}
-          env_vars: OS,PYTHON
+          env_vars: CODECOV_OS,CODECOV_PYTHON
           name: upload_test_${{ matrix.os }}_python${{ matrix.python-version }}
           fail_ci_if_error: false  # Whether CI fails if this step fails.
           os: ${{ runner.os }}

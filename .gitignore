@@ -61,3 +61,4 @@ outputs/**
 data/**
 tutorials/*/data
 tutorials/*/logs
+codecov
