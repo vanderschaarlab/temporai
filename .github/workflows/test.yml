@@ -40,6 +40,9 @@ jobs:
       matrix:
         python-version: ["3.7", "3.8", "3.9", "3.10"]
         os: [macos-latest, ubuntu-latest, windows-latest]
+    env:
+      OS: ${{ matrix.os }}
+      PYTHON: ${{ matrix.python-version }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -65,13 +68,15 @@ jobs:
         run: pytest -vvvx -m "not slow and not extra" --durations=50 --cov
       - name: Upload coverage report to codecov
         uses: codecov/codecov-action@v3
-        # Only need to upload in one of the matrix cases, choose ubuntu + py38:
+        # Currently we only upload in one of the matrix cases: ubuntu + py38:
         if: (matrix.os == 'ubuntu-latest') && (matrix.python-version == '3.8')
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          flags: test  # {test, test_full}
-          name: test-upload  # {test-upload, test_full-upload}
+          flags: test  # {test,test_full}
+          env_vars: OS,PYTHON
+          name: upload_test_${{ matrix.os }}_python${{ matrix.python-version }}
           fail_ci_if_error: false  # Whether CI fails if this step fails.
+          os: ${{ runner.os }}
           verbose: true
       - name: Run doctests with pytest (xdist)
         if: matrix.os != 'ubuntu-latest'
