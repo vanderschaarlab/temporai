@@ -1,30 +1,42 @@
-from typing import TYPE_CHECKING, Callable
+# pylint: disable=redefined-outer-name
+
+from typing import TYPE_CHECKING, Callable, Dict
 
 import pytest
 
 from tempor.benchmarks.evaluation import evaluate_time_to_event
-from tempor.plugins import plugin_loader
-from tempor.plugins.time_to_event.plugin_ts_coxph import CoxPHTimeToEventAnalysis as plugin
+from tempor.plugins.time_to_event.plugin_ts_coxph import CoxPHTimeToEventAnalysis
 from tempor.utils.serialization import load, save
 
 if TYPE_CHECKING:  # pragma: no cover
     from tempor.plugins.time_to_event import BaseTimeToEventAnalysis
 
-train_kwargs = {"random_state": 123, "n_iter": 5}
-
-TEST_ON_DATASETS = ["pbc_data_small"]
-
-
-def from_api() -> "BaseTimeToEventAnalysis":
-    return plugin_loader.get("time_to_event.ts_coxph", **train_kwargs)
-
-
-def from_module() -> "BaseTimeToEventAnalysis":
-    return plugin(**train_kwargs)
+INIT_KWARGS = {"random_state": 123, "n_iter": 10}
+PLUGIN_FROM_OPTIONS = ["from_api", pytest.param("from_module", marks=pytest.mark.extra)]
+DEVICES = [pytest.param("cpu", marks=pytest.mark.cpu), pytest.param("cuda", marks=pytest.mark.cuda)]
+TEST_ON_DATASETS = [
+    "pbc_data_small",
+    pytest.param("pbc_data_full", marks=pytest.mark.extra),
+]
 
 
-@pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_sanity(test_plugin: "BaseTimeToEventAnalysis") -> None:
+@pytest.fixture
+def get_test_plugin(get_plugin: Callable):
+    def func(plugin_from: str, base_kwargs: Dict, device: str):
+        base_kwargs["device"] = device
+        return get_plugin(
+            plugin_from,
+            fqn="time_to_event.ts_coxph",
+            cls=CoxPHTimeToEventAnalysis,
+            kwargs=base_kwargs,
+        )
+
+    return func
+
+
+@pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)
+def test_sanity(get_test_plugin: Callable, plugin_from: str) -> None:
+    test_plugin: "BaseTimeToEventAnalysis" = get_test_plugin(plugin_from, INIT_KWARGS, device="cpu")
     assert test_plugin is not None
     assert test_plugin.name == "ts_coxph"
     assert test_plugin.fqn() == "time_to_event.ts_coxph"
@@ -33,37 +45,31 @@ def test_sanity(test_plugin: "BaseTimeToEventAnalysis") -> None:
 
 @pytest.mark.filterwarnings("ignore::lifelines.utils.ConvergenceWarning")  # Expected.
 @pytest.mark.filterwarnings("ignore:.*Index constructor.*:FutureWarning")
-@pytest.mark.parametrize(
-    "test_plugin",
-    [
-        from_api(),
-        pytest.param(from_module(), marks=pytest.mark.extra),
-    ],
-)
+@pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
-def test_fit(test_plugin: "BaseTimeToEventAnalysis", data: str, request: pytest.FixtureRequest) -> None:
-    dataset = request.getfixturevalue(data)
+@pytest.mark.parametrize("device", DEVICES)
+def test_fit(plugin_from: str, data: str, device: str, get_test_plugin: Callable, get_dataset: Callable) -> None:
+    test_plugin: "BaseTimeToEventAnalysis" = get_test_plugin(plugin_from, INIT_KWARGS, device=device)
+    dataset = get_dataset(data)
     test_plugin.fit(dataset)
 
 
 @pytest.mark.filterwarnings("ignore:RNN.*contiguous.*:UserWarning")  # Expected: problem with current serialization.
 @pytest.mark.filterwarnings("ignore::lifelines.utils.ConvergenceWarning")  # Expected.
 @pytest.mark.filterwarnings("ignore:.*Index constructor.*:FutureWarning")
-@pytest.mark.parametrize(
-    "test_plugin",
-    [
-        from_api(),
-        pytest.param(from_module(), marks=pytest.mark.extra),
-    ],
-)
+@pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
+@pytest.mark.parametrize("device", DEVICES)
 def test_predict(
-    test_plugin: "BaseTimeToEventAnalysis",
-    get_event0_time_percentiles: Callable,
+    plugin_from: str,
     data: str,
-    request: pytest.FixtureRequest,
+    device: str,
+    get_test_plugin: Callable,
+    get_dataset: Callable,
+    get_event0_time_percentiles: Callable,
 ) -> None:
-    dataset = request.getfixturevalue(data)
+    test_plugin: "BaseTimeToEventAnalysis" = get_test_plugin(plugin_from, INIT_KWARGS, device=device)
+    dataset = get_dataset(data)
 
     horizons = get_event0_time_percentiles(dataset, [0.25, 0.5, 0.75])
 
@@ -83,9 +89,12 @@ def test_predict(
 @pytest.mark.filterwarnings("ignore::lifelines.utils.ConvergenceWarning")  # Expected.
 @pytest.mark.filterwarnings("ignore:.*Index constructor.*:FutureWarning")
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
-def test_benchmark(get_event0_time_percentiles: Callable, data: str, request: pytest.FixtureRequest) -> None:
-    test_plugin = from_api()
-    dataset = request.getfixturevalue(data)
+@pytest.mark.parametrize("device", DEVICES)
+def test_benchmark(
+    data: str, device: str, get_test_plugin: Callable, get_dataset: Callable, get_event0_time_percentiles: Callable
+) -> None:
+    test_plugin: "BaseTimeToEventAnalysis" = get_test_plugin("from_api", INIT_KWARGS, device=device)
+    dataset = get_dataset(data)
 
     horizons = get_event0_time_percentiles(dataset, [0.25, 0.5, 0.75])
 
