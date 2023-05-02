@@ -31,9 +31,9 @@ def get_test_plugin(get_plugin: Callable):
     return func
 
 
-@pytest.mark.parametrize("plugin_from", ["from_api", "from_module"])
+@pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)
 def test_sanity(get_test_plugin: Callable, plugin_from: str) -> None:
-    test_plugin = get_test_plugin(plugin_from, INIT_KWARGS)
+    test_plugin = get_test_plugin(plugin_from, INIT_KWARGS, device="cpu")
     assert test_plugin is not None
     assert test_plugin.name == "nn_classifier"
     assert test_plugin.fqn() == "prediction.one_off.classification.nn_classifier"
@@ -51,6 +51,7 @@ def test_fit(plugin_from: str, data: str, device: str, get_test_plugin: Callable
 
 @pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
+@pytest.mark.parametrize("device", DEVICES)
 @pytest.mark.parametrize(
     "no_targets",
     [
@@ -59,9 +60,9 @@ def test_fit(plugin_from: str, data: str, device: str, get_test_plugin: Callable
     ],
 )
 def test_predict(
-    plugin_from: str, data: str, no_targets: bool, get_test_plugin: Callable, get_dataset: Callable
+    plugin_from: str, data: str, device: str, no_targets: bool, get_test_plugin: Callable, get_dataset: Callable
 ) -> None:
-    test_plugin: BaseOneOffClassifier = get_test_plugin(plugin_from, INIT_KWARGS)
+    test_plugin: BaseOneOffClassifier = get_test_plugin(plugin_from, INIT_KWARGS, device=device)
     dataset = get_dataset(data)
     test_plugin.fit(dataset)
     if no_targets:
@@ -72,8 +73,11 @@ def test_predict(
 
 @pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
-def test_predict_proba(plugin_from: str, data: str, get_test_plugin: Callable, get_dataset: Callable) -> None:
-    test_plugin: BaseOneOffClassifier = get_test_plugin(plugin_from, INIT_KWARGS)
+@pytest.mark.parametrize("device", DEVICES)
+def test_predict_proba(
+    plugin_from: str, data: str, device: str, get_test_plugin: Callable, get_dataset: Callable
+) -> None:
+    test_plugin: BaseOneOffClassifier = get_test_plugin(plugin_from, INIT_KWARGS, device=device)
     dataset = get_dataset(data)
 
     output = test_plugin.fit(dataset).predict_proba(dataset)
@@ -83,8 +87,9 @@ def test_predict_proba(plugin_from: str, data: str, get_test_plugin: Callable, g
 
 @pytest.mark.filterwarnings("ignore:RNN.*contiguous.*:UserWarning")  # Expected: problem with current serialization.
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
-def test_serde(data: str, get_test_plugin: Callable, get_dataset: Callable) -> None:
-    test_plugin: BaseOneOffClassifier = get_test_plugin("from_api", INIT_KWARGS)
+@pytest.mark.parametrize("device", DEVICES)
+def test_serde(data: str, device: str, get_test_plugin: Callable, get_dataset: Callable) -> None:
+    test_plugin: BaseOneOffClassifier = get_test_plugin("from_api", INIT_KWARGS, device=device)
     dataset = get_dataset(data)
 
     dump = save(test_plugin)
