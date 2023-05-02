@@ -1,56 +1,65 @@
+# pylint: disable=redefined-outer-name
+
+from typing import TYPE_CHECKING, Callable, Dict
+
 import pytest
 
-from tempor.plugins import plugin_loader
-from tempor.plugins.treatments.temporal import BaseTemporalTreatmentEffects
-from tempor.plugins.treatments.temporal.classification.plugin_crn_classifier import CRNTreatmentsClassifier as plugin
+from tempor.plugins.treatments.temporal.classification.plugin_crn_classifier import CRNTreatmentsClassifier
 from tempor.utils.serialization import load, save
 
 from ...helpers_treatments import simulate_horizons, simulate_treatments_scenarios
 
-train_kwargs = {"random_state": 123, "n_iter": 3}
+if TYPE_CHECKING:  # pragma: no cover
+    from tempor.plugins.treatments.temporal import BaseTemporalTreatmentEffects
 
-TEST_ON_DATASETS = ["clv_data_small"]
+INIT_KWARGS = {"random_state": 123, "n_iter": 3}
+PLUGIN_FROM_OPTIONS = ["from_api", pytest.param("from_module", marks=pytest.mark.extra)]
+DEVICES = [pytest.param("cpu", marks=pytest.mark.cpu), pytest.param("cuda", marks=pytest.mark.cuda)]
+TEST_ON_DATASETS = [
+    "clv_data_small",
+    pytest.param("clv_data_full", marks=pytest.mark.extra),
+]
 
 
-def from_api() -> BaseTemporalTreatmentEffects:
-    return plugin_loader.get("treatments.temporal.classification.crn_classifier", **train_kwargs)
+@pytest.fixture
+def get_test_plugin(get_plugin: Callable):
+    def func(plugin_from: str, base_kwargs: Dict, device: str):
+        base_kwargs["device"] = device
+        return get_plugin(
+            plugin_from,
+            fqn="treatments.temporal.classification.crn_classifier",
+            cls=CRNTreatmentsClassifier,
+            kwargs=base_kwargs,
+        )
+
+    return func
 
 
-def from_module() -> BaseTemporalTreatmentEffects:
-    return plugin(**train_kwargs)
-
-
-@pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_sanity(test_plugin: BaseTemporalTreatmentEffects) -> None:
+@pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)
+def test_sanity(get_test_plugin: Callable, plugin_from: str) -> None:
+    test_plugin = get_test_plugin(plugin_from, INIT_KWARGS, device="cpu")
     assert test_plugin is not None
     assert test_plugin.name == "crn_classifier"
     assert len(test_plugin.hyperparameter_space()) == 8
 
 
-@pytest.mark.parametrize(
-    "test_plugin",
-    [
-        from_api(),
-        pytest.param(from_module(), marks=pytest.mark.extra),
-    ],
-)
+@pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
-def test_fit(test_plugin: BaseTemporalTreatmentEffects, data: str, request: pytest.FixtureRequest) -> None:
-    dataset = request.getfixturevalue(data)
+@pytest.mark.parametrize("device", DEVICES)
+def test_fit(plugin_from: str, data: str, device: str, get_test_plugin: Callable, get_dataset: Callable) -> None:
+    test_plugin: "BaseTemporalTreatmentEffects" = get_test_plugin(plugin_from, INIT_KWARGS, device=device)
+    dataset = get_dataset(data)
     test_plugin.fit(dataset)
 
 
 @pytest.mark.filterwarnings("ignore:RNN.*contiguous.*:UserWarning")  # Expected: problem with current serialization.
-@pytest.mark.parametrize(
-    "test_plugin",
-    [
-        from_api(),
-        pytest.param(from_module(), marks=pytest.mark.extra),
-    ],
-)
+@pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
-def test_predict(test_plugin: BaseTemporalTreatmentEffects, data: str, request: pytest.FixtureRequest) -> None:
-    dataset = request.getfixturevalue(data)
+@pytest.mark.parametrize("device", DEVICES)
+def test_predict(plugin_from: str, data: str, device: str, get_test_plugin: Callable, get_dataset: Callable) -> None:
+    test_plugin: "BaseTemporalTreatmentEffects" = get_test_plugin(plugin_from, INIT_KWARGS, device=device)
+    dataset = get_dataset(data)
+    test_plugin.fit(dataset)
 
     dump = save(test_plugin)
     reloaded = load(dump)
@@ -66,18 +75,14 @@ def test_predict(test_plugin: BaseTemporalTreatmentEffects, data: str, request: 
     assert output.numpy().shape == (len(dataset.time_series), 6, 3)
 
 
-@pytest.mark.parametrize(
-    "test_plugin",
-    [
-        from_api(),
-        pytest.param(from_module(), marks=pytest.mark.extra),
-    ],
-)
+@pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
-def test_crn_classifier_plugin_predict_counterfactuals(
-    test_plugin: BaseTemporalTreatmentEffects, data: str, request: pytest.FixtureRequest
+@pytest.mark.parametrize("device", DEVICES)
+def test_predict_counterfactuals(
+    plugin_from: str, data: str, device: str, get_test_plugin: Callable, get_dataset: Callable
 ) -> None:
-    dataset = request.getfixturevalue(data)
+    test_plugin: "BaseTemporalTreatmentEffects" = get_test_plugin(plugin_from, INIT_KWARGS, device=device)
+    dataset = get_dataset(data)
     test_plugin.fit(dataset)
 
     n_counterfactuals_per_sample = 2
