@@ -26,8 +26,8 @@ class PredictiveTaskData(abc.ABC):
     def __init__(
         self,
         parent_dataset: "PredictiveDataset",
-        targets: Any,  # pylint: disable=unused-argument
-        treatments: Optional[Any],  # pylint: disable=unused-argument
+        targets: Any,
+        treatments: Optional[Any],
         **kwargs,  # pylint: disable=unused-argument
     ) -> None:  # pragma: no cover
         self.parent_dataset = parent_dataset

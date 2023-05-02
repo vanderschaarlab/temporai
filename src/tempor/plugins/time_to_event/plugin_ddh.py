@@ -38,7 +38,7 @@ class DynamicDeepHitTimeToEventAnalysis(BaseTimeToEventAnalysis):
     ParamsDefinition = DynamicDeepHitTimeToEventAnalysisParams
     params: DynamicDeepHitTimeToEventAnalysisParams  # type: ignore
 
-    def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
+    def __init__(self, **params) -> None:
         """Dynamic DeepHit survival analysis model.
 
         Note:

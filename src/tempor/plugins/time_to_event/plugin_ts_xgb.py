@@ -177,7 +177,7 @@ class XGBTimeToEventAnalysis(BaseTimeToEventAnalysis):
     ParamsDefinition = XGBTimeToEventAnalysisParams
     params: XGBTimeToEventAnalysisParams  # type: ignore
 
-    def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
+    def __init__(self, **params) -> None:
         """XGB survival analysis model.
 
         Args:

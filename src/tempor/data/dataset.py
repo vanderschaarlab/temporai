@@ -66,7 +66,7 @@ class BaseDataset(abc.ABC):
         static: Optional[data_typing.DataContainer] = None,
         targets: Optional[data_typing.DataContainer] = None,
         treatments: Optional[data_typing.DataContainer] = None,
-        **kwargs,  # pylint: disable=unused-argument
+        **kwargs,
     ) -> None:
         """Abstract base class representing a dataset used by TemporAI.
 

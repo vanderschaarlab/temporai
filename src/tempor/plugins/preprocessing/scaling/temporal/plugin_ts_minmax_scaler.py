@@ -28,7 +28,7 @@ class TimeSeriesMinMaxScaler(BaseScaler):
     ParamsDefinition = TimeSeriesMinMaxScalerParams
     params: TimeSeriesMinMaxScalerParams  # type: ignore
 
-    def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
+    def __init__(self, **params) -> None:
         """MinMax scaling for the time-series data.
 
         Transform the temporal features by scaling each feature to a given range. This estimator scales and translates

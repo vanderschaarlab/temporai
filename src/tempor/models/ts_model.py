@@ -553,7 +553,7 @@ class TimeSeriesLayer(nn.Module):
         self,
         n_static_units_in: int,
         n_temporal_units_in: int,
-        n_temporal_window: int,  # pylint: disable=unused-argument
+        n_temporal_window: int,
         n_units_out: int,
         n_static_units_hidden: int = 100,
         n_static_layers_hidden: int = 2,

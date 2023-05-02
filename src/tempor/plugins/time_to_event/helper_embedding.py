@@ -155,7 +155,7 @@ class EmbTimeToEventAnalysis:
         self,
         data: dataset.BaseDataset,
         *args,  # pylint: disable=unused-argument
-        **kwargs,  # pylint: disable=unused-argument
+        **kwargs,
     ) -> Self:
         data = cast(dataset.TimeToEventAnalysisDataset, data)
         self._validate_data(data)
@@ -179,7 +179,7 @@ class EmbTimeToEventAnalysis:
         data: dataset.PredictiveDataset,
         horizons: data_typing.TimeIndex,
         *args,  # pylint: disable=unused-argument
-        **kwargs,  # pylint: disable=unused-argument
+        **kwargs,
     ) -> samples.TimeSeriesSamples:
         # NOTE: kwargs will be passed to DynamicDeepHitModel.predict_emb().
         # E.g. `bs` batch size parameter can be provided this way.

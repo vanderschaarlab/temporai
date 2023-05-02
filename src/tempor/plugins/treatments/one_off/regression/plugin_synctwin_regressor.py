@@ -79,7 +79,7 @@ class SyncTwinTreatmentsRegressor(BaseOneOffTreatmentEffects):
             "SyncTwin implementation does not currently support `predict`, only `predict_counterfactuals`"
         )
 
-    def _predict_counterfactuals(  # type: ignore[override]  # pylint: disable=arguments-differ
+    def _predict_counterfactuals(  # type: ignore[override]
         self,
         data: dataset.PredictiveDataset,
         # horizons: SyncTwin can only handle the same time horizon as targets in the data.
@@ -93,7 +93,7 @@ class SyncTwinTreatmentsRegressor(BaseOneOffTreatmentEffects):
         cl_dataset = tempor_dataset_to_clairvoyance2_dataset(data)
 
         counterfactuals: List = []
-        for idx, sample_idx in enumerate(cl_dataset.sample_indices):  # pylint: disable=unused-variable
+        for idx, sample_idx in enumerate(cl_dataset.sample_indices):
             treatment_status = data[idx].predictive.treatments.dataframe().iloc[0, 0][1]  # type: ignore
 
             if treatment_status is True:

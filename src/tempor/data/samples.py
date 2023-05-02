@@ -1,6 +1,6 @@
 """Data handling for different data samples modalities supported by TemporAI."""
 
-# pylint: disable=useless-super-delegation, unnecessary-ellipsis
+# pylint: disable=unnecessary-ellipsis
 
 import abc
 from typing import TYPE_CHECKING, Any, List, Optional, Tuple
@@ -29,7 +29,7 @@ class DataSamples(abc.ABC):
     def __init__(
         self,
         data: data_typing.DataContainer,  # pylint: disable=unused-argument
-        **kwargs,  # pylint: disable=unused-argument
+        **kwargs,
     ) -> None:  # pragma: no cover
         if "_skip_validate" not in kwargs:
             # For efficiency, pass `_skip_validate` internally (e.g. in `__getitem__`)

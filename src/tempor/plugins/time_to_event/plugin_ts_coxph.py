@@ -153,7 +153,7 @@ class CoxPHTimeToEventAnalysis(BaseTimeToEventAnalysis):
     ParamsDefinition = CoxPHTimeToEventAnalysisParams
     params: CoxPHTimeToEventAnalysisParams  # type: ignore
 
-    def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
+    def __init__(self, **params) -> None:
         """CoxPH survival analysis model.
 
         Args:
