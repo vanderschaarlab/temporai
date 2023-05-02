@@ -14,7 +14,8 @@ if TYPE_CHECKING:
 
 
 def pytest_runtest_setup(item):
-    if item.iter_markers(name="cuda"):
+    cuda_marks = list(item.iter_markers(name="cuda"))
+    if cuda_marks:
         # Auto-skip tests marked with "cuda" if no CUDA available.
         if not torch.cuda.is_available():
             pytest.skip("Test skipped because CUDA not supported")
