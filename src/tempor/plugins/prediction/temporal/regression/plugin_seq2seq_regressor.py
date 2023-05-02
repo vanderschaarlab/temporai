@@ -8,10 +8,7 @@ from typing_extensions import Self
 
 import tempor.plugins.core as plugins
 from tempor.data import dataset, samples
-from tempor.data.clv2conv import (
-    _from_clv2_time_series,
-    tempor_dataset_to_clairvoyance2_dataset,
-)
+from tempor.data.clv2conv import _from_clv2_time_series, tempor_dataset_to_clairvoyance2_dataset
 from tempor.plugins.core._params import CategoricalParams, FloatParams, IntegerParams
 from tempor.plugins.prediction.temporal.regression import BaseTemporalRegressor
 

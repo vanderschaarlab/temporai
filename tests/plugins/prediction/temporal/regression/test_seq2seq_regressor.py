@@ -2,9 +2,7 @@ import pytest
 
 from tempor.plugins import plugin_loader
 from tempor.plugins.prediction.temporal.regression import BaseTemporalRegressor
-from tempor.plugins.prediction.temporal.regression.plugin_seq2seq_regressor import (
-    Seq2seqRegressor as plugin,
-)
+from tempor.plugins.prediction.temporal.regression.plugin_seq2seq_regressor import Seq2seqRegressor as plugin
 from tempor.utils.serialization import load, save
 
 train_kwargs = {"random_state": 123, "epochs": 5}

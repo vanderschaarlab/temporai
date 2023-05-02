@@ -2,9 +2,7 @@ import pytest
 
 from tempor.plugins import plugin_loader
 from tempor.plugins.treatments.temporal import BaseTemporalTreatmentEffects
-from tempor.plugins.treatments.temporal.regression.plugin_crn_regressor import (
-    CRNTreatmentsRegressor as plugin,
-)
+from tempor.plugins.treatments.temporal.regression.plugin_crn_regressor import CRNTreatmentsRegressor as plugin
 from tempor.utils.serialization import load, save
 
 from ...helpers_treatments import simulate_horizons, simulate_treatments_scenarios

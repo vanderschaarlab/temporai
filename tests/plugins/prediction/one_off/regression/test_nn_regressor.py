@@ -2,9 +2,7 @@ import pytest
 
 from tempor.plugins import plugin_loader
 from tempor.plugins.prediction.one_off.regression import BaseOneOffRegressor
-from tempor.plugins.prediction.one_off.regression.plugin_nn_regressor import (
-    NeuralNetRegressor as plugin,
-)
+from tempor.plugins.prediction.one_off.regression.plugin_nn_regressor import NeuralNetRegressor as plugin
 from tempor.utils.serialization import load, save
 
 train_kwargs = {"random_state": 123, "n_iter": 5}

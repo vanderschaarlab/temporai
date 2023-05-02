@@ -2,9 +2,7 @@ import pytest
 
 from tempor.plugins import plugin_loader
 from tempor.plugins.treatments.temporal import BaseTemporalTreatmentEffects
-from tempor.plugins.treatments.temporal.classification.plugin_crn_classifier import (
-    CRNTreatmentsClassifier as plugin,
-)
+from tempor.plugins.treatments.temporal.classification.plugin_crn_classifier import CRNTreatmentsClassifier as plugin
 from tempor.utils.serialization import load, save
 
 from ...helpers_treatments import simulate_horizons, simulate_treatments_scenarios

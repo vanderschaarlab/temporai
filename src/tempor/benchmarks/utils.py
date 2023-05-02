@@ -1,13 +1,7 @@
 from typing import Tuple
 
 import numpy as np
-from sklearn.metrics import (
-    auc,
-    average_precision_score,
-    precision_recall_curve,
-    roc_auc_score,
-    roc_curve,
-)
+from sklearn.metrics import auc, average_precision_score, precision_recall_curve, roc_auc_score, roc_curve
 from sklearn.preprocessing import label_binarize
 
 from tempor.log import logger as log

@@ -4,9 +4,7 @@ import pytest
 
 from tempor.plugins import plugin_loader
 from tempor.plugins.preprocessing.imputation import BaseImputer
-from tempor.plugins.preprocessing.imputation.temporal.plugin_bfill import (
-    BFillImputer as plugin,
-)
+from tempor.plugins.preprocessing.imputation.temporal.plugin_bfill import BFillImputer as plugin
 from tempor.utils.serialization import load, save
 
 from ...helpers_preprocessing import as_covariates_dataset

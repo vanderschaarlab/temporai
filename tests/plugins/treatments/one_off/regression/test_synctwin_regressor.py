@@ -3,9 +3,7 @@ import pytest
 
 from tempor.plugins import plugin_loader
 from tempor.plugins.treatments.one_off import BaseOneOffTreatmentEffects
-from tempor.plugins.treatments.one_off.regression.plugin_synctwin_regressor import (
-    SyncTwinTreatmentsRegressor as plugin,
-)
+from tempor.plugins.treatments.one_off.regression.plugin_synctwin_regressor import SyncTwinTreatmentsRegressor as plugin
 
 train_kwargs = {
     "pretraining_iterations": 3,

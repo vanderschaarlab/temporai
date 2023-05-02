@@ -4,9 +4,7 @@ import pytest
 
 from tempor.benchmarks.evaluation import evaluate_time_to_event
 from tempor.plugins import plugin_loader
-from tempor.plugins.time_to_event.plugin_ts_coxph import (
-    CoxPHTimeToEventAnalysis as plugin,
-)
+from tempor.plugins.time_to_event.plugin_ts_coxph import CoxPHTimeToEventAnalysis as plugin
 from tempor.utils.serialization import load, save
 
 if TYPE_CHECKING:  # pragma: no cover

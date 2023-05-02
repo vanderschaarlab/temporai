@@ -8,10 +8,7 @@ import tempor.plugins.core as plugins
 from tempor.data import dataset
 from tempor.data.samples import TimeSeriesSamples
 from tempor.plugins.core._params import CategoricalParams, Params
-from tempor.plugins.preprocessing.imputation._base import (
-    BaseImputer,
-    TabularImputerType,
-)
+from tempor.plugins.preprocessing.imputation._base import BaseImputer, TabularImputerType
 
 
 @dataclasses.dataclass

@@ -8,13 +8,7 @@ import tempor.exc
 import tempor.plugins.core as plugins
 from tempor.data import data_typing, dataset, samples
 from tempor.models import utils
-from tempor.models.ddh import (
-    DynamicDeepHitModel,
-    OutputMode,
-    RnnMode,
-    output_modes,
-    rnn_modes,
-)
+from tempor.models.ddh import DynamicDeepHitModel, OutputMode, RnnMode, output_modes, rnn_modes
 from tempor.plugins.core._params import CategoricalParams, FloatParams, IntegerParams
 from tempor.plugins.time_to_event import BaseTimeToEventAnalysis
 

@@ -5,9 +5,7 @@ from typing import Callable, Dict
 import pytest
 
 from tempor.plugins.prediction.one_off.classification import BaseOneOffClassifier
-from tempor.plugins.prediction.one_off.classification.plugin_nn_classifier import (
-    NeuralNetClassifier,
-)
+from tempor.plugins.prediction.one_off.classification.plugin_nn_classifier import NeuralNetClassifier
 from tempor.utils.serialization import load, save
 
 INIT_KWARGS = {"random_state": 123, "n_iter": 5}

@@ -2,9 +2,7 @@ import pytest
 
 from tempor.plugins import plugin_loader
 from tempor.plugins.prediction.one_off.classification import BaseOneOffClassifier
-from tempor.plugins.prediction.one_off.classification.plugin_ode_classifier import (
-    ODEClassifier as plugin,
-)
+from tempor.plugins.prediction.one_off.classification.plugin_ode_classifier import ODEClassifier as plugin
 from tempor.utils.serialization import load, save
 
 train_kwargs = {"random_state": 123, "n_iter": 5}

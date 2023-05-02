@@ -5,9 +5,7 @@ from typing_extensions import get_args
 
 from tempor.plugins import plugin_loader
 from tempor.plugins.preprocessing.imputation import BaseImputer, TabularImputerType
-from tempor.plugins.preprocessing.imputation.static.plugin_static_tabular_imputer import (
-    StaticTabularImputer as plugin,
-)
+from tempor.plugins.preprocessing.imputation.static.plugin_static_tabular_imputer import StaticTabularImputer as plugin
 from tempor.utils.serialization import load, save
 
 from ...helpers_preprocessing import as_covariates_dataset

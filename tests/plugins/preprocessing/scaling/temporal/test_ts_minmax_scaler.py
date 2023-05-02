@@ -2,9 +2,7 @@ import pytest
 
 from tempor.plugins import plugin_loader
 from tempor.plugins.preprocessing.scaling import BaseScaler
-from tempor.plugins.preprocessing.scaling.temporal.plugin_ts_minmax_scaler import (
-    TimeSeriesMinMaxScaler as plugin,
-)
+from tempor.plugins.preprocessing.scaling.temporal.plugin_ts_minmax_scaler import TimeSeriesMinMaxScaler as plugin
 from tempor.utils.serialization import load, save
 
 from ...helpers_preprocessing import as_covariates_dataset
