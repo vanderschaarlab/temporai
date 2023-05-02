@@ -15,9 +15,9 @@ def _sine_data_scaled_full():
 
 
 @pytest.fixture(scope="function")
-def sine_data_scaled_full(_sine_data_full: dataset.OneOffPredictionDataset) -> dataset.OneOffPredictionDataset:
+def sine_data_scaled_full(_sine_data_scaled_full: dataset.OneOffPredictionDataset) -> dataset.OneOffPredictionDataset:
     # Give each test a copy, just in case.
-    return copy.deepcopy(_sine_data_full)
+    return copy.deepcopy(_sine_data_scaled_full)
 
 
 # Sine data: small, scaled.
