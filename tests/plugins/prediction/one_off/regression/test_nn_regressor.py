@@ -1,52 +1,57 @@
+# pylint: disable=redefined-outer-name
+
+from typing import Callable, Dict
+
 import pytest
 
-from tempor.plugins import plugin_loader
 from tempor.plugins.prediction.one_off.regression import BaseOneOffRegressor
-from tempor.plugins.prediction.one_off.regression.plugin_nn_regressor import NeuralNetRegressor as plugin
+from tempor.plugins.prediction.one_off.regression.plugin_nn_regressor import NeuralNetRegressor
 from tempor.utils.serialization import load, save
 
-train_kwargs = {"random_state": 123, "n_iter": 5}
-
-TEST_ON_DATASETS = ["sine_data_small"]
-
-
-def from_api() -> BaseOneOffRegressor:
-    return plugin_loader.get("prediction.one_off.regression.nn_regressor", **train_kwargs)
-
-
-def from_module() -> BaseOneOffRegressor:
-    return plugin(**train_kwargs)
+INIT_KWARGS = {"random_state": 123, "n_iter": 5}
+PLUGIN_FROM_OPTIONS = ["from_api", pytest.param("from_module", marks=pytest.mark.extra)]
+DEVICES = [pytest.param("cpu", marks=pytest.mark.cpu), pytest.param("cuda", marks=pytest.mark.cuda)]
+TEST_ON_DATASETS = [
+    "sine_data_small",
+    pytest.param("sine_data_full", marks=pytest.mark.extra),
+]
 
 
-@pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_sanity(test_plugin: BaseOneOffRegressor) -> None:
+@pytest.fixture
+def get_test_plugin(get_plugin: Callable):
+    def func(plugin_from: str, base_kwargs: Dict, device: str):
+        base_kwargs["device"] = device
+        return get_plugin(
+            plugin_from,
+            fqn="prediction.one_off.regression.nn_regressor",
+            cls=NeuralNetRegressor,
+            kwargs=base_kwargs,
+        )
+
+    return func
+
+
+@pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)
+def test_sanity(get_test_plugin: Callable, plugin_from: str) -> None:
+    test_plugin = get_test_plugin(plugin_from, INIT_KWARGS, device="cpu")
     assert test_plugin is not None
     assert test_plugin.name == "nn_regressor"
     assert len(test_plugin.hyperparameter_space()) == 9
 
 
-@pytest.mark.parametrize(
-    "test_plugin",
-    [
-        from_api(),
-        pytest.param(from_module(), marks=pytest.mark.extra),
-    ],
-)
+@pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
-def test_fit(test_plugin: BaseOneOffRegressor, data: str, request: pytest.FixtureRequest) -> None:
-    dataset = request.getfixturevalue(data)
+@pytest.mark.parametrize("device", DEVICES)
+def test_fit(plugin_from: str, data: str, device: str, get_test_plugin: Callable, get_dataset: Callable) -> None:
+    test_plugin: BaseOneOffRegressor = get_test_plugin(plugin_from, INIT_KWARGS, device=device)
+    dataset = get_dataset(data)
     test_plugin.fit(dataset)
 
 
 @pytest.mark.filterwarnings("ignore:RNN.*contiguous.*:UserWarning")  # Expected: problem with current serialization.
-@pytest.mark.parametrize(
-    "test_plugin",
-    [
-        from_api(),
-        pytest.param(from_module(), marks=pytest.mark.extra),
-    ],
-)
+@pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
+@pytest.mark.parametrize("device", DEVICES)
 @pytest.mark.parametrize(
     "no_targets",
     [
@@ -54,8 +59,11 @@ def test_fit(test_plugin: BaseOneOffRegressor, data: str, request: pytest.Fixtur
         pytest.param(True, marks=pytest.mark.extra),
     ],
 )
-def test_predict(test_plugin: BaseOneOffRegressor, no_targets: bool, data: str, request: pytest.FixtureRequest) -> None:
-    dataset = request.getfixturevalue(data)
+def test_predict(
+    plugin_from: str, data: str, device: str, no_targets: bool, get_test_plugin: Callable, get_dataset: Callable
+) -> None:
+    test_plugin: BaseOneOffRegressor = get_test_plugin(plugin_from, INIT_KWARGS, device=device)
+    dataset = get_dataset(data)
 
     dump = save(test_plugin)
     reloaded = load(dump)
