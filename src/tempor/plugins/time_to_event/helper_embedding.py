@@ -1,5 +1,5 @@
 import abc
-from typing import TYPE_CHECKING, List, Optional, cast
+from typing import TYPE_CHECKING, List, Optional, Tuple, cast
 
 import numpy as np
 import pandas as pd
@@ -7,7 +7,8 @@ from typing_extensions import Self
 
 import tempor.exc
 from tempor.data import data_typing, dataset, samples
-from tempor.models.ddh import DynamicDeepHitModel, OutputMode, RnnMode, output_modes, rnn_modes
+from tempor.models import utils
+from tempor.models.ddh import DynamicDeepHitModel, output_modes, rnn_modes
 from tempor.plugins.core._params import CategoricalParams, FloatParams, IntegerParams
 
 
@@ -21,82 +22,15 @@ class OutputTimeToEventAnalysis:
         ...
 
 
-# TODO: Refactor to avoid duplication with DynamicDeepHitTimeToEventAnalysis.
-class EmbTimeToEventAnalysis:
-    def __init__(
-        self,
-        output_model: OutputTimeToEventAnalysis,
-        n_iter: int = 1000,
-        batch_size: int = 100,
-        lr: float = 1e-3,
-        n_layers_hidden: int = 1,
-        n_units_hidden: int = 40,
-        split: int = 100,
-        rnn_mode: RnnMode = "GRU",
-        alpha: float = 0.34,
-        beta: float = 0.27,
-        sigma: float = 0.21,
-        dropout: float = 0.06,
-        device: str = "cpu",
-        patience: int = 20,
-        output_mode: OutputMode = "MLP",
-        random_state: int = 0,  # pylint: disable=unused-argument
-    ) -> None:
-        """Survival analysis embedding creation for time-series.
+class DDHEmbedding:
+    def __init__(self, emb_model: DynamicDeepHitModel) -> None:
+        """Survival analysis embedding creation for time-series with :class:`tempor.models.ddh.DynamicDeepHitModel`.
 
         Args:
-            output_model (OutputTimeToEventAnalysis):
-                Output model to use for predicting risk.
-            n_iter (int):
-                Number of training epochs. Defaults to ``1000``.
-            batch_size (int):
-                Training batch size. Defaults to ``100``.
-            lr (float):
-                Training learning rate. Defaults to ``1e-3``.
-            n_layers_hidden (int):
-                Number of hidden layers in the network. Defaults to ``1``.
-            n_units_hidden (int):
-                Number of units for each hidden layer. Defaults to ``40``.
-            split (int):
-                Number of discrete buckets. Defaults to ``100``.
-            rnn_mode (RnnMode):
-                Internal temporal architecture. Available options: ``"RNN"``, ``"LSTM"``, ``"GRU"``, ``"Transformer"``.
-                Defaults to ``"GRU"``.
-            alpha (float):
-                Weighting (0, 1) likelihood and rank loss (L2 in paper). 1 gives only likelihood, and 0 gives only
-                rank loss. Defaults to ``0.34``.
-            beta (float):
-                Defaults to ``0.27``.
-            sigma (float):
-                From eta in rank loss (L2 in paper). Defaults to ``0.21``.
-            dropout (float):
-                Network dropout value. Defaults to ``0.06``.
-            device (str):
-                PyTorch Device. Defaults to ``"cpu"``.
-            patience (int):
-                Training patience without any improvement. Defaults to ``20``.
-            output_mode (OutputMode):
-                Output network. Available options: ``"MLP"``, ``"LSTM"``, ``"GRU"``, ``"RNN"``. Defaults to ``"MLP"``.
-            random_state (int):
-                Random seed. Defaults to ``0``.
+            emb_model (DynamicDeepHitModel):
+                :class:`tempor.models.ddh.DynamicDeepHitModel` to use for temporal feature embedding.
         """
-        self.emb_model = DynamicDeepHitModel(
-            split=split,
-            n_layers_hidden=n_layers_hidden,
-            n_units_hidden=n_units_hidden,
-            rnn_mode=rnn_mode,
-            alpha=alpha,
-            beta=beta,
-            sigma=sigma,
-            dropout=dropout,
-            patience=patience,
-            lr=lr,
-            batch_size=batch_size,
-            n_iter=n_iter,
-            output_mode=output_mode,
-            device=device,
-        )
-        self.output_model = output_model
+        self.emb_model = emb_model
 
     def _merge_data(
         self,
@@ -151,18 +85,74 @@ class EmbTimeToEventAnalysis:
             event_times, event_values = None, None
         return (static, temporal, observation_times, event_times, event_values)
 
-    def fit(
+    def prepare_fit(
         self,
         data: dataset.BaseDataset,
-        *args,  # pylint: disable=unused-argument
-        **kwargs,
-    ) -> Self:
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        utils.enable_reproducibility(self.emb_model.random_state)
+
         data = cast(dataset.TimeToEventAnalysisDataset, data)
         self._validate_data(data)
         (static, temporal, observation_times, event_times, event_values) = self._convert_data(data)
         processed_data = self._merge_data(static, temporal, observation_times)
         if TYPE_CHECKING:  # pragma: no cover
             assert event_times is not None and event_values is not None  # nosec B101
+        return processed_data, event_times, event_values
+
+    def prepare_predict(
+        self,
+        data: dataset.PredictiveDataset,
+        horizons: data_typing.TimeIndex,
+        *args,  # pylint: disable=unused-argument
+        **kwargs,
+    ) -> np.ndarray:
+        data = cast(dataset.TimeToEventAnalysisDataset, data)
+        self._validate_data(data)
+        (static, temporal, observation_times, _, _) = self._convert_data(data)
+        processed_data = self._merge_data(static, temporal, observation_times)
+        return processed_data
+
+    @staticmethod
+    def hyperparameter_space(*args, **kwargs):  # pylint: disable=unused-argument
+        return [
+            IntegerParams(name="n_units_hidden", low=10, high=100, step=10),
+            IntegerParams(name="n_layers_hidden", low=1, high=4),
+            CategoricalParams(name="batch_size", choices=[100, 200, 500]),
+            CategoricalParams(name="lr", choices=[1e-2, 1e-3, 1e-4]),
+            CategoricalParams(name="rnn_mode", choices=list(rnn_modes)),
+            CategoricalParams(name="output_mode", choices=list(output_modes)),
+            FloatParams(name="alpha", low=0.0, high=0.5),
+            FloatParams(name="sigma", low=0.0, high=0.5),
+            FloatParams(name="beta", low=0.0, high=0.5),
+            FloatParams(name="dropout", low=0.0, high=0.2),
+        ]
+
+
+class DDHEmbeddingTimeToEventAnalysis(DDHEmbedding):
+    def __init__(
+        self,
+        output_model: OutputTimeToEventAnalysis,
+        emb_model: DynamicDeepHitModel,
+    ) -> None:
+        """Survival analysis embedding creation for time-series with :class:`tempor.models.ddh.DynamicDeepHitModel`
+        followed by ``output_model`` :class:`OutputTimeToEventAnalysis` survival analysis estimator.
+
+        Args:
+            output_model (OutputTimeToEventAnalysis):
+                Output model to use for predicting risk.
+            emb_model (DynamicDeepHitModel):
+                :class:`tempor.models.ddh.DynamicDeepHitModel` to use for temporal feature embedding.
+        """
+        DDHEmbedding.__init__(self, emb_model=emb_model)
+        self.output_model = output_model
+
+    def fit(
+        self,
+        data: dataset.BaseDataset,
+        *args,  # pylint: disable=unused-argument
+        **kwargs,
+    ) -> Self:
+        processed_data, event_times, event_values = self.prepare_fit(data)
 
         self.emb_model.fit(processed_data, event_times, event_values)
         embeddings = self.emb_model.predict_emb(processed_data)
@@ -178,15 +168,12 @@ class EmbTimeToEventAnalysis:
         self,
         data: dataset.PredictiveDataset,
         horizons: data_typing.TimeIndex,
-        *args,  # pylint: disable=unused-argument
+        *args,
         **kwargs,
     ) -> samples.TimeSeriesSamples:
         # NOTE: kwargs will be passed to DynamicDeepHitModel.predict_emb().
         # E.g. `bs` batch size parameter can be provided this way.
-        data = cast(dataset.TimeToEventAnalysisDataset, data)
-        self._validate_data(data)
-        (static, temporal, observation_times, _, _) = self._convert_data(data)
-        processed_data = self._merge_data(static, temporal, observation_times)
+        processed_data = self.prepare_predict(data, horizons, *args, **kwargs)
 
         embeddings = self.emb_model.predict_emb(processed_data)
         risk = self.output_model.predict_risk(
@@ -203,16 +190,5 @@ class EmbTimeToEventAnalysis:
         )
 
     @staticmethod
-    def hyperparameter_space(*args, **kwargs):  # pylint: disable=unused-argument
-        return [
-            IntegerParams(name="n_units_hidden", low=10, high=100, step=10),
-            IntegerParams(name="n_layers_hidden", low=1, high=4),
-            CategoricalParams(name="batch_size", choices=[100, 200, 500]),
-            CategoricalParams(name="lr", choices=[1e-2, 1e-3, 1e-4]),
-            CategoricalParams(name="rnn_mode", choices=list(rnn_modes)),
-            CategoricalParams(name="output_mode", choices=list(output_modes)),
-            FloatParams(name="alpha", low=0.0, high=0.5),
-            FloatParams(name="sigma", low=0.0, high=0.5),
-            FloatParams(name="beta", low=0.0, high=0.5),
-            FloatParams(name="dropout", low=0.0, high=0.2),
-        ]
+    def hyperparameter_space(*args, **kwargs):
+        return DDHEmbedding.hyperparameter_space(*args, **kwargs)
