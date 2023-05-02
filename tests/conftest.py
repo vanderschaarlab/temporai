@@ -212,7 +212,7 @@ def sine_data_missing_small(
 
 # Sine data: temporal, full.
 @pytest.fixture(scope="session")
-def _sine_data_temporal(_sine_data_full: "dataset.OneOffPredictionDataset") -> "dataset.TemporalPredictionDataset":
+def _sine_data_temporal_full(_sine_data_full: "dataset.OneOffPredictionDataset") -> "dataset.TemporalPredictionDataset":
     from tempor.data import dataset
 
     if TYPE_CHECKING:
@@ -232,15 +232,17 @@ def _sine_data_temporal(_sine_data_full: "dataset.OneOffPredictionDataset") -> "
 
 # Sine data: temporal, small.
 @pytest.fixture(scope="function")
-def sine_data_temporal(_sine_data_temporal: "dataset.TemporalPredictionDataset") -> "dataset.TemporalPredictionDataset":
-    return copy.deepcopy(_sine_data_temporal)
+def sine_data_temporal_full(
+    _sine_data_temporal_full: "dataset.TemporalPredictionDataset",
+) -> "dataset.TemporalPredictionDataset":
+    return copy.deepcopy(_sine_data_temporal_full)
 
 
 @pytest.fixture(scope="session")
 def _sine_data_temporal_small(
-    _sine_data_temporal: "dataset.TemporalPredictionDataset",
+    _sine_data_temporal_full: "dataset.TemporalPredictionDataset",
 ) -> "dataset.TemporalPredictionDataset":
-    data = copy.deepcopy(_sine_data_temporal)[:6]
+    data = copy.deepcopy(_sine_data_temporal_full)[:6]
     return data
 
 
