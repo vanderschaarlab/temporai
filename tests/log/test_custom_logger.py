@@ -1,3 +1,5 @@
+# pylint: disable=redefined-outer-name
+
 import contextlib
 import glob
 import logging
@@ -6,10 +8,11 @@ import pathlib
 import re
 from typing import Any, List
 
+import pytest
 from _pytest.logging import caplog  # pylint: disable=unused-import  # noqa: F401
 
 import tempor
-from tempor.log import logger
+from tempor.log import log_helpers, logger
 
 TEMPORAI_LOGURU_CONSOLE_LOGGERS = ("print", "main")
 
@@ -45,8 +48,6 @@ def propagate_loguru(_caplog):
         def emit(self, record):
             logging.getLogger(record.name).handle(record)
 
-    print("_ADD_CONFIGS\n", _ADD_CONFIGS)
-
     handler_ids = []
     for name in TEMPORAI_LOGURU_CONSOLE_LOGGERS:
         _ADD_CONFIGS[name]["sink"] = PropogateHandler()
@@ -71,7 +72,7 @@ def as_loguru_logs(records: List[Any]) -> str:
     return out
 
 
-def test_console_logging_at_trace(caplog):  # pylint: disable=redefined-outer-name  # noqa: F811
+def test_console_logging_at_trace(caplog):  # noqa: F811
 
     config = tempor.get_config()
     config.logging.level = "TRACE"
@@ -95,7 +96,7 @@ def test_console_logging_at_trace(caplog):  # pylint: disable=redefined-outer-na
     assert re.match(console_logs_part0 + "ERROR" + console_logs_part1 + "This is error\n", loguru_logs, re_flags)
 
 
-def test_console_logging_at_info(caplog):  # pylint: disable=redefined-outer-name  # noqa: F811
+def test_console_logging_at_info(caplog):  # noqa: F811
 
     config = tempor.get_config()
     config.logging.level = "INFO"
@@ -119,7 +120,7 @@ def test_console_logging_at_info(caplog):  # pylint: disable=redefined-outer-nam
     assert re.match(console_logs_part0 + "ERROR" + console_logs_part1 + "This is error\n", loguru_logs, re_flags)
 
 
-def test_console_logging_at_error(caplog):  # pylint: disable=redefined-outer-name  # noqa: F811
+def test_console_logging_at_error(caplog):  # noqa: F811
 
     config = tempor.get_config()
     config.logging.level = "ERROR"
@@ -175,3 +176,46 @@ def test_file_log_enabled(tmp_path: pathlib.Path):
     assert re.match(console_logs_part0 + "INFO" + console_logs_part1 + "This is info\n", log_content, re_flags)
     assert re.match(console_logs_part0 + "WARNING" + console_logs_part1 + "This is warning\n", log_content, re_flags)
     assert re.match(console_logs_part0 + "ERROR" + console_logs_part1 + "This is error\n", log_content, re_flags)
+
+
+@pytest.mark.parametrize("config_diagnose", [False, True])
+def test_exception_catch(config_diagnose, caplog, tmp_path):  # noqa: F811
+    def raise_exc():
+        raise ValueError("I raised an exception")
+
+    config = tempor.get_config()
+    config.working_directory = str(tmp_path)
+    config.logging.diagnose = config_diagnose
+    config.logging.file_log = True
+    tempor.configure(config)
+
+    # Console logs:
+    with propagate_loguru(caplog) as cap_log:
+        with log_helpers.exc_to_log(
+            "Custom message",
+            reraise=False,  # So that can proceed with the test.
+        ):
+            raise_exc()
+        console_logs = as_loguru_logs(cap_log.records)
+
+    # File logs:
+    log_dir = tmp_path / "logs"
+    log_files = list(glob.glob(os.path.join(log_dir, "*.log")))
+    with open(log_files[0], "r", encoding="utf8") as f:
+        file_logs = f.read()
+
+    # Console logs:
+    assert "ERROR" in console_logs
+    assert "Custom message" in console_logs
+    assert "ValueError: I raised an exception" in console_logs
+    if config_diagnose is True:
+        assert "-> <function" in console_logs or "└ <function" in console_logs
+    else:
+        assert not ("-> <function" in console_logs or "└ <function" in console_logs)
+
+    # File logs:
+    assert "ERROR" in file_logs
+    assert "Custom message" in file_logs
+    assert "ValueError: I raised an exception" in file_logs
+    # NOTE: `diagnose` is always enabled in file logs, regardless of the setting in tempor config.
+    assert "-> <function" in file_logs or "└ <function" in file_logs

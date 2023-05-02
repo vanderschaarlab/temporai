@@ -1,23 +1,22 @@
-import sys
 from contextlib import contextmanager
 
 from ._custom_logger import logger
 
 
-def _suppress_exception_output(exc_type, exc_value, exc_traceback):
-    # See: https://stackoverflow.com/a/16993115
-    if issubclass(exc_type, KeyboardInterrupt):
-        sys.__excepthook__(exc_type, exc_value, exc_traceback)
-        return
-
-
 @contextmanager
-def exc_to_log(message: str = ""):
+def exc_to_log(message: str = "", reraise: bool = True):
+    """Log `Exception` raised inside this context manager and reraise.
+
+    Args:
+        message (str, optional): Log message. Defaults to "".
+        reraise (bool, optional): Whether to reraise the exception. Defaults to True.
+    """
     try:
         yield
     except Exception:  # pylint: disable=broad-except
-        sys.excepthook = _suppress_exception_output
-        logger.bind(always_show=True).opt(depth=1).exception(message)
-        raise
+        logger.opt(depth=2).exception(message)
+        logger.opt(depth=2).error("=== Exception logs above ===\n")
+        if reraise:
+            raise
     finally:
         pass
