@@ -62,3 +62,4 @@ data/**
 tutorials/*/data
 tutorials/*/logs
 codecov
+workspace
