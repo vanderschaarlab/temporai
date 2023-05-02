@@ -1,5 +1,4 @@
 import dataclasses
-import enum
 import os
 import pathlib
 import sys
@@ -26,14 +25,8 @@ DEFAULT_CONFIG_FILE_PATH = os.path.join(
 # Use missing for everything and define the defaults in the config file: DEFAULT_CONFIG_FILE_PATH.
 
 
-class LoggingMode(enum.Enum):
-    LIBRARY = enum.auto()
-    SCRIPT = enum.auto()
-
-
 @dataclasses.dataclass
 class LoggingConfig:
-    mode: LoggingMode = LoggingMode.LIBRARY
     level: str = omegaconf.MISSING
     diagnose: bool = omegaconf.MISSING
     backtrace: bool = omegaconf.MISSING

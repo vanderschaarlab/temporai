@@ -58,7 +58,6 @@ repos:
     hooks:
     -   id: mypy
         files: "^src/"
-        exclude: "_custom_logger.pyi"  # To avoid duplicate module error in pre-commit mypy
         args: [--config-file=mypy.ini]
         additional_dependencies: [pydantic]
 
