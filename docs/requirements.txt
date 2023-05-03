@@ -26,7 +26,6 @@ torchdiffeq
 torchlaplace >= 0.0.4
 tsai
 typing-extensions
-urllib3<2
 xgbse
 # dev:
 black[jupyter]
