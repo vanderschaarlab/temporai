@@ -2,14 +2,14 @@
 # under `install_requires` in `setup.cfg` is also listed here!
 # ----- auto_update -----
 # install_requires:
-catboost < 1.2  # 1.2+ currently has build errors.
+catboost < 1.2
 clairvoyance2 >=0.0.2
 cloudpickle
 geomloss>=0.2.6
 hydra-core >=1.3
 hyperimpute >= 0.1.17
 importlib-metadata; python_version<"3.8"
-lifelines != 0.27.5  # v0.27.5 has py37 bug.
+lifelines != 0.27.5
 loguru
 numpy >=1
 packaging
@@ -26,6 +26,7 @@ torchdiffeq
 torchlaplace >= 0.0.4
 tsai
 typing-extensions
+urllib3<2
 xgbse
 # dev:
 black[jupyter]
