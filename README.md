@@ -16,7 +16,7 @@
 
 [![Tests](https://github.com/vanderschaarlab/temporai/actions/workflows/test.yml/badge.svg)](https://github.com/vanderschaarlab/temporai/actions/workflows/test.yml)
 [![Tests](https://github.com/vanderschaarlab/temporai/actions/workflows/test_full.yml/badge.svg)](https://github.com/vanderschaarlab/temporai/actions/workflows/test.yml)
-[![codecov](https://codecov.io/gh/vanderschaarlab/temporai/branch/DrShushen/misc-updates-2023-04/graph/badge.svg?token=FCKO12SND7)](https://codecov.io/gh/vanderschaarlab/temporai)
+[![codecov](https://codecov.io/gh/vanderschaarlab/temporai/branch/main/graph/badge.svg?token=FCKO12SND7)](https://codecov.io/gh/vanderschaarlab/temporai)
 
 [![arXiv](https://img.shields.io/badge/arXiv-2301.12260-b31b1b.svg)](https://arxiv.org/abs/2301.12260)
 [![slack](https://img.shields.io/badge/chat-on%20slack-purple?logo=slack)](https://join.slack.com/t/vanderschaarlab/shared_invite/zt-1u2rmhw06-sHS5nQDMN3Ka2Zer6sAU6Q)
