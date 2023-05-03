@@ -98,6 +98,10 @@ def register_plugin(name: str, category: str):
             else:
                 # The same class is being reimported, do not raise error.
                 pass
+        for existing_cls in PLUGIN_REGISTRY.values():
+            # Cannot have the same plugin name (not just fqn), as this is not supported by Pipeline.
+            if cls.name == existing_cls.name:
+                raise TypeError(f"Plugin with name {cls.name} already registered (as class {existing_cls})")
 
         PLUGIN_REGISTRY[cls.fqn()] = cls
 

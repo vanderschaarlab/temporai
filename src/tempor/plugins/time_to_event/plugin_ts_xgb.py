@@ -10,11 +10,11 @@ from xgbse.converters import convert_to_structured
 import tempor.plugins.core as plugins
 from tempor.data import data_typing, dataset, samples
 from tempor.models.constants import DEVICE
-from tempor.models.ddh import OutputMode, RnnMode
+from tempor.models.ddh import DynamicDeepHitModel, OutputMode, RnnMode
 from tempor.plugins.core._params import CategoricalParams, FloatParams, IntegerParams
 from tempor.plugins.time_to_event import BaseTimeToEventAnalysis
 
-from .helper_embedding import EmbTimeToEventAnalysis, OutputTimeToEventAnalysis
+from .helper_embedding import DDHEmbeddingTimeToEventAnalysis, OutputTimeToEventAnalysis
 
 XGBObjective = Literal["aft", "cox"]
 XGBStrategy = Literal["weibull", "debiased_bce", "km"]
@@ -25,37 +25,70 @@ class XGBTimeToEventAnalysisParams:
     # TODO: Docstring.
     # Output model:
     xgb_n_estimators: int = 100
+    """Respective parameter for `xgbse` ``XGBSE<Method>`` class initializer ``xgb_params``."""
     xgb_colsample_bynode: float = 1.0
+    """Respective parameter for `xgbse` ``XGBSE<Method>`` class initializer ``xgb_params``."""
     xgb_colsample_bytree: float = 1.0
+    """Respective parameter for `xgbse` ``XGBSE<Method>`` class initializer ``xgb_params``."""
     xgb_colsample_bylevel: float = 1.0
+    """Respective parameter for `xgbse` ``XGBSE<Method>`` class initializer ``xgb_params``."""
     xgb_max_depth: int = 5
+    """Respective parameter for `xgbse` ``XGBSE<Method>`` class initializer ``xgb_params``."""
     xgb_subsample: float = 0.5
+    """Respective parameter for `xgbse` ``XGBSE<Method>`` class initializer ``xgb_params``."""
     xgb_learning_rate: float = 5e-2
+    """Respective parameter for `xgbse` ``XGBSE<Method>`` class initializer ``xgb_params``."""
     xgb_min_child_weight: int = 50
+    """Respective parameter for `xgbse` ``XGBSE<Method>`` class initializer ``xgb_params``."""
     xgb_tree_method: str = "hist"
+    """Respective parameter for `xgbse` ``XGBSE<Method>`` class initializer ``xgb_params``."""
     xgb_booster: int = 0
+    """Respective parameter for `xgbse` ``XGBSE<Method>`` class initializer ``xgb_params``."""
     xgb_objective: XGBObjective = "aft"
+    """XGB Objective, one of `XGBObjective`."""
     xgb_strategy: XGBStrategy = "debiased_bce"
+    """XGB Objective, one of `XGBStrategy`:
+    weibull: `XGBSEStackedWeibull`, debiased_bce: `XGBSEDebiasedBCE`, km: `XGBSEKaplanNeighbors`.
+    """
     xgb_bce_n_iter: int = 1000
+    """Parameter for `xgbse` ``XGBSEDebiasedBCE`` initializer ``lr_params.max_iter``."""
     xgb_time_points: int = 100
+    """Number of discrete time points to use."""
     xgb_reg_lambda: float = 1
+    """Respective parameter for `xgbse` ``XGBSE<Method>`` class initializer ``xgb_params``."""
     xgb_reg_alpha: float = 0
+    """Respective parameter for `xgbse` ``XGBSE<Method>`` class initializer ``xgb_params``."""
     # Embedding model:
     n_iter: int = 1000
+    """Number of training epochs."""
     batch_size: int = 100
+    """Training batch size."""
     lr: float = 1e-3
+    """Training learning rate."""
     n_layers_hidden: int = 1
+    """Number of hidden layers in the network."""
     n_units_hidden: int = 40
+    """Number of units for each hidden layer."""
     split: int = 100
+    """Number of discrete buckets."""
     rnn_mode: RnnMode = "GRU"
+    """Internal temporal architecture, one of `RnnMode`."""
     alpha: float = 0.34
+    """Weighting (0, 1) likelihood and rank loss (L2 in paper). 1 gives only likelihood, and 0 gives only rank loss."""
     beta: float = 0.27
+    """Beta, see paper."""
     sigma: float = 0.21
+    """From eta in rank loss (L2 in paper)."""
     dropout: float = 0.06
+    """Network dropout value."""
     device: str = "cpu"
+    """PyTorch Device."""
     patience: int = 20
+    """Training patience without any improvement."""
     output_mode: OutputMode = "MLP"
+    """Output network, on of `OutputMode`."""
     random_state: int = 0
+    """Random seed."""
 
 
 class XGBSurvivalAnalysis(OutputTimeToEventAnalysis):
@@ -171,13 +204,12 @@ class XGBSurvivalAnalysis(OutputTimeToEventAnalysis):
         return pd.DataFrame(np.concatenate(preds_, axis=0), columns=time_horizons, index=X.index)
 
 
-# TODO: Docstring.
 @plugins.register_plugin(name="ts_xgb", category="time_to_event")
 class XGBTimeToEventAnalysis(BaseTimeToEventAnalysis):
     ParamsDefinition = XGBTimeToEventAnalysisParams
     params: XGBTimeToEventAnalysisParams  # type: ignore
 
-    def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
+    def __init__(self, **params) -> None:
         """XGB survival analysis model.
 
         Args:
@@ -206,22 +238,24 @@ class XGBTimeToEventAnalysis(BaseTimeToEventAnalysis):
             time_points=self.params.xgb_time_points,
             device=self.params.device,
         )
-        self.model = EmbTimeToEventAnalysis(
+        self.model = DDHEmbeddingTimeToEventAnalysis(
             output_model=output_model,
-            split=self.params.split,
-            n_layers_hidden=self.params.n_layers_hidden,
-            n_units_hidden=self.params.n_units_hidden,
-            rnn_mode=self.params.rnn_mode,
-            alpha=self.params.alpha,
-            beta=self.params.beta,
-            sigma=self.params.sigma,
-            dropout=self.params.dropout,
-            patience=self.params.patience,
-            lr=self.params.lr,
-            batch_size=self.params.batch_size,
-            n_iter=self.params.n_iter,
-            output_mode=self.params.output_mode,
-            device=self.params.device,
+            emb_model=DynamicDeepHitModel(
+                split=self.params.split,
+                n_layers_hidden=self.params.n_layers_hidden,
+                n_units_hidden=self.params.n_units_hidden,
+                rnn_mode=self.params.rnn_mode,
+                alpha=self.params.alpha,
+                beta=self.params.beta,
+                sigma=self.params.sigma,
+                dropout=self.params.dropout,
+                patience=self.params.patience,
+                lr=self.params.lr,
+                batch_size=self.params.batch_size,
+                n_iter=self.params.n_iter,
+                output_mode=self.params.output_mode,
+                device=self.params.device,
+            ),
         )
 
     def _fit(
@@ -258,4 +292,4 @@ class XGBTimeToEventAnalysis(BaseTimeToEventAnalysis):
             FloatParams(name="xgb_learning_rate", low=1e-4, high=1e-2),
             IntegerParams(name="xgb_max_bin", low=256, high=512),
             IntegerParams(name="xgb_booster", low=0, high=len(XGBSurvivalAnalysis.booster) - 1),
-        ] + EmbTimeToEventAnalysis.hyperparameter_space()
+        ] + DDHEmbeddingTimeToEventAnalysis.hyperparameter_space()

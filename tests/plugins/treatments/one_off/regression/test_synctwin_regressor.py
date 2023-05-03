@@ -1,61 +1,67 @@
+# pylint: disable=redefined-outer-name
+
+from typing import TYPE_CHECKING, Callable, Dict
+
 import pandas as pd
 import pytest
 
-from tempor.plugins import plugin_loader
-from tempor.plugins.treatments.one_off import BaseOneOffTreatmentEffects
-from tempor.plugins.treatments.one_off.regression.plugin_synctwin_regressor import (
-    SyncTwinTreatmentsRegressor as plugin,
-)
+from tempor.plugins.treatments.one_off.regression.plugin_synctwin_regressor import SyncTwinTreatmentsRegressor
 
-train_kwargs = {
+if TYPE_CHECKING:  # pragma: no cover
+    from tempor.plugins.treatments.one_off import BaseOneOffTreatmentEffects
+
+INIT_KWARGS = {
     "pretraining_iterations": 3,
     "matching_iterations": 3,
     "inference_iterations": 3,
 }
-
-TEST_ON_DATASETS = ["pkpd_data_small"]
-
-
-def from_api() -> BaseOneOffTreatmentEffects:
-    return plugin_loader.get("treatments.one_off.regression.synctwin_regressor", **train_kwargs)
-
-
-def from_module() -> BaseOneOffTreatmentEffects:
-    return plugin(**train_kwargs)
+PLUGIN_FROM_OPTIONS = ["from_api", pytest.param("from_module", marks=pytest.mark.extra)]
+DEVICES = [pytest.param("cpu", marks=pytest.mark.cpu), pytest.param("cuda", marks=pytest.mark.cuda)]
+TEST_ON_DATASETS = [
+    "pkpd_data_small",
+    pytest.param("pkpd_data_full", marks=pytest.mark.extra),
+]
 
 
-@pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_sanity(test_plugin: BaseOneOffTreatmentEffects) -> None:
+@pytest.fixture
+def get_test_plugin(get_plugin: Callable):
+    def func(plugin_from: str, base_kwargs: Dict, device: str):
+        base_kwargs["device"] = device
+        return get_plugin(
+            plugin_from,
+            fqn="treatments.one_off.regression.synctwin_regressor",
+            cls=SyncTwinTreatmentsRegressor,
+            kwargs=base_kwargs,
+        )
+
+    return func
+
+
+@pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)
+def test_sanity(get_test_plugin: Callable, plugin_from: str) -> None:
+    test_plugin = get_test_plugin(plugin_from, INIT_KWARGS, device="cpu")
     assert test_plugin is not None
     assert test_plugin.name == "synctwin_regressor"
     assert len(test_plugin.hyperparameter_space()) == 5
 
 
-@pytest.mark.parametrize(
-    "test_plugin",
-    [
-        from_api(),
-        pytest.param(from_module(), marks=pytest.mark.extra),
-    ],
-)
+@pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
-def test_fit(test_plugin: BaseOneOffTreatmentEffects, data: str, request: pytest.FixtureRequest) -> None:
-    dataset = request.getfixturevalue(data)
+@pytest.mark.parametrize("device", DEVICES)
+def test_fit(plugin_from: str, data: str, device: str, get_test_plugin: Callable, get_dataset: Callable) -> None:
+    test_plugin: "BaseOneOffTreatmentEffects" = get_test_plugin(plugin_from, INIT_KWARGS, device=device)
+    dataset = get_dataset(data)
     test_plugin.fit(dataset)
 
 
-@pytest.mark.parametrize(
-    "test_plugin",
-    [
-        from_api(),
-        pytest.param(from_module(), marks=pytest.mark.extra),
-    ],
-)
+@pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
+@pytest.mark.parametrize("device", DEVICES)
 def test_predict_counterfactuals(
-    test_plugin: BaseOneOffTreatmentEffects, data: str, request: pytest.FixtureRequest
+    plugin_from: str, data: str, device: str, get_test_plugin: Callable, get_dataset: Callable
 ) -> None:
-    dataset = request.getfixturevalue(data)
+    test_plugin: "BaseOneOffTreatmentEffects" = get_test_plugin(plugin_from, INIT_KWARGS, device=device)
+    dataset = get_dataset(data)
     test_plugin.fit(dataset)
 
     output = test_plugin.predict_counterfactuals(dataset)

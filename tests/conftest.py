@@ -1,12 +1,25 @@
 import copy
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, List, Tuple
+from typing import TYPE_CHECKING, Any, List, Tuple, Type
 
 import numpy as np
 import pytest
+import torch
 
 if TYPE_CHECKING:
     from tempor.data import dataset
+
+
+# --- Pytest configuration ---
+
+
+def pytest_runtest_setup(item):
+    cuda_marks = list(item.iter_markers(name="cuda"))
+    if cuda_marks:
+        # Auto-skip tests marked with "cuda" if no CUDA available.
+        if not torch.cuda.is_available():
+            pytest.skip("Test skipped because CUDA not supported")
+
 
 # --- Test utilities. ---
 
@@ -84,6 +97,35 @@ def patch_module(monkeypatch, request):
 
 
 # --- Reusable utility functions. ---
+
+
+@pytest.fixture
+def get_plugin():
+    # A reusable function fixture to help get a plugin defined using its `fqn` (fully-qualified name) or
+    # `cls` (actual plugin class). `plugin_from` (str) allows to choose which method of getting the plugin to use,
+    # 'from_api' (using fqn), 'from_module' (using class). `kwargs` are the parameters that will be passed to the
+    # plugin initializer.
+    def func(plugin_from: str, fqn: str, cls: Type, kwargs: Any) -> Any:
+        from tempor.plugins import plugin_loader
+
+        if plugin_from == "from_api":
+            return plugin_loader.get(fqn, **kwargs)
+        elif plugin_from == "from_module":
+            return cls(**kwargs)
+        else:
+            raise ValueError("`get_plugin` `plugin_from` parameter must be one of: 'from_api', 'from_module'")
+
+    return func
+
+
+@pytest.fixture
+def get_dataset(request: pytest.FixtureRequest):
+    # A reusable function fixture to get a dataset by its fixture string name.
+    # The various dataset fixtures are defined below in this conftest.py.
+    def func(dataset: str) -> Any:
+        return request.getfixturevalue(dataset)
+
+    return func
 
 
 @pytest.fixture
@@ -170,7 +212,7 @@ def sine_data_missing_small(
 
 # Sine data: temporal, full.
 @pytest.fixture(scope="session")
-def _sine_data_temporal(_sine_data_full: "dataset.OneOffPredictionDataset") -> "dataset.TemporalPredictionDataset":
+def _sine_data_temporal_full(_sine_data_full: "dataset.OneOffPredictionDataset") -> "dataset.TemporalPredictionDataset":
     from tempor.data import dataset
 
     if TYPE_CHECKING:
@@ -190,15 +232,17 @@ def _sine_data_temporal(_sine_data_full: "dataset.OneOffPredictionDataset") -> "
 
 # Sine data: temporal, small.
 @pytest.fixture(scope="function")
-def sine_data_temporal(_sine_data_temporal: "dataset.TemporalPredictionDataset") -> "dataset.TemporalPredictionDataset":
-    return copy.deepcopy(_sine_data_temporal)
+def sine_data_temporal_full(
+    _sine_data_temporal_full: "dataset.TemporalPredictionDataset",
+) -> "dataset.TemporalPredictionDataset":
+    return copy.deepcopy(_sine_data_temporal_full)
 
 
 @pytest.fixture(scope="session")
 def _sine_data_temporal_small(
-    _sine_data_temporal: "dataset.TemporalPredictionDataset",
+    _sine_data_temporal_full: "dataset.TemporalPredictionDataset",
 ) -> "dataset.TemporalPredictionDataset":
-    data = copy.deepcopy(_sine_data_temporal)[:6]
+    data = copy.deepcopy(_sine_data_temporal_full)[:6]
     return data
 
 

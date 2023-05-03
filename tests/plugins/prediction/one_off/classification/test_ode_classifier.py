@@ -1,54 +1,57 @@
+# pylint: disable=redefined-outer-name
+
+from typing import Callable, Dict
+
 import pytest
 
-from tempor.plugins import plugin_loader
 from tempor.plugins.prediction.one_off.classification import BaseOneOffClassifier
-from tempor.plugins.prediction.one_off.classification.plugin_ode_classifier import (
-    ODEClassifier as plugin,
-)
+from tempor.plugins.prediction.one_off.classification.plugin_ode_classifier import ODEClassifier
 from tempor.utils.serialization import load, save
 
-train_kwargs = {"random_state": 123, "n_iter": 5}
-
-TEST_ON_DATASETS = ["sine_data_small"]
-
-
-def from_api() -> BaseOneOffClassifier:
-    return plugin_loader.get("prediction.one_off.classification.ode_classifier", **train_kwargs)
-
-
-def from_module() -> BaseOneOffClassifier:
-    return plugin(**train_kwargs)
+INIT_KWARGS = {"random_state": 123, "n_iter": 5}
+PLUGIN_FROM_OPTIONS = ["from_api", pytest.param("from_module", marks=pytest.mark.extra)]
+DEVICES = [pytest.param("cpu", marks=pytest.mark.cpu), pytest.param("cuda", marks=pytest.mark.cuda)]
+TEST_ON_DATASETS = [
+    "sine_data_small",
+    pytest.param("sine_data_full", marks=pytest.mark.extra),
+]
 
 
-@pytest.mark.parametrize("test_plugin", [from_api(), from_module()])
-def test_sanity(test_plugin: BaseOneOffClassifier) -> None:
+@pytest.fixture
+def get_test_plugin(get_plugin: Callable):
+    def func(plugin_from: str, base_kwargs: Dict, device: str):
+        base_kwargs["device"] = device
+        return get_plugin(
+            plugin_from,
+            fqn="prediction.one_off.classification.ode_classifier",
+            cls=ODEClassifier,
+            kwargs=base_kwargs,
+        )
+
+    return func
+
+
+@pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)
+def test_sanity(get_test_plugin: Callable, plugin_from: str) -> None:
+    test_plugin = get_test_plugin(plugin_from, INIT_KWARGS, device="cpu")
     assert test_plugin is not None
     assert test_plugin.name == "ode_classifier"
     assert test_plugin.fqn() == "prediction.one_off.classification.ode_classifier"
     assert len(test_plugin.hyperparameter_space()) == 9
 
 
-@pytest.mark.parametrize(
-    "test_plugin",
-    [
-        from_api(),
-        pytest.param(from_module(), marks=pytest.mark.extra),
-    ],
-)
+@pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
-def test_fit(test_plugin: BaseOneOffClassifier, data: str, request: pytest.FixtureRequest) -> None:
-    dataset = request.getfixturevalue(data)
+@pytest.mark.parametrize("device", DEVICES)
+def test_fit(plugin_from: str, data: str, device: str, get_test_plugin: Callable, get_dataset: Callable) -> None:
+    test_plugin: BaseOneOffClassifier = get_test_plugin(plugin_from, INIT_KWARGS, device=device)
+    dataset = get_dataset(data)
     test_plugin.fit(dataset)
 
 
-@pytest.mark.parametrize(
-    "test_plugin",
-    [
-        from_api(),
-        pytest.param(from_module(), marks=pytest.mark.extra),
-    ],
-)
+@pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
+@pytest.mark.parametrize("device", DEVICES)
 @pytest.mark.parametrize(
     "no_targets",
     [
@@ -57,9 +60,10 @@ def test_fit(test_plugin: BaseOneOffClassifier, data: str, request: pytest.Fixtu
     ],
 )
 def test_predict(
-    test_plugin: BaseOneOffClassifier, no_targets: bool, data: str, request: pytest.FixtureRequest
+    plugin_from: str, data: str, device: str, no_targets: bool, get_test_plugin: Callable, get_dataset: Callable
 ) -> None:
-    dataset = request.getfixturevalue(data)
+    test_plugin: BaseOneOffClassifier = get_test_plugin(plugin_from, INIT_KWARGS, device=device)
+    dataset = get_dataset(data)
     test_plugin.fit(dataset)
     if no_targets:
         dataset.predictive.targets = None
@@ -67,26 +71,26 @@ def test_predict(
     assert output.numpy().shape == (len(dataset.time_series), 1)
 
 
-@pytest.mark.parametrize(
-    "test_plugin",
-    [
-        from_api(),
-        pytest.param(from_module(), marks=pytest.mark.extra),
-    ],
-)
+@pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
-def test_predict_proba(test_plugin: BaseOneOffClassifier, data: str, request: pytest.FixtureRequest) -> None:
-    dataset = request.getfixturevalue(data)
+@pytest.mark.parametrize("device", DEVICES)
+def test_predict_proba(
+    plugin_from: str, data: str, device: str, get_test_plugin: Callable, get_dataset: Callable
+) -> None:
+    test_plugin: BaseOneOffClassifier = get_test_plugin(plugin_from, INIT_KWARGS, device=device)
+    dataset = get_dataset(data)
+
     output = test_plugin.fit(dataset).predict_proba(dataset)
+
     assert output.numpy().shape == (len(dataset.time_series), 2)
 
 
 @pytest.mark.filterwarnings("ignore:RNN.*contiguous.*:UserWarning")  # Expected: problem with current serialization.
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
-def test_serde(data: str, request: pytest.FixtureRequest) -> None:
-    test_plugin = from_api()
-
-    dataset = request.getfixturevalue(data)
+@pytest.mark.parametrize("device", DEVICES)
+def test_serde(data: str, device: str, get_test_plugin: Callable, get_dataset: Callable) -> None:
+    test_plugin: BaseOneOffClassifier = get_test_plugin("from_api", INIT_KWARGS, device=device)
+    dataset = get_dataset(data)
 
     dump = save(test_plugin)
     reloaded1 = load(dump)

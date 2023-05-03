@@ -11,11 +11,11 @@ from typing_extensions import Self
 
 import tempor.plugins.core as plugins
 from tempor.data import data_typing, dataset, samples
-from tempor.models.ddh import OutputMode, RnnMode
+from tempor.models.ddh import DynamicDeepHitModel, OutputMode, RnnMode
 from tempor.plugins.core._params import FloatParams
 from tempor.plugins.time_to_event import BaseTimeToEventAnalysis
 
-from .helper_embedding import EmbTimeToEventAnalysis, OutputTimeToEventAnalysis
+from .helper_embedding import DDHEmbeddingTimeToEventAnalysis, OutputTimeToEventAnalysis
 
 
 @contextlib.contextmanager
@@ -54,26 +54,42 @@ def monkeypatch_lifelines_pd2_compatibility():
 
 @dataclasses.dataclass
 class CoxPHTimeToEventAnalysisParams:
-    # TODO: Docstring.
     # Output model:
     coxph_alpha: float = 0.05
+    """``alpha`` parameter for `lifelines.CoxPHFitter`."""
     coxph_penalizer: float = 0.0
+    """``penalizer`` parameter for `lifelines.CoxPHFitter`."""
     # Embedding model:
     n_iter: int = 1000
+    """Number of training epochs."""
     batch_size: int = 100
+    """Training batch size."""
     lr: float = 1e-3
+    """Training learning rate."""
     n_layers_hidden: int = 1
+    """Number of hidden layers in the network."""
     n_units_hidden: int = 40
+    """Number of units for each hidden layer."""
     split: int = 100
+    """Number of discrete buckets."""
     rnn_mode: RnnMode = "GRU"
+    """Internal temporal architecture, one of `RnnMode`."""
     alpha: float = 0.34
+    """Weighting (0, 1) likelihood and rank loss (L2 in paper). 1 gives only likelihood, and 0 gives only rank loss."""
     beta: float = 0.27
+    """Beta, see paper."""
     sigma: float = 0.21
+    """From eta in rank loss (L2 in paper)."""
     dropout: float = 0.06
+    """Network dropout value."""
     device: str = "cpu"
+    """PyTorch Device."""
     patience: int = 20
+    """Training patience without any improvement."""
     output_mode: OutputMode = "MLP"
+    """Output network, on of `OutputMode`."""
     random_state: int = 0
+    """Random seed."""
 
 
 def drop_constant_columns(dataframe: pd.DataFrame) -> list:
@@ -153,7 +169,7 @@ class CoxPHTimeToEventAnalysis(BaseTimeToEventAnalysis):
     ParamsDefinition = CoxPHTimeToEventAnalysisParams
     params: CoxPHTimeToEventAnalysisParams  # type: ignore
 
-    def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
+    def __init__(self, **params) -> None:
         """CoxPH survival analysis model.
 
         Args:
@@ -166,22 +182,24 @@ class CoxPHTimeToEventAnalysis(BaseTimeToEventAnalysis):
             alpha=self.params.coxph_alpha,
             penalizer=self.params.coxph_penalizer,
         )
-        self.model = EmbTimeToEventAnalysis(
+        self.model = DDHEmbeddingTimeToEventAnalysis(
             output_model=output_model,
-            split=self.params.split,
-            n_layers_hidden=self.params.n_layers_hidden,
-            n_units_hidden=self.params.n_units_hidden,
-            rnn_mode=self.params.rnn_mode,
-            alpha=self.params.alpha,
-            beta=self.params.beta,
-            sigma=self.params.sigma,
-            dropout=self.params.dropout,
-            patience=self.params.patience,
-            lr=self.params.lr,
-            batch_size=self.params.batch_size,
-            n_iter=self.params.n_iter,
-            output_mode=self.params.output_mode,
-            device=self.params.device,
+            emb_model=DynamicDeepHitModel(
+                split=self.params.split,
+                n_layers_hidden=self.params.n_layers_hidden,
+                n_units_hidden=self.params.n_units_hidden,
+                rnn_mode=self.params.rnn_mode,
+                alpha=self.params.alpha,
+                beta=self.params.beta,
+                sigma=self.params.sigma,
+                dropout=self.params.dropout,
+                patience=self.params.patience,
+                lr=self.params.lr,
+                batch_size=self.params.batch_size,
+                n_iter=self.params.n_iter,
+                output_mode=self.params.output_mode,
+                device=self.params.device,
+            ),
         )
 
     def _fit(
@@ -207,4 +225,4 @@ class CoxPHTimeToEventAnalysis(BaseTimeToEventAnalysis):
         return [
             FloatParams(name="coxph_alpha", low=0.05, high=0.1),
             FloatParams(name="coxph_penalizer", low=0, high=0.2),
-        ] + EmbTimeToEventAnalysis.hyperparameter_space()
+        ] + DDHEmbeddingTimeToEventAnalysis.hyperparameter_space()

@@ -16,6 +16,7 @@ from tempor.utils import dataloaders
         dataloaders.PKPDDataLoader,
         dataloaders.DummyTemporalPredictionDataLoader,
         dataloaders.DummyTemporalTreatmentEffectsDataLoader,
+        dataloaders.UCIDiabetesDataLoader,
     ],
 )
 def test_init_load_and_basic_methods(dataloader_cls: Type[DataLoader]):

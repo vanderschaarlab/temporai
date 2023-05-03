@@ -1,4 +1,4 @@
-# pylint: disable=no-member
+# pylint: disable=redefined-outer-name,no-member
 
 from typing import Any, List
 
@@ -7,7 +7,10 @@ import pytest
 from tempor.plugins.pipeline import Pipeline, PipelineGroup, PipelineMeta
 from tempor.utils.serialization import load, save
 
-TEST_ON_DATASETS = ["sine_data_small"]
+TEST_ON_DATASETS = [
+    "sine_data_small",
+    pytest.param("sine_data_full", marks=pytest.mark.extra),
+]
 
 
 @pytest.mark.parametrize(
@@ -20,7 +23,8 @@ TEST_ON_DATASETS = ["sine_data_small"]
             "prediction.one_off.classification.nn_classifier",
         ],
         [
-            "preprocessing.imputation.static.static_imputation",
+            "preprocessing.imputation.static.static_tabular_imputer",
+            "preprocessing.imputation.temporal.ts_tabular_imputer",
             "prediction.one_off.regression.nn_regressor",
         ],
         [
@@ -81,7 +85,8 @@ def test_fails(plugins_str: List[Any]) -> None:
     "plugins_str",
     [
         [
-            "preprocessing.imputation.static.static_imputation",
+            "preprocessing.imputation.static.static_tabular_imputer",
+            "preprocessing.imputation.temporal.ts_tabular_imputer",
             "preprocessing.nop.nop_transformer",
             "preprocessing.imputation.temporal.bfill",
             "preprocessing.scaling.static.static_minmax_scaler",
@@ -89,17 +94,20 @@ def test_fails(plugins_str: List[Any]) -> None:
             "prediction.one_off.classification.nn_classifier",
         ],
         [
+            "preprocessing.imputation.static.static_tabular_imputer",
             "preprocessing.imputation.temporal.bfill",
             "preprocessing.scaling.temporal.ts_minmax_scaler",
             "prediction.one_off.regression.nn_regressor",
         ],
         [
+            "preprocessing.imputation.static.static_tabular_imputer",
             "preprocessing.imputation.temporal.ffill",
             "preprocessing.scaling.static.static_minmax_scaler",
             "preprocessing.scaling.temporal.ts_minmax_scaler",
             "prediction.one_off.regression.nn_regressor",
         ],
         [
+            "preprocessing.imputation.static.static_tabular_imputer",
             "preprocessing.imputation.temporal.ffill",
             "prediction.one_off.regression.nn_regressor",
         ],

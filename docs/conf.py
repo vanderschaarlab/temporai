@@ -329,6 +329,9 @@ intersphinx_mapping = {
     "scipy": ("https://docs.scipy.org/doc/scipy/reference", None),
     "setuptools": ("https://setuptools.pypa.io/en/stable/", None),
     "pyscaffold": ("https://pyscaffold.org/en/stable", None),
+    "hyperimpute": ("https://hyperimpute.readthedocs.io/en/latest/", None),
+    "xgbse": ("https://loft-br.github.io/xgboost-survival-embeddings/", None),
+    "lifelines": ("https://lifelines.readthedocs.io/en/stable/", None),
 }
 
 print(f"loading configurations for {project} {version} ...", file=sys.stderr)

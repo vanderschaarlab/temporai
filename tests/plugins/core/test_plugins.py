@@ -120,7 +120,7 @@ class TestRegistration:
             class UnexpectedClassPlugin(plugin_core.Plugin):  # pylint: disable=unused-variable
                 pass
 
-    def test_plugin_registration_fails_duplicate(
+    def test_plugin_registration_fails_duplicate_fqn(
         self,
     ):
         plugin_core.register_plugin_category("dummy_category", expected_class=plugin_core.Plugin)
@@ -129,9 +129,25 @@ class TestRegistration:
         class DummyPlugin(plugin_core.Plugin):  # pylint: disable=unused-variable
             pass
 
-        with pytest.raises(TypeError, match=".*[Pp]lugin.*name.*already registered.*"):
+        with pytest.raises(TypeError, match=".*[Pp]lugin with fully-qualified name.*already registered.*"):
 
             @plugin_core.register_plugin(name="dummy_plugin", category="dummy_category")
+            class DummyPluginDuplicate(plugin_core.Plugin):  # pylint: disable=unused-variable
+                pass
+
+    def test_plugin_registration_fails_duplicate_name(
+        self,
+    ):
+        plugin_core.register_plugin_category("dummy_category", expected_class=plugin_core.Plugin)
+        plugin_core.register_plugin_category("dummy_category_2", expected_class=plugin_core.Plugin)
+
+        @plugin_core.register_plugin(name="dummy_plugin", category="dummy_category")
+        class DummyPlugin(plugin_core.Plugin):  # pylint: disable=unused-variable
+            pass
+
+        with pytest.raises(TypeError, match=".*[Pp]lugin with name.*already registered.*"):
+
+            @plugin_core.register_plugin(name="dummy_plugin", category="dummy_category_2")
             class DummyPluginDuplicate(plugin_core.Plugin):  # pylint: disable=unused-variable
                 pass
 

@@ -53,7 +53,8 @@ def test_tempor_plugin_loader_contents():
     # ---
     assert "nop_transformer" in all_plugins["preprocessing"]["nop"]
     # ---
-    assert "static_imputation" in all_plugins["preprocessing"]["imputation"]["static"]
+    assert "static_tabular_imputer" in all_plugins["preprocessing"]["imputation"]["static"]
+    assert "ts_tabular_imputer" in all_plugins["preprocessing"]["imputation"]["temporal"]
     assert "ffill" in all_plugins["preprocessing"]["imputation"]["temporal"]
     assert "bfill" in all_plugins["preprocessing"]["imputation"]["temporal"]
     # ---

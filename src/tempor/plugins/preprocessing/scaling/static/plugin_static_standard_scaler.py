@@ -1,3 +1,6 @@
+import dataclasses
+from typing import Any, Dict
+
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from typing_extensions import Self
@@ -8,12 +11,29 @@ from tempor.data.samples import StaticSamples
 from tempor.plugins.preprocessing.scaling._base import BaseScaler
 
 
+@dataclasses.dataclass
+class StaticStandardScalerParams:
+    """Initialization parameters for :class:`StaticStandardScaler`."""
+
+    with_mean: bool = True
+    """If True, center the data before scaling. See `sklearn.preprocessing.StandardScaler`."""
+    with_std: bool = True
+    """If True, scale the data to unit variance. See `sklearn.preprocessing.StandardScaler`."""
+
+
 @plugins.register_plugin(name="static_standard_scaler", category="preprocessing.scaling.static")
 class StaticStandardScaler(BaseScaler):
-    def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
+    ParamsDefinition = StaticStandardScalerParams
+    params: StaticStandardScalerParams  # type: ignore
+
+    def __init__(self, **params) -> None:
         """Standard scaling for the static data.
 
         Standardize the static features by removing the mean and scaling to unit variance.
+
+        Args:
+            **params:
+                Parameters and defaults as defined in :class:`StaticStandardScalerParams`.
 
         Example:
             >>> from tempor.utils.dataloaders import SineDataLoader
@@ -31,9 +51,9 @@ class StaticStandardScaler(BaseScaler):
             >>> # Scale:
             >>> scaled = model.transform(dataset)
         """
-
         super().__init__(**params)
-        self.model = StandardScaler()
+        sklearn_params: Dict[str, Any] = dict(self.params)  # type: ignore
+        self.model = StandardScaler(**sklearn_params)
 
     def _fit(
         self,
