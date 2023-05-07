@@ -1,6 +1,8 @@
 import abc
 import random
-from typing import Any, List, Tuple
+from typing import Any, List, Optional, Tuple
+
+from optuna.trial import Trial
 
 
 class Params(abc.ABC):
@@ -11,11 +13,22 @@ class Params(abc.ABC):
         self.bounds = bounds
 
     @abc.abstractmethod
-    def get(self) -> List[Any]:
+    def get(self) -> List[Any]:  # pragma: no cover
+        ...
+
+    def sample(self, trial: Optional[Trial] = None) -> Any:
+        if trial is not None:
+            return self._sample_optuna_trial(trial)
+        else:
+            return self._sample_default()
+        # NOTE: Could support more parameter sampling implementations.
+
+    @abc.abstractmethod
+    def _sample_optuna_trial(self, trial: Trial) -> Any:  # pragma: no cover
         ...
 
     @abc.abstractmethod
-    def sample(self) -> Any:
+    def _sample_default(self) -> Any:  # pragma: no cover
         ...
 
 
@@ -30,7 +43,10 @@ class CategoricalParams(Params):
     def get(self) -> List[Any]:
         return [self.name, self.choices]
 
-    def sample(self) -> Any:
+    def _sample_optuna_trial(self, trial: Trial) -> Any:
+        return trial.suggest_categorical(self.name, self.choices)
+
+    def _sample_default(self) -> Any:
         return random.SystemRandom().choice(self.choices)
 
 
@@ -49,7 +65,10 @@ class FloatParams(Params):
     def get(self) -> List[Any]:
         return [self.name, self.low, self.high]
 
-    def sample(self) -> Any:
+    def _sample_optuna_trial(self, trial: Trial) -> Any:
+        return trial.suggest_float(self.name, self.low, self.high)
+
+    def _sample_default(self) -> Any:
         return random.uniform(self.low, self.high)  # nosec
 
 
@@ -71,7 +90,8 @@ class IntegerParams(Params):
     def get(self) -> List[Any]:
         return [self.name, self.low, self.high, self.step]
 
-    def sample(self) -> Any:
-        return random.SystemRandom().choice(
-            self.choices,
-        )
+    def _sample_optuna_trial(self, trial: Trial) -> Any:
+        return trial.suggest_int(self.name, self.low, self.high, self.step)
+
+    def _sample_default(self) -> Any:
+        return random.SystemRandom().choice(self.choices)

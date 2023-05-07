@@ -3,6 +3,7 @@ import dataclasses
 from typing import TYPE_CHECKING, Any, ClassVar, Dict, List, Optional, Type
 
 import omegaconf
+import optuna
 import pydantic
 import rich.pretty
 from typing_extensions import Self
@@ -110,11 +111,16 @@ class BaseEstimator(Plugin, abc.ABC):
     @classmethod
     def sample_hyperparameters(cls, *args: Any, **kwargs: Any) -> Dict[str, Any]:
         """Sample hyperparameters."""
+        # Pop the `trial` argument for optuna if such is found (if not, `trial` will be `None`).
+        trial, args, kwargs = utils.get_from_args_or_kwargs(
+            args, kwargs, argument_name="trial", argument_type=optuna.Trial, position_if_args=0
+        )
+
         param_space = cls.hyperparameter_space(*args, **kwargs)
 
-        results = {}
+        results = dict()
 
         for hp in param_space:
-            results[hp.name] = hp.sample()
+            results[hp.name] = hp.sample(trial)
 
         return results

@@ -88,6 +88,8 @@ def test_transform(
     assert output.static.dataframe().isna().sum().sum() == 0
 
 
+@pytest.mark.filterwarnings("ignore:.*Jupyter.*platformdirs.*:DeprecationWarning")  # Expected.
+@pytest.mark.filterwarnings("ignore:.*bool8.*:DeprecationWarning")  # Expected.
 @pytest.mark.filterwarnings("ignore:.*nonzero.*0d.*:DeprecationWarning")  # Expected for EM imputer.
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")  # Expected for EM imputer.
 @pytest.mark.filterwarnings("ignore::sklearn.exceptions.ConvergenceWarning")  # May happen in some cases.
