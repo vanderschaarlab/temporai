@@ -86,8 +86,8 @@ def get_from_args_or_kwargs(
         2. Check if a ``kwarg`` by key ``argument_name`` is found in ``kwargs``.
         3. If both 1 and 2 are found raise `RuntimeError`.
         4. If ``kwarg`` from 2 is not of type ``argument_type`` raise `TypeError`.
-        5. Return 1 or 2 if argument is found, else return `None`. Also return ``args`` and ``kwargs``
-        with the argument "popped".
+        5. Return 1 or 2 if argument is found, else return `None`. Also return ``args`` and ``kwargs``\
+            with the argument "popped".
 
     Args:
         args (Tuple):
