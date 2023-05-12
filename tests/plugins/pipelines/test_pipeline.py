@@ -1,16 +1,11 @@
-# pylint: disable=redefined-outer-name,no-member
+# pylint: disable=no-member
 
-from typing import Any, List
+import re
+from typing import Any, List, Type
 
 import pytest
 
-from tempor.plugins.pipeline import Pipeline, PipelineGroup, PipelineMeta
-from tempor.utils.serialization import load, save
-
-TEST_ON_DATASETS = [
-    "sine_data_small",
-    pytest.param("sine_data_full", marks=pytest.mark.extra),
-]
+from tempor.plugins.pipeline import PipelineBase, pipeline, pipeline_classes
 
 
 @pytest.mark.parametrize(
@@ -32,15 +27,29 @@ TEST_ON_DATASETS = [
         ],
     ],
 )
-def test_sanity(plugins_str: List[Any]) -> None:
-    dtype: PipelineMeta = Pipeline(plugins_str)
-    plugins = PipelineGroup(plugins_str)
+def test_sanity(plugins_str: List[Any]):
+    PipelineCls: Type[PipelineBase] = pipeline(plugins_str)
+    plugin_classes = pipeline_classes(plugins_str)
 
-    assert dtype.name() == "->".join(p for p in plugins_str)
+    assert issubclass(PipelineCls, PipelineBase)
+    assert PipelineCls.pipeline_seq() == "->".join(p for p in plugins_str)
+    assert list(PipelineCls.plugin_types) == list(plugin_classes)
 
     args = {"features_count": 10}
-    for act, pl in zip(dtype.hyperparameter_space(**args), plugins):
-        assert len(dtype.hyperparameter_space(**args)[act]) == len(pl.hyperparameter_space(**args))
+    for act, pl in zip(PipelineCls.hyperparameter_space(**args), plugin_classes):
+        assert len(PipelineCls.hyperparameter_space(**args)[act]) == len(pl.hyperparameter_space(**args))
+
+    pipe = PipelineCls()
+    hps = pipe.sample_hyperparameters()
+
+    assert len(pipe.stages) == len(plugin_classes)
+    assert pipe.predictor_category == plugin_classes[-1].category
+    assert len(pipe.params) == len(plugin_classes)
+    for stage in pipe.stages:
+        assert pipe.params[stage.name] == stage.params
+    assert len(hps) == len(plugin_classes)
+    for stage in pipe.stages:
+        assert stage.name in hps
 
 
 @pytest.mark.parametrize(
@@ -72,70 +81,55 @@ def test_sanity(plugins_str: List[Any]) -> None:
             "preprocessing.imputation.temporal.bfill",
             "preprocessing.scaling.temporal.ts_minmax_scaler",
         ],
+        ["invalid_fqn"],
         [],
     ],
 )
-def test_fails(plugins_str: List[Any]) -> None:
+def test_fails(plugins_str: List[Any]):
     with pytest.raises(RuntimeError):
-        Pipeline(plugins_str)()
+        pipeline(plugins_str)()
 
 
-@pytest.mark.filterwarnings("ignore:RNN.*contiguous.*:UserWarning")  # Expected: problem with current serialization.
-@pytest.mark.parametrize(
-    "plugins_str",
-    [
-        [
-            "preprocessing.imputation.static.static_tabular_imputer",
-            "preprocessing.imputation.temporal.ts_tabular_imputer",
-            "preprocessing.nop.nop_transformer",
-            "preprocessing.imputation.temporal.bfill",
-            "preprocessing.scaling.static.static_minmax_scaler",
-            "preprocessing.scaling.temporal.ts_minmax_scaler",
-            "prediction.one_off.classification.nn_classifier",
-        ],
-        [
-            "preprocessing.imputation.static.static_tabular_imputer",
-            "preprocessing.imputation.temporal.bfill",
-            "preprocessing.scaling.temporal.ts_minmax_scaler",
-            "prediction.one_off.regression.nn_regressor",
-        ],
-        [
-            "preprocessing.imputation.static.static_tabular_imputer",
-            "preprocessing.imputation.temporal.ffill",
-            "preprocessing.scaling.static.static_minmax_scaler",
-            "preprocessing.scaling.temporal.ts_minmax_scaler",
-            "prediction.one_off.regression.nn_regressor",
-        ],
-        [
-            "preprocessing.imputation.static.static_tabular_imputer",
-            "preprocessing.imputation.temporal.ffill",
-            "prediction.one_off.regression.nn_regressor",
-        ],
-        [
-            "prediction.one_off.classification.nn_classifier",
-        ],
-    ],
-)
-@pytest.mark.parametrize("serialize", [True, False])
-def test_end2end(plugins_str, serialize: bool, sine_data_small, sine_data_missing_small) -> None:
-    if len(plugins_str) > 1:
-        dataset = sine_data_missing_small
-    else:
-        dataset = sine_data_small
+def test_hyperparameter_space_for_step():
+    plugins_str = [
+        "preprocessing.imputation.temporal.bfill",
+        "prediction.one_off.classification.nn_classifier",
+    ]
+    PipelineCls = pipeline(plugins_str)
 
-    template: PipelineMeta = Pipeline(plugins_str)
-    pipeline = template()
+    hps = PipelineCls.hyperparameter_space_for_step("nn_classifier")
 
-    if serialize:
-        dump = save(pipeline)
-        pipeline = load(dump)
+    assert len(hps) > 0
 
-    pipeline.fit(dataset)
 
-    if serialize:
-        dump = save(pipeline)
-        pipeline = load(dump)
+def test_hyperparameter_space_for_step_fails():
+    plugins_str = [
+        "preprocessing.imputation.temporal.bfill",
+        "prediction.one_off.classification.nn_classifier",
+    ]
+    PipelineCls = pipeline(plugins_str)
 
-    y_pred = pipeline.predict(dataset)
+    with pytest.raises(ValueError, match="Invalid layer.*"):
+        PipelineCls.hyperparameter_space_for_step("non_existent_step")
 
-    assert y_pred.dataframe().shape == (len(dataset.predictive.targets.dataframe()), 1)
+
+def test_repr():
+    plugins_str = [
+        "preprocessing.imputation.temporal.bfill",
+        "preprocessing.scaling.static.static_minmax_scaler",
+        "preprocessing.scaling.temporal.ts_minmax_scaler",
+        "prediction.one_off.classification.nn_classifier",
+    ]
+
+    PipelineCls = pipeline(plugins_str)
+
+    pipe = PipelineCls()
+    repr_ = repr(pipe)
+
+    seq = pipe.pipeline_seq()
+    assert re.search(
+        r"^Pipeline\(.*pipeline_seq='" + seq + r"'.*predictor_category='prediction.one_off.classification'"
+        r".*params=.?\{.*'bfill':.*'static_minmax_scaler':.*'ts_minmax_scaler':.*'nn_classifier':.*\}.*\)",
+        repr_,
+        re.S,
+    )

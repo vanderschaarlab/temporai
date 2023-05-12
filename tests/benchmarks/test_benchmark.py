@@ -9,7 +9,7 @@ from tempor.benchmarks import (
     time_to_event_supported_metrics,
 )
 from tempor.plugins import plugin_loader
-from tempor.plugins.pipeline import Pipeline
+from tempor.plugins.pipeline import pipeline
 
 N_ITER = 5
 
@@ -27,7 +27,7 @@ def test_classifier_benchmark(data: str, request: pytest.FixtureRequest) -> None
     testcases = [
         (
             "pipeline1",
-            Pipeline(
+            pipeline(
                 [
                     "preprocessing.imputation.static.static_tabular_imputer",
                     "preprocessing.imputation.temporal.ffill",
@@ -66,7 +66,7 @@ def test_regressor_benchmark(data: str, request: pytest.FixtureRequest) -> None:
     testcases = [
         (
             "pipeline1",
-            Pipeline(
+            pipeline(
                 [
                     "preprocessing.imputation.static.static_tabular_imputer",
                     "preprocessing.imputation.temporal.ffill",
@@ -107,7 +107,7 @@ def test_time_to_event_benchmark(
     testcases = [
         (
             "pipeline1",
-            Pipeline(
+            pipeline(
                 [
                     "preprocessing.imputation.static.static_tabular_imputer",
                     "preprocessing.imputation.temporal.ffill",

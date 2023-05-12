@@ -12,7 +12,7 @@ from tempor.benchmarks import (
     time_to_event_supported_metrics,
 )
 from tempor.plugins import plugin_loader
-from tempor.plugins.pipeline import Pipeline
+from tempor.plugins.pipeline import pipeline
 
 N_ITER = 5
 
@@ -29,13 +29,13 @@ PREDICTOR_TIME_TO_EVENT = "time_to_event.dynamic_deephit"
 @pytest.mark.parametrize(
     "model_template",
     [
-        Pipeline(
+        pipeline(
             [
                 "preprocessing.imputation.temporal.ffill",
                 PREDICTOR_CLASSIFICATION,
             ]
         )({"nn_classifier": {"n_iter": N_ITER}}),
-        Pipeline(
+        pipeline(
             [
                 PREDICTOR_CLASSIFICATION,
             ]
@@ -71,13 +71,13 @@ def test_classifier_evaluation_fail(n_splits: int, data: str, request: pytest.Fi
 @pytest.mark.parametrize(
     "model_template",
     [
-        Pipeline(
+        pipeline(
             [
                 "preprocessing.imputation.temporal.ffill",
                 PREDICTOR_REGRESSION,
             ]
         )({"nn_regressor": {"n_iter": N_ITER}}),
-        Pipeline(
+        pipeline(
             [
                 PREDICTOR_REGRESSION,
             ]
@@ -111,13 +111,13 @@ def test_regressor_evaluation_fail(n_splits: int, data: str, request: pytest.Fix
 @pytest.mark.parametrize(
     "model_template",
     [
-        Pipeline(
+        pipeline(
             [
                 "preprocessing.imputation.temporal.ffill",
                 PREDICTOR_TIME_TO_EVENT,
             ]
         )({"dynamic_deephit": {"n_iter": N_ITER}}),
-        Pipeline(
+        pipeline(
             [
                 PREDICTOR_TIME_TO_EVENT,
             ]
