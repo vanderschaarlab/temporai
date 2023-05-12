@@ -34,26 +34,30 @@ SETTINGS: Dict = dict()
 
 TEST_SAMPLER_SET = [
     optuna.samplers.TPESampler(seed=SEED),
-    optuna.samplers.RandomSampler(seed=SEED),
-    optuna.samplers.CmaEsSampler(seed=SEED),
+    pytest.param(optuna.samplers.RandomSampler(seed=SEED), marks=pytest.mark.extra),
+    pytest.param(optuna.samplers.CmaEsSampler(seed=SEED), marks=pytest.mark.extra),
     pytest.param(
         optuna.samplers.QMCSampler(seed=SEED),
-        marks=pytest.mark.skipif(
-            Version(optuna.__version__) < Version("3.0.0"),
-            reason="optuna.samplers.QMCSampler is only available in optuna v3.0.0+",
-        ),
+        marks=[
+            pytest.mark.skipif(
+                Version(optuna.__version__) < Version("3.0.0"),
+                reason="optuna.samplers.QMCSampler is only available in optuna v3.0.0+",
+            ),
+            pytest.mark.extra,
+        ],
     ),
-    "GridSampler",  # Needs get_grid_by_sampling() call in test to define the grid.
+    pytest.param("GridSampler", marks=pytest.mark.extra),
+    # ^ Needs get_grid_by_sampling() call in test to define the grid.
     # NOTE: `optuna.samplers.BruteForceSampler` not currently compatible due to FloatParams
     # infinite search space; MO samplers are not applicable.
 ]
 TEST_PRUNER_SET = [
     optuna.pruners.MedianPruner(),
-    optuna.pruners.PatientPruner(None, 3),
-    optuna.pruners.PercentilePruner(0.25),
-    optuna.pruners.SuccessiveHalvingPruner(),
-    optuna.pruners.ThresholdPruner(lower=0.5),
-    optuna.pruners.HyperbandPruner(),
+    pytest.param(optuna.pruners.PatientPruner(None, 3), marks=pytest.mark.extra),
+    pytest.param(optuna.pruners.PercentilePruner(0.25), marks=pytest.mark.extra),
+    pytest.param(optuna.pruners.SuccessiveHalvingPruner(), marks=pytest.mark.extra),
+    pytest.param(optuna.pruners.ThresholdPruner(lower=0.5), marks=pytest.mark.extra),
+    pytest.param(optuna.pruners.HyperbandPruner(), marks=pytest.mark.extra),
 ]
 
 
