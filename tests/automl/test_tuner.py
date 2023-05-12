@@ -159,9 +159,9 @@ def tune_objective(get_event0_time_percentiles: Callable):
     ) -> float:
         model = estimator(*args, **kwargs)
         if evaluation_case == "prediction.one_off.classification":
-            metrics = evaluation.evaluate_classifier(model, dataset)
+            metrics = evaluation.evaluate_prediction_oneoff_classifier(model, dataset)
         elif evaluation_case == "prediction.one_off.regression":
-            metrics = evaluation.evaluate_regressor(model, dataset)
+            metrics = evaluation.evaluate_prediction_oneoff_regressor(model, dataset)
         elif evaluation_case == "prediction.temporal.classification":
             # TODO: This case needs to be handled in `tempor.benchmarks.evaluation`.
             raise NotImplementedError

@@ -338,7 +338,7 @@ class ClassifierMetrics:
 
 
 @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
-def evaluate_classifier(  # pylint: disable=unused-argument
+def evaluate_prediction_oneoff_classifier(  # pylint: disable=unused-argument
     estimator: Any,
     data: dataset.PredictiveDataset,
     *args: Any,
@@ -414,7 +414,7 @@ def evaluate_classifier(  # pylint: disable=unused-argument
 
 
 @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
-def evaluate_regressor(  # pylint: disable=unused-argument
+def evaluate_prediction_oneoff_regressor(  # pylint: disable=unused-argument
     estimator: Any,
     data: dataset.PredictiveDataset,
     *args: Any,

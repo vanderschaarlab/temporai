@@ -43,7 +43,7 @@ def test_classifier_benchmark(data: str, request: pytest.FixtureRequest) -> None
     dataset = request.getfixturevalue(data)
 
     aggr_score, per_test_score = benchmark_models(
-        task_type="classification",
+        task_type="prediction.one_off.classification",
         tests=testcases,
         data=dataset,
         n_splits=2,
@@ -82,7 +82,7 @@ def test_regressor_benchmark(data: str, request: pytest.FixtureRequest) -> None:
     dataset = request.getfixturevalue(data)
 
     aggr_score, per_test_score = benchmark_models(
-        task_type="regression",
+        task_type="prediction.one_off.regression",
         tests=testcases,
         data=dataset,
         n_splits=2,
