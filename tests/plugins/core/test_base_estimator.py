@@ -203,3 +203,37 @@ class TestBaseEstimator:
 
         with pytest.raises(ValueError, match=".*not fit-ready.*"):
             my_model.fit(data)
+
+    @pytest.mark.parametrize("override", [False, True])
+    def test_sample_hyperparameters(self, override):
+        hp = Mock()
+        hp.name = "my_param"
+        hp.sample = Mock(return_value="value")
+        hps = [hp]
+
+        class MyModel(tempor.plugins.core.BaseEstimator):
+            name = "my_model"
+            category = "my_category"
+            ParamsDefinition = self.MyModelParams
+
+            @staticmethod
+            def hyperparameter_space(*args: Any, **kwargs: Any):
+                return hps
+
+            def _fit(self, data, *args, **kwargs):
+                pass
+
+        my_model = MyModel()
+        if not override:
+            sampled = my_model.sample_hyperparameters()
+        else:
+            override_hp = Mock()
+            override_hp.name = "my_override_param"
+            override_hp.sample = Mock(return_value="override_value")
+            override_hps = [override_hp]
+            sampled = my_model.sample_hyperparameters(override=override_hps)  # type: ignore
+
+        if not override:
+            assert sampled == {"my_param": "value"}
+        else:
+            assert sampled == {"my_override_param": "override_value"}

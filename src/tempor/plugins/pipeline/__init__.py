@@ -96,7 +96,9 @@ class PipelineBase:
         raise NotImplementedError("Not implemented")
 
     @classmethod
-    def sample_hyperparameters(cls, *args: Any, **kwargs: Any) -> Dict[str, Any]:  # pragma: no cover
+    def sample_hyperparameters(
+        cls, *args: Any, override: Optional[List[Params]] = None, **kwargs: Any
+    ) -> Dict[str, Any]:  # pragma: no cover
         """The pipeline version of the estimator method of the same name. Returns a hyperparameter sample.
 
         Returns:

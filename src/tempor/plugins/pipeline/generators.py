@@ -1,6 +1,9 @@
-from typing import Any, Callable, Dict, Optional, Tuple, Type
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Type
 
 from tempor.data import dataset
+
+if TYPE_CHECKING:
+    from tempor.plugins.core._params import Params
 
 
 def _generate_pipeline_seq_impl(plugins: Tuple[Type, ...]) -> Callable:
@@ -31,10 +34,10 @@ def _generate_hyperparameter_space_for_step_impl(plugins: Tuple[Type, ...]) -> C
 
 
 def _generate_sample_hyperparameters_impl(plugins: Tuple[Type, ...]) -> Callable:
-    def sample_hyperparameters_impl(*args: Any, **kwargs: Any) -> Dict:  # pylint: disable=unused-argument
+    def sample_hyperparameters_impl(*args: Any, override: Optional[List["Params"]] = None, **kwargs: Any) -> Dict:
         sample: dict = {}
         for p in plugins:
-            sample[p.name] = p.sample_hyperparameters()
+            sample[p.name] = p.sample_hyperparameters(*args, override=override, **kwargs)
 
         return sample
 

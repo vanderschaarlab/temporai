@@ -4,11 +4,15 @@ from typing import Any, List, Optional, Tuple
 
 from optuna.trial import Trial
 
+RESERVED_ARG_NAMES = ("trail", "override")
+
 
 class Params(abc.ABC):
     """Helper for describing the hyperparameters for each estimator."""
 
     def __init__(self, name: str, bounds: Tuple[Any, Any]) -> None:
+        if name in RESERVED_ARG_NAMES:
+            raise ValueError(f"The hyperparameter name '{name}' is not allowed, as it is a special argument")
         self.name = name
         self.bounds = bounds
 
