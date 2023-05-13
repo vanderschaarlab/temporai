@@ -133,10 +133,10 @@ class OptunaTuner(BaseTuner):
         self.study_pruner = study_pruner
         self.study_load_if_exists = study_load_if_exists
 
-        self.study = self.create_study()
+        self.create_study()
 
     def create_study(self) -> optuna.Study:
-        study = optuna.create_study(
+        self.study = optuna.create_study(
             storage=self.study_storage,
             sampler=self.sampler,
             pruner=self.study_pruner,
@@ -145,7 +145,7 @@ class OptunaTuner(BaseTuner):
             load_if_exists=self.study_load_if_exists,
             directions=None,  # Do not support multi-objective.
         )
-        return study
+        return self.study
 
     def tune(
         self,

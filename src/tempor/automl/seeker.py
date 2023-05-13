@@ -78,6 +78,8 @@ METRIC_DIRECTION_MAP: Dict[SupportedMetric, OptimDirection] = {
 }
 
 # TODO: Pipeline with imputer and scaler.
+# TODO: Docstring.
+
 # TODO: Parallelism support (per-estimator).
 
 
@@ -89,6 +91,7 @@ def evaluation_callback_dispatch(
     n_cv_folds: int,
     random_state: int,
     horizon: Optional[data_typing.TimeIndex],
+    raise_exceptions: bool,
     *args,
     **kwargs,
 ) -> float:
@@ -100,6 +103,7 @@ def evaluation_callback_dispatch(
             dataset,
             n_splits=n_cv_folds,
             random_state=random_state,
+            raise_exceptions=raise_exceptions,
         )
     elif task_type == "prediction.one_off.regression":
         metrics = evaluation.evaluate_prediction_oneoff_regressor(
@@ -107,6 +111,7 @@ def evaluation_callback_dispatch(
             dataset,
             n_splits=n_cv_folds,
             random_state=random_state,
+            raise_exceptions=raise_exceptions,
         )
     elif task_type == "prediction.temporal.classification":  # pragma: no cover
         raise NotImplementedError
@@ -125,6 +130,7 @@ def evaluation_callback_dispatch(
             horizons=horizon,
             n_splits=n_cv_folds,
             random_state=random_state,
+            raise_exceptions=raise_exceptions,
         )
     elif task_type == "treatments.one_off.classification":  # pragma: no cover
         raise NotImplementedError
@@ -161,6 +167,7 @@ class SimpleSeeker:
         compute_baseline_score: bool = False,
         grid: Optional[Dict[str, Dict[str, Any]]] = None,
         custom_tuner: Optional[BaseTuner] = None,
+        raise_exceptions: bool = True,
         **kwargs,  # pylint: disable=unused-argument
     ) -> None:
         if override_hp_space is None:
@@ -181,6 +188,7 @@ class SimpleSeeker:
         self.horizon = horizon
         self.compute_baseline_score = compute_baseline_score
         self.grid = grid
+        self.raise_exceptions = raise_exceptions
 
         # Validate "grid" case:
         if self.tuner_type == "grid":
@@ -258,8 +266,8 @@ class SimpleSeeker:
                     assert isinstance(self.custom_tuner, OptunaTuner)  # nosec B101
                 study_name = f"{self.study_name}_{EstimatorCls.name}"
                 custom_tuner = copy.deepcopy(self.custom_tuner)
-                custom_tuner.study_name = study_name
-                custom_tuner.study = custom_tuner.create_study()
+                custom_tuner.study_name = study_name  # Update the study name to be unique.
+                custom_tuner.create_study()
                 self.tuners.append(custom_tuner)
 
     def search(self) -> Tuple[List[BasePredictor], List[float]]:
@@ -284,6 +292,7 @@ class SimpleSeeker:
                     n_cv_folds=self.num_cv_folds,
                     random_state=self.random_state,
                     horizon=self.horizon,
+                    raise_exceptions=self.raise_exceptions,
                 ),
                 override_hp_space=override,
                 compute_baseline_score=self.compute_baseline_score,
