@@ -60,6 +60,7 @@ class BaseTuner(abc.ABC):
         evaluation_callback: EvaluationCallback,
         override_hp_space: Optional[List[Params]] = None,
         compute_baseline_score: bool = True,
+        **kwargs,
     ) -> Tuple[List[float], List[Dict]]:
         """Run the hyperparameter tuner and return scores and chosen hyperparameters.
 
@@ -154,6 +155,7 @@ class OptunaTuner(BaseTuner):
         override_hp_space: Optional[List[Params]] = None,
         compute_baseline_score: bool = True,
         optimize_kwargs: Optional[Dict[str, Any]] = None,
+        **kwargs,
     ) -> Tuple[List[float], List[Dict]]:
         """Run the hyperparameter tuner and return scores and chosen hyperparameters.
 
