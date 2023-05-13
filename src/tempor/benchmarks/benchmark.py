@@ -2,24 +2,12 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import pandas as pd
 import pydantic
-from typing_extensions import Literal
 
+from tempor.core.types import PredictiveTaskType
 from tempor.data import data_typing, dataset
 from tempor.log import logger as log
 
 from . import evaluation
-
-TaskType = Literal[
-    "prediction.one_off.classification",
-    "prediction.one_off.regression",
-    "prediction.temporal.classification",
-    "prediction.temporal.regression",
-    "time_to_event",
-    "treatments.one_off.classification",
-    "treatments.one_off.regression",
-    "treatments.temporal.classification",
-    "treatments.temporal.regression",
-]
 
 
 def print_score(mean: pd.Series, std: pd.Series) -> pd.Series:
@@ -35,7 +23,7 @@ def print_score(mean: pd.Series, std: pd.Series) -> pd.Series:
 
 @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
 def benchmark_models(
-    task_type: TaskType,
+    task_type: PredictiveTaskType,
     tests: List[Tuple[str, Any]],  # [ ( Test name, Model to evaluate (unfitted) ), ... ]
     data: dataset.PredictiveDataset,
     n_splits: int = 3,
@@ -45,9 +33,9 @@ def benchmark_models(
     """Benchmark the performance of several algorithms.
 
     Args:
-        task_type (TaskType):
+        task_type (PredictiveTaskType):
             The type of problem. Relevant for evaluating the downstream models with the correct metrics.
-            The options are any of `TaskType`.
+            The options are any of `PredictiveTaskType`.
         tests (List[Tuple[str, Any]]):
             Tuples of form ``(test_name: str, plugin: BasePredictor/Pipeline)``
         data (dataset.Dataset):
