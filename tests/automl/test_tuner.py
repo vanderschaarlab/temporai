@@ -211,7 +211,9 @@ def helper_initialize(limit_int_param: Callable, get_dataset: Callable):
 
 @pytest.fixture
 def helper_tune(tune_objective: Callable):
-    def func(dataset, plugin, evaluation_case, metric, direction, sampler, pruner, compute_baseline_score):
+    def func(
+        dataset, plugin, evaluation_case, metric, direction, sampler, pruner, override_hp_space, compute_baseline_score
+    ):
         # Initialize and tune the tuner.OptunaTuner.
         hp_tuner = tuner.OptunaTuner(
             study_name="my_study",
@@ -227,6 +229,7 @@ def helper_tune(tune_objective: Callable):
                 evaluation_case=evaluation_case,
                 metric=metric,
             ),
+            override_hp_space=override_hp_space,
             compute_baseline_score=compute_baseline_score,
             optimize_kwargs=OPTIMIZE_KWARGS,
         )
@@ -289,6 +292,7 @@ def helper_test_optuna_tuner(
             direction=direction,
             sampler=sampler,
             pruner=pruner,
+            override_hp_space=None,
             compute_baseline_score=compute_baseline_score,
         )
         helper_asserts(
@@ -326,6 +330,42 @@ class TestOptunaTuner:
             direction="maximize",
             compute_baseline_score=compute_baseline_score,
         )
+
+    def test_override_hp_space(
+        self,
+        helper_initialize: Callable,
+        helper_tune: Callable,
+    ):
+        # Can only be sampled as:
+        # {'n_temporal_layers_hidden': 1, 'n_iter': 2}
+        override = [
+            IntegerParams(name="n_temporal_layers_hidden", low=1, high=1),
+            IntegerParams(name="n_iter", low=2, high=2),
+        ]
+
+        dataset, p = helper_initialize(
+            data="sine_data_small",
+            plugin="prediction.one_off.classification.nn_classifier",
+        )
+
+        sampler = optuna.samplers.TPESampler(seed=SEED)
+
+        scores, params = helper_tune(
+            dataset=dataset,
+            plugin=p,
+            evaluation_case="prediction.one_off.classification",
+            metric="aucroc",
+            direction="maximize",
+            sampler=sampler,
+            pruner=None,
+            override_hp_space=override,
+            compute_baseline_score=False,
+        )
+
+        assert len(params) == len(scores) == OPTIMIZE_KWARGS["n_trials"]
+        # Check that indeed our override params are being used. These can only be sampled as:
+        # {'n_temporal_layers_hidden': 1, 'n_iter': 2}
+        assert params[0] == params[1] == {"n_temporal_layers_hidden": 1, "n_iter": 2}
 
     class TestPredictionOneOffClassification:
         @pytest.mark.parametrize("data", SETTINGS["prediction.one_off.classification"]["TEST_ON_DATASETS"])

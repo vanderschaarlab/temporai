@@ -10,6 +10,7 @@ from typing_extensions import Protocol, runtime_checkable
 from tempor.data.dataset import PredictiveDataset
 from tempor.log import logger
 from tempor.plugins.core._base_predictor import BasePredictor
+from tempor.plugins.core._params import Params
 
 from ._types import OptimDirection
 
@@ -57,6 +58,7 @@ class BaseTuner(abc.ABC):
         estimator: Type[BasePredictor],
         dataset: PredictiveDataset,
         evaluation_callback: EvaluationCallback,
+        override_hp_space: Optional[List[Params]] = None,
         compute_baseline_score: bool = True,
     ) -> Tuple[List[float], List[Dict]]:
         """Run the hyperparameter tuner and return scores and chosen hyperparameters.
@@ -69,6 +71,9 @@ class BaseTuner(abc.ABC):
                 Dataset to use.
             evaluation_callback (EvaluationCallback):
                 Evaluation callback which will take in the estimator class, hyperparameters, and return a score.
+            override_hp_space (Optional[List[Params]]):
+                If this is not `None`, hyperparameters will be sampled from this list, rather than from those defined
+                in the ``hyperparameter_space`` method of the estimator. Defaults to `None`.
             compute_baseline_score (bool, optional):
                 If `True`, a trial will be run with default parameters (hyperparameters passed to ``__init__`` as an
                 empty dictionary). This will be returned as the zeroth item in ``scores`` and ``params``. If `False`,
@@ -146,6 +151,7 @@ class OptunaTuner(BaseTuner):
         estimator: Type[BasePredictor],
         dataset: PredictiveDataset,
         evaluation_callback: EvaluationCallback,
+        override_hp_space: Optional[List[Params]] = None,
         compute_baseline_score: bool = True,
         optimize_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Tuple[List[float], List[Dict]]:
@@ -158,6 +164,9 @@ class OptunaTuner(BaseTuner):
                 Dataset to use.
             evaluation_callback (EvaluationCallback):
                 Evaluation callback which will take in the estimator class, hyperparameters, and return a score.
+            override_hp_space (Optional[List[Params]]):
+                If this is not `None`, hyperparameters will be sampled from this list, rather than from those defined
+                in the ``hyperparameter_space`` method of the estimator. Defaults to `None`.
             compute_baseline_score (bool, optional):
                 If `True`, a trial will be run with default parameters (hyperparameters passed to ``__init__`` as an
                 empty dictionary). This will be returned as the zeroth item in ``scores`` and ``params``. If `False`,
@@ -188,7 +197,7 @@ class OptunaTuner(BaseTuner):
             return scores, params
 
         def objective(trial: optuna.Trial) -> float:
-            hps = estimator.sample_hyperparameters(trial)
+            hps = estimator.sample_hyperparameters(trial, override=override_hp_space)
             logger.info(f"Hyperparameters sampled from {estimator.__name__}:\n{hps}")
             score = evaluation_callback(estimator, dataset, **hps)
             return score
