@@ -158,15 +158,14 @@ def tune_objective(get_event0_time_percentiles: Callable):
         **kwargs,
     ) -> float:
         model = estimator(*args, **kwargs)
+        # TODO: Handle missing cases.
         if evaluation_case == "prediction.one_off.classification":
             metrics = evaluation.evaluate_prediction_oneoff_classifier(model, dataset)
         elif evaluation_case == "prediction.one_off.regression":
             metrics = evaluation.evaluate_prediction_oneoff_regressor(model, dataset)
         elif evaluation_case == "prediction.temporal.classification":
-            # TODO: This case needs to be handled in `tempor.benchmarks.evaluation`.
             raise NotImplementedError
         elif evaluation_case == "prediction.temporal.regression":
-            # TODO: This case needs to be handled in `tempor.benchmarks.evaluation`.
             raise NotImplementedError
         elif evaluation_case == "time_to_event":
             assert isinstance(dataset, TimeToEventAnalysisDataset)
@@ -174,16 +173,12 @@ def tune_objective(get_event0_time_percentiles: Callable):
                 model, dataset, horizons=get_event0_time_percentiles(dataset, [0.25, 0.5, 0.75])
             )
         elif evaluation_case == "treatments.one_off.classification":
-            # TODO: This case needs to be handled in `tempor.benchmarks.evaluation`.
             raise NotImplementedError
         elif evaluation_case == "treatments.one_off.regression":
-            # TODO: This case needs to be handled in `tempor.benchmarks.evaluation`.
             raise NotImplementedError
         elif evaluation_case == "treatments.temporal.classification":
-            # TODO: This case needs to be handled in `tempor.benchmarks.evaluation`.
             raise NotImplementedError
         elif evaluation_case == "treatments.temporal.regression":
-            # TODO: This case needs to be handled in `tempor.benchmarks.evaluation`.
             raise NotImplementedError
         else:
             raise ValueError(f"Unknown evaluation case: {evaluation_case}")
@@ -196,7 +191,7 @@ def tune_objective(get_event0_time_percentiles: Callable):
 
 
 @pytest.fixture
-def tuner_initialize(limit_int_param: Callable, get_dataset: Callable):
+def helper_initialize(limit_int_param: Callable, get_dataset: Callable):
     def func(data: str, plugin: str):
         # Initialize the dataset and plugin class from the strings provided.
         # In addition, limit the `n_iter`, `epochs` hyperparameter sampling, such that tests run in reasonable time.
@@ -215,11 +210,16 @@ def tuner_initialize(limit_int_param: Callable, get_dataset: Callable):
 
 
 @pytest.fixture
-def tuner_tune(tune_objective: Callable):
+def helper_tune(tune_objective: Callable):
     def func(dataset, plugin, evaluation_case, metric, direction, sampler, pruner, compute_baseline_score):
         # Initialize and tune the tuner.OptunaTuner.
         hp_tuner = tuner.OptunaTuner(
             study_name="my_study",
+            direction=direction,
+            study_sampler=sampler,
+            study_pruner=pruner,
+        )
+        return hp_tuner.tune(
             estimator=plugin,
             dataset=dataset,
             evaluation_callback=functools.partial(
@@ -227,18 +227,15 @@ def tuner_tune(tune_objective: Callable):
                 evaluation_case=evaluation_case,
                 metric=metric,
             ),
-            direction=direction,
-            sampler=sampler,
-            study_pruner=pruner,
+            compute_baseline_score=compute_baseline_score,
             optimize_kwargs=OPTIMIZE_KWARGS,
         )
-        return hp_tuner.tune(compute_baseline_score=compute_baseline_score)
 
     return func
 
 
 @pytest.fixture
-def tuner_asserts():
+def helper_asserts():
     def func(plugin, scores, params, compute_baseline_score: bool, pruner_enabled: bool):
         # Do the necessary asserts for the tests.
         hp_names = sorted(list(get_grid_by_sampling(plugin, n=1).keys()))
@@ -257,9 +254,9 @@ def tuner_asserts():
 
 @pytest.fixture
 def helper_test_optuna_tuner(
-    tuner_initialize: Callable,
-    tuner_tune: Callable,
-    tuner_asserts: Callable,
+    helper_initialize: Callable,
+    helper_tune: Callable,
+    helper_asserts: Callable,
 ):
     def func(
         data: str,
@@ -273,7 +270,7 @@ def helper_test_optuna_tuner(
     ):
         # A general test function for testing `tuner.OptunaTuner`.
 
-        dataset, p = tuner_initialize(
+        dataset, p = helper_initialize(
             data=data,
             plugin=plugin,
         )
@@ -284,7 +281,7 @@ def helper_test_optuna_tuner(
         if sampler == "GridSampler":
             sampler = optuna.samplers.GridSampler(search_space=get_grid_by_sampling(p, n=GRID_SAMPLER_GRID_N))
 
-        scores, params = tuner_tune(
+        scores, params = helper_tune(
             dataset=dataset,
             plugin=p,
             evaluation_case=evaluation_case,
@@ -294,7 +291,7 @@ def helper_test_optuna_tuner(
             pruner=pruner,
             compute_baseline_score=compute_baseline_score,
         )
-        tuner_asserts(
+        helper_asserts(
             plugin=p,
             compute_baseline_score=compute_baseline_score,
             scores=scores,
@@ -318,7 +315,7 @@ class TestOptunaTuner:
         helper_test_optuna_tuner: Callable,
     ):
         # Check compute_baseline_score = True, False cases.
-        # tuner_asserts() helper has appropriate asserts for each of these two cases.
+        # helper_asserts() helper has appropriate asserts for each of these two cases.
         helper_test_optuna_tuner(
             data="sine_data_small",
             plugin="prediction.one_off.classification.nn_classifier",
