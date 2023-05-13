@@ -81,6 +81,70 @@ class TestSimpleSeeker:
             override_hp_space=override_hp_space,
         )
 
+    def test_init_success_custom_tuner(self, get_dataset: Callable):
+        import optuna
+
+        from tempor.automl.tuner import OptunaTuner
+
+        estimator_names = [
+            "cde_classifier",
+            "ode_classifier",
+            "nn_classifier",
+        ]
+        dataset = get_dataset("sine_data_full")
+
+        custom_tuner = OptunaTuner(
+            study_name="test_study",
+            direction="maximize",
+            study_sampler=optuna.samplers.TPESampler(seed=12345),
+            study_pruner=optuna.pruners.PercentilePruner(0.1),
+        )
+
+        seeker = SimpleSeeker(
+            study_name="test_study",
+            task_type="prediction.one_off.classification",
+            estimator_names=estimator_names,
+            metric="aucroc",
+            dataset=dataset,
+            override_hp_space=None,
+            custom_tuner=custom_tuner,
+        )
+        assert len(seeker.tuners) == len(estimator_names)
+        for tuner in seeker.tuners:
+            assert isinstance(tuner, OptunaTuner)
+            assert "test_study_" in tuner.study_name
+            isinstance(tuner.study_pruner, optuna.pruners.PercentilePruner)
+
+    def test_init_fails_custom_tuner_grid_sampler_unsupported(self, get_dataset: Callable):
+        import optuna
+
+        from tempor.automl.tuner import OptunaTuner
+
+        estimator_names = [
+            "cde_classifier",
+            "ode_classifier",
+            "nn_classifier",
+        ]
+        dataset = get_dataset("sine_data_full")
+
+        custom_tuner = OptunaTuner(
+            study_name="test_study",
+            direction="maximize",
+            study_sampler=optuna.samplers.GridSampler(search_space={}),
+            study_pruner=optuna.pruners.PercentilePruner(0.1),
+        )
+
+        with pytest.raises(ValueError, match=".*[Gg]rid.*not supported.*"):
+            SimpleSeeker(
+                study_name="test_study",
+                task_type="prediction.one_off.classification",
+                estimator_names=estimator_names,
+                metric="aucroc",
+                dataset=dataset,
+                override_hp_space=None,
+                custom_tuner=custom_tuner,
+            )
+
     def test_init_fails_wrong_overrides(self, get_dataset: Callable):
         estimator_names = [
             "cde_classifier",
@@ -305,6 +369,61 @@ class TestSimpleSeeker:
             return_top_k=2,
             num_iter=3,
             override_hp_space=override_hp_space,  # type: ignore
+        )
+
+        estimators, scores = seeker.search()
+
+        assert len(estimators) == len(scores) == 2
+        for est in estimators:
+            assert est.name in estimator_names
+
+    @pytest.mark.slow
+    def test_search_end2end_custom_tuner(self, get_dataset: Callable):
+        import optuna
+
+        from tempor.automl.tuner import OptunaTuner
+
+        estimator_names = [
+            "cde_classifier",
+            "ode_classifier",
+            "nn_classifier",
+        ]
+        override_hp_space = {
+            "cde_classifier": [
+                IntegerParams(name="n_iter", low=2, high=2),
+                IntegerParams(name="n_temporal_units_hidden", low=5, high=20),
+                CategoricalParams(name="lr", choices=[1e-2, 1e-3, 1e-4]),
+            ],
+            "ode_classifier": [
+                IntegerParams(name="n_iter", low=2, high=2),
+                IntegerParams(name="n_units_hidden", low=5, high=20),
+                CategoricalParams(name="lr", choices=[1e-2, 1e-3, 1e-4]),
+            ],
+            "nn_classifier": [
+                IntegerParams(name="n_iter", low=2, high=2),
+                IntegerParams(name="n_units_hidden", low=5, high=20),
+                CategoricalParams(name="lr", choices=[1e-2, 1e-3, 1e-4]),
+            ],
+        }
+        dataset = get_dataset("sine_data_full")
+
+        custom_tuner = OptunaTuner(
+            study_name="test_study",
+            direction="maximize",
+            study_sampler=optuna.samplers.TPESampler(seed=12345),
+            study_pruner=optuna.pruners.PercentilePruner(0.1),
+        )
+
+        seeker = SimpleSeeker(
+            study_name="test_study",
+            task_type="prediction.one_off.classification",
+            estimator_names=estimator_names,
+            metric="aucroc",
+            dataset=dataset,
+            return_top_k=2,
+            num_iter=3,
+            override_hp_space=override_hp_space,  # type: ignore
+            custom_tuner=custom_tuner,
         )
 
         estimators, scores = seeker.search()

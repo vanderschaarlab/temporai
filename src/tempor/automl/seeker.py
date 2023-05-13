@@ -1,3 +1,4 @@
+import copy
 import functools
 import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
@@ -77,7 +78,6 @@ METRIC_DIRECTION_MAP: Dict[SupportedMetric, OptimDirection] = {
 }
 
 # TODO: Pipeline with imputer and scaler.
-# TODO: Allow to pass a tuner directly.
 # TODO: Parallelism support (per-estimator).
 
 
@@ -139,7 +139,7 @@ def evaluation_callback_dispatch(
     return metrics.loc[metric, "mean"]  # pyright: ignore
 
 
-class SimpleSeeker:  # BaseSeeker
+class SimpleSeeker:
     @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def __init__(
         self,
@@ -160,6 +160,7 @@ class SimpleSeeker:  # BaseSeeker
         horizon: Optional[data_typing.TimeIndex] = None,
         compute_baseline_score: bool = False,
         grid: Optional[Dict[str, Dict[str, Any]]] = None,
+        custom_tuner: Optional[BaseTuner] = None,
         **kwargs,  # pylint: disable=unused-argument
     ) -> None:
         if override_hp_space is None:
@@ -199,6 +200,12 @@ class SimpleSeeker:  # BaseSeeker
                 )
         self.override_hp_space = override_hp_space
 
+        # Validate custom tuner.
+        if isinstance(custom_tuner, OptunaTuner):
+            if isinstance(custom_tuner.sampler, optuna.samplers.GridSampler):
+                raise ValueError("Passing a custom tuner with `optuna.samplers.GridSampler` is not supported")
+        self.custom_tuner = custom_tuner
+
         self.direction: OptimDirection = METRIC_DIRECTION_MAP[self.metric]
         self.estimators: List[Type[BasePredictor]] = []
         self.tuners: List[BaseTuner] = []
@@ -214,34 +221,46 @@ class SimpleSeeker:  # BaseSeeker
             self.estimators.append(EstimatorCls)
 
             # Set up tuner.
-            # Pruner:
-            with warnings.catch_warnings():
-                warnings.filterwarnings("ignore", category=optuna.exceptions.ExperimentalWarning)
-                pruner = optuna.pruners.PatientPruner(None, self.tuner_patience)
-            # Sampler:
-            with warnings.catch_warnings():
-                warnings.filterwarnings("ignore", category=optuna.exceptions.ExperimentalWarning)
-                SamplerCls = TUNER_OPTUNA_SAMPLER_MAP[self.tuner_type]
-                if self.tuner_type != "grid":
-                    sampler = SamplerCls(seed=self.random_state)
-                else:
-                    if TYPE_CHECKING:  # pragma: no cover
-                        assert self.grid is not None  # nosec B101
-                    sampler = SamplerCls(seed=self.random_state, search_space=self.grid[estimator_name])
-            # Instantiate:
-            if self.tuner_type in TUNER_OPTUNA_SAMPLER_MAP:
-                tuner = OptunaTuner(
-                    study_name=f"{self.study_name}_{EstimatorCls.name}",
-                    direction=self.direction,
-                    study_sampler=sampler,
-                    study_storage=None,
-                    study_pruner=pruner,
-                    study_load_if_exists=False,
-                )
-                self.tuners.append(tuner)
-            else:  # pragma: no cover
-                # Should not get here as there is pydantic validation.
-                raise ValueError(f"Unsupported tuner type: {self.tuner_type}. Available: {get_args(TunerType)}.")
+            if self.custom_tuner is None:
+                # Case: Default tuners based on tuner_type etc.
+                # Pruner:
+                with warnings.catch_warnings():
+                    warnings.filterwarnings("ignore", category=optuna.exceptions.ExperimentalWarning)
+                    pruner = optuna.pruners.PatientPruner(None, self.tuner_patience)
+                # Sampler:
+                with warnings.catch_warnings():
+                    warnings.filterwarnings("ignore", category=optuna.exceptions.ExperimentalWarning)
+                    SamplerCls = TUNER_OPTUNA_SAMPLER_MAP[self.tuner_type]
+                    if self.tuner_type != "grid":
+                        sampler = SamplerCls(seed=self.random_state)
+                    else:
+                        if TYPE_CHECKING:  # pragma: no cover
+                            assert self.grid is not None  # nosec B101
+                        sampler = SamplerCls(seed=self.random_state, search_space=self.grid[estimator_name])
+                # Instantiate:
+                if self.tuner_type in TUNER_OPTUNA_SAMPLER_MAP:
+                    tuner = OptunaTuner(
+                        study_name=f"{self.study_name}_{EstimatorCls.name}",
+                        direction=self.direction,
+                        study_sampler=sampler,
+                        study_storage=None,
+                        study_pruner=pruner,
+                        study_load_if_exists=False,
+                    )
+                    self.tuners.append(tuner)
+                else:  # pragma: no cover
+                    # Should not get here as there is pydantic validation.
+                    raise ValueError(f"Unsupported tuner type: {self.tuner_type}. Available: {get_args(TunerType)}.")
+            else:
+                # Case: Custom tuner.
+                # Copy the tuner for each estimator.
+                if TYPE_CHECKING:  # pragma: no cover
+                    assert isinstance(self.custom_tuner, OptunaTuner)  # nosec B101
+                study_name = f"{self.study_name}_{EstimatorCls.name}"
+                custom_tuner = copy.deepcopy(self.custom_tuner)
+                custom_tuner.study_name = study_name
+                custom_tuner.study = custom_tuner.create_study()
+                self.tuners.append(custom_tuner)
 
     def search(self) -> Tuple[List[BasePredictor], List[float]]:
         search_results: List[Tuple[List[float], List[Dict]]] = []
