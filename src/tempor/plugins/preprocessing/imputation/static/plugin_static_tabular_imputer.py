@@ -1,7 +1,6 @@
 import dataclasses
 from typing import Any, Dict, List
 
-from hyperimpute.plugins.imputers import Imputers
 from typing_extensions import Self, get_args
 
 import tempor.plugins.core as plugins
@@ -9,6 +8,11 @@ from tempor.data import dataset
 from tempor.data.samples import StaticSamples
 from tempor.plugins.core._params import CategoricalParams, Params
 from tempor.plugins.preprocessing.imputation._base import BaseImputer, TabularImputerType
+
+from ..hyperimpute_utils import monkeypatch_hyperimpute_logger
+
+with monkeypatch_hyperimpute_logger():
+    from hyperimpute.plugins.imputers import Imputers
 
 
 @dataclasses.dataclass
