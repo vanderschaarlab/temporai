@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional, Tuple, Type
 
 import optuna
 
@@ -111,7 +111,7 @@ class PipelineSelector:
     def _get_relevant_hps(plugin_name: str, hps: Dict[str, Any]) -> Dict[str, Any]:
         return {k.split("(")[-1][:-1]: v for k, v in hps.items() if f"[{plugin_name}]" in k}
 
-    def pipeline_from_hps(self, hps: Dict[str, Any]) -> PipelineBase:
+    def pipeline_class_from_hps(self, hps: Dict[str, Any]) -> Tuple[Type[PipelineBase], Dict[str, Dict]]:
         pipeline_def: List[str] = []
         pipeline_init_params: Dict[str, Dict] = dict()
 
@@ -126,9 +126,9 @@ class PipelineSelector:
         predictor_hps = self._get_relevant_hps(self.predictor.name, hps)
         pipeline_init_params[self.predictor.name] = predictor_hps
 
-        # print("======")
-        # print(pipeline_def)
-        # print(pipeline_init_params)
-        # print("======")
+        return pipeline(pipeline_def), pipeline_init_params
 
-        return pipeline(pipeline_def)(pipeline_init_params)
+    def pipeline_from_hps(self, hps: Dict[str, Any]) -> PipelineBase:
+        PipelineCls, pipeline_init_params = self.pipeline_class_from_hps(hps)
+
+        return PipelineCls(pipeline_init_params)

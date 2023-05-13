@@ -1,7 +1,7 @@
 """Module containing the interface for, and the implemented hyperparameter tuners."""
 
 import abc
-from typing import Any, Dict, List, Optional, Tuple, Type, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Type, Union
 
 import optuna
 from pydantic import validate_arguments
@@ -13,6 +13,7 @@ from tempor.plugins.core._base_predictor import BasePredictor
 from tempor.plugins.core._params import Params
 
 from ._types import OptimDirection
+from .pipeline_selector import PipelineSelector
 
 
 @runtime_checkable
@@ -55,7 +56,7 @@ class BaseTuner(abc.ABC):
     @abc.abstractmethod
     def tune(
         self,
-        estimator: Type[BasePredictor],
+        estimator: Union[Type[BasePredictor], PipelineSelector],
         dataset: PredictiveDataset,
         evaluation_callback: EvaluationCallback,
         override_hp_space: Optional[List[Params]] = None,
@@ -65,9 +66,8 @@ class BaseTuner(abc.ABC):
         """Run the hyperparameter tuner and return scores and chosen hyperparameters.
 
         Args:
-            estimator (Type[BasePredictor]):
-                Estimator Returns:
-            Tuple[List[float], List[Dict]]: _description_class whose hyperparameters will be tuned.
+            estimator (Union[Type[BasePredictor], PipelineSelector]):
+                Estimator class, or `PipelineSelector`, whose hyperparameters will be tuned.
             dataset (PredictiveDataset):
                 Dataset to use.
             evaluation_callback (EvaluationCallback):
@@ -149,7 +149,7 @@ class OptunaTuner(BaseTuner):
 
     def tune(
         self,
-        estimator: Type[BasePredictor],
+        estimator: Union[Type[BasePredictor], PipelineSelector],
         dataset: PredictiveDataset,
         evaluation_callback: EvaluationCallback,
         override_hp_space: Optional[List[Params]] = None,
@@ -160,8 +160,8 @@ class OptunaTuner(BaseTuner):
         """Run the hyperparameter tuner and return scores and chosen hyperparameters.
 
         Args:
-            estimator (Type[BasePredictor]):
-                Estimator class whose hyperparameters will be tuned.
+            estimator (Union[Type[BasePredictor], PipelineSelector]):
+                Estimator class, or `PipelineSelector`, whose hyperparameters will be tuned.
             dataset (PredictiveDataset):
                 Dataset to use.
             evaluation_callback (EvaluationCallback):
@@ -187,7 +187,8 @@ class OptunaTuner(BaseTuner):
         scores = []
         params: List[Dict[str, Any]] = []
 
-        if compute_baseline_score:
+        if compute_baseline_score and not isinstance(estimator, PipelineSelector):
+            # NOTE: in case of PipelineSelector base case is not defined, so this is ignored.
             baseline_score = evaluation_callback(estimator, dataset)
             scores.append(baseline_score)
             params.append(dict())
@@ -200,8 +201,21 @@ class OptunaTuner(BaseTuner):
 
         def objective(trial: optuna.Trial) -> float:
             hps = estimator.sample_hyperparameters(trial, override=override_hp_space)
-            logger.info(f"Hyperparameters sampled from {estimator.__name__}:\n{hps}")
-            score = evaluation_callback(estimator, dataset, **hps)
+
+            estimator_for_eval: Type[BasePredictor]
+            if isinstance(estimator, PipelineSelector):
+                pipe_cls, hps = estimator.pipeline_class_from_hps(hps)  # type: ignore
+                name = pipe_cls.pipeline_seq()
+                if TYPE_CHECKING:  # pragma: no cover
+                    assert issubclass(pipe_cls, BasePredictor)  # nosec B101
+                estimator_for_eval = pipe_cls
+            else:
+                estimator_for_eval = estimator
+                name = estimator_for_eval.__name__
+
+            logger.info(f"Hyperparameters sampled from {name}:\n{hps}")
+            score = evaluation_callback(estimator_for_eval, dataset, **hps)
+
             return score
 
         self.study.optimize(objective, **optimize_kwargs)
