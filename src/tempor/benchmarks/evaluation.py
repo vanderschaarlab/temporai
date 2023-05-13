@@ -22,7 +22,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from tempor.plugins.prediction.one_off.regression import BaseOneOffRegressor
     from tempor.plugins.time_to_event import BaseTimeToEventAnalysis
 
-# TODO: Benchmarking workflow for prediction.temporal case.
+# TODO: Benchmarking workflow for missing cases.
 
 ClassifierSupportedMetric = Literal[
     "aucroc",
@@ -341,9 +341,9 @@ class ClassifierMetrics:
 def evaluate_prediction_oneoff_classifier(  # pylint: disable=unused-argument
     estimator: Any,
     data: dataset.PredictiveDataset,
-    *args: Any,
     n_splits: int = 3,
     random_state: int = 0,
+    raise_exceptions: bool = False,
     **kwargs: Any,
 ) -> pd.DataFrame:
     """Helper for evaluating classifiers.
@@ -357,6 +357,10 @@ def evaluate_prediction_oneoff_classifier(  # pylint: disable=unused-argument
             Cross-validation folds. Defaults to ``3``.
         random_state (int, optional):
             Random state. Defaults to ``0``.
+        raise_exceptions (bool, optional):
+            Whether to raise exceptions during evaluation. If `False`, the exceptions will be swallowed and the
+            evaluation will continue - exception count will be reported in the `"errors"` column of the resultant
+            dataframe. Defaults to `False`.
 
     Returns:
         pd.DataFrame:
@@ -406,6 +410,8 @@ def evaluate_prediction_oneoff_classifier(  # pylint: disable=unused-argument
         except BaseException as e:  # pylint: disable=broad-except
             logger.error(f"Evaluation failed: {e}")
             results.errors.append(1)
+            if raise_exceptions:
+                raise
 
         results.durations.append(time() - start)
         indx += 1
@@ -417,9 +423,9 @@ def evaluate_prediction_oneoff_classifier(  # pylint: disable=unused-argument
 def evaluate_prediction_oneoff_regressor(  # pylint: disable=unused-argument
     estimator: Any,
     data: dataset.PredictiveDataset,
-    *args: Any,
     n_splits: int = 3,
     random_state: int = 0,
+    raise_exceptions: bool = False,
     **kwargs: Any,
 ) -> pd.DataFrame:
     """Helper for evaluating regression tasks.
@@ -433,6 +439,10 @@ def evaluate_prediction_oneoff_regressor(  # pylint: disable=unused-argument
             Cross-validation folds. Defaults to ``3``.
         random_state (int, optional):
             Random state. Defaults to ``0``.
+        raise_exceptions (bool, optional):
+            Whether to raise exceptions during evaluation. If `False`, the exceptions will be swallowed and the
+            evaluation will continue - exception count will be reported in the `"errors"` column of the resultant
+            dataframe. Defaults to `False`.
 
     Returns:
         pd.DataFrame:
@@ -475,6 +485,8 @@ def evaluate_prediction_oneoff_regressor(  # pylint: disable=unused-argument
         except BaseException as e:  # pylint: disable=broad-except
             logger.error(f"Regression evaluation failed: {e}")
             results.errors.append(1)
+            if raise_exceptions:
+                raise
 
         results.durations.append(time() - start)
         indx += 1
@@ -565,9 +577,9 @@ def evaluate_time_to_event(  # pylint: disable=unused-argument
     estimator: Any,
     data: dataset.TimeToEventAnalysisDataset,
     horizons: data_typing.TimeIndex,
-    *args: Any,
     n_splits: int = 3,
     random_state: int = 0,
+    raise_exceptions: bool = False,
     **kwargs: Any,
 ) -> pd.DataFrame:
     """Helper for evaluating time-to-event tasks.
@@ -583,6 +595,10 @@ def evaluate_time_to_event(  # pylint: disable=unused-argument
             Cross-validation folds. Defaults to ``3``.
         random_state (int, optional):
             Random state. Defaults to ``0``.
+        raise_exceptions (bool, optional):
+            Whether to raise exceptions during evaluation. If `False`, the exceptions will be swallowed and the
+            evaluation will continue - exception count will be reported in the `"errors"` column of the resultant
+            dataframe. Defaults to `False`.
 
     Returns:
         pd.DataFrame:
@@ -635,6 +651,8 @@ def evaluate_time_to_event(  # pylint: disable=unused-argument
         except BaseException as e:  # pylint: disable=broad-except
             logger.error(f"Regression evaluation failed: {e}")
             results.errors.append(1)
+            if raise_exceptions:
+                raise
 
         results.durations.append(time() - start)
         indx += 1
