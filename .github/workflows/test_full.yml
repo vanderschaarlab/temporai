@@ -55,12 +55,11 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install .[dev]
-      - name: Test with pytest (xdist)
-        if: matrix.os != 'ubuntu-latest'
-        run: pytest -vvvx -n auto --durations=50 --cov
+      # Currently xdist approach runs out of memory for test_full.
+      # - name: Test with pytest (xdist)
+      #   if: matrix.os != 'ubuntu-latest'
+      #   run: pytest -vvvx -n auto --durations=50 --cov
       - name: Test with pytest
-        # Avoid xdist on 'ubuntu-latest', as this has worse performance.
-        if: matrix.os == 'ubuntu-latest'
         run: pytest -vvvx --durations=50 --cov
       - name: Upload coverage report to codecov
         uses: codecov/codecov-action@v3
