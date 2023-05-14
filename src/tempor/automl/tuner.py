@@ -193,9 +193,11 @@ class OptunaTuner(BaseTuner):
         scores = []
         params: List[Dict[str, Any]] = []
 
+        # TODO: Handle dataset passing through transformation such that there is no need to copy.
+
         if compute_baseline_score and not isinstance(estimator, PipelineSelector):
             # NOTE: in case of PipelineSelector base case is not defined, so this is ignored.
-            baseline_score = evaluation_callback(estimator, dataset)
+            baseline_score = evaluation_callback(estimator, copy.deepcopy(dataset))
             scores.append(baseline_score)
             params.append(dict())
             logger.info(f"Baseline score for {estimator.name}: {baseline_score}")
@@ -223,7 +225,7 @@ class OptunaTuner(BaseTuner):
                 name = estimator_for_eval.__name__
 
             logger.info(f"Hyperparameters sampled from {name}:\n{hps}")
-            score = evaluation_callback(estimator_for_eval, dataset, **hps)
+            score = evaluation_callback(estimator_for_eval, copy.deepcopy(dataset), **hps)
 
             return score
 
