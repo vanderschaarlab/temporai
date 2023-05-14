@@ -1,3 +1,5 @@
+"""Module containing the interface for, and the implemented hyperparameter seekers."""
+
 import abc
 import copy
 import functools
@@ -18,7 +20,7 @@ from tempor.plugins import plugin_loader
 from tempor.plugins.core import BasePredictor
 from tempor.plugins.core._params import Params
 
-from ._types import OptimDirection
+from ._types import AutoMLCompatibleEstimator, OptimDirection
 from .pipeline_selector import (
     DEFAULT_STATIC_IMPUTERS,
     DEFAULT_STATIC_SCALERS,
@@ -50,6 +52,7 @@ SupportedMetric = Union[
     evaluation.RegressionSupportedMetric,
     evaluation.TimeToEventSupportedMetric,
 ]
+"""The type denoting all metrics supported by ``Seeker`` classes"""
 
 TUNER_OPTUNA_SAMPLER_MAP: Dict[TunerType, Any] = {
     "bayesian": optuna.samplers.TPESampler,
@@ -58,6 +61,7 @@ TUNER_OPTUNA_SAMPLER_MAP: Dict[TunerType, Any] = {
     "qmc": optuna.samplers.QMCSampler,
     "grid": optuna.samplers.GridSampler,
 }
+"""A map from `TunerType` to the corresponding `optuna` sampler class"""
 
 METRIC_DIRECTION_MAP: Dict[SupportedMetric, OptimDirection] = {
     # ClassifierSupportedMetric:
@@ -84,8 +88,8 @@ METRIC_DIRECTION_MAP: Dict[SupportedMetric, OptimDirection] = {
     "c_index": "maximize",
     "brier_score": "minimize",
 }
+"""A map from metric (`SupportedMetric`) to its optimization direction (`OptimDirection`)"""
 
-# TODO: Docstring.
 # TODO: Parallelism support (per-estimator).
 
 
@@ -93,7 +97,7 @@ def evaluation_callback_dispatch(
     estimator: Type[BasePredictor],
     dataset: PredictiveDataset,
     task_type: PredictiveTaskType,
-    metric: str,
+    metric: SupportedMetric,
     n_cv_folds: int,
     random_state: int,
     horizon: Optional[data_typing.TimeIndex],
@@ -101,6 +105,31 @@ def evaluation_callback_dispatch(
     *args,
     **kwargs,
 ) -> float:
+    """Perform evaluation of ``estimator`` (of task type ``task_type``) on ``dataset``, using the appropriate
+    evaluation function from the `tempor.benchmarks.evaluation` module.
+
+    Args:
+        estimator (Type[BasePredictor]):
+            The predictor estimator class to use.
+        dataset (PredictiveDataset):
+            The dataset to use.
+        task_type (PredictiveTaskType):
+            The task type of the predictor.
+        metric (SupportedMetric):
+            The metric to be used for evaluation.
+        n_cv_folds (int):
+            Number of cross-validation folds to use.
+        random_state (int):
+            Random state used for data splitting.
+        horizon (Optional[data_typing.TimeIndex]):
+            The prediction horizon. Applicable to the "time_to_event" task case.
+        raise_exceptions (bool):
+            If set to `True`, if an exception is raised during evaluation, this will be raised and execution will be
+            terminated. Otherwise the exception will be ignored and a dummy value returned.
+
+    Returns:
+        float: The mean evaluation metric across the cross-validation folds.
+    """
     model = estimator(*args, **kwargs)
     # TODO: Handle missing cases.
     if task_type == "prediction.one_off.classification":
@@ -177,6 +206,58 @@ class BaseSeeker(abc.ABC):
         raise_exceptions: bool = True,
         **kwargs,  # pylint: disable=unused-argument
     ) -> None:
+        """The base class for an AutoML Seeker, to be derived from by concrete implementations. Provides an AutoML
+        interface, in particular, the ``search`` method.
+
+        Args:
+            study_name (str):
+                The name of the AutoML study (that is, the set of all individual AutoML trials).
+            task_type (PredictiveTaskType):
+                The task type of the predictor estimators to be searched.
+            estimator_names (List[str]):
+                Friendly names of estimators. Will be passed one-by-one to ``_init_estimator`` method calls.
+            estimator_defs (List[Any]):
+                Definition of estimators. Will be passed one-by-one to ``_init_estimator`` method calls.
+            metric (SupportedMetric):
+                The metric to use for evaluation.
+            dataset (PredictiveDataset):
+                The dataset to use for evaluation.
+            return_top_k (int, optional):
+                How many best estimators to return. Defaults to ``3``.
+            num_cv_folds (int, optional):
+                How many cross-validation folds to use. Defaults to ``5``.
+            num_iter (int, optional):
+                Number of AutoML iterations. Defaults to ``100``.
+            tuner_patience (int, optional):
+                Patience of the AutoML tuner (for early-stopping). Defaults to ``5``.
+            tuner_type (TunerType, optional):
+                The type of AutoML tuner to use. Defaults to ``"bayesian"``.
+            timeout (int, optional):
+                AutoML optimization run time out (seconds). Defaults to ``360``.
+            random_state (int, optional):
+                Random state to use. Defaults to ``0``.
+            override_hp_space (Optional[Dict[str, List[Params]]], optional):
+                A dictionary with ``estimator_names`` keys and the hyperparameter space overrides values, e.g.
+                ``{"my_estimator_A": [IntegerParams("some_param", low=1, high=100), ...], "my_estimator_B": ....}``.
+                Defaults to `None`.
+            horizon (Optional[data_typing.TimeIndex], optional):
+                The prediction horizon for evaluation. Applicable to the "time_to_event" task case. Defaults to `None`.
+            compute_baseline_score (bool, optional):
+                (If supported by the ``Seeker`` implementation.) Whether to run a baseline trial and compute its score.
+                A baseline trial is a trial with all the default parameters. Defaults to `False`.
+            grid (Optional[Dict[str, Dict[str, Any]]], optional):
+                (If supported by the ``Seeker`` implementation; only relevant to `"grid"` tuner type) The grid for the
+                grid search tuner type. Keys are ``estimator_names`, values are
+                ``(param_name: str -> List[param_value_candidate: Any])``. Defaults to `None`.
+            custom_tuner (Optional[BaseTuner], optional):
+                Pass a ``custom_tuner`` to override the default AutoML tuner for ``tuner_type``. Defaults to `None`.
+            raise_exceptions (bool, optional):
+                 If set to `True`, if an exception is raised during AutoML study run, this will be raised and
+                 execution will be terminated. Otherwise the exception will be ignored. Defaults to `True`.
+
+        Raises:
+            ValueError: If incompatible / invalid input arguments have been passed.
+        """
         if override_hp_space is None:
             override_hp_space = dict()
 
@@ -226,25 +307,48 @@ class BaseSeeker(abc.ABC):
         self.custom_tuner = custom_tuner
 
         self.direction: OptimDirection = METRIC_DIRECTION_MAP[self.metric]
-        self.estimators: List[Union[Type[BasePredictor], PipelineSelector]] = []
+        self.estimators: List[AutoMLCompatibleEstimator] = []
         self.tuners: List[BaseTuner] = []
 
         self._set_up_tuners()
 
     @abc.abstractmethod
-    def _init_estimator(
-        self, estimator_name: str, estimator_def: Any
-    ) -> Union[Type[BasePredictor], PipelineSelector]:  # pragma: no cover
-        ...
+    def _init_estimator(self, estimator_name: str, estimator_def: Any) -> AutoMLCompatibleEstimator:  # pragma: no cover
+        """Abstract method for overriding by concrete ``Seeker`` implementations. Create an AutoML estimator based on
+        its name (``estimator_name``) and any other information provided in its definition (``estimator_def``).
+
+        Args:
+            estimator_name (str): Estimator friendly name.
+            estimator_def (Any): Estimator definition - can be any data needed for creating the estimator.
+
+        Returns:
+            AutoMLCompatibleEstimator: The created estimator.
+        """
+        ...  # pylint: disable=unnecessary-ellipsis
 
     @abc.abstractmethod
     def _create_estimator_with_hps(
         self,
-        estimator_cls: Union[Type[BasePredictor], PipelineSelector],
+        estimator_cls: AutoMLCompatibleEstimator,
         hps: Dict[str, Any],
         score: float,
     ) -> BasePredictor:  # pragma: no cover
-        ...
+        """Abstract method for overriding by concrete ``Seeker`` implementations. Create a concrete `BasePredictor`
+        instance based on the hyperparameters provided. Used when a trial is completed and a set of parameters has
+        been sampled.
+
+        Args:
+            estimator_cls (AutoMLCompatibleEstimator):
+                The AutoML-compatible estimator to facilitate the creation of the instance.
+            hps (Dict[str, Any]):
+                Hyperparameter dictionary.
+            score (float):
+                The score corresponding to this trail (for information).
+
+        Returns:
+            BasePredictor: Predictor instance to return.
+        """
+        ...  # pylint: disable=unnecessary-ellipsis
 
     def _set_up_tuners(self):
         logger.info(f"Setting up estimators and tuners for study {self.study_name}.")
@@ -296,6 +400,12 @@ class BaseSeeker(abc.ABC):
                 self.tuners.append(custom_tuner)
 
     def search(self) -> Tuple[List[BasePredictor], List[float]]:
+        """Perform AutoML search.
+
+        Returns:
+            Tuple[List[BasePredictor], List[float]]:
+                ``(best_estimators, best_scores)``, the best estimators and the corresponding base scores returned.
+        """
         search_results: List[Tuple[List[float], List[Dict]]] = []
         for idx, (estimator_name, estimator_cls, tuner) in enumerate(
             zip(self.estimator_names, self.estimators, self.tuners)
@@ -382,6 +492,48 @@ class MethodSeeker(BaseSeeker):
         raise_exceptions: bool = True,
         **kwargs,
     ) -> None:
+        """An AutoML seeker which will search the hyperparameter space of each of the predictor estimators defined in
+        ``estimator_names`` for the ``task_type`` task setting.
+
+        Args:
+            study_name (str):
+                See `~tempor.automl.seeker.BaseSeeker`.
+            task_type (PredictiveTaskType):
+                See `~tempor.automl.seeker.BaseSeeker`.
+            estimator_names (List[str]):
+                The candidate predictors. Provide plugin names (without category qualification), e.g. like
+                ``["nn_classifier", "cde_classifier"]``.
+            metric (SupportedMetric):
+                See `~tempor.automl.seeker.BaseSeeker`.
+            dataset (PredictiveDataset):
+                See `~tempor.automl.seeker.BaseSeeker`.
+            return_top_k (int, optional):
+                See `~tempor.automl.seeker.BaseSeeker`.
+            num_cv_folds (int, optional):
+                See `~tempor.automl.seeker.BaseSeeker`.
+            num_iter (int, optional):
+                See `~tempor.automl.seeker.BaseSeeker`.
+            tuner_patience (int, optional):
+                See `~tempor.automl.seeker.BaseSeeker`.
+            tuner_type (TunerType, optional):
+                See `~tempor.automl.seeker.BaseSeeker`.
+            timeout (int, optional):
+                See `~tempor.automl.seeker.BaseSeeker`.
+            random_state (int, optional):
+                See `~tempor.automl.seeker.BaseSeeker`.
+            override_hp_space (Optional[Dict[str, List[Params]]], optional):
+                See `~tempor.automl.seeker.BaseSeeker`.
+            horizon (Optional[data_typing.TimeIndex], optional):
+                See `~tempor.automl.seeker.BaseSeeker`.
+            compute_baseline_score (bool, optional):
+                See `~tempor.automl.seeker.BaseSeeker`.
+            grid (Optional[Dict[str, Dict[str, Any]]], optional):
+                See `~tempor.automl.seeker.BaseSeeker`.
+            custom_tuner (Optional[BaseTuner], optional):
+                See `~tempor.automl.seeker.BaseSeeker`.
+            raise_exceptions (bool, optional):
+                See `~tempor.automl.seeker.BaseSeeker`.
+        """
         estimator_defs = estimator_names
 
         super().__init__(
@@ -407,13 +559,13 @@ class MethodSeeker(BaseSeeker):
             **kwargs,
         )
 
-    def _init_estimator(self, estimator_name: str, estimator_def: Any) -> Union[Type[BasePredictor], PipelineSelector]:
+    def _init_estimator(self, estimator_name: str, estimator_def: Any) -> AutoMLCompatibleEstimator:
         logger.info(f"Creating estimator {estimator_name}.")
         estimator_fqn = f"{self.task_type}.{estimator_def}"
         return plugin_loader.get_class(estimator_fqn)
 
     def _create_estimator_with_hps(
-        self, estimator_cls: Union[Type[BasePredictor], PipelineSelector], hps: Dict[str, Any], score: float
+        self, estimator_cls: AutoMLCompatibleEstimator, hps: Dict[str, Any], score: float
     ) -> BasePredictor:
         estimator_cls = cast(Type[BasePredictor], estimator_cls)
         logger.info(f"Selected score {score} for {estimator_cls.name} with hyperparameters:\n{hps}")
@@ -449,6 +601,70 @@ class PipelineSeeker(BaseSeeker):
         raise_exceptions: bool = True,
         **kwargs,
     ) -> None:
+        """An AutoML seeker which will sample pipelines comprised of:
+            - A static imputer (if at lease one candidate in ``static_imputers`` provided)
+            - A static scaler (if at lease one candidate in ``static_scalers`` provided)
+            - A temporal imputer (if at lease one candidate in ``temporal_imputers`` provided)
+            - A temporal scaler (if at lease one candidate in ``temporal_scalers`` provided)
+            - The final predictor, from the ``estimator_names`` options.
+
+        The imputer/scaler candidates will be sampled as a categorical hyperparameter. The hyperparameter spaces of
+        these, and of the final predictor, will be sampled.
+
+        Note:
+            - ``compute_baseline_score=True`` is not supported, as the pipeline is dynamic and there is no defined\
+                baseline case.
+            - ``tuner_type="grid"`` is not currently supported.
+
+        Args:
+            study_name (str):
+                See `~tempor.automl.seeker.BaseSeeker`.
+            task_type (PredictiveTaskType):
+                See `~tempor.automl.seeker.BaseSeeker`.
+            estimator_names (List[str]):
+                The candidate predictors that will be the last step of the pipeline. Provide plugin names
+                (without category qualification), e.g. like ``["nn_classifier", "cde_classifier"]``.
+            metric (SupportedMetric):
+                See `~tempor.automl.seeker.BaseSeeker`.
+            dataset (PredictiveDataset):
+                See `~tempor.automl.seeker.BaseSeeker`.
+            static_imputers (List[str], optional):
+                A list of candidate static imputers. Defaults to `DEFAULT_STATIC_IMPUTERS`.
+            static_scalers (List[str], optional):
+                A list of candidate static scalers. Defaults to `DEFAULT_STATIC_SCALERS`.
+            temporal_imputers (List[str], optional):
+                A list of candidate temporal imputers. Defaults to `DEFAULT_TEMPORAL_IMPUTERS`.
+            temporal_scalers (List[str], optional):
+                A list of candidate temporal scalers. Defaults to `DEFAULT_TEMPORAL_SCALERS`.
+            return_top_k (int, optional):
+                See `~tempor.automl.seeker.BaseSeeker`.
+            num_cv_folds (int, optional):
+                See `~tempor.automl.seeker.BaseSeeker`.
+            num_iter (int, optional):
+                See `~tempor.automl.seeker.BaseSeeker`.
+            tuner_patience (int, optional):
+                See `~tempor.automl.seeker.BaseSeeker`.
+            tuner_type (TunerType, optional):
+                See `~tempor.automl.seeker.BaseSeeker`.
+            timeout (int, optional):
+                See `~tempor.automl.seeker.BaseSeeker`.
+            random_state (int, optional):
+                See `~tempor.automl.seeker.BaseSeeker`.
+            override_hp_space (Optional[Dict[str, List[Params]]], optional):
+                See `~tempor.automl.seeker.BaseSeeker`. Note that currently the hyperparameter space override in this
+                case can only be specified for the last pipeline step (the predictive estimator), not the preceding
+                data transformer steps. The default hyperparameter space will always be used for those.
+            horizon (Optional[data_typing.TimeIndex], optional):
+                See `~tempor.automl.seeker.BaseSeeker`.
+            compute_baseline_score (bool, optional):
+                See `~tempor.automl.seeker.BaseSeeker`.
+            grid (Optional[Dict[str, Dict[str, Any]]], optional):
+                See `~tempor.automl.seeker.BaseSeeker`.
+            custom_tuner (Optional[BaseTuner], optional):
+                See `~tempor.automl.seeker.BaseSeeker`.
+            raise_exceptions (bool, optional):
+                See `~tempor.automl.seeker.BaseSeeker`.
+        """
         # Define estimator definitions:
         estimator_defs = []
         for predictor in estimator_names:
@@ -513,7 +729,7 @@ class PipelineSeeker(BaseSeeker):
     def _pipe_human_name(self, predictor_name: str) -> str:
         return f"<Pipeline with {predictor_name}>"
 
-    def _init_estimator(self, estimator_name: str, estimator_def: Any) -> Union[Type[BasePredictor], PipelineSelector]:
+    def _init_estimator(self, estimator_name: str, estimator_def: Any) -> AutoMLCompatibleEstimator:
         logger.info(f"Creating estimator {estimator_name}.")
         return PipelineSelector(
             task_type=self.task_type,
@@ -525,7 +741,7 @@ class PipelineSeeker(BaseSeeker):
         )
 
     def _create_estimator_with_hps(
-        self, estimator_cls: Union[Type[BasePredictor], PipelineSelector], hps: Dict[str, Any], score: float
+        self, estimator_cls: AutoMLCompatibleEstimator, hps: Dict[str, Any], score: float
     ) -> BasePredictor:
         estimator_cls = cast(PipelineSelector, estimator_cls)
         name = self._pipe_human_name(estimator_cls.predictor.name)

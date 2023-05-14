@@ -13,8 +13,13 @@ from tempor.log import logger
 from tempor.plugins.core._base_predictor import BasePredictor
 from tempor.plugins.core._params import Params
 
-from ._types import OptimDirection
+from ._types import AutoMLCompatibleEstimator, OptimDirection
 from .pipeline_selector import PipelineSelector
+
+# TODO: Handle other hyperparameter tuning frameworks, e.g. hyperband.
+# TODO: Explicitly handle other storage types, e.g. redis.
+# TODO: Possibly add a repeated parameter pruner.
+# TODO: Support ensembles.
 
 
 @runtime_checkable
@@ -57,7 +62,7 @@ class BaseTuner(abc.ABC):
     @abc.abstractmethod
     def tune(
         self,
-        estimator: Union[Type[BasePredictor], PipelineSelector],
+        estimator: AutoMLCompatibleEstimator,
         dataset: PredictiveDataset,
         evaluation_callback: EvaluationCallback,
         override_hp_space: Optional[List[Params]] = None,
@@ -67,7 +72,7 @@ class BaseTuner(abc.ABC):
         """Run the hyperparameter tuner and return scores and chosen hyperparameters.
 
         Args:
-            estimator (Union[Type[BasePredictor], PipelineSelector]):
+            estimator (AutoMLCompatibleEstimator):
                 Estimator class, or `PipelineSelector`, whose hyperparameters will be tuned.
             dataset (PredictiveDataset):
                 Dataset to use.
@@ -89,11 +94,6 @@ class BaseTuner(abc.ABC):
         ...  # pylint: disable=unnecessary-ellipsis
 
 
-# TODO: Handle other hyperparameter tuning frameworks, e.g. hyperband.
-
-# TODO: Handle other storage types, e.g. redis.
-# TODO: Possibly add a repeated parameter pruner.
-# TODO: Handle ensembles.
 class OptunaTuner(BaseTuner):
     @validate_arguments(config=dict(arbitrary_types_allowed=True))
     def __init__(
@@ -137,6 +137,11 @@ class OptunaTuner(BaseTuner):
         self.create_study()
 
     def create_study(self) -> optuna.Study:
+        """Create an `optuna.Study` to be used for tuning. Sets the ``self.study`` attribute.
+
+        Returns:
+            optuna.Study: The created study.
+        """
         self.study = optuna.create_study(
             storage=self.study_storage,
             sampler=self.sampler,
@@ -150,7 +155,7 @@ class OptunaTuner(BaseTuner):
 
     def tune(
         self,
-        estimator: Union[Type[BasePredictor], PipelineSelector],
+        estimator: AutoMLCompatibleEstimator,
         dataset: PredictiveDataset,
         evaluation_callback: EvaluationCallback,
         override_hp_space: Optional[List[Params]] = None,
@@ -161,7 +166,7 @@ class OptunaTuner(BaseTuner):
         """Run the hyperparameter tuner and return scores and chosen hyperparameters.
 
         Args:
-            estimator (Union[Type[BasePredictor], PipelineSelector]):
+            estimator (AutoMLCompatibleEstimator):
                 Estimator class, or `PipelineSelector`, whose hyperparameters will be tuned.
             dataset (PredictiveDataset):
                 Dataset to use.
