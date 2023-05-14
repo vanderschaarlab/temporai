@@ -34,7 +34,7 @@ def test_sanity(get_test_plugin: Callable, plugin_from: str) -> None:
     test_plugin = get_test_plugin(plugin_from, INIT_KWARGS)
     assert test_plugin is not None
     assert test_plugin.name == "ts_minmax_scaler"
-    assert len(test_plugin.hyperparameter_space()) == 0
+    assert len(test_plugin.hyperparameter_space()) == 1
 
 
 @pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)

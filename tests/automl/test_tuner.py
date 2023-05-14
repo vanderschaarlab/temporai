@@ -306,6 +306,55 @@ def helper_test_optuna_tuner(
     return func
 
 
+@pytest.fixture
+def helper_test_optuna_tuner_pipeline_selector(
+    get_dataset: Callable,
+    helper_tune: Callable,
+    helper_asserts: Callable,
+):
+    def func(
+        data: str,
+        pipeline_selector,
+        sampler: Any,
+        pruner: Any,
+        evaluation_case: str,
+        metric: str,
+        direction: OptimDirection,
+    ):
+        # A general test function for testing `tuner.OptunaTuner` - pipeline selector case.
+
+        dataset = get_dataset(data)
+
+        if sampler is None:
+            sampler = optuna.samplers.TPESampler(seed=SEED)
+
+        if sampler == "GridSampler":
+            sampler = optuna.samplers.GridSampler(
+                search_space=get_grid_by_sampling(pipeline_selector, n=GRID_SAMPLER_GRID_N)
+            )
+
+        scores, params = helper_tune(
+            dataset=dataset,
+            plugin=pipeline_selector,
+            evaluation_case=evaluation_case,
+            metric=metric,
+            direction=direction,
+            sampler=sampler,
+            pruner=pruner,
+            override_hp_space=None,
+            compute_baseline_score=False,
+        )
+        helper_asserts(
+            plugin=pipeline_selector,
+            compute_baseline_score=False,
+            scores=scores,
+            params=params,
+            pruner_enabled=pruner is not None,
+        )
+
+    return func
+
+
 # TestOptunaTuner helper functions (end) ---
 
 
@@ -534,3 +583,24 @@ class TestOptunaTuner:
                 direction=direction,
                 compute_baseline_score=False,
             )
+
+    # Test PipelineSelector case.
+
+    @pytest.mark.slow
+    @pytest.mark.filterwarnings("ignore")  # In some HyperImpute cases.
+    def test_pipeline_selector_case(self, helper_test_optuna_tuner_pipeline_selector: Callable):
+        from tempor.automl.pipeline_selector import PipelineSelector
+
+        ps = PipelineSelector(task_type="prediction.one_off.classification", predictor="nn_classifier")
+
+        data = "sine_data_full"
+
+        helper_test_optuna_tuner_pipeline_selector(
+            data=data,
+            pipeline_selector=ps,
+            sampler=None,
+            pruner=None,
+            evaluation_case="prediction.one_off.classification",
+            metric="aucroc",
+            direction="maximize",
+        )

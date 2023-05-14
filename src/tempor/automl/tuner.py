@@ -204,7 +204,8 @@ class OptunaTuner(BaseTuner):
 
             estimator_for_eval: Type[BasePredictor]
             if isinstance(estimator, PipelineSelector):
-                pipe_cls, hps = estimator.pipeline_class_from_hps(hps)  # type: ignore
+                pipe_cls, pipe_hp_dict = estimator.pipeline_class_from_hps(hps)
+                hps = dict(plugin_params=pipe_hp_dict)
                 name = pipe_cls.pipeline_seq()
                 if TYPE_CHECKING:  # pragma: no cover
                     assert issubclass(pipe_cls, BasePredictor)  # nosec B101

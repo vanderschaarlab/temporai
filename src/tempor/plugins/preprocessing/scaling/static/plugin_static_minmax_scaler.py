@@ -88,6 +88,5 @@ class StaticMinMaxScaler(BaseScaler):
     @staticmethod
     def hyperparameter_space(*args, **kwargs):
         return [
-            CategoricalParams("feature_range", [(0.0, 1.0), (-1.0, 1.0)]),
             CategoricalParams("clip", [True, False]),
         ]
