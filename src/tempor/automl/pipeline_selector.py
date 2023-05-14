@@ -76,29 +76,42 @@ class PipelineSelector:
             # Should not reach here in normal use.
             raise RuntimeError("Must pass a list of candidates with at least one item")
 
-    def hyperparameter_space(self, *args, **kwargs) -> List[Params]:
+    def hyperparameter_space(
+        self,
+        *args,
+        predictor_override: Optional[List[Params]] = None,
+        **kwargs,
+    ) -> List[Params]:
         hps: List[Params] = []
+
         for plugin_cls_list in self._preproc_candidate_lists():
             if plugin_cls_list:
                 hps.append(self._generate_candidates_param(plugin_cls_list))
             for plugin in plugin_cls_list:
                 hps.extend(self.format_hps_names(plugin, plugin.hyperparameter_space(*args, **kwargs)))
-        hps.extend(self.format_hps_names(self.predictor, self.predictor.hyperparameter_space(*args, **kwargs)))
+
+        if predictor_override is not None:
+            hps.extend(self.format_hps_names(self.predictor, predictor_override))
+        else:
+            hps.extend(self.format_hps_names(self.predictor, self.predictor.hyperparameter_space(*args, **kwargs)))
+
         return hps
 
     def sample_hyperparameters(
-        self, *args: Any, override: Optional[List[Params]] = None, **kwargs: Any
+        self,
+        *args: Any,
+        predictor_override: Optional[List[Params]] = None,
+        **kwargs: Any,
     ) -> Dict[str, Any]:
+        # NOTE: The inner workings of this method need to stay roughly consistent with
+        # `BaseEstimator.sample_hyperparameters`.
+
         # Pop the `trial` argument for optuna if such is found (if not, `trial` will be `None`).
         trial, args, kwargs = utils.get_from_args_or_kwargs(
             args, kwargs, argument_name="trial", argument_type=optuna.Trial, position_if_args=0
         )
 
-        # TODO: Override mechanic here still to be determined.
-        if override is None:
-            param_space = self.hyperparameter_space(*args, **kwargs)
-        else:
-            param_space = override
+        param_space = self.hyperparameter_space(*args, predictor_override=predictor_override, **kwargs)
 
         results = dict()
 
