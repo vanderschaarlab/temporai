@@ -69,6 +69,13 @@ readme_content = re.sub(
     flags=re.DOTALL,
 )
 # ^ Add a hidden copy of the ```python ... ``` blocks as testcode blocks with output check skipped.
+readme_content = re.sub(
+    r"```{testcode}(.*)\n(.*?)# doctest: \+SKIP(.*?)```python",
+    r"```{testcode}\1\n#\2\3```python",
+    readme_content,
+    flags=re.DOTALL,
+)
+# ^ Comment out any lines that include "# doctest: +SKIP" (in {testcode}```...``` only).
 
 # Make emoji representations compatible with sphinxemoji, e.g. :key: --> |:key:|
 # readme_content = re.sub(r"\:[a-z1-9+\-_]{0,100}\:", (lambda x: f"|{x.group(0)}|"), readme_content)

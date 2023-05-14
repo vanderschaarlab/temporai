@@ -98,7 +98,13 @@ SETTINGS["time_to_event"] = dict(
     TEST_WITH_PLUGINS=[
         f"{_category_prefix}.dynamic_deephit",
         pytest.param(f"{_category_prefix}.ts_coxph", marks=pytest.mark.extra),
-        pytest.param(f"{_category_prefix}.ts_xgb", marks=pytest.mark.extra),
+        pytest.param(
+            f"{_category_prefix}.ts_xgb",
+            marks=[
+                pytest.mark.extra,
+                pytest.mark.skipci,  # Too memory intensive for CI workers, skip.
+            ],
+        ),
     ],
     METRICS=[
         ("c_index", "maximize"),

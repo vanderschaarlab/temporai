@@ -29,6 +29,8 @@
 
 *TemporAI* is a Machine Learning-centric time-series library for medicine.  The tasks that are currently of focus in TemporAI are: time-series prediction, time-to-event (a.k.a. survival) analysis with time-series data, and counterfactual inference (i.e. \[individualized\] treatment effects).
 
+*TemporAI* provides data preprocessing methods (including scaling and imputation methods for static and temporal covariates). AutoML tools for hyperparameter tuning and pipeline selection are available.
+
 In future versions, the library also aims to provide the user with understanding of their data, model, and problem, through e.g. integration with interpretability methods.
 
 Key concepts:
@@ -83,11 +85,9 @@ model.fit(dataset)
 
 # Impute:
 imputed = model.transform(dataset)
-static_data_n_missing = imputed.static.dataframe().isna().sum().sum()
 temporal_data_n_missing = imputed.time_series.dataframe().isna().sum().sum()
 
 print(static_data_n_missing, temporal_data_n_missing)
-assert static_data_n_missing == 0
 assert temporal_data_n_missing == 0
 ```
 
@@ -130,13 +130,13 @@ Classification task
 ```python
 from tempor.benchmarks import benchmark_models
 from tempor.plugins import plugin_loader
-from tempor.plugins.pipeline import Pipeline
+from tempor.plugins.pipeline import pipeline
 from tempor.utils.dataloaders import SineDataLoader
 
 testcases = [
     (
         "pipeline1",
-        Pipeline(
+        pipeline(
             [
                 "preprocessing.scaling.static.static_minmax_scaler",
                 "prediction.one_off.classification.nn_classifier",
@@ -151,7 +151,7 @@ testcases = [
 dataset = SineDataLoader().load()
 
 aggr_score, per_test_score = benchmark_models(
-    task_type="classification",
+    task_type="prediction.one_off.classification",
     tests=testcases,
     data=dataset,
     n_splits=2,
@@ -173,6 +173,38 @@ buff = save(model)  # Save model to bytes.
 reloaded = load(buff)  # Reload model.
 
 # `save_to_file`, `load_from_file` also available in the serialization module.
+```
+
+* AutoML
+```python
+from tempor.automl.seeker import PipelineSeeker
+from tempor.utils.dataloaders import SineDataLoader
+
+dataset = SineDataLoader().load()
+
+# Specify the AutoML pipeline seeker for the task of your choice, providing candidate methods, metric,
+# preprocessing steps etc.
+seeker = PipelineSeeker(
+    study_name="my_automl_study",
+    task_type="prediction.one_off.classification",
+    estimator_names=[
+        "cde_classifier",
+        "ode_classifier",
+        "nn_classifier",
+    ],
+    metric="aucroc",
+    dataset=dataset,
+    return_top_k=3,
+    num_iter=100,
+    tuner_type="bayesian",
+    static_imputers=["static_tabular_imputer"],
+    static_scalers=[],
+    temporal_imputers=["ffill", "bfill"],
+    temporal_scalers=["ts_minmax_scaler"],
+)
+
+# The search will return the best pipelines.
+best_pipelines, best_scores = seeker.search()  # doctest: +SKIP
 ```
 
 ## 🔑 Methods
@@ -318,6 +350,7 @@ Treatment effects estimation where treatments are temporal (time series).
 - [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial06_treatments.ipynb) - [Treatment Effects](./tutorials/user_guide/tutorial06_treatments.ipynb)
 - [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial07_pipeline.ipynb) - [Pipeline](./tutorials/user_guide/tutorial07_pipeline.ipynb)
 - [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial08_benchmarks.ipynb) - [Benchmarks](./tutorials/user_guide/tutorial08_benchmarks.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial09_automl.ipynb) - [AutoML](./tutorials/user_guide/tutorial09_automl.ipynb)
 
 ### Extending TemporAI
 - [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/extending/tutorial01_custom_plugin.ipynb) - [Writing a Custom Plugin](./tutorials/extending/tutorial01_custom_plugin.ipynb)
