@@ -171,7 +171,7 @@ def test_sample_hyperparameters_predictor_override():
 
     predictor_hps_override: List[Params] = [IntegerParams("n_iter", low=1, high=1)]
 
-    sample = ps.sample_hyperparameters(predictor_override=predictor_hps_override)  # type: ignore
+    sample = ps.sample_hyperparameters(override=predictor_hps_override)  # type: ignore
 
     assert len([s for s in sample if "[nn_classifier]" in s]) == 1
     assert "[nn_classifier](n_iter)" in sample
@@ -245,7 +245,7 @@ def test_pipeline_from_hps_predictor_override():
         temporal_scalers=[],
     )
 
-    sample = ps.sample_hyperparameters(predictor_override=predictor_hps_override)
+    sample = ps.sample_hyperparameters(override=predictor_hps_override)
     pipe = ps.pipeline_from_hps(sample)
 
     assert isinstance(pipe, PipelineBase)

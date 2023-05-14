@@ -1,7 +1,8 @@
+import abc
 import copy
 import functools
 import warnings
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union, cast
 
 import numpy as np
 import optuna
@@ -18,6 +19,13 @@ from tempor.plugins.core import BasePredictor
 from tempor.plugins.core._params import Params
 
 from ._types import OptimDirection
+from .pipeline_selector import (
+    DEFAULT_STATIC_IMPUTERS,
+    DEFAULT_STATIC_SCALERS,
+    DEFAULT_TEMPORAL_IMPUTERS,
+    DEFAULT_TEMPORAL_SCALERS,
+    PipelineSelector,
+)
 from .tuner import BaseTuner, OptunaTuner
 
 TunerType = Literal[
@@ -77,9 +85,7 @@ METRIC_DIRECTION_MAP: Dict[SupportedMetric, OptimDirection] = {
     "brier_score": "minimize",
 }
 
-# TODO: Pipeline with imputer and scaler.
 # TODO: Docstring.
-
 # TODO: Parallelism support (per-estimator).
 
 
@@ -145,13 +151,14 @@ def evaluation_callback_dispatch(
     return metrics.loc[metric, "mean"]  # pyright: ignore
 
 
-class SimpleSeeker:
+class BaseSeeker(abc.ABC):
     @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def __init__(
         self,
         study_name: str,
         task_type: PredictiveTaskType,
         estimator_names: List[str],
+        estimator_defs: List[Any],
         metric: SupportedMetric,
         dataset: PredictiveDataset,
         *,
@@ -175,7 +182,6 @@ class SimpleSeeker:
 
         self.study_name = study_name
         self.task_type: PredictiveTaskType = task_type
-        self.estimator_names = estimator_names
         self.metric: SupportedMetric = metric
         self.dataset = dataset
         self.return_top_k = return_top_k
@@ -189,6 +195,11 @@ class SimpleSeeker:
         self.compute_baseline_score = compute_baseline_score
         self.grid = grid
         self.raise_exceptions = raise_exceptions
+
+        if len(estimator_defs) != len(estimator_names):
+            raise ValueError("`estimator_defs` and `estimator_names` must be the same length.")
+        self.estimator_names = estimator_names
+        self.estimator_defs = estimator_defs
 
         # Validate "grid" case:
         if self.tuner_type == "grid":
@@ -215,17 +226,31 @@ class SimpleSeeker:
         self.custom_tuner = custom_tuner
 
         self.direction: OptimDirection = METRIC_DIRECTION_MAP[self.metric]
-        self.estimators: List[Type[BasePredictor]] = []
+        self.estimators: List[Union[Type[BasePredictor], PipelineSelector]] = []
         self.tuners: List[BaseTuner] = []
 
         self._set_up_tuners()
 
+    @abc.abstractmethod
+    def _init_estimator(
+        self, estimator_name: str, estimator_def: Any
+    ) -> Union[Type[BasePredictor], PipelineSelector]:  # pragma: no cover
+        ...
+
+    @abc.abstractmethod
+    def _create_estimator_with_hps(
+        self,
+        estimator_cls: Union[Type[BasePredictor], PipelineSelector],
+        hps: Dict[str, Any],
+        score: float,
+    ) -> BasePredictor:  # pragma: no cover
+        ...
+
     def _set_up_tuners(self):
         logger.info(f"Setting up estimators and tuners for study {self.study_name}.")
-        for estimator_name in self.estimator_names:
+        for estimator_name, estimator_def in zip(self.estimator_names, self.estimator_defs):
             # Set up estimator.
-            estimator_fqn = f"{self.task_type}.{estimator_name}"
-            EstimatorCls = plugin_loader.get_class(estimator_fqn)
+            EstimatorCls = self._init_estimator(estimator_name=estimator_name, estimator_def=estimator_def)
             self.estimators.append(EstimatorCls)
 
             # Set up tuner.
@@ -248,7 +273,7 @@ class SimpleSeeker:
                 # Instantiate:
                 if self.tuner_type in TUNER_OPTUNA_SAMPLER_MAP:
                     tuner = OptunaTuner(
-                        study_name=f"{self.study_name}_{EstimatorCls.name}",
+                        study_name=f"{self.study_name}_{estimator_name}",
                         direction=self.direction,
                         study_sampler=sampler,
                         study_storage=None,
@@ -264,7 +289,7 @@ class SimpleSeeker:
                 # Copy the tuner for each estimator.
                 if TYPE_CHECKING:  # pragma: no cover
                     assert isinstance(self.custom_tuner, OptunaTuner)  # nosec B101
-                study_name = f"{self.study_name}_{EstimatorCls.name}"
+                study_name = f"{self.study_name}_{estimator_name}"
                 custom_tuner = copy.deepcopy(self.custom_tuner)
                 custom_tuner.study_name = study_name  # Update the study name to be unique.
                 custom_tuner.create_study()
@@ -275,7 +300,7 @@ class SimpleSeeker:
         for idx, (estimator_name, estimator_cls, tuner) in enumerate(
             zip(self.estimator_names, self.estimators, self.tuners)
         ):
-            logger.info(f"Running  search for estimator '{estimator_cls.name}' {idx+1}/{len(self.estimators)}.")
+            logger.info(f"Running  search for estimator '{estimator_name}' {idx+1}/{len(self.estimators)}.")
 
             if estimator_name in self.override_hp_space:
                 override = self.override_hp_space[estimator_name]
@@ -309,7 +334,7 @@ class SimpleSeeker:
             all_scores.append(scores[best_idx])
             all_hps.append(hps[best_idx])
             all_estimators.append(self.estimators[idx])
-            logger.info(f"Evaluation for {self.estimators[idx].name} scores:\n{scores}.")
+            logger.info(f"Evaluation for {self.estimator_names[idx]} scores:\n{scores}.")
         logger.info(f"All estimator definitions searched:\n{self.estimator_names}")
         logger.info(f"Best scores for each estimator searched:\n{all_scores}")
         logger.info(f"Best hyperparameters for each estimator searched:\n{all_hps}")
@@ -326,8 +351,189 @@ class SimpleSeeker:
         for score in reversed(top_k_scores):
             result_scores.append(score)
             idx = np.argwhere(all_scores_np == score)[0][0]
-            logger.info(f"Selected score {score} for {all_estimators[idx].name} with hyperparameters:\n{all_hps[idx]}")
-            estimator_top_k = all_estimators[idx](**all_hps[idx])
+            estimator_top_k = self._create_estimator_with_hps(all_estimators[idx], all_hps[idx], score)
             result.append(estimator_top_k)
 
         return result, result_scores
+
+
+class MethodSeeker(BaseSeeker):
+    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    def __init__(
+        self,
+        study_name: str,
+        task_type: PredictiveTaskType,
+        estimator_names: List[str],
+        metric: SupportedMetric,
+        dataset: PredictiveDataset,
+        *,
+        return_top_k: int = 3,
+        num_cv_folds: int = 5,
+        num_iter: int = 100,
+        tuner_patience: int = 5,
+        tuner_type: TunerType = "bayesian",
+        timeout: int = 360,
+        random_state: int = 0,
+        override_hp_space: Optional[Dict[str, List[Params]]] = None,
+        horizon: Optional[data_typing.TimeIndex] = None,
+        compute_baseline_score: bool = False,
+        grid: Optional[Dict[str, Dict[str, Any]]] = None,
+        custom_tuner: Optional[BaseTuner] = None,
+        raise_exceptions: bool = True,
+        **kwargs,
+    ) -> None:
+        estimator_defs = estimator_names
+
+        super().__init__(
+            study_name,
+            task_type,
+            estimator_names,
+            estimator_defs,
+            metric,
+            dataset,
+            return_top_k=return_top_k,
+            num_cv_folds=num_cv_folds,
+            num_iter=num_iter,
+            tuner_patience=tuner_patience,
+            tuner_type=tuner_type,
+            timeout=timeout,
+            random_state=random_state,
+            override_hp_space=override_hp_space,
+            horizon=horizon,
+            compute_baseline_score=compute_baseline_score,
+            grid=grid,
+            custom_tuner=custom_tuner,
+            raise_exceptions=raise_exceptions,
+            **kwargs,
+        )
+
+    def _init_estimator(self, estimator_name: str, estimator_def: Any) -> Union[Type[BasePredictor], PipelineSelector]:
+        logger.info(f"Creating estimator {estimator_name}.")
+        estimator_fqn = f"{self.task_type}.{estimator_def}"
+        return plugin_loader.get_class(estimator_fqn)
+
+    def _create_estimator_with_hps(
+        self, estimator_cls: Union[Type[BasePredictor], PipelineSelector], hps: Dict[str, Any], score: float
+    ) -> BasePredictor:
+        estimator_cls = cast(Type[BasePredictor], estimator_cls)
+        logger.info(f"Selected score {score} for {estimator_cls.name} with hyperparameters:\n{hps}")
+        return estimator_cls(**hps)
+
+
+class PipelineSeeker(BaseSeeker):
+    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    def __init__(
+        self,
+        study_name: str,
+        task_type: PredictiveTaskType,
+        estimator_names: List[str],
+        metric: SupportedMetric,
+        dataset: PredictiveDataset,
+        *,
+        static_imputers: List[str] = DEFAULT_STATIC_IMPUTERS,
+        static_scalers: List[str] = DEFAULT_STATIC_SCALERS,
+        temporal_imputers: List[str] = DEFAULT_TEMPORAL_IMPUTERS,
+        temporal_scalers: List[str] = DEFAULT_TEMPORAL_SCALERS,
+        return_top_k: int = 3,
+        num_cv_folds: int = 5,
+        num_iter: int = 100,
+        tuner_patience: int = 5,
+        tuner_type: TunerType = "bayesian",
+        timeout: int = 360,
+        random_state: int = 0,
+        override_hp_space: Optional[Dict[str, List[Params]]] = None,
+        horizon: Optional[data_typing.TimeIndex] = None,
+        compute_baseline_score: bool = False,
+        grid: Optional[Dict[str, Dict[str, Any]]] = None,
+        custom_tuner: Optional[BaseTuner] = None,
+        raise_exceptions: bool = True,
+        **kwargs,
+    ) -> None:
+        # Define estimator definitions:
+        estimator_defs = []
+        for predictor in estimator_names:
+            estimator_defs.append(
+                dict(
+                    predictor=predictor,
+                    static_imputers=static_imputers,
+                    static_scalers=static_scalers,
+                    temporal_imputers=temporal_imputers,
+                    temporal_scalers=temporal_scalers,
+                )
+            )
+        # Define human-friendly names for pipelines (pre-predictor):
+        estimator_human_names = []
+        for predictor in estimator_names:
+            estimator_human_names.append(self._pipe_human_name(predictor))
+
+        # Validate override:
+        if override_hp_space is not None:
+            for key in override_hp_space.keys():
+                if key not in estimator_names:
+                    raise ValueError(
+                        f"Estimator name '{key}' in `override_hp_space` was found that did not "
+                        f"correspond to any of the estimators provided: {estimator_names}"
+                    )
+        # Set override keys:
+        if override_hp_space is not None:
+            override_hp_space_keys_renamed = dict()
+            for predictor in estimator_names:
+                if predictor in override_hp_space:
+                    override_hp_space_keys_renamed[self._pipe_human_name(predictor)] = override_hp_space[predictor]
+        else:
+            override_hp_space_keys_renamed = None
+
+        # Grid search not supported.
+        if tuner_type == "grid":
+            raise ValueError(f"The 'grid' search method not supported with {self.__class__.__name__}")
+
+        super().__init__(
+            study_name,
+            task_type,
+            estimator_human_names,
+            estimator_defs,
+            metric,
+            dataset,
+            return_top_k=return_top_k,
+            num_cv_folds=num_cv_folds,
+            num_iter=num_iter,
+            tuner_patience=tuner_patience,
+            tuner_type=tuner_type,
+            timeout=timeout,
+            random_state=random_state,
+            override_hp_space=override_hp_space_keys_renamed,
+            horizon=horizon,
+            compute_baseline_score=compute_baseline_score,
+            grid=grid,
+            custom_tuner=custom_tuner,
+            raise_exceptions=raise_exceptions,
+            **kwargs,
+        )
+
+    def _pipe_human_name(self, predictor_name: str) -> str:
+        return f"<Pipeline with {predictor_name}>"
+
+    def _init_estimator(self, estimator_name: str, estimator_def: Any) -> Union[Type[BasePredictor], PipelineSelector]:
+        logger.info(f"Creating estimator {estimator_name}.")
+        return PipelineSelector(
+            task_type=self.task_type,
+            predictor=estimator_def["predictor"],
+            static_imputers=estimator_def["static_imputers"],
+            static_scalers=estimator_def["static_scalers"],
+            temporal_imputers=estimator_def["temporal_imputers"],
+            temporal_scalers=estimator_def["temporal_scalers"],
+        )
+
+    def _create_estimator_with_hps(
+        self, estimator_cls: Union[Type[BasePredictor], PipelineSelector], hps: Dict[str, Any], score: float
+    ) -> BasePredictor:
+        estimator_cls = cast(PipelineSelector, estimator_cls)
+        name = self._pipe_human_name(estimator_cls.predictor.name)
+        logger.info(f"Selected score {score} for {name} with hyperparameters:\n{hps}")
+
+        pipe = estimator_cls.pipeline_from_hps(hps)
+
+        if not isinstance(pipe, BasePredictor):  # pragma: no cover
+            # Should not end up here.
+            raise RuntimeError(f"Pipeline was not a subclass of {BasePredictor.__name__}")
+        return pipe

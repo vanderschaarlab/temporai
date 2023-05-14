@@ -79,7 +79,7 @@ class PipelineSelector:
     def hyperparameter_space(
         self,
         *args,
-        predictor_override: Optional[List[Params]] = None,
+        override: Optional[List[Params]] = None,  # NOTE: Hyperparameter override applies to predictor only.
         **kwargs,
     ) -> List[Params]:
         hps: List[Params] = []
@@ -90,8 +90,8 @@ class PipelineSelector:
             for plugin in plugin_cls_list:
                 hps.extend(self.format_hps_names(plugin, plugin.hyperparameter_space(*args, **kwargs)))
 
-        if predictor_override is not None:
-            hps.extend(self.format_hps_names(self.predictor, predictor_override))
+        if override is not None:
+            hps.extend(self.format_hps_names(self.predictor, override))
         else:
             hps.extend(self.format_hps_names(self.predictor, self.predictor.hyperparameter_space(*args, **kwargs)))
 
@@ -100,7 +100,7 @@ class PipelineSelector:
     def sample_hyperparameters(
         self,
         *args: Any,
-        predictor_override: Optional[List[Params]] = None,
+        override: Optional[List[Params]] = None,  # NOTE: Hyperparameter override applies to predictor only.
         **kwargs: Any,
     ) -> Dict[str, Any]:
         # NOTE: The inner workings of this method need to stay roughly consistent with
@@ -111,7 +111,7 @@ class PipelineSelector:
             args, kwargs, argument_name="trial", argument_type=optuna.Trial, position_if_args=0
         )
 
-        param_space = self.hyperparameter_space(*args, predictor_override=predictor_override, **kwargs)
+        param_space = self.hyperparameter_space(*args, override=override, **kwargs)
 
         results = dict()
 

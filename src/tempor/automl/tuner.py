@@ -1,6 +1,7 @@
 """Module containing the interface for, and the implemented hyperparameter tuners."""
 
 import abc
+import copy
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Type, Union
 
 import optuna
@@ -200,7 +201,9 @@ class OptunaTuner(BaseTuner):
             return scores, params
 
         def objective(trial: optuna.Trial) -> float:
-            hps = estimator.sample_hyperparameters(trial, override=override_hp_space)
+            # Ensure the override variable doesn't get mutated unintentionally by copying.
+            override_copy = copy.deepcopy(override_hp_space)
+            hps = estimator.sample_hyperparameters(trial, override=override_copy)
 
             estimator_for_eval: Type[BasePredictor]
             if isinstance(estimator, PipelineSelector):
