@@ -8,6 +8,7 @@ from typing_extensions import Self
 import tempor.plugins.core as plugins
 from tempor.data import dataset
 from tempor.data.samples import StaticSamples
+from tempor.plugins.core._params import CategoricalParams
 from tempor.plugins.preprocessing.scaling._base import BaseScaler
 
 
@@ -86,4 +87,6 @@ class StaticMinMaxScaler(BaseScaler):
 
     @staticmethod
     def hyperparameter_space(*args, **kwargs):
-        return []
+        return [
+            CategoricalParams("clip", [True, False]),
+        ]

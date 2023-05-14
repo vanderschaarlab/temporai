@@ -12,6 +12,7 @@ importlib-metadata; python_version<"3.8"
 lifelines != 0.27.5
 loguru
 numpy >=1
+optuna >= 2.8.0
 packaging
 pandas >=1
 pandera >=0.13

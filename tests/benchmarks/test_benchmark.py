@@ -9,7 +9,7 @@ from tempor.benchmarks import (
     time_to_event_supported_metrics,
 )
 from tempor.plugins import plugin_loader
-from tempor.plugins.pipeline import Pipeline
+from tempor.plugins.pipeline import pipeline
 
 N_ITER = 5
 
@@ -27,7 +27,7 @@ def test_classifier_benchmark(data: str, request: pytest.FixtureRequest) -> None
     testcases = [
         (
             "pipeline1",
-            Pipeline(
+            pipeline(
                 [
                     "preprocessing.imputation.static.static_tabular_imputer",
                     "preprocessing.imputation.temporal.ffill",
@@ -43,7 +43,7 @@ def test_classifier_benchmark(data: str, request: pytest.FixtureRequest) -> None
     dataset = request.getfixturevalue(data)
 
     aggr_score, per_test_score = benchmark_models(
-        task_type="classification",
+        task_type="prediction.one_off.classification",
         tests=testcases,
         data=dataset,
         n_splits=2,
@@ -66,7 +66,7 @@ def test_regressor_benchmark(data: str, request: pytest.FixtureRequest) -> None:
     testcases = [
         (
             "pipeline1",
-            Pipeline(
+            pipeline(
                 [
                     "preprocessing.imputation.static.static_tabular_imputer",
                     "preprocessing.imputation.temporal.ffill",
@@ -82,7 +82,7 @@ def test_regressor_benchmark(data: str, request: pytest.FixtureRequest) -> None:
     dataset = request.getfixturevalue(data)
 
     aggr_score, per_test_score = benchmark_models(
-        task_type="regression",
+        task_type="prediction.one_off.regression",
         tests=testcases,
         data=dataset,
         n_splits=2,
@@ -107,7 +107,7 @@ def test_time_to_event_benchmark(
     testcases = [
         (
             "pipeline1",
-            Pipeline(
+            pipeline(
                 [
                     "preprocessing.imputation.static.static_tabular_imputer",
                     "preprocessing.imputation.temporal.ffill",

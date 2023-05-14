@@ -8,8 +8,6 @@ from tempor.plugins.preprocessing.imputation import BaseImputer
 from tempor.plugins.preprocessing.imputation.temporal.plugin_bfill import BFillImputer
 from tempor.utils.serialization import load, save
 
-from ...helpers_preprocessing import as_covariates_dataset
-
 INIT_KWARGS: Any = dict()
 PLUGIN_FROM_OPTIONS = ["from_api", pytest.param("from_module", marks=pytest.mark.extra)]
 TEST_ON_DATASETS = [
@@ -58,7 +56,12 @@ def test_fit(plugin_from: str, data: str, get_test_plugin: Callable, get_dataset
     ],
 )
 def test_transform(
-    plugin_from: str, data: str, covariates_dataset: bool, get_test_plugin: Callable, get_dataset: Callable
+    plugin_from: str,
+    data: str,
+    covariates_dataset: bool,
+    get_test_plugin: Callable,
+    get_dataset: Callable,
+    as_covariates_dataset: Callable,
 ) -> None:
     test_plugin: BaseImputer = get_test_plugin(plugin_from, INIT_KWARGS)
     dataset = get_dataset(data)

@@ -3,6 +3,7 @@ import dataclasses
 from typing import TYPE_CHECKING, Any, ClassVar, Dict, List, Optional, Type
 
 import omegaconf
+import optuna
 import pydantic
 import rich.pretty
 from typing_extensions import Self
@@ -108,13 +109,41 @@ class BaseEstimator(Plugin, abc.ABC):
         ...  # pylint: disable=unnecessary-ellipsis
 
     @classmethod
-    def sample_hyperparameters(cls, *args: Any, **kwargs: Any) -> Dict[str, Any]:
-        """Sample hyperparameters."""
-        param_space = cls.hyperparameter_space(*args, **kwargs)
+    def sample_hyperparameters(
+        cls, *args: Any, override: Optional[List[Params]] = None, **kwargs: Any
+    ) -> Dict[str, Any]:
+        """Sample hyperparameters. Hyperparameters will be sampled as defined in the ``hyperparameter_space`` static
+        method, unless ``override`` is provided, in which case, they will be sampled from the ``override`` definition.
 
-        results = {}
+        Can provide variadics ``*args`` and ``**kwargs``, these will be passed on to the ``hyperparameter_space``
+        method.
+
+        Note:
+            If using `optuna` as the hyperparameter optimizer, an additional argument, ``trial`` (`optuna.Trial`) must
+            be passed either as an argument or keyword argument to this method, i.e.
+            ``.sample_hyperparameters(trial, ...)`` or ``.sample_hyperparameters(..., trial=trial, ...)``.
+
+        Args:
+            override (Optional[List[Params]], optional):
+                If this is not `None`, hyperparameters will be sampled from this list, rather than from those defined\
+                    in the ``hyperparameter_space`` method. Defaults to `None`.
+
+        Returns:
+            Dict[str, Any]: _description_
+        """
+        # Pop the `trial` argument for optuna if such is found (if not, `trial` will be `None`).
+        trial, args, kwargs = utils.get_from_args_or_kwargs(
+            args, kwargs, argument_name="trial", argument_type=optuna.Trial, position_if_args=0
+        )
+
+        if override is None:
+            param_space = cls.hyperparameter_space(*args, **kwargs)
+        else:
+            param_space = override
+
+        results = dict()
 
         for hp in param_space:
-            results[hp.name] = hp.sample()
+            results[hp.name] = hp.sample(trial)
 
         return results

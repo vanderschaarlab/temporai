@@ -3,6 +3,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 import pandas as pd
 import pydantic
 
+from tempor.core.types import PredictiveTaskType
 from tempor.data import data_typing, dataset
 from tempor.log import logger as log
 
@@ -22,7 +23,7 @@ def print_score(mean: pd.Series, std: pd.Series) -> pd.Series:
 
 @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
 def benchmark_models(
-    task_type: str,
+    task_type: PredictiveTaskType,
     tests: List[Tuple[str, Any]],  # [ ( Test name, Model to evaluate (unfitted) ), ... ]
     data: dataset.PredictiveDataset,
     n_splits: int = 3,
@@ -32,9 +33,9 @@ def benchmark_models(
     """Benchmark the performance of several algorithms.
 
     Args:
-        task_type (str):
+        task_type (PredictiveTaskType):
             The type of problem. Relevant for evaluating the downstream models with the correct metrics.
-            Valid tasks are:  ``"classification"``, ``"regression"``, ``"time_to_event"``.
+            The options are any of `PredictiveTaskType`.
         tests (List[Tuple[str, Any]]):
             Tuples of form ``(test_name: str, plugin: BasePredictor/Pipeline)``
         data (dataset.Dataset):
@@ -59,24 +60,42 @@ def benchmark_models(
 
     results = {}
 
-    if task_type == "classification":
-        evaluator: Callable = evaluation.evaluate_classifier
-    elif task_type == "regression":
-        evaluator = evaluation.evaluate_regressor
+    if task_type == "prediction.one_off.classification":
+        evaluator: Callable = evaluation.evaluate_prediction_oneoff_classifier
+    elif task_type == "prediction.one_off.regression":
+        evaluator = evaluation.evaluate_prediction_oneoff_regressor
     elif task_type == "time_to_event":
         evaluator = evaluation.evaluate_time_to_event
+    elif task_type == "prediction.temporal.classification":
+        # TODO: This case needs to be handled in `tempor.benchmarks.evaluation`.
+        raise NotImplementedError
+    elif task_type == "prediction.temporal.regression":
+        # TODO: This case needs to be handled in `tempor.benchmarks.evaluation`.
+        raise NotImplementedError
+    elif task_type == "treatments.one_off.classification":
+        # TODO: This case needs to be handled in `tempor.benchmarks.evaluation`.
+        raise NotImplementedError
+    elif task_type == "treatments.one_off.regression":
+        # TODO: This case needs to be handled in `tempor.benchmarks.evaluation`.
+        raise NotImplementedError
+    elif task_type == "treatments.temporal.classification":
+        # TODO: This case needs to be handled in `tempor.benchmarks.evaluation`.
+        raise NotImplementedError
+    elif task_type == "treatments.temporal.regression":
+        # TODO: This case needs to be handled in `tempor.benchmarks.evaluation`.
+        raise NotImplementedError
     else:
-        raise ValueError(f"Unsupported task type {task_type}")
+        raise ValueError(f"Unsupported task type: {task_type}")
 
     for testcase, plugin in tests:
-        log.info(f"Testcase : {testcase}")
+        log.info(f"Test case: {testcase}")
 
         scores = evaluator(
             plugin,
-            data=data,  # pyright: ignore
+            data=data,  # type: ignore
             n_splits=n_splits,
             random_state=random_state,
-            horizons=horizons,  # pyright: ignore
+            horizons=horizons,  # type: ignore
         )
 
         mean_score = scores["mean"].to_dict()

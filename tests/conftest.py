@@ -1,6 +1,8 @@
+# pylint: disable=redefined-outer-name
+
 import copy
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, List, Tuple, Type
+from typing import TYPE_CHECKING, Any, Callable, List, Tuple, Type
 
 import numpy as np
 import pytest
@@ -135,6 +137,54 @@ def get_event0_time_percentiles():
             assert data.predictive.targets is not None  # nosec B101
         event0_times = data.predictive.targets.split_as_two_dataframes()[0].to_numpy().reshape((-1,))
         return np.quantile(event0_times, horizon_percentiles).tolist()
+
+    return func
+
+
+@pytest.fixture
+def simulate_horizons() -> Callable:
+    def func(data: "dataset.BaseDataset") -> List:
+        return [tc.time_indexes()[0][len(tc.time_indexes()[0]) // 2 :] for tc in data.time_series]
+
+    return func
+
+
+@pytest.fixture
+def simulate_treatments_scenarios(simulate_horizons: Callable) -> Callable:
+    def func(
+        data: "dataset.TemporalTreatmentEffectsDataset", n_counterfactuals_per_sample: int = 2
+    ) -> Tuple[List, List]:
+        horizons = simulate_horizons(data)
+
+        treatment_scenarios = []
+        for idx, sample_idx in enumerate(data.time_series.sample_index()):
+            sample_scenarios = []
+            treat = data.predictive.treatments[sample_idx].dataframe()  # pyright: ignore
+            horizon_counterfactuals_sample = horizons[idx]
+
+            for treat_sc_idx in range(n_counterfactuals_per_sample):
+                np.random.seed(12345 + treat_sc_idx)
+                treat_sc = np.random.randint(
+                    low=0, high=1 + 1, size=(len(horizon_counterfactuals_sample), treat.shape[1])
+                )
+                sample_scenarios.append(treat_sc)
+            treatment_scenarios.append(sample_scenarios)
+
+        return horizons, treatment_scenarios
+
+    return func
+
+
+@pytest.fixture
+def as_covariates_dataset() -> Callable:
+    from tempor.data.dataset import CovariatesDataset
+
+    def func(ds: "dataset.PredictiveDataset") -> "dataset.CovariatesDataset":
+        data = CovariatesDataset(
+            time_series=ds.time_series.dataframe(),
+            static=ds.static.dataframe() if ds.static is not None else None,
+        )
+        return data
 
     return func
 

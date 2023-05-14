@@ -332,6 +332,7 @@ intersphinx_mapping = {
     "hyperimpute": ("https://hyperimpute.readthedocs.io/en/latest/", None),
     "xgbse": ("https://loft-br.github.io/xgboost-survival-embeddings/", None),
     "lifelines": ("https://lifelines.readthedocs.io/en/stable/", None),
+    "optuna": ("https://optuna.readthedocs.io/en/stable/", None),
 }
 
 print(f"loading configurations for {project} {version} ...", file=sys.stderr)

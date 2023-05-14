@@ -41,3 +41,111 @@ class TestEnsureLiteralMatchesDictKeys:
     def test_fails_difference(self, lit, d, expect):
         with pytest.raises(TypeError, match=f".*{list(str(expect))}.*"):
             utils.ensure_literal_matches_dict_keys(lit, d)
+
+
+# Test get_from_args_or_kwargs ----------
+
+
+class MyArgument:
+    pass
+
+
+def my_function(*args, **kwargs):
+    value, args, kwargs = utils.get_from_args_or_kwargs(
+        args, kwargs, argument_name="my_arg", argument_type=MyArgument, position_if_args=0
+    )
+    return value, args, kwargs
+
+
+class TestGetFromArgsOrKwargs:
+    def test_get_from_args(self):
+        my_arg = MyArgument()
+
+        value, args, kwargs = my_function(my_arg)
+        assert value is my_arg
+        assert value not in args and "my_arg" not in kwargs
+        assert args == tuple()
+        assert kwargs == dict()
+
+        value, args, kwargs = my_function(my_arg, "bar", "baz")
+        assert value is my_arg
+        assert value not in args and "my_arg" not in kwargs
+        assert args == tuple(["bar", "baz"])
+        assert kwargs == dict()
+
+        value, args, kwargs = my_function(my_arg, foobar="foobar", foobaz="foobaz")
+        assert value is my_arg
+        assert value not in args and "my_arg" not in kwargs
+        assert args == tuple()
+        assert kwargs == dict(foobar="foobar", foobaz="foobaz")
+
+        value, args, kwargs = my_function(my_arg, "bar", "baz", foobar="foobar", foobaz="foobaz")
+        assert value is my_arg
+        assert value not in args and "my_arg" not in kwargs
+        assert args == tuple(["bar", "baz"])
+        assert kwargs == dict(foobar="foobar", foobaz="foobaz")
+
+    def test_get_from_kwargs(self):
+        my_arg = MyArgument()
+
+        value, args, kwargs = my_function(my_arg=my_arg)
+        assert value is my_arg
+        assert value not in args and "my_arg" not in kwargs
+        assert args == tuple()
+        assert kwargs == dict()
+
+        value, args, kwargs = my_function("bar", "baz", my_arg=my_arg)
+        assert value is my_arg
+        assert value not in args and "my_arg" not in kwargs
+        assert args == tuple(["bar", "baz"])
+        assert kwargs == dict()
+
+        value, args, kwargs = my_function(my_arg=my_arg, foobar="foobar", foobaz="foobaz")
+        assert value is my_arg
+        assert value not in args and "my_arg" not in kwargs
+        assert args == tuple()
+        assert kwargs == dict(foobar="foobar", foobaz="foobaz")
+
+        value, args, kwargs = my_function("bar", "baz", my_arg=my_arg, foobar="foobar", foobaz="foobaz")
+        assert value is my_arg
+        assert value not in args and "my_arg" not in kwargs
+        assert args == tuple(["bar", "baz"])
+        assert kwargs == dict(foobar="foobar", foobaz="foobaz")
+
+    def test_no_argument(self):
+        value, args, kwargs = my_function()
+        assert value is None
+        assert args == tuple()
+        assert kwargs == dict()
+
+        value, args, kwargs = my_function(12345)
+        assert value is None
+        assert args == tuple([12345])
+        assert kwargs == dict()
+
+        value, args, kwargs = my_function(12345, "abc")
+        assert value is None
+        assert args == tuple([12345, "abc"])
+        assert kwargs == dict()
+
+        value, args, kwargs = my_function(foobar=999, foobaz="foobaz")
+        assert args == tuple()
+        assert kwargs == dict(foobar=999, foobaz="foobaz")
+
+        value, args, kwargs = my_function("abc", -12345, foobar=999, foobaz="foobaz")
+        assert value is None
+        assert args == tuple(["abc", -12345])
+        assert kwargs == dict(foobar=999, foobaz="foobaz")
+
+    def test_exception_passed_as_both(self):
+        my_arg = MyArgument()
+
+        with pytest.raises(RuntimeError, match=".*as `kwargs`.*as `args`.*"):
+            my_function(my_arg, "bar", my_arg=my_arg, foobaz=1234)
+
+    def test_exception_kwargs_wrong_type(self):
+        with pytest.raises(TypeError, match=".*`kwargs`.*type.*"):
+            my_function("bar", "baz", my_arg="str", foobaz=1234)
+
+
+# Test get_from_args_or_kwargs (end) -----

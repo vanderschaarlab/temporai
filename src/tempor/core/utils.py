@@ -1,5 +1,5 @@
 import enum
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Tuple, Type
 
 from typing_extensions import get_args
 
@@ -72,3 +72,59 @@ def ensure_literal_matches_dict_keys(
             f"There was a mismatch between the literal '{literal_name}' and the the dictionary "
             f"'{dict_name}' keys: {list(lits.symmetric_difference(keys))}"
         )
+
+
+def get_from_args_or_kwargs(
+    args: Tuple, kwargs: Dict, argument_name: str, argument_type: Type, position_if_args: int
+) -> Tuple[Any, Tuple, Dict]:
+    """Will attempt to get the function argument as defined by ``argument_name``, ``argument_type``, and
+    ``position_if_args`` from ``args`` and ``kwargs``. Will return `None` if no such argument found.
+    Will raise an exception if ``args`` and ``kwargs`` have a problem with the definition given.
+
+    Algorithm:
+        1. Check if an ``arg`` of type ``argument_type`` is found at index ``position_if_args`` in ``args``.
+        2. Check if a ``kwarg`` by key ``argument_name`` is found in ``kwargs``.
+        3. If both 1 and 2 are found raise `RuntimeError`.
+        4. If ``kwarg`` from 2 is not of type ``argument_type`` raise `TypeError`.
+        5. Return 1 or 2 if argument is found, else return `None`. Also return ``args`` and ``kwargs``\
+            with the argument "popped".
+
+    Args:
+        args (Tuple):
+            ``args`` to check.
+        kwargs (Dict):
+            ``kwargs`` to check.
+        argument_name (str):
+            The name of the argument to look for.
+        argument_type (Type):
+            The type of the argument to confirm.
+        position_if_args (int):
+            The index in ``args`` at which the argument should be found, if it is provided by ``args``.
+
+    Raises:
+        RuntimeError: Error in case the argument appears to have been provided by both ``args`` and ``kwargs``.
+        TypeError: Error in case the ``kwarg`` provided by key ``argument_name`` is not of the expected type.
+
+    Returns:
+        Tuple[Any, Tuple, Dict]:
+            ``(found_argument_or_None, args, kwargs)``.
+            If argument found, it will be removed from the ``args``/``kwargs`` returned.
+    """
+    from_args = None
+    if len(args) >= (position_if_args + 1):
+        arg_at_position = args[position_if_args]
+        if isinstance(arg_at_position, argument_type):
+            from_args = arg_at_position
+            args = tuple([x for i, x in enumerate(args) if i != position_if_args])
+    from_kwargs = kwargs.pop(argument_name, None)
+    if from_args is not None and from_kwargs is not None:
+        raise RuntimeError(
+            f"Argument `{argument_name}` appears to have been passed as `kwargs` (by key '{argument_name}') "
+            f"and as `args` (at position {position_if_args}), but it should be passed in only one of these ways"
+        )
+    if from_kwargs is not None and not isinstance(from_kwargs, argument_type):
+        raise TypeError(
+            f"Argument `{argument_name}` was passed as `kwargs` (by key '{argument_name}') but was not of "
+            f"expected type `{argument_type}`"
+        )
+    return from_args if from_args is not None else from_kwargs, args, kwargs

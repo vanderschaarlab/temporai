@@ -7,8 +7,6 @@ import pytest
 from tempor.plugins.treatments.temporal.regression.plugin_crn_regressor import CRNTreatmentsRegressor
 from tempor.utils.serialization import load, save
 
-from ...helpers_treatments import simulate_horizons, simulate_treatments_scenarios
-
 if TYPE_CHECKING:  # pragma: no cover
     from tempor.plugins.treatments.temporal import BaseTemporalTreatmentEffects
 
@@ -56,7 +54,14 @@ def test_fit(plugin_from: str, data: str, device: str, get_test_plugin: Callable
 @pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
 @pytest.mark.parametrize("device", DEVICES)
-def test_predict(plugin_from: str, data: str, device: str, get_test_plugin: Callable, get_dataset: Callable) -> None:
+def test_predict(
+    plugin_from: str,
+    data: str,
+    device: str,
+    get_test_plugin: Callable,
+    get_dataset: Callable,
+    simulate_horizons: Callable,
+) -> None:
     test_plugin: "BaseTemporalTreatmentEffects" = get_test_plugin(plugin_from, INIT_KWARGS, device=device)
     dataset = get_dataset(data)
     test_plugin.fit(dataset)
@@ -79,7 +84,12 @@ def test_predict(plugin_from: str, data: str, device: str, get_test_plugin: Call
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
 @pytest.mark.parametrize("device", DEVICES)
 def test_predict_counterfactuals(
-    plugin_from: str, data: str, device: str, get_test_plugin: Callable, get_dataset: Callable
+    plugin_from: str,
+    data: str,
+    device: str,
+    get_test_plugin: Callable,
+    get_dataset: Callable,
+    simulate_treatments_scenarios: Callable,
 ) -> None:
     test_plugin: "BaseTemporalTreatmentEffects" = get_test_plugin(plugin_from, INIT_KWARGS, device=device)
     dataset = get_dataset(data)

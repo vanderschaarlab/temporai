@@ -10,8 +10,6 @@ from tempor.plugins.preprocessing.imputation import BaseImputer, TabularImputerT
 from tempor.plugins.preprocessing.imputation.temporal.plugin_ts_tabular_imputer import TemporalTabularImputer
 from tempor.utils.serialization import load, save
 
-from ...helpers_preprocessing import as_covariates_dataset
-
 INIT_KWARGS = {"random_state": 123}
 PLUGIN_FROM_OPTIONS = ["from_api", pytest.param("from_module", marks=pytest.mark.extra)]
 TEST_ON_DATASETS = [
@@ -60,7 +58,12 @@ def test_fit(plugin_from: str, data: str, get_test_plugin: Callable, get_dataset
     ],
 )
 def test_transform(
-    plugin_from: str, data: str, covariates_dataset: bool, get_test_plugin: Callable, get_dataset: Callable
+    plugin_from: str,
+    data: str,
+    covariates_dataset: bool,
+    get_test_plugin: Callable,
+    get_dataset: Callable,
+    as_covariates_dataset: Callable,
 ) -> None:
     test_plugin: BaseImputer = get_test_plugin(plugin_from, INIT_KWARGS)
     dataset = get_dataset(data)
@@ -81,6 +84,8 @@ def test_transform(
     assert output.time_series.dataframe().isna().sum().sum() == 0
 
 
+@pytest.mark.filterwarnings("ignore:.*Jupyter.*platformdirs.*:DeprecationWarning")  # Expected.
+@pytest.mark.filterwarnings("ignore:.*bool8.*:DeprecationWarning")  # Expected.
 @pytest.mark.filterwarnings("ignore:.*nonzero.*0d.*:DeprecationWarning")  # Expected for EM imputer.
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")  # Expected for EM imputer.
 @pytest.mark.filterwarnings("ignore::sklearn.exceptions.ConvergenceWarning")  # May happen in some cases.

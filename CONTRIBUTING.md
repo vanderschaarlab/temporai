@@ -16,7 +16,8 @@ considerate, reasonable, and respectful**. When in doubt,
 [Python Software Foundation's Code of Conduct] is a good reference in terms of
 behavior guidelines.
 
-> 🕮 Please also make sure to first familiarize yourself with the [`vanderschaarlab` Code of Conduct](https://github.com/vanderschaarlab/.github/blob/main/CODE_OF_CONDUCT.md).
+> 🕮 Please also make sure to first familiarize yourself with the
+[`vanderschaarlab` Code of Conduct](https://github.com/vanderschaarlab/.github/blob/main/CODE_OF_CONDUCT.md).
 
 ## Issue Reports
 
@@ -43,7 +44,8 @@ by adding missing information and correcting mistakes.
 This means that the docs are kept in the same repository as the project code, and
 that any documentation update is done in the same way was a code contribution.
 
-We use [CommonMark] as the markup language for the documentation, facilitated by the [MyST] extension. This also allows the use of [reStructuredText] where necessary.
+We use [CommonMark] as the markup language for the documentation, facilitated by the [MyST] extension.
+This also allows the use of [reStructuredText] where necessary.
 
 > Please notice that the [GitHub web interface] provides a quick way of
 propose changes in *TemporAI*'s files. While this mechanism can
@@ -173,14 +175,16 @@ conda activate temporai
 
    to look for recurring communication patterns.
 
-1. Please locally check that your changes don't break any tests. The same set of tests will be executed via [GitHub workflows] when you submit your PR.
+1. Please locally check that your changes don't break any tests. The same set of tests will be executed via
+[GitHub workflows] when you submit your PR.
 
    ```sh
    # Run unit tests on your current environment.
    pytest
 
-   # Run unit tests on different tox python environments (this may be slow).
+   # [Optional] Run unit tests on different tox python environments (this may be slow).
    # The tests will also include doctests, and a check that all notebooks execute without errors.
+   # The different environment cases will be tested by automated GitHub workflows, so doing this locally is optional.
    tox
    # If your code introduces new dependencies, use `tox -r`.
    ```
@@ -190,7 +194,34 @@ conda activate temporai
    You can also use [tox] to run several other pre-configured tasks in the
    repository. Try `tox -av` to see a list of the available checks.
 
-1. It is also useful to check that documentation generation succeeds after your changes, run this with the following command, and make sure you do not see any [Sphinx] `WARNING`s or errors.
+   **Note on running tests faster:**
+
+   You may wish to first run a minimal set of tests, as this is faster:
+   ```sh
+   pytest -m "not slow and not extra"
+   ```
+
+   You may also with to use [pytest-xdist] (pre installed with the `[dev]` extra) to distribute test across multiple
+   CPUs to make the test run faster, this requires the following parameters:
+   ```sh
+   # Split tests across all available CPUs (likely not optimal, may also cause running out of memory errors):
+   pytest -n auto
+
+   # Split tests across <INT> max number of CPUs. Optimal value varies by machine / system.
+   pytest -n <INT>
+   # Note that some code is multithreaded under the hood, which means more than <INT> CPUs will be utilized.
+   # From our testing, on a machine with ~20 CPUs (including hyperthreading), value of around 3-6 appears optimal.
+   # Try out different values and monitor your CPUs utilization -
+   # aim to keep high utilization *but below* 100% across all CPUs/threads.
+   ```
+
+   If your system has GPU that supports CUDA, you may wish to skip CPU-only tests for speed:
+   ```sh
+   pytest -m "not cpu"
+   ```
+
+1. It is also useful to check that documentation generation succeeds after your changes, run this with the following
+command, and make sure you do not see any [Sphinx] `WARNING`s or errors.
    ```sh
    tox -e docs
    tox -e doctests
@@ -277,7 +308,8 @@ package:
 
 ### Releases
 
-We now use [GitHub workflows] for releases, see [`release.yml`](https://github.com/vanderschaarlab/temporai/blob/main/.github/workflows/release.yml).
+We now use [GitHub workflows] for releases, see
+[`release.yml`](https://github.com/vanderschaarlab/temporai/blob/main/.github/workflows/release.yml).
 
 
 
@@ -306,6 +338,7 @@ We now use [GitHub workflows] for releases, see [`release.yml`](https://github.c
 [PyScaffold contributor's guide template]: https://github.com/pyscaffold/pyscaffold/blob/835eb4f986e37409d33fdb3f4d150e41ee07a111/src/pyscaffold/templates/contributing.template
 [pyscaffold]: https://pyscaffold.org/
 [pytest can drop you]: https://docs.pytest.org/en/stable/usage.html#dropping-to-pdb-python-debugger-at-the-start-of-a-test
+[pytest-xdist]: https://pytest-xdist.readthedocs.io/en/stable/
 [python software foundation's code of conduct]: https://www.python.org/psf/conduct/
 [restructuredtext]: https://www.sphinx-doc.org/en/master/usage/restructuredtext/
 [sphinx]: https://www.sphinx-doc.org/en/master/
