@@ -2,4 +2,4 @@
 
 # pylint: disable=wildcard-import,unused-wildcard-import
 
-from tempor.plugins.core._params import *  # noqa: F401,F403
+from tempor.plugins.core._params import *  # noqa: F401,F403  # pragma: no cover

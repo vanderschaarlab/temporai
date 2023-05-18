@@ -234,17 +234,15 @@ class ClassifierMetrics:
                 Defaults to :obj:`~tempor.benchmarks.evaluation.classifier_supported_metrics`.
         """
         self.metrics: Union[ClassifierSupportedMetric, Sequence[ClassifierSupportedMetric]]
-        if isinstance(metric, str):
+        if isinstance(metric, str):  # pragma: no cover
+            # Should be prevented by pydantic.
             self.metrics = [cast(ClassifierSupportedMetric, metric)]
         else:
             self.metrics = metric
 
-    def get_metric(self) -> Union[ClassifierSupportedMetric, Sequence[ClassifierSupportedMetric]]:
-        return self.metrics
-
     def score_proba(self, y_test: np.ndarray, y_pred_proba: np.ndarray) -> Dict[str, float]:
         if y_test is None or y_pred_proba is None:
-            raise RuntimeError("Invalid input for score_proba")
+            raise ValueError("Invalid input for score_proba")
 
         results = {}
         y_pred = np.argmax(np.asarray(y_pred_proba), axis=1)
@@ -324,7 +322,7 @@ class ClassifierMetrics:
                 )
             elif metric == "mcc":
                 results[metric] = sklearn.metrics.matthews_corrcoef(y_test, y_pred)
-            else:
+            else:  # pragma: no cover
                 raise ValueError(f"invalid metric {metric}")
 
         logger.debug(f"evaluate_classifier: {results}")

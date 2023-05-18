@@ -7,6 +7,7 @@ from tempor.benchmarks import (
     classifier_supported_metrics,
     regression_supported_metrics,
     time_to_event_supported_metrics,
+    visualize_benchmark,
 )
 from tempor.plugins import plugin_loader
 from tempor.plugins.pipeline import pipeline
@@ -22,6 +23,7 @@ PREDICTOR_REGRESSION = "prediction.one_off.regression.nn_regressor"
 PREDICTOR_TIME_TO_EVENT = "time_to_event.dynamic_deephit"
 
 
+@pytest.mark.filterwarnings("ignore:.*Matplotlib.*:UserWarning")
 @pytest.mark.parametrize("data", TEST_ON_DATASETS_CLASSIFIER)
 def test_classifier_benchmark(data: str, request: pytest.FixtureRequest) -> None:
     testcases = [
@@ -59,6 +61,10 @@ def test_classifier_benchmark(data: str, request: pytest.FixtureRequest) -> None
 
         for testcase, _ in testcases:
             assert metric in per_test_score[testcase].index
+
+    # Check also visualize_benchmarks executes without error.
+    print(per_test_score)
+    visualize_benchmark(per_test_score)
 
 
 @pytest.mark.parametrize("data", TEST_ON_DATASETS_REGRESSOR)

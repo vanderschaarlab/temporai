@@ -1,5 +1,6 @@
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
+import matplotlib.pyplot as plt
 import pandas as pd
 import pydantic
 import seaborn as sns
@@ -12,7 +13,7 @@ from . import evaluation
 
 
 def print_score(mean: pd.Series, std: pd.Series) -> pd.Series:
-    with pd.option_context("mode.chained_assignment", None):
+    with pd.option_context("mode.chained_assignment", None):  # pyright: ignore
         mean.loc[(mean < 1e-3) & (mean != 0)] = 1e-3
         std.loc[(std < 1e-3) & (std != 0)] = 1e-3
 
@@ -77,19 +78,20 @@ def benchmark_models(
         evaluator = evaluation.evaluate_prediction_oneoff_regressor
     elif task_type == "time_to_event":
         evaluator = evaluation.evaluate_time_to_event
-    elif task_type == "prediction.temporal.classification":
+    elif task_type == "prediction.temporal.classification":  # pragma: no cover
         raise NotImplementedError
-    elif task_type == "prediction.temporal.regression":
+    elif task_type == "prediction.temporal.regression":  # pragma: no cover
         raise NotImplementedError
-    elif task_type == "treatments.one_off.classification":
+    elif task_type == "treatments.one_off.classification":  # pragma: no cover
         raise NotImplementedError
-    elif task_type == "treatments.one_off.regression":
+    elif task_type == "treatments.one_off.regression":  # pragma: no cover
         raise NotImplementedError
-    elif task_type == "treatments.temporal.classification":
+    elif task_type == "treatments.temporal.classification":  # pragma: no cover
         raise NotImplementedError
-    elif task_type == "treatments.temporal.regression":
+    elif task_type == "treatments.temporal.regression":  # pragma: no cover
         raise NotImplementedError
-    else:
+    else:  # pragma: no cover
+        # Should not reach here, will be caught by Pydantic.
         raise ValueError(f"Unsupported task type: {task_type}")
 
     for testcase, plugin in tests:
@@ -129,11 +131,7 @@ def benchmark_models(
 
 
 @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
-def visualize_benchmark(
-    results: Dict[str, pd.DataFrame], palette: str = "viridis", set_options: Optional[Dict[str, Any]] = None
-) -> Any:
-    if set_options is None:
-        set_options = dict(title="Benchmark results", ylabel="Metric (CV mean)", xlabel="Benchmark case")
+def visualize_benchmark(results: Dict[str, pd.DataFrame], palette: str = "viridis") -> Any:
 
     # Pre-format DF for plotting.
     for k, v in results.items():
@@ -146,6 +144,15 @@ def visualize_benchmark(
     key = {order: idx for idx, order in enumerate(df_sns["method"].unique())}
     err = err.sort_index(key=lambda x: x.map(key)).T
 
-    out = sns.barplot(df_sns, x="method", y="mean", hue="metric", palette=palette, yerr=err)
-    out.set(**set_options)
-    return out
+    axes = []
+    for metric in err.index:
+        set_options = dict(title=f"Benchmark results: {metric}", ylabel=f"{metric} (CV mean)", xlabel="Benchmark case")
+        out = sns.barplot(
+            df_sns[df_sns["metric"] == metric], x="method", y="mean", palette=palette, yerr=err.loc[metric, :]
+        )
+        out.set(**set_options)
+        axes.append(out)
+        print(f"Plotting bar plot for metric: {metric}")
+        plt.show()
+
+    return axes

@@ -68,7 +68,7 @@ class BaseTuner(abc.ABC):
         override_hp_space: Optional[List[Params]] = None,
         compute_baseline_score: bool = True,
         **kwargs,
-    ) -> Tuple[List[float], List[Dict]]:
+    ) -> Tuple[List[float], List[Dict]]:  # pragma: no cover
         """Run the hyperparameter tuner and return scores and chosen hyperparameters.
 
         Args:
