@@ -1,4 +1,5 @@
 import copy
+import warnings
 from time import time
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Sequence, Union, cast
 
@@ -344,6 +345,7 @@ def evaluate_prediction_oneoff_classifier(  # pylint: disable=unused-argument
     n_splits: int = 3,
     random_state: int = 0,
     raise_exceptions: bool = False,
+    silence_warnings: bool = False,
     **kwargs: Any,
 ) -> pd.DataFrame:
     """Helper for evaluating classifiers.
@@ -361,6 +363,8 @@ def evaluate_prediction_oneoff_classifier(  # pylint: disable=unused-argument
             Whether to raise exceptions during evaluation. If `False`, the exceptions will be swallowed and the
             evaluation will continue - exception count will be reported in the `"errors"` column of the resultant
             dataframe. Defaults to `False`.
+        silence_warnings (bool, optional):
+            Whether to silence warnings raised. Defaults to `False`.
 
     Returns:
         pd.DataFrame:
@@ -373,48 +377,52 @@ def evaluate_prediction_oneoff_classifier(  # pylint: disable=unused-argument
             :obj:`~tempor.benchmarks.evaluation.ClassifierSupportedMetric`.
     """
 
-    if n_splits < 2 or not isinstance(n_splits, int):
-        raise ValueError("n_splits must be an integer >= 2")
-    estimator_ = cast("BaseOneOffClassifier", estimator)
-    enable_reproducibility(random_state)
+    with warnings.catch_warnings():
+        if silence_warnings:
+            warnings.simplefilter("ignore")
 
-    results = _InternalScores()
-    evaluator = ClassifierMetrics()
-    for metric in classifier_supported_metrics:
-        results.metrics[metric] = np.zeros(n_splits)
+        if n_splits < 2 or not isinstance(n_splits, int):
+            raise ValueError("n_splits must be an integer >= 2")
+        estimator_ = cast("BaseOneOffClassifier", estimator)
+        enable_reproducibility(random_state)
 
-    splitter = sklearn.model_selection.StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_state)
+        results = _InternalScores()
+        evaluator = ClassifierMetrics()
+        for metric in classifier_supported_metrics:
+            results.metrics[metric] = np.zeros(n_splits)
 
-    if data.predictive.targets is None:
-        raise ValueError("The dataset for evaluation needs to contain targets but did not")
-    labels = data.predictive.targets.numpy().squeeze()
-    if len(labels.shape) > 1:
-        raise ValueError("Classifier evaluation expects 1D output")
+        splitter = sklearn.model_selection.StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_state)
 
-    indx = 0
-    for train_data, test_data in data.split(splitter=splitter, y=labels):
-        model = copy.deepcopy(estimator_)
-        start = time()
-        try:
-            model.fit(train_data)
+        if data.predictive.targets is None:
+            raise ValueError("The dataset for evaluation needs to contain targets but did not")
+        labels = data.predictive.targets.numpy().squeeze()
+        if len(labels.shape) > 1:
+            raise ValueError("Classifier evaluation expects 1D output")
 
-            if TYPE_CHECKING:  # pragma: no cover
-                assert test_data.predictive.targets is not None  # nosec B101
-            test_labels = test_data.predictive.targets.numpy()
-            preds = model.predict_proba(test_data).numpy()
+        indx = 0
+        for train_data, test_data in data.split(splitter=splitter, y=labels):
+            model = copy.deepcopy(estimator_)
+            start = time()
+            try:
+                model.fit(train_data)
 
-            scores = evaluator.score_proba(test_labels, preds)
-            for metric in scores:
-                results.metrics[metric][indx] = scores[metric]
-            results.errors.append(0)
-        except BaseException as e:  # pylint: disable=broad-except
-            logger.error(f"Evaluation failed: {e}")
-            results.errors.append(1)
-            if raise_exceptions:
-                raise
+                if TYPE_CHECKING:  # pragma: no cover
+                    assert test_data.predictive.targets is not None  # nosec B101
+                test_labels = test_data.predictive.targets.numpy()
+                preds = model.predict_proba(test_data).numpy()
 
-        results.durations.append(time() - start)
-        indx += 1
+                scores = evaluator.score_proba(test_labels, preds)
+                for metric in scores:
+                    results.metrics[metric][indx] = scores[metric]
+                results.errors.append(0)
+            except BaseException as e:  # pylint: disable=broad-except
+                logger.error(f"Evaluation failed: {e}")
+                results.errors.append(1)
+                if raise_exceptions:
+                    raise
+
+            results.durations.append(time() - start)
+            indx += 1
 
     return _postprocess_results(results)
 
@@ -426,6 +434,7 @@ def evaluate_prediction_oneoff_regressor(  # pylint: disable=unused-argument
     n_splits: int = 3,
     random_state: int = 0,
     raise_exceptions: bool = False,
+    silence_warnings: bool = False,
     **kwargs: Any,
 ) -> pd.DataFrame:
     """Helper for evaluating regression tasks.
@@ -443,6 +452,8 @@ def evaluate_prediction_oneoff_regressor(  # pylint: disable=unused-argument
             Whether to raise exceptions during evaluation. If `False`, the exceptions will be swallowed and the
             evaluation will continue - exception count will be reported in the `"errors"` column of the resultant
             dataframe. Defaults to `False`.
+        silence_warnings (bool, optional):
+            Whether to silence warnings raised. Defaults to `False`.
 
     Returns:
         pd.DataFrame:
@@ -454,42 +465,47 @@ def evaluate_prediction_oneoff_regressor(  # pylint: disable=unused-argument
             The index of the dataframe contains all the metrics evaluated: all of
             :obj:`~tempor.benchmarks.evaluation.RegressionSupportedMetric`.
     """
-    if n_splits < 2 or not isinstance(n_splits, int):
-        raise ValueError("n_splits must be an integer >= 2")
-    estimator_ = cast("BaseOneOffRegressor", estimator)
-    enable_reproducibility(random_state)
-    metrics = regression_supported_metrics
 
-    results = _InternalScores()
-    for metric in metrics:
-        results.metrics[metric] = np.zeros(n_splits)
+    with warnings.catch_warnings():
+        if silence_warnings:
+            warnings.simplefilter("ignore")
 
-    splitter = sklearn.model_selection.KFold(n_splits=n_splits, shuffle=True, random_state=random_state)
+        if n_splits < 2 or not isinstance(n_splits, int):
+            raise ValueError("n_splits must be an integer >= 2")
+        estimator_ = cast("BaseOneOffRegressor", estimator)
+        enable_reproducibility(random_state)
+        metrics = regression_supported_metrics
 
-    indx = 0
-    for train_data, test_data in data.split(splitter=splitter):
-        model = copy.deepcopy(estimator_)
-        start = time()
-        try:
-            model.fit(train_data)
+        results = _InternalScores()
+        for metric in metrics:
+            results.metrics[metric] = np.zeros(n_splits)
 
-            if TYPE_CHECKING:  # pragma: no cover
-                assert test_data.predictive.targets is not None  # nosec B101
-            targets = test_data.predictive.targets.numpy().squeeze()
-            preds = model.predict(test_data).numpy().squeeze()
+        splitter = sklearn.model_selection.KFold(n_splits=n_splits, shuffle=True, random_state=random_state)
 
-            results.metrics["mse"][indx] = sklearn.metrics.mean_squared_error(targets, preds)
-            results.metrics["mae"][indx] = sklearn.metrics.mean_absolute_error(targets, preds)
-            results.metrics["r2"][indx] = sklearn.metrics.r2_score(targets, preds)
-            results.errors.append(0)
-        except BaseException as e:  # pylint: disable=broad-except
-            logger.error(f"Regression evaluation failed: {e}")
-            results.errors.append(1)
-            if raise_exceptions:
-                raise
+        indx = 0
+        for train_data, test_data in data.split(splitter=splitter):
+            model = copy.deepcopy(estimator_)
+            start = time()
+            try:
+                model.fit(train_data)
 
-        results.durations.append(time() - start)
-        indx += 1
+                if TYPE_CHECKING:  # pragma: no cover
+                    assert test_data.predictive.targets is not None  # nosec B101
+                targets = test_data.predictive.targets.numpy().squeeze()
+                preds = model.predict(test_data).numpy().squeeze()
+
+                results.metrics["mse"][indx] = sklearn.metrics.mean_squared_error(targets, preds)
+                results.metrics["mae"][indx] = sklearn.metrics.mean_absolute_error(targets, preds)
+                results.metrics["r2"][indx] = sklearn.metrics.r2_score(targets, preds)
+                results.errors.append(0)
+            except BaseException as e:  # pylint: disable=broad-except
+                logger.error(f"Regression evaluation failed: {e}")
+                results.errors.append(1)
+                if raise_exceptions:
+                    raise
+
+            results.durations.append(time() - start)
+            indx += 1
 
     return _postprocess_results(results)
 
@@ -580,6 +596,7 @@ def evaluate_time_to_event(  # pylint: disable=unused-argument
     n_splits: int = 3,
     random_state: int = 0,
     raise_exceptions: bool = False,
+    silence_warnings: bool = False,
     **kwargs: Any,
 ) -> pd.DataFrame:
     """Helper for evaluating time-to-event tasks.
@@ -599,6 +616,8 @@ def evaluate_time_to_event(  # pylint: disable=unused-argument
             Whether to raise exceptions during evaluation. If `False`, the exceptions will be swallowed and the
             evaluation will continue - exception count will be reported in the `"errors"` column of the resultant
             dataframe. Defaults to `False`.
+        silence_warnings (bool, optional):
+            Whether to silence warnings raised. Defaults to `False`.
 
     Returns:
         pd.DataFrame:
@@ -610,51 +629,56 @@ def evaluate_time_to_event(  # pylint: disable=unused-argument
             The index of the dataframe contains all the metrics evaluated: all of
             :obj:`~tempor.benchmarks.evaluation.TimeToEventSupportedMetric`.
     """
-    if n_splits < 2 or not isinstance(n_splits, int):
-        raise ValueError("n_splits must be an integer >= 2")
-    estimator_ = cast("BaseTimeToEventAnalysis", estimator)
-    enable_reproducibility(random_state)
-    metrics = time_to_event_supported_metrics
-    metrics_map = {
-        "c_index": compute_c_index,
-        "brier_score": compute_brier_score,
-    }
+    with warnings.catch_warnings():
+        if silence_warnings:
+            warnings.simplefilter("ignore")
+            # NOTE: xbgse is somehow able to circumvent warnings silencing, so will still raise warnings.
 
-    results = _InternalScores()
-    for metric in metrics:
-        results.metrics[metric] = np.zeros(n_splits)
+        if n_splits < 2 or not isinstance(n_splits, int):
+            raise ValueError("n_splits must be an integer >= 2")
+        estimator_ = cast("BaseTimeToEventAnalysis", estimator)
+        enable_reproducibility(random_state)
+        metrics = time_to_event_supported_metrics
+        metrics_map = {
+            "c_index": compute_c_index,
+            "brier_score": compute_brier_score,
+        }
 
-    splitter = sklearn.model_selection.KFold(n_splits=n_splits, shuffle=True, random_state=random_state)
+        results = _InternalScores()
+        for metric in metrics:
+            results.metrics[metric] = np.zeros(n_splits)
 
-    indx = 0
-    for train_data, test_data in data.split(splitter=splitter):
-        model = copy.deepcopy(estimator_)
-        start = time()
-        try:
-            model.fit(train_data)
+        splitter = sklearn.model_selection.KFold(n_splits=n_splits, shuffle=True, random_state=random_state)
 
-            # targets = test_data.predictive.targets.numpy().squeeze()
-            preds = model.predict(test_data, horizons=horizons)
+        indx = 0
+        for train_data, test_data in data.split(splitter=splitter):
+            model = copy.deepcopy(estimator_)
+            start = time()
+            try:
+                model.fit(train_data)
 
-            for metric_name in time_to_event_supported_metrics:
-                metric_func = metrics_map[metric_name]
-                results.metrics[metric_name][indx] = _compute_time_to_event_metric(
-                    metric_func,
-                    train_data=train_data,
-                    test_data=test_data,
-                    horizons=horizons,
-                    predictions=preds,
-                )
+                # targets = test_data.predictive.targets.numpy().squeeze()
+                preds = model.predict(test_data, horizons=horizons)
 
-            results.errors.append(0)
+                for metric_name in time_to_event_supported_metrics:
+                    metric_func = metrics_map[metric_name]
+                    results.metrics[metric_name][indx] = _compute_time_to_event_metric(
+                        metric_func,
+                        train_data=train_data,
+                        test_data=test_data,
+                        horizons=horizons,
+                        predictions=preds,
+                    )
 
-        except BaseException as e:  # pylint: disable=broad-except
-            logger.error(f"Regression evaluation failed: {e}")
-            results.errors.append(1)
-            if raise_exceptions:
-                raise
+                results.errors.append(0)
 
-        results.durations.append(time() - start)
-        indx += 1
+            except BaseException as e:  # pylint: disable=broad-except
+                logger.error(f"Regression evaluation failed: {e}")
+                results.errors.append(1)
+                if raise_exceptions:
+                    raise
+
+            results.durations.append(time() - start)
+            indx += 1
 
     return _postprocess_results(results)

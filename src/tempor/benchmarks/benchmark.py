@@ -2,6 +2,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import pandas as pd
 import pydantic
+import seaborn as sns
 
 from tempor.core.types import PredictiveTaskType
 from tempor.data import data_typing, dataset
@@ -29,6 +30,8 @@ def benchmark_models(
     n_splits: int = 3,
     random_state: int = 0,
     horizons: Optional[data_typing.TimeIndex] = None,
+    raise_exceptions: bool = False,
+    silence_warnings: bool = True,
 ) -> Tuple[pd.DataFrame, Dict[str, pd.DataFrame]]:
     """Benchmark the performance of several algorithms.
 
@@ -46,6 +49,13 @@ def benchmark_models(
             Random seed. Defaults to ``0``.
         horizons (data_typing.TimeIndex, optional):
             Time horizons for making predictions, if applicable to the task.
+        raise_exceptions (bool, optional):
+            Whether to raise exceptions during evaluation. If `False`, the exceptions will be swallowed and the
+            evaluation will continue - exception count will be reported in the `"errors"` column of the resultant
+            dataframe. Defaults to `False`.
+        silence_warnings (bool, optional):
+            Whether to silence warnings raised. Some dependencies (e.g. `xgbse`) may circumvent this and raise warnings
+            regardless. Defaults to `True`.
 
     Returns:
         Tuple[pd.DataFrame, Dict[str, pd.DataFrame]]:
@@ -60,6 +70,7 @@ def benchmark_models(
 
     results = {}
 
+    # TODO: Handle missing cases.
     if task_type == "prediction.one_off.classification":
         evaluator: Callable = evaluation.evaluate_prediction_oneoff_classifier
     elif task_type == "prediction.one_off.regression":
@@ -67,22 +78,16 @@ def benchmark_models(
     elif task_type == "time_to_event":
         evaluator = evaluation.evaluate_time_to_event
     elif task_type == "prediction.temporal.classification":
-        # TODO: This case needs to be handled in `tempor.benchmarks.evaluation`.
         raise NotImplementedError
     elif task_type == "prediction.temporal.regression":
-        # TODO: This case needs to be handled in `tempor.benchmarks.evaluation`.
         raise NotImplementedError
     elif task_type == "treatments.one_off.classification":
-        # TODO: This case needs to be handled in `tempor.benchmarks.evaluation`.
         raise NotImplementedError
     elif task_type == "treatments.one_off.regression":
-        # TODO: This case needs to be handled in `tempor.benchmarks.evaluation`.
         raise NotImplementedError
     elif task_type == "treatments.temporal.classification":
-        # TODO: This case needs to be handled in `tempor.benchmarks.evaluation`.
         raise NotImplementedError
     elif task_type == "treatments.temporal.regression":
-        # TODO: This case needs to be handled in `tempor.benchmarks.evaluation`.
         raise NotImplementedError
     else:
         raise ValueError(f"Unsupported task type: {task_type}")
@@ -96,6 +101,8 @@ def benchmark_models(
             n_splits=n_splits,
             random_state=random_state,
             horizons=horizons,  # type: ignore
+            raise_exceptions=raise_exceptions,
+            silence_warnings=silence_warnings,
         )
 
         mean_score = scores["mean"].to_dict()
@@ -119,3 +126,26 @@ def benchmark_models(
     aggr = aggr.set_axis(results.keys(), axis=1)
 
     return aggr, results
+
+
+@pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+def visualize_benchmark(
+    results: Dict[str, pd.DataFrame], palette: str = "viridis", set_options: Optional[Dict[str, Any]] = None
+) -> Any:
+    if set_options is None:
+        set_options = dict(title="Benchmark results", ylabel="Metric (CV mean)", xlabel="Benchmark case")
+
+    # Pre-format DF for plotting.
+    for k, v in results.items():
+        v["method"] = k
+    df_sns = pd.concat(list(results.values()))
+    df_sns["metric"] = df_sns.index
+
+    # Prepare "stddev" column for plotting as error bars.
+    err = df_sns.pivot(index="method", columns="metric", values="stddev")
+    key = {order: idx for idx, order in enumerate(df_sns["method"].unique())}
+    err = err.sort_index(key=lambda x: x.map(key)).T
+
+    out = sns.barplot(df_sns, x="method", y="mean", hue="metric", palette=palette, yerr=err)
+    out.set(**set_options)
+    return out

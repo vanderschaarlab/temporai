@@ -1,4 +1,4 @@
-from .benchmark import benchmark_models  # noqa: F401
+from .benchmark import benchmark_models, visualize_benchmark  # noqa: F401
 from .evaluation import (  # noqa: F401
     ClassifierSupportedMetric,
     OutputMetric,
