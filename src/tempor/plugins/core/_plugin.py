@@ -101,7 +101,13 @@ def register_plugin(name: str, category: str):
         for existing_cls in PLUGIN_REGISTRY.values():
             # Cannot have the same plugin name (not just fqn), as this is not supported by Pipeline.
             if cls.name == existing_cls.name:
-                raise TypeError(f"Plugin with name {cls.name} already registered (as class {existing_cls})")
+                if not _check_same_class(cls, existing_cls):
+                    raise TypeError(f"Plugin with name {cls.name} already registered (as class {existing_cls})")
+                else:  # pragma: no cover
+                    # The same class is being reimported, do not raise error.
+                    # Some kind of coverage issues - this case *is* covered by test:
+                    # test_plugins.py::TestRegistration::test_category_registration_reimport_allowed
+                    pass
 
         PLUGIN_REGISTRY[cls.fqn()] = cls
 
@@ -172,7 +178,8 @@ def _glob_plugin_paths(package_dir: str) -> List[str]:
 def _module_name_from_path(path: str) -> str:
     path = os.path.normpath(path)
     split = path[path.rfind(f"{tempor.import_name}{os.sep}") :].split(os.sep)
-    if split[-1][-3:] != ".py":
+    if split[-1][-3:] != ".py":  # pragma: no cover
+        # Should be prevented by `_glob_plugin_paths`.
         raise ValueError(f"Path `{path}` is not a python file.")
     split[-1] = split[-1].replace(".py", "")
     return ".".join(split)
