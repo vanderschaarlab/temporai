@@ -133,7 +133,7 @@ class Seq2seqClassifier(BaseTemporalClassifier):
         *args,
         **kwargs,
     ) -> samples.TimeSeriesSamples:
-        raise NotImplementedError("not supported")
+        raise NotImplementedError("Not currently supported")
 
     @staticmethod
     def hyperparameter_space(*args, **kwargs):

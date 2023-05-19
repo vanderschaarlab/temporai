@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 from unittest.mock import Mock
 
 
-class DummyOneOffClassifier(BaseOneOffRegressor):
+class DummyOneOffRegressor(BaseOneOffRegressor):
     name = "dummy"
     category = "dummy_cat"
 
@@ -31,14 +31,14 @@ class DummyOneOffClassifier(BaseOneOffRegressor):
 
 
 def test_wrong_dataset():
-    plugin = DummyOneOffClassifier()
+    plugin = DummyOneOffRegressor()
 
     with pytest.raises(TypeError, match="[Ee]xpected.*data.*one-off regression.*"):
         plugin.fit(data=Mock())
 
 
 def test_unpack_dataset_empty():
-    plugin = DummyOneOffClassifier()
+    plugin = DummyOneOffRegressor()
 
     mock_data = Mock(
         PredictiveDataset,
