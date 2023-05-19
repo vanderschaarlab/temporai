@@ -43,6 +43,9 @@ class BaseEstimator(Plugin, abc.ABC):
             try:
                 if not pydantic_utils.is_pydantic_dataclass(ParamsDefinitionClass):
                     ParamsDefinitionClass = pydantic_utils.make_pydantic_dataclass(ParamsDefinitionClass)
+                else:  # pragma: no cover
+                    # Currently we do not end up here.
+                    pass
                 defined_params = omegaconf.OmegaConf.structured(dataclasses.asdict(ParamsDefinitionClass(**params)))
             except Exception as ex:
                 name = utils.get_class_full_name(ex)
@@ -99,7 +102,7 @@ class BaseEstimator(Plugin, abc.ABC):
         return fitted_model
 
     @abc.abstractmethod
-    def _fit(self, data: dataset.BaseDataset, *args, **kwargs) -> Self:
+    def _fit(self, data: dataset.BaseDataset, *args, **kwargs) -> Self:  # pragma: no cover
         ...
 
     @staticmethod

@@ -1,5 +1,3 @@
-# pylint: disable=redefined-outer-name, unused-argument
-
 import dataclasses
 import re
 from typing import Any, Tuple
@@ -178,7 +176,9 @@ class TestBaseEstimator:
         my_model = MyModel()
         data = Mock(spec=BaseDataset)
 
+        assert my_model.is_fitted is False
         my_model.fit(data)
+        assert my_model.is_fitted is True
 
     def test_fit_fails_data_not_fit_ready(self):
         from tempor.data.dataset import BaseDataset
