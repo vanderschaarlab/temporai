@@ -78,6 +78,18 @@ def test_change_config_via_hydra(tmp_path_factory, mock_updated_on_configure):
         assert lib_config == tempor.get_config()
 
 
+def test_change_config_fails_wrong_type():
+    with pytest.raises(TypeError, match=".*type.*not supported.*"):
+        tempor.configure([])  # type: ignore
+
+
+@pytest.mark.parametrize("wd_raw", ["~", "$PWD"])
+def test_get_working_dir(wd_raw):
+    c = TemporConfig(logging=Mock(), working_directory=wd_raw)
+    wd = c.get_working_dir()
+    assert wd_raw not in wd
+
+
 def test_observer(monkeypatch):
     mock_func = Mock()
     monkeypatch.setattr(tempor.config, "updated_on_configure", {mock_func})

@@ -68,7 +68,7 @@ def check_y_survival(y_or_event: np.ndarray, *args, allow_all_censored=False) ->
             continue
 
         yt = sklearn.utils.check_array(yt, ensure_2d=False)
-        if not np.issubdtype(yt.dtype, np.number):
+        if not np.issubdtype(yt.dtype, np.number):  # pragma: no cover
             raise ValueError("time must be numeric, but found {} for argument {}".format(yt.dtype, i + 2))
 
         return_val.append(yt)
@@ -496,7 +496,7 @@ def _estimate_concordance_index(
 
         est = estimate[order[mask]]
 
-        if not event_i:
+        if not event_i:  # pragma: no cover
             raise RuntimeError("got censored sample at index %d, but expected uncensored" % order[ind])
 
         ties = np.absolute(est - est_i) <= tied_tol

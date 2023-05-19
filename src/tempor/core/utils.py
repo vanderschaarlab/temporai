@@ -1,4 +1,3 @@
-import enum
 from typing import Any, Dict, Tuple, Type
 
 from typing_extensions import get_args
@@ -13,8 +12,9 @@ def get_class_full_name(o: object):
     return module + "." + class_.__qualname__
 
 
-def get_enum_name(enum_: enum.Enum) -> str:
-    return enum_.name.lower()
+# Currently unused
+# def get_enum_name(enum_: enum.Enum) -> str:
+#     return enum_.name.lower()
 
 
 class RichReprStrPassthrough:
@@ -32,34 +32,6 @@ def is_iterable(o: object) -> bool:
     except TypeError:
         is_iterable_ = False
     return is_iterable_
-
-
-def get_version(version: str) -> Tuple[int, ...]:
-    """Get the semantic ``version`` as a tuple of ``int`` s.
-
-    Note:
-        Assumes that the ``version`` string is specified as ``.``-separated ``ints``; will throw exceptions in
-        case of more complex version semantics.
-
-    Args:
-        module (ModuleType): The module to get the version of.
-
-    Returns:
-        Tuple[int, ...]: Tuple of integers representing ``(major, minor, patch[, ...])``.
-    """
-    return tuple(int(v) for v in version.split("."))
-
-
-def version_above_incl(version: Tuple[int, int], above_incl: Tuple[int, int]) -> bool:
-    v_major, v_minor = version
-    compare_major, compare_minor = above_incl
-    return (v_major == compare_major and v_minor >= compare_minor) or v_major > compare_major
-
-
-def version_below_excl(version: Tuple[int, int], below_excl: Tuple[int, int]) -> bool:
-    v_major, v_minor = version
-    compare_major, compare_minor = below_excl
-    return (v_major == compare_major and v_minor < compare_minor) or v_major < compare_major
 
 
 def ensure_literal_matches_dict_keys(
