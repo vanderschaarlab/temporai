@@ -41,11 +41,7 @@ class BaseEstimator(Plugin, abc.ABC):
                 assert ParamsDefinitionClass is not None  # nosec B101
 
             try:
-                if not pydantic_utils.is_pydantic_dataclass(ParamsDefinitionClass):
-                    ParamsDefinitionClass = pydantic_utils.make_pydantic_dataclass(ParamsDefinitionClass)
-                else:  # pragma: no cover
-                    # Currently we do not end up here.
-                    pass
+                ParamsDefinitionClass = pydantic_utils.make_pydantic_dataclass(ParamsDefinitionClass)
                 defined_params = omegaconf.OmegaConf.structured(dataclasses.asdict(ParamsDefinitionClass(**params)))
             except Exception as ex:
                 name = utils.get_class_full_name(ex)
