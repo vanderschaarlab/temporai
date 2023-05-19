@@ -3,7 +3,7 @@ import pytest
 import torch
 
 from tempor.models.constants import DEVICE
-from tempor.models.transformer import TransformerModel
+from tempor.models.transformer import TransformerModel, Transpose
 from tempor.utils.dataloaders import GoogleStocksDataLoader, SineDataLoader
 
 
@@ -23,7 +23,7 @@ def unpack_dataset(source):
 
 @pytest.mark.parametrize("source", [GoogleStocksDataLoader, SineDataLoader])
 def test_sanity(source) -> None:
-    _, temporal, _, _ = unpack_dataset(source)  # pylint: disable=unused-variable
+    _, temporal, _, _ = unpack_dataset(source)
 
     n_hidden = 10
     model = TransformerModel(n_units_in=temporal[0].shape[-1], n_units_hidden=n_hidden)
@@ -31,3 +31,11 @@ def test_sanity(source) -> None:
     out = model.forward(temporal)
 
     assert out.shape == (len(temporal), temporal[0].shape[0], n_hidden)
+
+
+@pytest.mark.parametrize("contiguous", [True, False])
+def test_transpose(contiguous):
+    x = torch.ones(size=(2, 3))
+    tr = Transpose(1, 0, contiguous=contiguous)
+    out = tr(x)
+    assert list(out.shape) == [3, 2]

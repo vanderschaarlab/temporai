@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING
+from unittest.mock import Mock
 
 import numpy as np
 import pytest
@@ -35,7 +36,7 @@ def test_network_config() -> None:
 
 
 @pytest.mark.parametrize("task_type", ["regression", "classification"])
-@pytest.mark.parametrize("nonlin", ["relu", "elu", "leaky_relu", None])
+@pytest.mark.parametrize("nonlin", ["relu", "elu", "leaky_relu"])
 @pytest.mark.parametrize("n_iter", [10, 50, 100])
 @pytest.mark.parametrize("dropout", [0, 0.5, 0.2])
 @pytest.mark.parametrize("batch_norm", [True, False])
@@ -151,3 +152,106 @@ def test_mlp_regression(residual: bool) -> None:
     assert model.predict(X).shape == y.shape
     with pytest.raises(ValueError):
         model.predict_proba(X)
+
+
+def test_mlp_input_validation_fails():
+    with pytest.raises(ValueError, match=".*>=.*0.*"):
+        MLP(task_type="regression", n_units_in=-1, n_units_out=3)
+    with pytest.raises(ValueError, match=".*>=.*0.*"):
+        MLP(task_type="regression", n_units_in=3, n_units_out=-1)
+
+
+def test_mlp_hidden_0():
+    model = MLP(task_type="regression", n_units_in=3, n_units_out=3, n_layers_hidden=0)
+    assert len(model.model) == 1
+
+
+def test_nonlin_out_mismatch():
+    with pytest.raises(RuntimeError, match=".*mismatch.*"):
+        MLP(task_type="regression", n_units_in=3, n_units_out=3, nonlin_out=[("tanh", 1), ("softmax", 3)])
+
+
+def test_mlp_loss_provided():
+    mock_loss = Mock()
+    model = MLP(task_type="regression", n_units_in=3, n_units_out=3, n_layers_hidden=0, loss=mock_loss)
+    assert model.loss == mock_loss
+
+
+def test_residual_layer_x_last_dim_0():
+    rl = ResidualLayer(n_units_in=10, n_units_out=10)
+    out = rl.forward(torch.ones(size=(3, 3, 0)))
+    assert list(out.shape) == [3, 3, 10]
+
+
+def test_mlp_score():
+    model = MLP(task_type="regression", n_units_in=3, n_units_out=3, n_units_hidden=3, device=torch.device("cpu"))
+    out = model.score(X=np.ones(shape=(3, 3)), y=np.ones((3,)))
+    assert isinstance(out, float)
+
+    model = MLP(task_type="classification", n_units_in=3, n_units_out=3, n_units_hidden=3, device=torch.device("cpu"))
+    out = model.score(X=np.ones(shape=(3, 3)), y=np.ones((3,)))
+    assert isinstance(out, float)
+
+
+def test_mlp_clipping_0_case():
+    X, y = load_digits(return_X_y=True)
+
+    model = MLP(
+        task_type="classification",
+        n_units_in=X.shape[1],
+        n_units_out=len(np.unique(y)),
+        n_iter=10,
+        clipping_value=0,
+    )
+
+    model.fit(X, y)  # type: ignore
+
+
+def test_mlp_print_iter_no_early_stopping_case():
+    X, y = load_digits(return_X_y=True)
+
+    model = MLP(
+        task_type="classification",
+        n_units_in=X.shape[1],
+        n_units_out=len(np.unique(y)),
+        n_iter=10,
+        n_iter_print=3,
+        early_stopping=False,
+    )
+
+    model.fit(X, y)  # type: ignore
+
+
+def test_mlp_early_stop():
+    X, y = load_digits(return_X_y=True)
+
+    model = MLP(
+        task_type="classification",
+        n_units_in=X.shape[1],
+        n_units_out=len(np.unique(y)),
+        early_stopping=True,
+        n_iter=100,
+        n_iter_min=0,
+        patience=1,
+    )
+
+    model.fit(X, y)  # type: ignore
+
+
+def test_mlp_len():
+    X, y = load_digits(return_X_y=True)
+
+    model = MLP(
+        task_type="classification",
+        n_units_in=X.shape[1],
+        n_units_out=len(np.unique(y)),
+        early_stopping=True,
+        n_iter=10,
+    )
+
+    assert len(model) == len(model.model)
+
+
+def test_linear_layer_nonlin_none():
+    ll = LinearLayer(n_units_in=10, n_units_out=10, nonlin=None)
+    assert len(ll.model) == 1
