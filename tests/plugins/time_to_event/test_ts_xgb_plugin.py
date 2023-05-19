@@ -2,10 +2,11 @@
 
 from typing import TYPE_CHECKING, Callable, Dict
 
+import pandas as pd
 import pytest
 
 from tempor.benchmarks.evaluation import evaluate_time_to_event
-from tempor.plugins.time_to_event.plugin_ts_xgb import XGBTimeToEventAnalysis
+from tempor.plugins.time_to_event.plugin_ts_xgb import XGBSurvivalAnalysis, XGBTimeToEventAnalysis
 from tempor.utils.serialization import load, save
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -100,3 +101,16 @@ def test_benchmark(
         assert score.loc["c_index", "mean"] >= 0.5  # pyright: ignore
     else:
         assert score.loc["c_index", "mean"] > 0.5  # pyright: ignore
+
+
+class TestXGBSurvivalAnalysis:
+    def test_init_validation_failure(self):
+        with pytest.raises(ValueError, match=".*strategy.*"):
+            XGBSurvivalAnalysis(strategy="unknown")  # type: ignore
+
+    def test_fit_lower_bound_edge_case(self):
+        model = XGBSurvivalAnalysis()
+        X = pd.DataFrame({"f1": [11, 22, 11], "f2": [0.11, 0.91, 0.13]})
+        Y = pd.Series([True, False, True])
+        T = pd.Series([2, 5, 19])
+        model.fit(X, T, Y)
