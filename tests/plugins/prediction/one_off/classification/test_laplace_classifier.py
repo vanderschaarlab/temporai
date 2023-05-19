@@ -1,6 +1,7 @@
 # pylint: disable=redefined-outer-name
 
 from typing import Callable, Dict
+from unittest.mock import Mock
 
 import pytest
 
@@ -40,6 +41,22 @@ def test_sanity(get_test_plugin: Callable, plugin_from: str) -> None:
     assert len(test_plugin.hyperparameter_space()) == 7
 
 
+def test_fit_first_runtime_error(get_test_plugin: Callable, monkeypatch):
+    from tempor.data.dataset import OneOffPredictionDataset
+
+    test_plugin = get_test_plugin("from_api", INIT_KWARGS, device="cpu")
+    monkeypatch.setattr(test_plugin, "_fit", Mock())
+
+    test_plugin.fit(Mock(OneOffPredictionDataset))
+    test_plugin.model = None
+
+    with pytest.raises(RuntimeError, match=".*[Ff]it.*first.*"):
+        test_plugin.predict(Mock(OneOffPredictionDataset))
+
+    with pytest.raises(RuntimeError, match=".*[Ff]it.*first.*"):
+        test_plugin.predict_proba(Mock(OneOffPredictionDataset))
+
+
 @pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
 @pytest.mark.parametrize("device", DEVICES)
@@ -69,6 +86,26 @@ def test_predict(
         dataset.predictive.targets = None
     output = test_plugin.predict(dataset)
     assert output.numpy().shape == (len(dataset.time_series), 1)
+
+
+@pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)
+@pytest.mark.parametrize("data", TEST_ON_DATASETS)
+@pytest.mark.parametrize("device", DEVICES)
+def test_predict_proba(
+    plugin_from: str, data: str, device: str, get_test_plugin: Callable, get_dataset: Callable
+) -> None:
+    test_plugin: BaseOneOffClassifier = get_test_plugin(plugin_from, INIT_KWARGS, device=device)
+    dataset = get_dataset(data)
+
+    output = test_plugin.fit(dataset).predict_proba(dataset)
+
+    if data == "google_stocks_data_small":
+        out_classes = 6
+    elif data == "google_stocks_data_full":
+        out_classes = 10
+    else:
+        raise NotImplementedError
+    assert output.numpy().shape == (len(dataset.time_series), out_classes)
 
 
 @pytest.mark.filterwarnings("ignore:RNN.*contiguous.*:UserWarning")  # Expected: problem with current serialization.
