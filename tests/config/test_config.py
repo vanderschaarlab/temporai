@@ -30,6 +30,15 @@ def test_default_config(mock_updated_on_configure):
     assert config == tempor.config.get_config()
 
 
+def test_change_config_file_log(mock_updated_on_configure):
+    config = tempor.get_config()
+    config.logging.file_log = False
+    tempor.configure(config)
+    assert isinstance(config, TemporConfig)
+    assert config.logging.file_log is False
+    assert config == tempor.config.get_config()
+
+
 @pytest.mark.parametrize("str_path", [False, True])
 def test_change_config_yaml_file(tmp_path_factory, str_path, mock_updated_on_configure):
     yaml_file_path = tmp_path_factory.mktemp("my_config") / "config.yaml"

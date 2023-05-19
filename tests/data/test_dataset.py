@@ -141,6 +141,44 @@ class TestBaseDataset:
         )
         dummy_dataset.mock_validate_call.assert_called_once()
 
+    def test_repr(self, mock_dataset_cls: Type[MockedBaseDataset], mocked_depends: MockedDepends):
+        data_time_series = Mock()
+        data_static = Mock()
+        data_targets = Mock()
+        data_treatments = Mock()
+
+        dummy_dataset = mock_dataset_cls(
+            time_series=data_time_series,
+            static=data_static,
+            targets=data_targets,
+            treatments=data_treatments,
+            **{"dummy": "kwarg"},
+        )
+
+        assert "time_series" in str(dummy_dataset)
+        assert "static" in str(dummy_dataset)
+        assert "predictive" in str(dummy_dataset)
+
+        dummy_dataset.static = None
+        dummy_dataset.predictive = None
+        assert "static" not in str(dummy_dataset)
+        assert "predictive" not in str(dummy_dataset)
+
+    def test_predictive_none(self, mock_dataset_cls: Type[MockedBaseDataset], mocked_depends: MockedDepends):
+        data_time_series = Mock()
+        data_static = Mock()
+
+        dummy_dataset = mock_dataset_cls(
+            time_series=data_time_series,
+            static=data_static,
+            targets=None,
+            treatments=None,
+            **{"dummy": "kwarg"},
+        )
+
+        dummy_dataset.predictive = None
+        assert dummy_dataset.predictive_task is None
+
     def test_init_no_targets_provided(self, mock_dataset_cls: Type[MockedBaseDataset], mocked_depends: MockedDepends):
         data_time_series = Mock()
         data_static = Mock()
@@ -255,6 +293,70 @@ class TestBaseDataset:
                 time_series=data_time_series,
                 static=data_static,
                 targets=None,
+            )
+
+
+# --- CovariatesDataset. ---
+
+
+class MockedCovariatesDataset(dataset.CovariatesDataset):
+    mock_validate_call: Mock
+
+    def validate(self) -> None:
+        self._validate()
+
+    def _validate(self) -> None:
+        self.mock_validate_call()
+
+
+@pytest.fixture
+def mock_covariate_dataset_cls():
+    MockedCovariatesDataset.mock_validate_call = Mock()
+    return MockedCovariatesDataset
+
+
+class TestCovariatesDataset:
+    def test_init(self, mock_covariate_dataset_cls: Type[MockedCovariatesDataset], mocked_depends: MockedDepends):
+        data_time_series = Mock()
+        data_static = Mock()
+        data_targets = None
+        data_treatments = None
+
+        dummy_dataset = mock_covariate_dataset_cls(
+            time_series=data_time_series,
+            static=data_static,
+            targets=data_targets,
+            treatments=data_treatments,
+            **{"dummy": "kwarg"},
+        )
+
+        mocked_depends.TimeSeriesSamples.assert_called_once_with(data_time_series)
+        mocked_depends.StaticSamples.assert_called_once_with(data_static)
+        mocked_depends.OneOffPredictionTaskData.assert_not_called()
+        dummy_dataset.mock_validate_call.assert_called_once()
+
+        assert dummy_dataset.fit_ready
+
+    def test_init_fails(self, mock_covariate_dataset_cls: Type[MockedCovariatesDataset], mocked_depends: MockedDepends):
+        data_time_series = Mock()
+        data_static = Mock()
+
+        with pytest.raises(ValueError, match=".*targets.*not.*"):
+            mock_covariate_dataset_cls(
+                time_series=data_time_series,
+                static=data_static,
+                targets=Mock(),
+                treatments=None,
+                **{"dummy": "kwarg"},
+            )
+
+        with pytest.raises(ValueError, match="treatments.*not"):
+            mock_covariate_dataset_cls(
+                time_series=data_time_series,
+                static=data_static,
+                targets=None,
+                treatments=Mock(),
+                **{"dummy": "kwarg"},
             )
 
 

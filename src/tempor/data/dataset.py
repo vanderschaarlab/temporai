@@ -246,7 +246,7 @@ class BaseDataset(abc.ABC):
 
 # `Dataset`s corresponding to different tasks follow. More can be added to handle new Tasks.
 
-# TODO: unit test CovariatesDataset.
+
 class CovariatesDataset(BaseDataset):
     def __init__(
         self,

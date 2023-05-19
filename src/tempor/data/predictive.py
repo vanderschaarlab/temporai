@@ -11,9 +11,6 @@ if TYPE_CHECKING:  # pragma: no cover
     from .dataset import PredictiveDataset  # For typing only, no circular import.
 
 
-# TODO: Unit test.
-
-
 class PredictiveTaskData(abc.ABC):
     _targets: Optional[samples.DataSamples]
     _treatments: Optional[samples.DataSamples]
@@ -139,7 +136,7 @@ class OneOffTreatmentEffectsTaskData(PredictiveTaskData):
 
     @property
     def predictive_task(self) -> data_typing.PredictiveTask:
-        return data_typing.PredictiveTask.TEMPORAL_TREATMENT_EFFECTS
+        return data_typing.PredictiveTask.ONE_OFF_TREATMENT_EFFECTS
 
     def __init__(
         self,

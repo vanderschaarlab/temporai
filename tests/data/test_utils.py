@@ -1075,14 +1075,14 @@ class TestEventTimeValuePairsToEventDataframe:
             ],
         ],
     )
-    def test_success(self, sample_index, event_time_value_pairs):
-        feature_index = ["f1", "f2"]
+    @pytest.mark.parametrize("feature_index", [["f1", "f2"], None])
+    def test_success(self, sample_index, event_time_value_pairs, feature_index):
         df = utils.event_time_value_pairs_to_event_dataframe(
             event_time_value_pairs, sample_index=sample_index, feature_index=feature_index
         )
 
         assert list(df.index) == sample_index
-        assert list(df.columns) == feature_index
+        assert list(df.columns) == (feature_index if feature_index is not None else [0, 1])
         assert df.shape == (3, 2)
         assert isinstance(df.iloc[0, 0], tuple)
 

@@ -118,7 +118,7 @@ _configure_loggers(_initial_config)
 conf.updated_on_configure.add(_configure_loggers)
 
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     # This is to allow type checkers to recognize the custom added logger.print method.
 
     from loguru import Logger as _Logger
