@@ -50,7 +50,7 @@ class UCIDiabetesDataLoader(dataloader.TemporalPredictionDataLoader):
                     make_regular=self.make_regular,
                     use_int_index=self.use_int_index,
                 )
-            except (requests.exceptions.RequestException, urllib.error.URLError) as ex:
+            except (requests.exceptions.RequestException, urllib.error.URLError) as ex:  # pragma: no cover
                 if retry + 1 == download_retries:
                     logger.error(f"Failed to download UCI diabetes dataset after {download_retries} retries.")
                     raise
