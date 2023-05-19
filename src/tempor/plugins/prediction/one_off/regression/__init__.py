@@ -37,7 +37,7 @@ class BaseOneOffRegressor(plugins.BasePredictor):
         return super().predict(data, *args, **kwargs)
 
     @abc.abstractmethod
-    def _predict(self, data: dataset.PredictiveDataset, *args, **kwargs) -> samples.StaticSamples:
+    def _predict(self, data: dataset.PredictiveDataset, *args, **kwargs) -> samples.StaticSamples:  # pragma: no cover
         ...
 
     def _unpack_dataset(self, data: dataset.BaseDataset) -> Tuple:
