@@ -62,7 +62,8 @@ def clairvoyance2_dataset_to_tempor_dataset(data: Clairvoyance2Dataset) -> datas
         targets_df = data.temporal_targets.to_multi_index_dataframe()
     elif data.event_targets is not None:
         targets_df = data.event_targets.df
-    else:
+    else:  # pragma: no cover
+        # Case caught by exceptions above.
         targets_df = None
 
     # Treatments.
@@ -81,6 +82,9 @@ def clairvoyance2_dataset_to_tempor_dataset(data: Clairvoyance2Dataset) -> datas
         targets_df = _from_clv2_time_series(targets_df)  # pyright: ignore
     elif data.event_targets is not None:
         targets_df = _from_clv2_event(targets_df)  # pyright: ignore
+    else:  # pragma: no cover
+        # Case caught by exceptions above.
+        targets_df = None
     if data.temporal_treatments is not None:
         treatments_df = _from_clv2_time_series(treatments_df)  # pyright: ignore
     elif data.event_treatments is not None:
@@ -95,7 +99,7 @@ def clairvoyance2_dataset_to_tempor_dataset(data: Clairvoyance2Dataset) -> datas
         TemporDatasetCls = dataset.OneOffTreatmentEffectsDataset
     elif data.temporal_targets is not None and data.temporal_treatments is not None:
         TemporDatasetCls = dataset.TemporalTreatmentEffectsDataset
-    else:
+    else:  # pragma: no cover
         raise ValueError(
             "Cannot convert a clairvoyance2 dataset to tempor dataset in this case, as it is "
             f"not supported, see clairvoyance2 dataset components:\n{data}"

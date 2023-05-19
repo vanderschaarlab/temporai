@@ -174,7 +174,7 @@ class TestTemporDatasetToClairvoyance2Dataset:
         data_ = load_pbc
 
         # Add an event feature with different times.
-        df = data_.predictive.targets.dataframe()
+        df = data_.predictive.targets.dataframe()  # pyright: ignore
         df["feat_2"] = df["status"].apply(lambda x: (x[0] + 0.5, x[1]))
 
         data = dataset.TimeToEventAnalysisDataset(
@@ -214,7 +214,7 @@ class TestTemporDatasetToClairvoyance2Dataset:
         data_ = load_pbc
 
         # Make events multi-feature:
-        df = data_.predictive.targets.dataframe()
+        df = data_.predictive.targets.dataframe()  # pyright: ignore
         df["feat_2"] = df["status"].copy()
 
         data = dataset.TimeToEventAnalysisDataset(
@@ -241,7 +241,7 @@ class TestTemporDatasetToClairvoyance2Dataset:
         data_ = load_pbc
 
         # Make events multi-feature:
-        df = data_.predictive.targets.dataframe()
+        df = data_.predictive.targets.dataframe()  # pyright: ignore
         df["feat_2"] = df["status"].copy()
 
         data = dataset.OneOffTreatmentEffectsDataset(
@@ -290,3 +290,20 @@ class TestTemporDatasetToClairvoyance2Dataset:
         if static:
             assert data_converted.static_covariates is not None
             assert data.static.num_features == data_converted.static_covariates.n_features  # pyright: ignore
+
+    def test_unsupported(self, load_sine: dataset.OneOffTreatmentEffectsDataset):
+        data_ = load_sine
+        data = dataset.CovariatesDataset(
+            time_series=data_.time_series.dataframe(),
+            static=None,
+        )
+
+        data_converted = clv2conv.tempor_dataset_to_clairvoyance2_dataset(data)
+        assert isinstance(data_converted, Clairvoyance2Dataset)
+        assert len(data) == data_converted.n_samples
+        assert list(range(len(data))) == data_converted.sample_indices
+        assert data.time_series.num_features == data_converted.temporal_covariates.n_features
+        assert data_converted.temporal_targets is None
+        assert data_converted.event_targets is None
+        assert data_converted.temporal_treatments is None
+        assert data_converted.event_treatments is None
