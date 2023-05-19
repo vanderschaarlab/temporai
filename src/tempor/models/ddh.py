@@ -156,7 +156,7 @@ class DynamicDeepHitModel:
                 tb = t_train[j * self.batch_size : (j + 1) * self.batch_size]
                 eb = e_train[j * self.batch_size : (j + 1) * self.batch_size]
 
-                if xb.shape[0] == 0:
+                if xb.shape[0] == 0:  # pragma: no cover
                     continue
 
                 optimizer.zero_grad()
@@ -178,12 +178,12 @@ class DynamicDeepHitModel:
                 tb = t_val[j * self.batch_size : (j + 1) * self.batch_size]
                 eb = e_val[j * self.batch_size : (j + 1) * self.batch_size]
 
-                if xb.shape[0] == 0:
+                if xb.shape[0] == 0:  # pragma: no cover
                     continue
 
                 valid_loss += self.total_loss(xb, tb, eb)
 
-            if torch.isnan(valid_loss):
+            if torch.isnan(valid_loss):  # pragma: no cover
                 raise RuntimeError("NaNs detected in the total loss")
 
             valid_loss = valid_loss.item()
@@ -260,7 +260,7 @@ class DynamicDeepHitModel:
         x: np.ndarray,
     ) -> torch.Tensor:
         if self.model is None:
-            raise Exception(
+            raise RuntimeError(
                 "The model has not been fitted yet. Please fit the "
                 + "model using the `fit` method on some training data "
                 + "before calling `predict_survival`."
@@ -280,7 +280,7 @@ class DynamicDeepHitModel:
         bs: int = 100,
     ) -> np.ndarray:
         if self.model is None:
-            raise Exception(
+            raise RuntimeError(
                 "The model has not been fitted yet. Please fit the "
                 + "model using the `fit` method on some training data "
                 + "before calling `predict_survival`."
@@ -308,7 +308,7 @@ class DynamicDeepHitModel:
 
                 if isinstance(pred, list):
                     scores[t_].extend(pred)
-                else:
+                else:  # pragma: no cover
                     scores[t_].append(pred)
 
         output = []
@@ -556,7 +556,7 @@ class DynamicDeepHitLayers(nn.Module):
         inputmask = torch.isnan(x[:, :, 0])
         x[torch.isnan(x)] = -1
 
-        if torch.isnan(x).sum() != 0:
+        if torch.isnan(x).sum() != 0:  # pragma: no cover
             raise RuntimeError("NaNs detected in the input")
 
         if self.rnn_type in ["GRU", "LSTM", "RNN"]:
@@ -564,12 +564,12 @@ class DynamicDeepHitLayers(nn.Module):
         else:
             hidden = self.embedding(x)
 
-        if torch.isnan(hidden).sum() != 0:
+        if torch.isnan(hidden).sum() != 0:  # pragma: no cover
             raise RuntimeError("NaNs detected in the embeddings")
 
         # Longitudinal modelling
         longitudinal_prediction = self.longitudinal(hidden)
-        if torch.isnan(longitudinal_prediction).sum() != 0:
+        if torch.isnan(longitudinal_prediction).sum() != 0:  # pragma: no cover
             raise RuntimeError("NaNs detected in the longitudinal_prediction")
 
         hidden_attentive = self.forward_attention(x, inputmask, hidden)
@@ -590,7 +590,7 @@ class DynamicDeepHitLayers(nn.Module):
         # Soft max for probability distribution
         outcomes_t = torch.cat(outcomes, dim=1)
         outcomes_t = self.soft(outcomes_t)
-        if torch.isnan(outcomes_t).sum() != 0:
+        if torch.isnan(outcomes_t).sum() != 0:  # pragma: no cover
             raise RuntimeError("NaNs detected in the outcome")
 
         outcomes = [outcomes_t[:, i * self.output_dim : (i + 1) * self.output_dim] for i in range(self.risks)]

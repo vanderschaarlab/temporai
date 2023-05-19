@@ -35,7 +35,7 @@ def test_network_config() -> None:
 
 
 @pytest.mark.parametrize("task_type", ["regression", "classification"])
-@pytest.mark.parametrize("nonlin", ["relu", "elu", "leaky_relu"])
+@pytest.mark.parametrize("nonlin", ["relu", "elu", "leaky_relu", None])
 @pytest.mark.parametrize("n_iter", [10, 50, 100])
 @pytest.mark.parametrize("dropout", [0, 0.5, 0.2])
 @pytest.mark.parametrize("batch_norm", [True, False])
