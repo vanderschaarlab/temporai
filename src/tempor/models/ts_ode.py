@@ -321,7 +321,6 @@ class NeuralODE(torch.nn.Module):
                 n_units_latent=n_units_hidden,
                 device=device,
             )
-
         else:
             raise RuntimeError(f"Invalid ODE backend {self.backend}")
 
@@ -337,7 +336,7 @@ class NeuralODE(torch.nn.Module):
                 nonlin=nonlin,
                 device=device,
             )
-        elif self.backend == "laplace":
+        else:  # self.backend == "laplace":
             self.initial_temporal = ReverseGRUEncoder(
                 n_temporal_units_in + 1,
                 n_units_latent=n_units_hidden,
@@ -628,7 +627,7 @@ class NeuralODE(torch.nn.Module):
                 self.optimizer.zero_grad()  # clear gradients for this training step
 
                 pred = self(static_mb, temporal_mb, horizons_mb)  # rnn output
-                if torch.isnan(pred).sum() > 0:
+                if torch.isnan(pred).sum() > 0:  # pragma: no cover
                     raise RuntimeError("NaNs in the training prediction")
 
                 loss = self.loss(pred.squeeze(), y_mb.squeeze())
@@ -638,7 +637,7 @@ class NeuralODE(torch.nn.Module):
                     torch.nn.utils.clip_grad_norm_(self.parameters(), self.clipping_value)  # pyright: ignore
                 self.optimizer.step()  # apply gradients
 
-                if torch.isnan(loss):
+                if torch.isnan(loss):  # pragma: no cover
                     raise RuntimeError("NaNs in the loss")
 
                 losses.append(loss.detach().cpu())
@@ -654,7 +653,7 @@ class NeuralODE(torch.nn.Module):
                 loader
             ):
                 pred = self(static_mb, temporal_mb, horizons_mb)  # ODE output
-                if torch.isnan(pred).sum() > 0:
+                if torch.isnan(pred).sum() > 0:  # pragma: no cover
                     raise RuntimeError("NaNs in the test prediction")
                 loss = self.loss(pred.squeeze(), y_mb.squeeze())
 
