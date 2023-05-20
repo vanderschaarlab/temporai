@@ -149,7 +149,7 @@ class TimeSeriesModel(nn.Module):
             self.loss = nn.MSELoss()
         elif task_type == "classification":
             self.loss = nn.CrossEntropyLoss()
-        else:
+        else:  # Prevented by pydantic.  # pragma: no cover
             raise ValueError(f"Invalid task type {task_type}")
 
         self.n_iter = n_iter
@@ -241,7 +241,7 @@ class TimeSeriesModel(nn.Module):
         else:
             temporal_data_merged = temporal_data
 
-        if torch.isnan(temporal_data_merged).sum() != 0:
+        if torch.isnan(temporal_data_merged).sum() != 0:  # pragma: no cover
             raise ValueError("NaNs detected in the temporal merged data")
 
         pred = self.temporal_layer(static_data, temporal_data_merged)
