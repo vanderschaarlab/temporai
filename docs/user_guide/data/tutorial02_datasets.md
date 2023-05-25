@@ -5,7 +5,7 @@ This tutorial shows different TemporAI `Dataset`s.
 
 
 
-## 0. Prepare some example data
+## Prepare some example data
 
 
 ```python
@@ -244,7 +244,7 @@ event_df
 
 
 
-## 1. `CovariatesDataset`
+## `CovariatesDataset`
 
 A `CovariatesDataset` contains time series and optionally static covariates only, without any predictive data
 (targets or treatments).
@@ -430,7 +430,7 @@ data.static
 
 
 
-## 1. `OneOffPredictionDataset`
+## `OneOffPredictionDataset`
 
 A `OneOffPredictionDataset` contains time series and optionally static covariates.
 
@@ -661,7 +661,7 @@ data.predictive.targets
 
 
 
-## 1. `TemporalPredictionDataset`
+## `TemporalPredictionDataset`
 
 A `TemporalPredictionDataset` contains time series and optionally static covariates.
 
@@ -911,7 +911,7 @@ data.predictive.targets
 
 
 
-## 1. `TimeToEventAnalysisDataset`
+## `TimeToEventAnalysisDataset`
 
 A `TimeToEventAnalysisDataset` contains time series and optionally static covariates.
 
@@ -1152,7 +1152,7 @@ data.predictive.targets
 
 
 
-## 1. `OneOffTreatmentEffectsDataset`
+## `OneOffTreatmentEffectsDataset`
 
 A `OneOffTreatmentEffectsDataset` contains time series and optionally static covariates.
 
@@ -1458,7 +1458,7 @@ data.predictive.treatments
 
 
 
-## 1. `TemporalTreatmentEffectsDataset`
+## `TemporalTreatmentEffectsDataset`
 
 A `TemporalTreatmentEffectsDataset` contains time series and optionally static covariates.
 

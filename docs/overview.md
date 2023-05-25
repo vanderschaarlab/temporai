@@ -52,7 +52,121 @@ from tempor.plugins import plugin_loader
 print(plugin_loader.list())
 ```
 
-* Use an imputer
+* Use a time-to-event (survival) analysis model
+```{testcode}
+:hide:
+import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
+
+from tempor.utils.dataloaders import PBCDataLoader
+from tempor.plugins import plugin_loader
+
+# Load a time-to-event dataset:
+dataset = PBCDataLoader().load()
+
+# Initialize the model:
+model = plugin_loader.get("time_to_event.dynamic_deephit")
+
+# Train:
+model.fit(dataset)
+
+# Make risk predictions:
+prediction = model.predict(dataset, horizons=[0.25, 0.50, 0.75])
+```
+```python
+from tempor.utils.dataloaders import PBCDataLoader
+from tempor.plugins import plugin_loader
+
+# Load a time-to-event dataset:
+dataset = PBCDataLoader().load()
+
+# Initialize the model:
+model = plugin_loader.get("time_to_event.dynamic_deephit")
+
+# Train:
+model.fit(dataset)
+
+# Make risk predictions:
+prediction = model.predict(dataset, horizons=[0.25, 0.50, 0.75])
+```
+
+* Use a temporal treatment effects model
+```{testcode}
+:hide:
+import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
+
+import numpy as np
+
+from tempor.utils.dataloaders import DummyTemporalTreatmentEffectsDataLoader
+from tempor.plugins import plugin_loader
+
+# Load a dataset with temporal treatments and outcomes:
+dataset = DummyTemporalTreatmentEffectsDataLoader(
+    temporal_covariates_missing_prob=0.0,
+    temporal_treatments_n_features=1,
+    temporal_treatments_n_categories=2,
+).load()
+
+# Initialize the model:
+model = plugin_loader.get("treatments.temporal.regression.crn_regressor", epochs=20)
+
+# Train:
+model.fit(dataset)
+
+# Define target variable horizons for each sample:
+horizons = [
+    tc.time_indexes()[0][len(tc.time_indexes()[0]) // 2 :] for tc in dataset.time_series
+]
+
+# Define treatment scenarios for each sample:
+treatment_scenarios = [
+    [np.asarray([1] * len(h)), np.asarray([0] * len(h))] for h in horizons
+]
+
+# Predict counterfactuals:
+counterfactuals = model.predict_counterfactuals(
+    dataset,
+    horizons=horizons,
+    treatment_scenarios=treatment_scenarios,
+)
+```
+```python
+import numpy as np
+
+from tempor.utils.dataloaders import DummyTemporalTreatmentEffectsDataLoader
+from tempor.plugins import plugin_loader
+
+# Load a dataset with temporal treatments and outcomes:
+dataset = DummyTemporalTreatmentEffectsDataLoader(
+    temporal_covariates_missing_prob=0.0,
+    temporal_treatments_n_features=1,
+    temporal_treatments_n_categories=2,
+).load()
+
+# Initialize the model:
+model = plugin_loader.get("treatments.temporal.regression.crn_regressor", epochs=20)
+
+# Train:
+model.fit(dataset)
+
+# Define target variable horizons for each sample:
+horizons = [
+    tc.time_indexes()[0][len(tc.time_indexes()[0]) // 2 :] for tc in dataset.time_series
+]
+
+# Define treatment scenarios for each sample:
+treatment_scenarios = [
+    [np.asarray([1] * len(h)), np.asarray([0] * len(h))] for h in horizons
+]
+
+# Predict counterfactuals:
+counterfactuals = model.predict_counterfactuals(
+    dataset,
+    horizons=horizons,
+    treatment_scenarios=treatment_scenarios,
+)
+```
+
+* Use a missing data imputer
 ```{testcode}
 :hide:
 import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
@@ -68,7 +182,7 @@ print(static_data_n_missing, temporal_data_n_missing)
 assert static_data_n_missing > 0
 assert temporal_data_n_missing > 0
 
-# Load the model:
+# Initialize the model:
 model = plugin_loader.get("preprocessing.imputation.temporal.bfill")
 
 # Train:
@@ -93,7 +207,7 @@ print(static_data_n_missing, temporal_data_n_missing)
 assert static_data_n_missing > 0
 assert temporal_data_n_missing > 0
 
-# Load the model:
+# Initialize the model:
 model = plugin_loader.get("preprocessing.imputation.temporal.bfill")
 
 # Train:
@@ -107,7 +221,7 @@ print(static_data_n_missing, temporal_data_n_missing)
 assert temporal_data_n_missing == 0
 ```
 
-* Use a classifier
+* Use a one-off classifier (prediction)
 ```{testcode}
 :hide:
 import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
@@ -117,7 +231,7 @@ from tempor.plugins import plugin_loader
 
 dataset = SineDataLoader().load()
 
-# Load the model:
+# Initialize the model:
 model = plugin_loader.get("prediction.one_off.classification.nn_classifier", n_iter=50)
 
 # Train:
@@ -132,7 +246,7 @@ from tempor.plugins import plugin_loader
 
 dataset = SineDataLoader().load()
 
-# Load the model:
+# Initialize the model:
 model = plugin_loader.get("prediction.one_off.classification.nn_classifier", n_iter=50)
 
 # Train:
@@ -142,43 +256,44 @@ model.fit(dataset)
 prediction = model.predict(dataset)
 ```
 
-* Use a regressor
+* Use a temporal regressor (forecasting)
 ```{testcode}
 :hide:
 import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
 
-from tempor.utils.dataloaders import SineDataLoader
+from tempor.utils.dataloaders import DummyTemporalPredictionDataLoader
 from tempor.plugins import plugin_loader
 
-dataset = SineDataLoader().load()
+# Load a dataset with temporal targets.
+dataset = DummyTemporalPredictionDataLoader(temporal_covariates_missing_prob=0.0).load()
 
-# Load the model:
-model = plugin_loader.get("prediction.one_off.regression.nn_regressor", n_iter=50)
+# Initialize the model:
+model = plugin_loader.get("prediction.temporal.regression.seq2seq_regressor", epochs=10)
 
 # Train:
 model.fit(dataset)
 
 # Predict:
-prediction = model.predict(dataset)
+prediction = model.predict(dataset, n_future_steps=5)
 ```
 ```python
-from tempor.utils.dataloaders import SineDataLoader
+from tempor.utils.dataloaders import DummyTemporalPredictionDataLoader
 from tempor.plugins import plugin_loader
 
-dataset = SineDataLoader().load()
+# Load a dataset with temporal targets.
+dataset = DummyTemporalPredictionDataLoader(temporal_covariates_missing_prob=0.0).load()
 
-# Load the model:
-model = plugin_loader.get("prediction.one_off.regression.nn_regressor", n_iter=50)
+# Initialize the model:
+model = plugin_loader.get("prediction.temporal.regression.seq2seq_regressor", epochs=10)
 
 # Train:
 model.fit(dataset)
 
 # Predict:
-prediction = model.predict(dataset)
+prediction = model.predict(dataset, n_future_steps=5)
 ```
 
-* Benchmark models
-Classification task
+* Benchmark models, time-to-event task
 ```{testcode}
 :hide:
 import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
@@ -186,31 +301,36 @@ import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
 from tempor.benchmarks import benchmark_models
 from tempor.plugins import plugin_loader
 from tempor.plugins.pipeline import pipeline
-from tempor.utils.dataloaders import SineDataLoader
+from tempor.utils.dataloaders import PBCDataLoader
 
 testcases = [
     (
         "pipeline1",
         pipeline(
             [
-                "preprocessing.scaling.static.static_minmax_scaler",
-                "prediction.one_off.classification.nn_classifier",
+                "preprocessing.scaling.temporal.ts_minmax_scaler",
+                "time_to_event.dynamic_deephit",
             ]
-        )({"nn_classifier": {"n_iter": 10}}),
+        )({"ts_coxph": {"n_iter": 100}}),
     ),
     (
         "plugin1",
-        plugin_loader.get("prediction.one_off.classification.nn_classifier", n_iter=10),
+        plugin_loader.get("time_to_event.dynamic_deephit", n_iter=100),
+    ),
+    (
+        "plugin2",
+        plugin_loader.get("time_to_event.ts_coxph", n_iter=100),
     ),
 ]
-dataset = SineDataLoader().load()
+dataset = PBCDataLoader().load()
 
 aggr_score, per_test_score = benchmark_models(
-    task_type="prediction.one_off.classification",
+    task_type="time_to_event",
     tests=testcases,
     data=dataset,
     n_splits=2,
     random_state=0,
+    horizons=[2.0, 4.0, 6.0],
 )
 
 print(aggr_score)
@@ -219,31 +339,36 @@ print(aggr_score)
 from tempor.benchmarks import benchmark_models
 from tempor.plugins import plugin_loader
 from tempor.plugins.pipeline import pipeline
-from tempor.utils.dataloaders import SineDataLoader
+from tempor.utils.dataloaders import PBCDataLoader
 
 testcases = [
     (
         "pipeline1",
         pipeline(
             [
-                "preprocessing.scaling.static.static_minmax_scaler",
-                "prediction.one_off.classification.nn_classifier",
+                "preprocessing.scaling.temporal.ts_minmax_scaler",
+                "time_to_event.dynamic_deephit",
             ]
-        )({"nn_classifier": {"n_iter": 10}}),
+        )({"ts_coxph": {"n_iter": 100}}),
     ),
     (
         "plugin1",
-        plugin_loader.get("prediction.one_off.classification.nn_classifier", n_iter=10),
+        plugin_loader.get("time_to_event.dynamic_deephit", n_iter=100),
+    ),
+    (
+        "plugin2",
+        plugin_loader.get("time_to_event.ts_coxph", n_iter=100),
     ),
 ]
-dataset = SineDataLoader().load()
+dataset = PBCDataLoader().load()
 
 aggr_score, per_test_score = benchmark_models(
-    task_type="prediction.one_off.classification",
+    task_type="time_to_event",
     tests=testcases,
     data=dataset,
     n_splits=2,
     random_state=0,
+    horizons=[2.0, 4.0, 6.0],
 )
 
 print(aggr_score)
@@ -257,7 +382,7 @@ import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
 from tempor.utils.serialization import load, save
 from tempor.plugins import plugin_loader
 
-# Load the model:
+# Initialize the model:
 model = plugin_loader.get("prediction.one_off.classification.nn_classifier", n_iter=50)
 
 buff = save(model)  # Save model to bytes.
@@ -269,7 +394,7 @@ reloaded = load(buff)  # Reload model.
 from tempor.utils.serialization import load, save
 from tempor.plugins import plugin_loader
 
-# Load the model:
+# Initialize the model:
 model = plugin_loader.get("prediction.one_off.classification.nn_classifier", n_iter=50)
 
 buff = save(model)  # Save model to bytes.
@@ -278,7 +403,7 @@ reloaded = load(buff)  # Reload model.
 # `save_to_file`, `load_from_file` also available in the serialization module.
 ```
 
-* AutoML
+* AutoML - search for the best pipeline for your task
 ```{testcode}
 :hide:
 import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f

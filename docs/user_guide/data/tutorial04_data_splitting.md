@@ -5,7 +5,7 @@ This tutorial shows how a `Dataset` can be split or KFold-ed.
 
 
 
-## 0. Splitting data
+## 1. Splitting data
 
 
 ```python
@@ -55,7 +55,7 @@ print(sine_dataset_test)
     )
 
 
-## 0. Using `KFold` and other `sklearn` splitter classes
+## 2. Using `KFold` and other `sklearn` splitter classes
 
 Any of the [sklearn splitter classes](https://scikit-learn.org/stable/modules/classes.html#splitter-classes) can be used with `Dataset` `split` method.
 
