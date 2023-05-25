@@ -272,47 +272,7 @@ best_pipelines, best_scores = seeker.search()  # doctest: +SKIP
 
 
 
-### Prediction
-
-#### One-off
-Prediction where targets are static.
-
-* Classification (category: `prediction.one_off.classification`)
-
-| Name | Description| Reference |
-| --- | --- | --- |
-| `nn_classifier` | Neural-net based classifier. Supports multiple recurrent models, like RNN, LSTM, Transformer etc.  | --- |
-| `ode_classifier` | Classifier based on ordinary differential equation (ODE) solvers.  | --- |
-| `cde_classifier` | Classifier based Neural Controlled Differential Equations for Irregular Time Series.  | [Paper](https://arxiv.org/abs/2005.08926) |
-| `laplace_ode_classifier` | Classifier based Inverse Laplace Transform (ILT) algorithms implemented in PyTorch.  | [Paper](https://arxiv.org/abs/2206.04843) |
-
-* Regression (category: `prediction.one_off.regression`)
-
-| Name | Description| Reference |
-| --- | --- | --- |
-| `nn_regressor` | Neural-net based regressor. Supports multiple recurrent models, like RNN, LSTM, Transformer etc.  | --- |
-| `ode_regressor` | Regressor based on ordinary differential equation (ODE) solvers.  | --- |
-| `cde_regressor` | Regressor based Neural Controlled Differential Equations for Irregular Time Series.  | [Paper](https://arxiv.org/abs/2005.08926)
-| `laplace_ode_regressor` | Regressor based Inverse Laplace Transform (ILT) algorithms implemented in PyTorch.  | [Paper](https://arxiv.org/abs/2206.04843) |
-
-#### Temporal
-Prediction where targets are temporal (time series).
-
-* Classification (category: `prediction.temporal.classification`)
-
-| Name | Description| Reference |
-| --- | --- | --- |
-| `seq2seq_classifier` | Seq2Seq prediction, classification | --- |
-
-* Regression (category: `prediction.temporal.regression`)
-
-| Name | Description| Reference |
-| --- | --- | --- |
-| `seq2seq_regressor` | Seq2Seq prediction, regression | --- |
-
-
-
-### Time-to-Event
+### Time-to-Event (survival) analysis over time
 
 Risk estimation given event data (category: `time_to_event`)
 
@@ -353,6 +313,46 @@ Treatment effects estimation where treatments are temporal (time series).
 | Name | Description| Reference |
 | --- | --- | --- |
 | `crn_regressor` | The Counterfactual Recurrent Network (CRN), a sequence-to-sequence model that leverages the available patient observational data to estimate treatment effects over time. | [Paper](https://arxiv.org/abs/2002.04083) |
+
+
+
+### Prediction
+
+#### One-off
+Prediction where targets are static.
+
+* Classification (category: `prediction.one_off.classification`)
+
+| Name | Description| Reference |
+| --- | --- | --- |
+| `nn_classifier` | Neural-net based classifier. Supports multiple recurrent models, like RNN, LSTM, Transformer etc.  | --- |
+| `ode_classifier` | Classifier based on ordinary differential equation (ODE) solvers.  | --- |
+| `cde_classifier` | Classifier based Neural Controlled Differential Equations for Irregular Time Series.  | [Paper](https://arxiv.org/abs/2005.08926) |
+| `laplace_ode_classifier` | Classifier based Inverse Laplace Transform (ILT) algorithms implemented in PyTorch.  | [Paper](https://arxiv.org/abs/2206.04843) |
+
+* Regression (category: `prediction.one_off.regression`)
+
+| Name | Description| Reference |
+| --- | --- | --- |
+| `nn_regressor` | Neural-net based regressor. Supports multiple recurrent models, like RNN, LSTM, Transformer etc.  | --- |
+| `ode_regressor` | Regressor based on ordinary differential equation (ODE) solvers.  | --- |
+| `cde_regressor` | Regressor based Neural Controlled Differential Equations for Irregular Time Series.  | [Paper](https://arxiv.org/abs/2005.08926)
+| `laplace_ode_regressor` | Regressor based Inverse Laplace Transform (ILT) algorithms implemented in PyTorch.  | [Paper](https://arxiv.org/abs/2206.04843) |
+
+#### Temporal
+Prediction where targets are temporal (time series).
+
+* Classification (category: `prediction.temporal.classification`)
+
+| Name | Description| Reference |
+| --- | --- | --- |
+| `seq2seq_classifier` | Seq2Seq prediction, classification | --- |
+
+* Regression (category: `prediction.temporal.regression`)
+
+| Name | Description| Reference |
+| --- | --- | --- |
+| `seq2seq_regressor` | Seq2Seq prediction, regression | --- |
 
 
 
