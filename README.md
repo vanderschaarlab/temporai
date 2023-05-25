@@ -31,10 +31,10 @@
 
 ### How is TemporAI unique?
 
-* **🏥 Medicine-first:** We focus on use cases tailored to medicine and healthcare, such as temporal treatment effects, survival analysis over time, imputation methods, models with built-in and post-hoc interpretability, etc.
+* **🏥 Medicine-first:** Focused on use cases for medicine and healthcare, such as temporal treatment effects, survival analysis over time, imputation methods, models with built-in and post-hoc interpretability, ... See [methods](./#-methods).
 * **🏗️ Fast prototyping:** A plugin design allowing for on-the-fly integration of new methods by the users.
-* **🚀 From research to practice:** New relevant methods from research community adapted for practical use.
-* **🌍 A healthcare ecosystem vision:** As we develop TemporAI, a range of interactive demonstration apps, new medical problem settings, and interpretability tools are planned.
+* **🚀 From research to practice:** Relevant novel models from research community adapted for practical use.
+* **🌍 A healthcare ecosystem vision:** A range of interactive demonstration apps, new medical problem settings, interpretability tools, data-centric tools etc. are planned.
 
 ### Key concepts
 
