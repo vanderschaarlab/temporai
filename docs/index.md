@@ -13,10 +13,10 @@ TemporAI: ML-centric Toolkit for Medical Time Series
 
 ```{toctree}
 :glob:
-:maxdepth: 3
+:maxdepth: 1
 
 Overview <overview>
-User Guide <user_guide>
+User Guide <user_guide/index>
 Contributions & Help <contributing>
 License <license>
 Authors <authors>

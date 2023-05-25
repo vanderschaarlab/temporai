@@ -332,7 +332,7 @@ Treatment effects estimation where treatments are temporal (time series).
 
 
 
-## Tutorials
+## 📖 Tutorials
 
 ### Data
 
@@ -388,7 +388,7 @@ For development and contribution to TemporAI, see:
 * 📓 [Extending TemporAI tutorials](https://github.com/vanderschaarlab/temporai/tutorials/extending/)
 * 📃 [Contribution guide](https://github.com/vanderschaarlab/temporai/CONTRIBUTING.md)
 
-## Citing
+## ✍️ Citing
 
 If you use this code, please cite the associated paper:
 ```

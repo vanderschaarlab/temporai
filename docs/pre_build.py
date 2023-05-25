@@ -9,10 +9,14 @@ The code will:
 import os
 import re
 
+from pre_build_nbconvert import do_conversion
+
 REPO_URL = "https://github.com/vanderschaarlab/temporai/"
 
 
 # -- Update `docs/requirements.txt` with the content of `install_requires` in `setup.cfg`.
+
+print("Updating `docs/requirements.txt`...")
 
 SETUP_CFG_PATH = os.path.join(os.path.dirname(__file__), "../setup.cfg")
 DOCS_REQS_FILE = os.path.join(os.path.dirname(__file__), "requirements.txt")
@@ -35,6 +39,7 @@ with open(DOCS_REQS_FILE, "w", encoding="utf8") as file:
     file.write(docs_req_content)
 
 # -- Convert `README.md` into `overview.md`.
+print("Working on `docs/overview.md`...")
 
 README_PATH = os.path.join(os.path.dirname(__file__), "../README.md")
 OVERVIEW_PATH = os.path.join(os.path.dirname(__file__), "overview.md")
@@ -85,6 +90,7 @@ with open(OVERVIEW_PATH, "w", encoding="utf8") as file:
 
 
 # -- Convert `README.md` into `pypi.md`.
+print("Working on `pypi.md`...")
 
 PYPI_README_PATH = os.path.join(os.path.dirname(__file__), "../pypi.md")
 
@@ -110,3 +116,7 @@ for source, destination in convert.items():
 
 with open(PYPI_README_PATH, "w", encoding="utf8") as file:
     file.write(readme_content)
+
+
+# Convert tutorial notebooks into user guide pages.
+do_conversion()
