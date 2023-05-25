@@ -12,7 +12,7 @@
 [![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/release/python-370/)
 [![PyPI-Server](https://img.shields.io/pypi/v/temporai?color=blue)](https://pypi.org/project/temporai/)
 [![](https://pepy.tech/badge/temporai)](https://pypi.org/project/temporai/)
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/vanderschaarlab/temporai/LICENSE.txt)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/vanderschaarlab/temporai/tree/main/LICENSE.txt)
 
 [![Tests](https://github.com/vanderschaarlab/temporai/actions/workflows/test.yml/badge.svg)](https://github.com/vanderschaarlab/temporai/actions/workflows/test.yml)
 [![Tests](https://github.com/vanderschaarlab/temporai/actions/workflows/test_full.yml/badge.svg)](https://github.com/vanderschaarlab/temporai/actions/workflows/test.yml)
@@ -25,15 +25,28 @@
 
 # <img src='https://raw.githubusercontent.com/vanderschaarlab/temporai/main/docs/assets/TemporAI_Logo_Icon.png' height=25> TemporAI
 
+<!-- exclude_docs -->
 > **⚗️ Status:** This project is still in *alpha*, and the API may change without warning.  
+<!-- exclude_docs_end -->
+<!-- include_docs
+:::{important}
+**Status:** This project is still in *alpha*, and the API may change without warning.  
+:::
+include_docs_end -->
 
-*TemporAI* is a Machine Learning-centric time-series library for medicine.  The tasks that are currently of focus in TemporAI are: time-series prediction, time-to-event (a.k.a. survival) analysis with time-series data, and counterfactual inference (i.e. \[individualized\] treatment effects).
 
-*TemporAI* provides data preprocessing methods (including scaling and imputation methods for static and temporal covariates). AutoML tools for hyperparameter tuning and pipeline selection are available.
+## 📃 Overview
 
-In future versions, the library also aims to provide the user with understanding of their data, model, and problem, through e.g. integration with interpretability methods.
+*TemporAI* is a Machine Learning-centric time-series library for medicine.  The tasks that are currently of focus in TemporAI are: time-to-event (survival) analysis with time-series data, treatment effects (causal inference) over time, and time-series prediction. Data preprocessing methods, including missing value imputation for static and temporal covariates, are provided. AutoML tools for hyperparameter tuning and pipeline selection are also available.
 
-Key concepts:
+### How is TemporAI unique?
+
+* **🏥 Medicine-first:** Focused on use cases for medicine and healthcare, such as temporal treatment effects, survival analysis over time, imputation methods, models with built-in and post-hoc interpretability, ... See [methods](https://github.com/vanderschaarlab/temporai/tree/main/#-methods).
+* **🏗️ Fast prototyping:** A plugin design allowing for on-the-fly integration of new methods by the users.
+* **🚀 From research to practice:** Relevant novel models from research community adapted for practical use.
+* **🌍 A healthcare ecosystem vision:** A range of interactive demonstration apps, new medical problem settings, interpretability tools, data-centric tools etc. are planned.
+
+### Key concepts
 
 <div align="center">
 
@@ -41,10 +54,12 @@ Key concepts:
 <img src='https://raw.githubusercontent.com/vanderschaarlab/temporai/main/docs/assets/Conceptual.png' alt="key concepts">
 <!-- exclude_docs_end -->
 <!-- include_docs
-<img src='https://raw.githubusercontent.com/vanderschaarlab/temporai/main/docs/assets/Conceptual.png' width="750" alt="key concepts">
+<img src='https://raw.githubusercontent.com/vanderschaarlab/temporai/main/docs/assets/Conceptual.png' alt="key concepts">
 include_docs_end -->
 
 </div>
+
+
 
 ## 🚀 Installation
 
@@ -55,6 +70,8 @@ or from source, using
 ```bash
 $ pip install .
 ```
+
+
 
 ## 💥 Sample Usage
 * List the available plugins
@@ -268,51 +285,14 @@ seeker = PipelineSeeker(
 best_pipelines, best_scores = seeker.search()  # doctest: +SKIP
 ```
 
+
+<!-- include_docs
+{#methods}include_docs_end -->
 ## 🔑 Methods
 
 
 
-### Prediction
-
-#### One-off
-Prediction where targets are static.
-
-* Classification (category: `prediction.one_off.classification`)
-
-| Name | Description| Reference |
-| --- | --- | --- |
-| `nn_classifier` | Neural-net based classifier. Supports multiple recurrent models, like RNN, LSTM, Transformer etc.  | --- |
-| `ode_classifier` | Classifier based on ordinary differential equation (ODE) solvers.  | --- |
-| `cde_classifier` | Classifier based Neural Controlled Differential Equations for Irregular Time Series.  | [Paper](https://arxiv.org/abs/2005.08926) |
-| `laplace_ode_classifier` | Classifier based Inverse Laplace Transform (ILT) algorithms implemented in PyTorch.  | [Paper](https://arxiv.org/abs/2206.04843) |
-
-* Regression (category: `prediction.one_off.regression`)
-
-| Name | Description| Reference |
-| --- | --- | --- |
-| `nn_regressor` | Neural-net based regressor. Supports multiple recurrent models, like RNN, LSTM, Transformer etc.  | --- |
-| `ode_regressor` | Regressor based on ordinary differential equation (ODE) solvers.  | --- |
-| `cde_regressor` | Regressor based Neural Controlled Differential Equations for Irregular Time Series.  | [Paper](https://arxiv.org/abs/2005.08926)
-| `laplace_ode_regressor` | Regressor based Inverse Laplace Transform (ILT) algorithms implemented in PyTorch.  | [Paper](https://arxiv.org/abs/2206.04843) |
-
-#### Temporal
-Prediction where targets are temporal (time series).
-
-* Classification (category: `prediction.temporal.classification`)
-
-| Name | Description| Reference |
-| --- | --- | --- |
-| `seq2seq_classifier` | Seq2Seq prediction, classification | --- |
-
-* Regression (category: `prediction.temporal.regression`)
-
-| Name | Description| Reference |
-| --- | --- | --- |
-| `seq2seq_regressor` | Seq2Seq prediction, regression | --- |
-
-
-
-### Time-to-Event
+### Time-to-Event (survival) analysis over time
 
 Risk estimation given event data (category: `time_to_event`)
 
@@ -353,6 +333,46 @@ Treatment effects estimation where treatments are temporal (time series).
 | Name | Description| Reference |
 | --- | --- | --- |
 | `crn_regressor` | The Counterfactual Recurrent Network (CRN), a sequence-to-sequence model that leverages the available patient observational data to estimate treatment effects over time. | [Paper](https://arxiv.org/abs/2002.04083) |
+
+
+
+### Prediction
+
+#### One-off
+Prediction where targets are static.
+
+* Classification (category: `prediction.one_off.classification`)
+
+| Name | Description| Reference |
+| --- | --- | --- |
+| `nn_classifier` | Neural-net based classifier. Supports multiple recurrent models, like RNN, LSTM, Transformer etc.  | --- |
+| `ode_classifier` | Classifier based on ordinary differential equation (ODE) solvers.  | --- |
+| `cde_classifier` | Classifier based Neural Controlled Differential Equations for Irregular Time Series.  | [Paper](https://arxiv.org/abs/2005.08926) |
+| `laplace_ode_classifier` | Classifier based Inverse Laplace Transform (ILT) algorithms implemented in PyTorch.  | [Paper](https://arxiv.org/abs/2206.04843) |
+
+* Regression (category: `prediction.one_off.regression`)
+
+| Name | Description| Reference |
+| --- | --- | --- |
+| `nn_regressor` | Neural-net based regressor. Supports multiple recurrent models, like RNN, LSTM, Transformer etc.  | --- |
+| `ode_regressor` | Regressor based on ordinary differential equation (ODE) solvers.  | --- |
+| `cde_regressor` | Regressor based Neural Controlled Differential Equations for Irregular Time Series.  | [Paper](https://arxiv.org/abs/2005.08926)
+| `laplace_ode_regressor` | Regressor based Inverse Laplace Transform (ILT) algorithms implemented in PyTorch.  | [Paper](https://arxiv.org/abs/2206.04843) |
+
+#### Temporal
+Prediction where targets are temporal (time series).
+
+* Classification (category: `prediction.temporal.classification`)
+
+| Name | Description| Reference |
+| --- | --- | --- |
+| `seq2seq_classifier` | Seq2Seq prediction, classification | --- |
+
+* Regression (category: `prediction.temporal.regression`)
+
+| Name | Description| Reference |
+| --- | --- | --- |
+| `seq2seq_regressor` | Seq2Seq prediction, regression | --- |
 
 
 
@@ -397,25 +417,25 @@ Treatment effects estimation where treatments are temporal (time series).
 
 ### Data
 
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/data/tutorial01_data_format.ipynb) - [Data Format](https://github.com/vanderschaarlab/temporai/tutorials/data/tutorial01_data_format.ipynb)
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/data/tutorial02_datasets.ipynb) - [Datasets](https://github.com/vanderschaarlab/temporai/tutorials/data/tutorial02_datasets.ipynb)
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/data/tutorial03_dataloaders.ipynb) - [Data Loaders](https://github.com/vanderschaarlab/temporai/tutorials/data/tutorial03_dataloaders.ipynb)
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/data/tutorial04_data_splitting.ipynb) - [Data Splitting](https://github.com/vanderschaarlab/temporai/tutorials/data/tutorial04_data_splitting.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/data/tutorial01_data_format.ipynb) - [Data Format](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/data/tutorial01_data_format.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/data/tutorial02_datasets.ipynb) - [Datasets](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/data/tutorial02_datasets.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/data/tutorial03_dataloaders.ipynb) - [Data Loaders](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/data/tutorial03_dataloaders.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/data/tutorial04_data_splitting.ipynb) - [Data Splitting](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/data/tutorial04_data_splitting.ipynb)
 
 ### User Guide
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial01_plugins.ipynb) - [Plugins](https://github.com/vanderschaarlab/temporai/tutorials/user_guide/tutorial01_plugins.ipynb)
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial02_imputation.ipynb) - [Imputation](https://github.com/vanderschaarlab/temporai/tutorials/user_guide/tutorial02_imputation.ipynb)
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial03_scaling.ipynb) - [Scaling](https://github.com/vanderschaarlab/temporai/tutorials/user_guide/tutorial03_scaling.ipynb)
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial04_prediction.ipynb) - [Prediction](https://github.com/vanderschaarlab/temporai/tutorials/user_guide/tutorial04_prediction.ipynb)
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial05_time_to_event.ipynb) - [Time-to-event Analysis](https://github.com/vanderschaarlab/temporai/tutorials/user_guide/tutorial05_time_to_event.ipynb)
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial06_treatments.ipynb) - [Treatment Effects](https://github.com/vanderschaarlab/temporai/tutorials/user_guide/tutorial06_treatments.ipynb)
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial07_pipeline.ipynb) - [Pipeline](https://github.com/vanderschaarlab/temporai/tutorials/user_guide/tutorial07_pipeline.ipynb)
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial08_benchmarks.ipynb) - [Benchmarks](https://github.com/vanderschaarlab/temporai/tutorials/user_guide/tutorial08_benchmarks.ipynb)
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial09_automl.ipynb) - [AutoML](https://github.com/vanderschaarlab/temporai/tutorials/user_guide/tutorial09_automl.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial01_plugins.ipynb) - [Plugins](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/user_guide/tutorial01_plugins.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial02_imputation.ipynb) - [Imputation](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/user_guide/tutorial02_imputation.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial03_scaling.ipynb) - [Scaling](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/user_guide/tutorial03_scaling.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial04_prediction.ipynb) - [Prediction](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/user_guide/tutorial04_prediction.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial05_time_to_event.ipynb) - [Time-to-event Analysis](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/user_guide/tutorial05_time_to_event.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial06_treatments.ipynb) - [Treatment Effects](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/user_guide/tutorial06_treatments.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial07_pipeline.ipynb) - [Pipeline](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/user_guide/tutorial07_pipeline.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial08_benchmarks.ipynb) - [Benchmarks](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/user_guide/tutorial08_benchmarks.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial09_automl.ipynb) - [AutoML](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/user_guide/tutorial09_automl.ipynb)
 
 ### Extending TemporAI
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/extending/tutorial01_custom_plugin.ipynb) - [Writing a Custom Plugin](https://github.com/vanderschaarlab/temporai/tutorials/extending/tutorial01_custom_plugin.ipynb)
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/extending/tutorial02_testing_custom_plugin.ipynb) - [Testing a Custom Plugin](https://github.com/vanderschaarlab/temporai/tutorials/extending/tutorial02_testing_custom_plugin.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/extending/tutorial01_custom_plugin.ipynb) - [Writing a Custom Plugin](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/extending/tutorial01_custom_plugin.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/extending/tutorial02_testing_custom_plugin.ipynb) - [Testing a Custom Plugin](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/extending/tutorial02_testing_custom_plugin.ipynb)
 
 
 
@@ -446,8 +466,9 @@ pytest -vsx
 ```
 
 For development and contribution to TemporAI, see:
-* 📓 [Extending TemporAI tutorials](https://github.com/vanderschaarlab/temporai/tutorials/extending/)
-* 📃 [Contribution guide](https://github.com/vanderschaarlab/temporai/CONTRIBUTING.md)
+* 📓 [Extending TemporAI tutorials](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/extending/)
+* 📃 [Contribution guide](https://github.com/vanderschaarlab/temporai/tree/main/CONTRIBUTING.md)
+* 👩‍💻 [Developer's guide](https://github.com/vanderschaarlab/temporai/tree/main/docs/dev_guide.md)
 
 ## ✍️ Citing
 

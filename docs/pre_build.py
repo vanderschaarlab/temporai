@@ -11,7 +11,8 @@ import re
 
 from pre_build_nbconvert import do_conversion
 
-REPO_URL = "https://github.com/vanderschaarlab/temporai/"
+REPO_URL_ROOT = "https://github.com/vanderschaarlab/temporai/"
+REPO_URL_TREE = f"{REPO_URL_ROOT}tree/main/"
 
 
 # -- Update `docs/requirements.txt` with the content of `install_requires` in `setup.cfg`.
@@ -51,7 +52,8 @@ REPLACE = {
     "include_docs_end -->": "",
     "./docs/": "",
     "docs/": "",
-    "./": REPO_URL,
+    "./#-": "#",
+    "./": REPO_URL_TREE,
 }
 
 with open(README_PATH, "r", encoding="utf8") as file:
@@ -96,7 +98,7 @@ PYPI_README_PATH = os.path.join(os.path.dirname(__file__), "../pypi.md")
 
 REPLACE = {
     # Add more as necessary.
-    "./": REPO_URL,
+    "./": REPO_URL_TREE,
 }
 
 with open(README_PATH, "r", encoding="utf8") as file:

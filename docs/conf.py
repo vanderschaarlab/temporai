@@ -43,7 +43,7 @@ except FileNotFoundError:
 try:
     import sphinx
 
-    cmd_line = f"sphinx-apidoc --implicit-namespaces -f -o {output_dir} {module_dir}"
+    cmd_line = f"sphinx-apidoc --implicit-namespaces -e -f -o {output_dir} {module_dir}"
 
     args = cmd_line.split(" ")
     if tuple(sphinx.__version__.split(".")) >= ("1", "7"):
@@ -93,7 +93,24 @@ myst_enable_extensions = [
     "smartquotes",
     "substitution",
     "tasklist",
+    "attrs_inline",
+    "attrs_block",
 ]
+
+# MyST URL schemes.
+myst_url_schemes = {
+    "http": None,
+    "https": None,
+    "ftp": None,
+    "mailto": None,
+    "repo-code": "https://github.com/vanderschaarlab/temporai/tree/main/{{path}}#{{fragment}}",
+    # "doi": "https://doi.org/{{path}}",
+    # "gh-issue": {
+    #     "url": "https://github.com/executablebooks/MyST-Parser/issue/{{path}}#{{fragment}}",
+    #     "title": "Issue #{{path}}",
+    #     "classes": ["github"],
+    # },
+}
 
 # The suffix of source filenames.
 source_suffix = [".rst", ".md"]
@@ -155,7 +172,8 @@ default_role = "py:obj"
 # show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = "sphinx"
+# https://pygments.org/styles/
+pygments_style = "tango"
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []

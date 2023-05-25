@@ -25,7 +25,17 @@
 
 # <img src="docs/assets/TemporAI_Logo_Icon.png" height=25> TemporAI
 
+<!-- exclude_docs -->
 > **⚗️ Status:** This project is still in *alpha*, and the API may change without warning.  
+<!-- exclude_docs_end -->
+<!-- include_docs
+:::{important}
+**Status:** This project is still in *alpha*, and the API may change without warning.  
+:::
+include_docs_end -->
+
+
+## 📃 Overview
 
 *TemporAI* is a Machine Learning-centric time-series library for medicine.  The tasks that are currently of focus in TemporAI are: time-to-event (survival) analysis with time-series data, treatment effects (causal inference) over time, and time-series prediction. Data preprocessing methods, including missing value imputation for static and temporal covariates, are provided. AutoML tools for hyperparameter tuning and pipeline selection are also available.
 
@@ -44,10 +54,12 @@
 <img src="docs/assets/Conceptual.png" alt="key concepts">
 <!-- exclude_docs_end -->
 <!-- include_docs
-<img src="docs/assets/Conceptual.png" width="750" alt="key concepts">
+<img src="docs/assets/Conceptual.png" alt="key concepts">
 include_docs_end -->
 
 </div>
+
+
 
 ## 🚀 Installation
 
@@ -58,6 +70,8 @@ or from source, using
 ```bash
 $ pip install .
 ```
+
+
 
 ## 💥 Sample Usage
 * List the available plugins
@@ -271,6 +285,9 @@ seeker = PipelineSeeker(
 best_pipelines, best_scores = seeker.search()  # doctest: +SKIP
 ```
 
+
+<!-- include_docs
+{#methods}include_docs_end -->
 ## 🔑 Methods
 
 
@@ -451,6 +468,7 @@ pytest -vsx
 For development and contribution to TemporAI, see:
 * 📓 [Extending TemporAI tutorials](./tutorials/extending/)
 * 📃 [Contribution guide](./CONTRIBUTING.md)
+* 👩‍💻 [Developer's guide](./docs/dev_guide.md)
 
 ## ✍️ Citing
 

@@ -21,6 +21,7 @@ Contributions & Help <contributing>
 License <license>
 Authors <authors>
 Changelog <changelog>
+Developer's Guide <dev_guide>
 Module Reference <api/modules>
 ```
 
