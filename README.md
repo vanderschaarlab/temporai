@@ -38,7 +38,7 @@ Key concepts:
 <div align="center">
 
 <!-- exclude_docs -->
-<img src="docs/assets/Conceptual.png" width="650" alt="key concepts">
+<img src="docs/assets/Conceptual.png" alt="key concepts">
 <!-- exclude_docs_end -->
 <!-- include_docs
 <img src="docs/assets/Conceptual.png" width="750" alt="key concepts">
