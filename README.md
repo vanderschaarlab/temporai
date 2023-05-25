@@ -27,13 +27,16 @@
 
 > **⚗️ Status:** This project is still in *alpha*, and the API may change without warning.  
 
-*TemporAI* is a Machine Learning-centric time-series library for medicine.  The tasks that are currently of focus in TemporAI are: time-series prediction, time-to-event (a.k.a. survival) analysis with time-series data, and counterfactual inference (i.e. \[individualized\] treatment effects).
+*TemporAI* is a Machine Learning-centric time-series library for medicine.  The tasks that are currently of focus in TemporAI are: time-to-event (survival) analysis with time-series data, treatment effects (causal inference) over time, and time-series prediction. Data preprocessing methods, including missing value imputation for static and temporal covariates, are provided. AutoML tools for hyperparameter tuning and pipeline selection are also available.
 
-*TemporAI* provides data preprocessing methods (including scaling and imputation methods for static and temporal covariates). AutoML tools for hyperparameter tuning and pipeline selection are available.
+## 💫 How is TemporAI unique?
 
-In future versions, the library also aims to provide the user with understanding of their data, model, and problem, through e.g. integration with interpretability methods.
+* **🏥 Medicine-first:** We focus on use cases tailored to medicine and healthcare, such as temporal treatment effects, survival analysis over time, imputation methods, models with built-in and post-hoc interpretability, etc.
+* **🏗️ Fast prototyping:** A plugin design allowing for on-the-fly integration of new methods by the users.
+* **🚀 From research to practice:** New relevant methods from research community adapted for practical use.
+* **🌍 A healthcare ecosystem vision:** As we develop TemporAI, a range of interactive demonstration apps, new medical problem settings, and interpretability tools are planned.
 
-Key concepts:
+## 💡 Key concepts
 
 <div align="center">
 
