@@ -3,11 +3,6 @@
 TemporAI: ML-centric Toolkit for Medical Time Series
 
 
-## Note
-
-> **💡 Status**: Migrating from the [previous iteration of the project](https://github.com/vanderschaarlab/clairvoyance2).
-
-
 
 ## Contents
 

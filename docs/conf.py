@@ -10,6 +10,7 @@
 import os
 import shutil
 import sys
+import time
 
 # -- Path setup --------------------------------------------------------------
 
@@ -123,7 +124,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "TemporAI"
-copyright = "2022, van der Schaar Lab"  # pylint: disable=redefined-builtin
+copyright = f"{time.strftime('%Y')}, van der Schaar Lab"  # pylint: disable=redefined-builtin
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -208,6 +209,8 @@ html_theme = "sphinx_material"
 html_theme_options = {
     # Set the name of the project to appear in the navigation.
     "nav_title": "TemporAI",
+    # Icon,
+    "logo_icon": "timelapse",  # TODO: Remove once the actual logo is fixed.
     # Set you GA account ID to enable tracking
     # "google_analytics_account": "UA-XXXXX",
     #
@@ -242,12 +245,12 @@ html_theme_options = {
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = "assets/TemporAI_Logo.svg"
+# html_logo = "assets/TemporAI_Logo.svg"
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-# html_favicon = None
+html_favicon = "assets/TemporAI_Logo_Icon.ico"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
