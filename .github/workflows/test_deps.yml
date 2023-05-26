@@ -60,7 +60,8 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install .[dev] "${{ matrix.python-version }}"
+          pip install .[dev]
+          pip install "${{ matrix.python-version }}"
       - name: Test with pytest (xdist)
         if: matrix.os != 'ubuntu-latest'
         run: pytest -vvvx -n auto -m "not slow and not extra and not skipci" --durations=50 --cov
