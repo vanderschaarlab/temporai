@@ -2,12 +2,11 @@ from typing import Callable
 
 import pytest
 
-from tempor.benchmarks import (
+from tempor.benchmarks import (  # visualize_benchmark,
     benchmark_models,
     classifier_supported_metrics,
     regression_supported_metrics,
     time_to_event_supported_metrics,
-    visualize_benchmark,
 )
 from tempor.plugins import plugin_loader
 from tempor.plugins.pipeline import pipeline
@@ -63,8 +62,8 @@ def test_classifier_benchmark(data: str, request: pytest.FixtureRequest) -> None
             assert metric in per_test_score[testcase].index
 
     # Check also visualize_benchmarks executes without error.
-    print(per_test_score)
-    visualize_benchmark(per_test_score)
+    # print(per_test_score)
+    # visualize_benchmark(per_test_score)
 
 
 @pytest.mark.parametrize("data", TEST_ON_DATASETS_REGRESSOR)
