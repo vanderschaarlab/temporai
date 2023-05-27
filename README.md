@@ -260,8 +260,8 @@ from tempor.utils.dataloaders import SineDataLoader
 
 dataset = SineDataLoader().load()
 
-# Specify the AutoML pipeline seeker for the task of your choice, providing candidate methods, metric,
-# preprocessing steps etc.
+# Specify the AutoML pipeline seeker for the task of your choice, providing candidate methods,
+# metric, preprocessing steps etc.
 seeker = PipelineSeeker(
     study_name="my_automl_study",
     task_type="prediction.one_off.classification",
