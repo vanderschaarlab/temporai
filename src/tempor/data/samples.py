@@ -136,7 +136,7 @@ class DataSamples(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def __getitem__(self, key: data_typing.GetItemKey) -> Self:
+    def __getitem__(self, key: data_typing.GetItemKey) -> Self:  # pragma: no cover
         ...
 
 

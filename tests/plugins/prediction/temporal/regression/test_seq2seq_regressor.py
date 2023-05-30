@@ -1,6 +1,7 @@
 # pylint: disable=redefined-outer-name
 
 from typing import Callable, Dict
+from unittest.mock import Mock
 
 import pytest
 
@@ -37,6 +38,19 @@ def test_sanity(get_test_plugin: Callable, plugin_from: str) -> None:
     assert test_plugin is not None
     assert test_plugin.name == "seq2seq_regressor"
     assert len(test_plugin.hyperparameter_space()) == 8
+
+
+def test_fit_first_runtime_error(get_test_plugin: Callable, monkeypatch):
+    from tempor.data.dataset import TemporalPredictionDataset
+
+    test_plugin = get_test_plugin("from_api", INIT_KWARGS, device="cpu")
+    monkeypatch.setattr(test_plugin, "_fit", Mock())
+
+    test_plugin.fit(Mock(TemporalPredictionDataset))
+    test_plugin.model = None
+
+    with pytest.raises(RuntimeError, match=".*[Ff]it.*first.*"):
+        test_plugin.predict(Mock(TemporalPredictionDataset), n_future_steps=1)
 
 
 @pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)

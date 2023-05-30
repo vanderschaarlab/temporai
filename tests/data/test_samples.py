@@ -277,6 +277,12 @@ class TestStaticSamples:
         assert "StaticSamples with data:" in str(s)
         assert str(s.dataframe()) in str(s)
 
+    def test_repr_html(self, df_static: pd.DataFrame):
+        s = samples.StaticSamples(data=df_static)
+        assert "span" in s._repr_html_()  # pylint: disable=protected-access
+        assert "StaticSamples" in s._repr_html_()  # pylint: disable=protected-access
+        assert s.dataframe()._repr_html_() in s._repr_html_()  # type: ignore  # pylint: disable=protected-access
+
     @pytest.mark.parametrize("df", dfs_test.df_static_success)
     def test_init_success(self, df: pd.DataFrame):
         samples.StaticSamples(data=df)
@@ -615,6 +621,12 @@ class TestTimeSeriesSamples:
         assert "TimeSeriesSamples with data:" in str(s)
         assert str(s.dataframe()) in str(s)
 
+    def test_repr_html(self, df_time_series: pd.DataFrame):
+        s = samples.TimeSeriesSamples.from_dataframe(df_time_series)
+        assert "span" in s._repr_html_()  # pylint: disable=protected-access
+        assert "TimeSeriesSamples" in s._repr_html_()  # pylint: disable=protected-access
+        assert s.dataframe()._repr_html_() in s._repr_html_()  # type: ignore  # pylint: disable=protected-access
+
     @pytest.mark.parametrize("df", dfs_test.df_time_series_success)
     def test_init_success(self, df: pd.DataFrame):
         samples.TimeSeriesSamples(data=df)
@@ -707,6 +719,12 @@ class TestEventSamples:
         s = samples.EventSamples.from_dataframe(df_event)
         assert "EventSamples with data:" in str(s)
         assert str(s.dataframe()) in str(s)
+
+    def test_repr_html(self, df_event: pd.DataFrame):
+        s = samples.EventSamples.from_dataframe(df_event)
+        assert "span" in s._repr_html_()  # pylint: disable=protected-access
+        assert "EventSamples" in s._repr_html_()  # pylint: disable=protected-access
+        assert s.dataframe()._repr_html_() in s._repr_html_()  # type: ignore  # pylint: disable=protected-access
 
     @pytest.mark.parametrize("df", dfs_test.df_event_success)
     def test_init_success(self, df: pd.DataFrame):

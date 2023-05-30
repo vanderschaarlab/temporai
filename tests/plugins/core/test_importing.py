@@ -2,6 +2,9 @@
 
 import os
 import pathlib
+from unittest.mock import Mock
+
+import pytest
 
 import tempor
 import tempor.plugins.core._plugin as plugin_core
@@ -74,3 +77,19 @@ def test_import_plugins(tmp_path: pathlib.Path, patch_plugins_core_module):
             "tempor.dummy_plugins.plugin_file_1",
         ]
     ) == sorted(names)
+
+
+def test_import_fail(tmp_path: pathlib.Path, monkeypatch, patch_plugins_core_module):
+    test_plugins_dir = tmp_path / tempor.import_name / "dummy_plugins"
+    test_plugins_dir.mkdir(parents=True, exist_ok=True)
+    with open(test_plugins_dir / "plugin_file_1.py", "w", encoding="utf8") as f:
+        f.write(plugin_file_1)
+
+    import importlib.util
+
+    monkeypatch.setattr(importlib.util, "spec_from_file_location", Mock(return_value=None))
+
+    plugin_core.register_plugin_category("dummy_category", expected_class=plugin_core.Plugin)
+    init_file = os.path.join(str(test_plugins_dir), "__init__.py")
+    with pytest.raises(RuntimeError, match=".*[Ii]mport failed.*"):
+        plugin_core.importing.import_plugins(init_file)

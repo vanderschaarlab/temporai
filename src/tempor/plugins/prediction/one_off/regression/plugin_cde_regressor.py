@@ -153,21 +153,6 @@ class CDERegressor(BaseOneOffRegressor):
         preds = preds.reshape(-1, 1)
         return samples.StaticSamples.from_numpy(preds)
 
-    def _predict_proba(
-        self,
-        data: dataset.PredictiveDataset,
-        *args,
-        **kwargs,
-    ) -> samples.StaticSamples:
-        if self.model is None:
-            raise RuntimeError("Fit the model first")
-        static, temporal, observation_times, _ = self._unpack_dataset(data)
-
-        preds = self.model.predict_proba(static, temporal, observation_times)
-        preds = preds.astype(float)
-
-        return samples.StaticSamples.from_numpy(preds)
-
     @staticmethod
     def hyperparameter_space(*args, **kwargs):
         return [

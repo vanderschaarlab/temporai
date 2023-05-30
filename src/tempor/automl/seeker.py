@@ -102,6 +102,7 @@ def evaluation_callback_dispatch(
     random_state: int,
     horizon: Optional[data_typing.TimeIndex],
     raise_exceptions: bool,
+    silence_warnings: bool,
     *args,
     **kwargs,
 ) -> float:
@@ -126,6 +127,8 @@ def evaluation_callback_dispatch(
         raise_exceptions (bool):
             If set to `True`, if an exception is raised during evaluation, this will be raised and execution will be
             terminated. Otherwise the exception will be ignored and a dummy value returned.
+        silence_warnings (bool, optional):
+            Whether to silence warnings raised. Defaults to `False`.
 
     Returns:
         float: The mean evaluation metric across the cross-validation folds.
@@ -139,6 +142,7 @@ def evaluation_callback_dispatch(
             n_splits=n_cv_folds,
             random_state=random_state,
             raise_exceptions=raise_exceptions,
+            silence_warnings=silence_warnings,
         )
     elif task_type == "prediction.one_off.regression":
         metrics = evaluation.evaluate_prediction_oneoff_regressor(
@@ -147,6 +151,7 @@ def evaluation_callback_dispatch(
             n_splits=n_cv_folds,
             random_state=random_state,
             raise_exceptions=raise_exceptions,
+            silence_warnings=silence_warnings,
         )
     elif task_type == "prediction.temporal.classification":  # pragma: no cover
         raise NotImplementedError
@@ -166,6 +171,7 @@ def evaluation_callback_dispatch(
             n_splits=n_cv_folds,
             random_state=random_state,
             raise_exceptions=raise_exceptions,
+            silence_warnings=silence_warnings,
         )
     elif task_type == "treatments.one_off.classification":  # pragma: no cover
         raise NotImplementedError
@@ -204,6 +210,7 @@ class BaseSeeker(abc.ABC):
         grid: Optional[Dict[str, Dict[str, Any]]] = None,
         custom_tuner: Optional[BaseTuner] = None,
         raise_exceptions: bool = True,
+        silence_warnings: bool = False,
         **kwargs,  # pylint: disable=unused-argument
     ) -> None:
         """The base class for an AutoML Seeker, to be derived from by concrete implementations. Provides an AutoML
@@ -254,6 +261,9 @@ class BaseSeeker(abc.ABC):
             raise_exceptions (bool, optional):
                  If set to `True`, if an exception is raised during AutoML study run, this will be raised and
                  execution will be terminated. Otherwise the exception will be ignored. Defaults to `True`.
+            silence_warnings (bool, optional):
+                Whether to silence warnings raised. Some dependencies (e.g. `xgbse`) may circumvent this and raise
+                warnings regardless. Defaults to `False`.
 
         Raises:
             ValueError: If incompatible / invalid input arguments have been passed.
@@ -276,6 +286,7 @@ class BaseSeeker(abc.ABC):
         self.compute_baseline_score = compute_baseline_score
         self.grid = grid
         self.raise_exceptions = raise_exceptions
+        self.silence_warnings = silence_warnings
 
         if len(estimator_defs) != len(estimator_names):
             raise ValueError("`estimator_defs` and `estimator_names` must be the same length.")
@@ -428,6 +439,7 @@ class BaseSeeker(abc.ABC):
                     random_state=self.random_state,
                     horizon=self.horizon,
                     raise_exceptions=self.raise_exceptions,
+                    silence_warnings=self.silence_warnings,
                 ),
                 override_hp_space=override,
                 compute_baseline_score=self.compute_baseline_score,
@@ -490,6 +502,7 @@ class MethodSeeker(BaseSeeker):
         grid: Optional[Dict[str, Dict[str, Any]]] = None,
         custom_tuner: Optional[BaseTuner] = None,
         raise_exceptions: bool = True,
+        silence_warnings: bool = False,
         **kwargs,
     ) -> None:
         """An AutoML seeker which will search the hyperparameter space of each of the predictor estimators defined in
@@ -533,6 +546,8 @@ class MethodSeeker(BaseSeeker):
                 See `~tempor.automl.seeker.BaseSeeker`.
             raise_exceptions (bool, optional):
                 See `~tempor.automl.seeker.BaseSeeker`.
+            silence_warnings (bool, optional):
+                See `~tempor.automl.seeker.BaseSeeker`.
         """
         estimator_defs = estimator_names
 
@@ -556,6 +571,7 @@ class MethodSeeker(BaseSeeker):
             grid=grid,
             custom_tuner=custom_tuner,
             raise_exceptions=raise_exceptions,
+            silence_warnings=silence_warnings,
             **kwargs,
         )
 
@@ -599,6 +615,7 @@ class PipelineSeeker(BaseSeeker):
         grid: Optional[Dict[str, Dict[str, Any]]] = None,
         custom_tuner: Optional[BaseTuner] = None,
         raise_exceptions: bool = True,
+        silence_warnings: bool = False,
         **kwargs,
     ) -> None:
         """An AutoML seeker which will sample pipelines comprised of:
@@ -664,6 +681,8 @@ class PipelineSeeker(BaseSeeker):
                 See `~tempor.automl.seeker.BaseSeeker`.
             raise_exceptions (bool, optional):
                 See `~tempor.automl.seeker.BaseSeeker`.
+            silence_warnings (bool, optional):
+                See `~tempor.automl.seeker.BaseSeeker`.
         """
         # Define estimator definitions:
         estimator_defs = []
@@ -723,6 +742,7 @@ class PipelineSeeker(BaseSeeker):
             grid=grid,
             custom_tuner=custom_tuner,
             raise_exceptions=raise_exceptions,
+            silence_warnings=silence_warnings,
             **kwargs,
         )
 

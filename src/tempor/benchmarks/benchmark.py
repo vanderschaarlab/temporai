@@ -1,7 +1,9 @@
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
+import matplotlib.pyplot as plt
 import pandas as pd
 import pydantic
+import seaborn as sns
 
 from tempor.core.types import PredictiveTaskType
 from tempor.data import data_typing, dataset
@@ -11,7 +13,7 @@ from . import evaluation
 
 
 def print_score(mean: pd.Series, std: pd.Series) -> pd.Series:
-    with pd.option_context("mode.chained_assignment", None):
+    with pd.option_context("mode.chained_assignment", None):  # pyright: ignore
         mean.loc[(mean < 1e-3) & (mean != 0)] = 1e-3
         std.loc[(std < 1e-3) & (std != 0)] = 1e-3
 
@@ -29,6 +31,8 @@ def benchmark_models(
     n_splits: int = 3,
     random_state: int = 0,
     horizons: Optional[data_typing.TimeIndex] = None,
+    raise_exceptions: bool = False,
+    silence_warnings: bool = True,
 ) -> Tuple[pd.DataFrame, Dict[str, pd.DataFrame]]:
     """Benchmark the performance of several algorithms.
 
@@ -46,6 +50,13 @@ def benchmark_models(
             Random seed. Defaults to ``0``.
         horizons (data_typing.TimeIndex, optional):
             Time horizons for making predictions, if applicable to the task.
+        raise_exceptions (bool, optional):
+            Whether to raise exceptions during evaluation. If `False`, the exceptions will be swallowed and the
+            evaluation will continue - exception count will be reported in the `"errors"` column of the resultant
+            dataframe. Defaults to `False`.
+        silence_warnings (bool, optional):
+            Whether to silence warnings raised. Some dependencies (e.g. `xgbse`) may circumvent this and raise warnings
+            regardless. Defaults to `True`.
 
     Returns:
         Tuple[pd.DataFrame, Dict[str, pd.DataFrame]]:
@@ -60,31 +71,27 @@ def benchmark_models(
 
     results = {}
 
+    # TODO: Handle missing cases.
     if task_type == "prediction.one_off.classification":
         evaluator: Callable = evaluation.evaluate_prediction_oneoff_classifier
     elif task_type == "prediction.one_off.regression":
         evaluator = evaluation.evaluate_prediction_oneoff_regressor
     elif task_type == "time_to_event":
         evaluator = evaluation.evaluate_time_to_event
-    elif task_type == "prediction.temporal.classification":
-        # TODO: This case needs to be handled in `tempor.benchmarks.evaluation`.
+    elif task_type == "prediction.temporal.classification":  # pragma: no cover
         raise NotImplementedError
-    elif task_type == "prediction.temporal.regression":
-        # TODO: This case needs to be handled in `tempor.benchmarks.evaluation`.
+    elif task_type == "prediction.temporal.regression":  # pragma: no cover
         raise NotImplementedError
-    elif task_type == "treatments.one_off.classification":
-        # TODO: This case needs to be handled in `tempor.benchmarks.evaluation`.
+    elif task_type == "treatments.one_off.classification":  # pragma: no cover
         raise NotImplementedError
-    elif task_type == "treatments.one_off.regression":
-        # TODO: This case needs to be handled in `tempor.benchmarks.evaluation`.
+    elif task_type == "treatments.one_off.regression":  # pragma: no cover
         raise NotImplementedError
-    elif task_type == "treatments.temporal.classification":
-        # TODO: This case needs to be handled in `tempor.benchmarks.evaluation`.
+    elif task_type == "treatments.temporal.classification":  # pragma: no cover
         raise NotImplementedError
-    elif task_type == "treatments.temporal.regression":
-        # TODO: This case needs to be handled in `tempor.benchmarks.evaluation`.
+    elif task_type == "treatments.temporal.regression":  # pragma: no cover
         raise NotImplementedError
-    else:
+    else:  # pragma: no cover
+        # Should not reach here, will be caught by Pydantic.
         raise ValueError(f"Unsupported task type: {task_type}")
 
     for testcase, plugin in tests:
@@ -96,6 +103,8 @@ def benchmark_models(
             n_splits=n_splits,
             random_state=random_state,
             horizons=horizons,  # type: ignore
+            raise_exceptions=raise_exceptions,
+            silence_warnings=silence_warnings,
         )
 
         mean_score = scores["mean"].to_dict()
@@ -119,3 +128,31 @@ def benchmark_models(
     aggr = aggr.set_axis(results.keys(), axis=1)
 
     return aggr, results
+
+
+@pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+def visualize_benchmark(results: Dict[str, pd.DataFrame], palette: str = "viridis") -> Any:
+
+    # Pre-format DF for plotting.
+    for k, v in results.items():
+        v["method"] = k
+    df_sns = pd.concat(list(results.values()))
+    df_sns["metric"] = df_sns.index
+
+    # Prepare "stddev" column for plotting as error bars.
+    err = df_sns.pivot(index="method", columns="metric", values="stddev")
+    key = {order: idx for idx, order in enumerate(df_sns["method"].unique())}
+    err = err.sort_index(key=lambda x: x.map(key)).T
+
+    axes = []
+    for metric in err.index:
+        set_options = dict(title=f"Benchmark results: {metric}", ylabel=f"{metric} (CV mean)", xlabel="Benchmark case")
+        out = sns.barplot(
+            df_sns[df_sns["metric"] == metric], x="method", y="mean", palette=palette, yerr=err.loc[metric, :]
+        )
+        out.set(**set_options)
+        axes.append(out)
+        print(f"Plotting bar plot for metric: {metric}")
+        plt.show()
+
+    return axes

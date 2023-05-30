@@ -79,6 +79,18 @@ class TestRegistration:
         assert plugin_core.PLUGIN_REGISTRY[p_a2.fqn()] == DummyPluginA2
         assert plugin_core.PLUGIN_REGISTRY[p_b1.fqn()] == DummyPluginB1
 
+    def test_category_registration_reimport_allowed(self):
+        plugin_core.register_plugin_category("dummy_category", expected_class=plugin_core.Plugin)
+
+        @plugin_core.register_plugin(name="dummy_plugin_A", category="dummy_category")
+        class DummyPluginA(plugin_core.Plugin):  # type: ignore  # pylint: disable=unused-variable
+            pass
+
+        @plugin_core.register_plugin(name="dummy_plugin_A", category="dummy_category")
+        # pylint: disable-next=function-redefined
+        class DummyPluginA(plugin_core.Plugin):  # type: ignore  # pyright: ignore  # noqa: F811
+            pass
+
     def test_category_registration_fails_duplicate(self):
         plugin_core.register_plugin_category("same_category", expected_class=plugin_core.Plugin)
 
@@ -272,7 +284,7 @@ class TestPluginLoader:
         plugin_core.register_plugin_category("category_c", expected_class=plugin_core.Plugin)
 
         @plugin_core.register_plugin(name="plugin_c1", category="category_c")
-        class PluginC1(plugin_core.Plugin):  # pylint: disable=unused-variable
+        class PluginC1(plugin_core.Plugin):
             pass
 
         listed = loader.list()

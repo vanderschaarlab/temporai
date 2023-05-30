@@ -85,3 +85,13 @@ class TestEnableReproducibility:
                 random_seed=42,
                 torch_use_deterministic_algorithms=True,
             )
+
+
+def test_get_nonlin_unknown():
+    with pytest.raises(ValueError):
+        utils.get_nonlin("unknown")  # type: ignore
+
+
+def test_get_sampler_unknown():
+    with pytest.raises(ValueError):
+        utils.get_sampler("unknown")  # type: ignore

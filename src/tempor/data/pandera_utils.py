@@ -50,7 +50,7 @@ _PA_MULTI_INDEX_INIT_PARAMETERS = [
     "unique",
 ]
 
-if Version(pa.__version__) < Version("0.14"):
+if Version(pa.__version__) < Version("0.14"):  # pragma: no cover
     # Before v0.14, pandera API had an extra parameter `report_duplicates`.
     _PA_MULTI_INDEX_INIT_PARAMETERS.append("report_duplicates")
 
@@ -209,7 +209,7 @@ class UnionDtype(pd_engine.DataType):
             if data_container is None:
                 # Only in case of direct type comparison, we also need to check via the union_dtype.check(pandera_dtype)
                 # method, making sure that pandera_dtype is an DataType instance not class.
-                if hasattr(pandera_dtype, "__mro__"):
+                if hasattr(pandera_dtype, "__mro__"):  # pragma: no cover
                     pandera_dtype = pandera_dtype()  # type: ignore
                 validated = validated or union_dtype.check(pandera_dtype)
             if tempor.core.utils.is_iterable(validated):
@@ -365,15 +365,16 @@ class checks:
         lambda df: df.index.nlevels == 2,
         error="Index must be a MultiIndex with 2 levels",
     )
-    require_2level_multiindex_one_to_one = pa.Check(
-        lambda df: (df.groupby(level=0).size() == 1).all(),
-        error="MultiIndex Index must one-to-one correspondence for between the two levels",
-    )
     require_element_len_2 = pa.Check(
         lambda x: len(x) == 2,
         element_wise=True,
         error="Each item must contain a sequence of length 2",
     )
+
+    # require_2level_multiindex_one_to_one = pa.Check(
+    #     lambda df: (df.groupby(level=0).size() == 1).all(),
+    #     error="MultiIndex Index must one-to-one correspondence for between the two levels",
+    # )
 
     class configurable:
         """Namespace containing functions to get configurable `pandera.Check` s."""

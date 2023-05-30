@@ -12,8 +12,8 @@ from tempor.utils import dataloaders
     [
         dataloaders.SineDataLoader,
         dataloaders.GoogleStocksDataLoader,
-        dataloaders.GoogleStocksDataLoader,
         dataloaders.PKPDDataLoader,
+        dataloaders.PBCDataLoader,
         dataloaders.DummyTemporalPredictionDataLoader,
         dataloaders.DummyTemporalTreatmentEffectsDataLoader,
         dataloaders.UCIDiabetesDataLoader,
@@ -33,3 +33,22 @@ def test_init_load_and_basic_methods(dataloader_cls: Type[DataLoader]):
     # Assert the right type of dataset for the dataloader has been returned.
     return_type = dataloader_cls.load.__annotations__["return"]
     assert isinstance(dataset, return_type)
+
+
+@pytest.mark.parametrize(
+    "dataloader_cls",
+    [
+        dataloaders.GoogleStocksDataLoader,
+        dataloaders.PBCDataLoader,
+        dataloaders.UCIDiabetesDataLoader,
+    ],
+)
+def test_download_and_local(dataloader_cls, tmpdir, monkeypatch):
+    temp_data_root_dir = tmpdir.mkdir("data_root")
+    monkeypatch.setattr(DataLoader, "data_root_dir", str(temp_data_root_dir))
+
+    dl = dataloader_cls()
+    # First time - download.
+    dl.load()
+    # Second time - local.
+    dl.load()

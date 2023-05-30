@@ -342,7 +342,7 @@ class MLP(nn.Module):
             self.optimizer.zero_grad()
 
             X_next, y_next = sample
-            if len(X_next) < 2:
+            if len(X_next) < 2:  # pragma: no cover
                 continue
 
             preds = self.forward(X_next).squeeze()

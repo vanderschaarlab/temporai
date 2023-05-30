@@ -1,20 +1,47 @@
 # pylint: disable=redefined-outer-name,unused-argument
 
-from typing import Callable
+from typing import Any, Callable, Dict
 from unittest.mock import MagicMock
 
 import pytest
 
+from tempor.automl._types import AutoMLCompatibleEstimator
 from tempor.automl.seeker import (
     DEFAULT_STATIC_SCALERS,
     DEFAULT_TEMPORAL_SCALERS,
     METRIC_DIRECTION_MAP,
+    BaseSeeker,
     MethodSeeker,
     PipelineSeeker,
     TunerType,
 )
 from tempor.data.dataset import PredictiveDataset, TimeToEventAnalysisDataset
 from tempor.plugins.core._params import CategoricalParams, IntegerParams
+
+
+def test_init_fails_estimator_name_def_length_mismatch():
+    class MySeeker(BaseSeeker):
+        def __init__(self, **kwargs) -> None:
+            super().__init__(
+                study_name="test",
+                task_type="prediction.one_off.classification",
+                estimator_names=["a", "b"],
+                estimator_defs=["a", "b", "c"],
+                metric="accuracy",
+                dataset=MagicMock(PredictiveDataset),
+                **kwargs,
+            )
+
+        def _init_estimator(self, estimator_name: str, estimator_def: Any):
+            pass
+
+        def _create_estimator_with_hps(
+            self, estimator_cls: AutoMLCompatibleEstimator, hps: Dict[str, Any], score: float
+        ):
+            pass
+
+    with pytest.raises(ValueError, match=".*length.*"):
+        MySeeker()
 
 
 @pytest.fixture

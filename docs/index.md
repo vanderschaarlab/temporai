@@ -3,24 +3,20 @@
 TemporAI: ML-centric Toolkit for Medical Time Series
 
 
-## Note
-
-> **💡 Status**: Migrating from the [previous iteration of the project](https://github.com/vanderschaarlab/clairvoyance2).
-
-
 
 ## Contents
 
 ```{toctree}
 :glob:
-:maxdepth: 3
+:maxdepth: 1
 
 Overview <overview>
-User Guide <user_guide>
+User Guide <user_guide/index>
 Contributions & Help <contributing>
 License <license>
 Authors <authors>
 Changelog <changelog>
+Developer's Guide <dev_guide>
 Module Reference <api/modules>
 ```
 

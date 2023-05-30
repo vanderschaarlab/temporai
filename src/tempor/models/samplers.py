@@ -11,28 +11,30 @@ from sklearn.model_selection import train_test_split
 class BaseSampler(torch.utils.data.sampler.Sampler):
     """DataSampler samples the conditional vector and corresponding data."""
 
-    def get_dataset_conditionals(self) -> Optional[np.ndarray]:
+    def get_dataset_conditionals(self) -> Optional[np.ndarray]:  # pragma: no cover
         return None
 
     @validate_arguments(config=dict(arbitrary_types_allowed=True))
-    def sample_conditional(self, batch: int, **kwargs: Any) -> Optional[Tuple]:  # pylint: disable=unused-argument
+    def sample_conditional(
+        self, batch: int, **kwargs: Any  # pylint: disable=unused-argument
+    ) -> Optional[Tuple]:  # pragma: no cover
         return None
 
     @validate_arguments(config=dict(arbitrary_types_allowed=True))
     def sample_conditional_for_class(
         self, batch: int, c: int  # pylint: disable=unused-argument
-    ) -> Optional[np.ndarray]:
+    ) -> Optional[np.ndarray]:  # pragma: no cover
         return None
 
-    def conditional_dimension(self) -> int:
+    def conditional_dimension(self) -> int:  # pragma: no cover
         """Return the total number of categories."""
         return 0
 
-    def conditional_probs(self) -> Optional[np.ndarray]:
+    def conditional_probs(self) -> Optional[np.ndarray]:  # pragma: no cover
         """Return the total number of categories."""
         return None
 
-    def train_test(self) -> Tuple:
+    def train_test(self) -> Tuple:  # pragma: no cover
         raise NotImplementedError()
 
 

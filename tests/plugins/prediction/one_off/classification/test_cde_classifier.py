@@ -1,6 +1,7 @@
 # pylint: disable=redefined-outer-name
 
 from typing import Callable, Dict
+from unittest.mock import Mock
 
 import pytest
 
@@ -38,6 +39,22 @@ def test_sanity(get_test_plugin: Callable, plugin_from: str) -> None:
     assert test_plugin.name == "cde_classifier"
     assert test_plugin.fqn() == "prediction.one_off.classification.cde_classifier"
     assert len(test_plugin.hyperparameter_space()) == 9
+
+
+def test_fit_first_runtime_error(get_test_plugin: Callable, monkeypatch):
+    from tempor.data.dataset import OneOffPredictionDataset
+
+    test_plugin = get_test_plugin("from_api", INIT_KWARGS, device="cpu")
+    monkeypatch.setattr(test_plugin, "_fit", Mock())
+
+    test_plugin.fit(Mock(OneOffPredictionDataset))
+    test_plugin.model = None
+
+    with pytest.raises(RuntimeError, match=".*[Ff]it.*first.*"):
+        test_plugin.predict(Mock(OneOffPredictionDataset))
+
+    with pytest.raises(RuntimeError, match=".*[Ff]it.*first.*"):
+        test_plugin.predict_proba(Mock(OneOffPredictionDataset))
 
 
 @pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)

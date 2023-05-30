@@ -12,7 +12,7 @@ from typing_extensions import Self
 
 if Version(sklearn.__version__) >= Version("1.1"):
     _has_input_name = True
-else:
+else:  # pragma: no cover
     _has_input_name = False
 
 
@@ -68,7 +68,7 @@ def check_y_survival(y_or_event: np.ndarray, *args, allow_all_censored=False) ->
             continue
 
         yt = sklearn.utils.check_array(yt, ensure_2d=False)
-        if not np.issubdtype(yt.dtype, np.number):
+        if not np.issubdtype(yt.dtype, np.number):  # pragma: no cover
             raise ValueError("time must be numeric, but found {} for argument {}".format(yt.dtype, i + 2))
 
         return_val.append(yt)
@@ -86,36 +86,6 @@ def _check_estimate_1d(estimate, test_time):
         raise ValueError("Expected 1D array, got {:d}D array instead:\narray={}.\n".format(estimate.ndim, estimate))
     sklearn.utils.check_consistent_length(test_time, estimate)
     return estimate
-
-
-def _check_inputs(event_indicator, event_time, estimate):
-    sklearn.utils.check_consistent_length(event_indicator, event_time, estimate)
-    event_indicator = sklearn.utils.check_array(
-        event_indicator,
-        ensure_2d=False,
-        **dict(input_name="event_indicator") if _has_input_name else dict(),
-    )
-    event_time = sklearn.utils.check_array(
-        event_time,
-        ensure_2d=False,
-        **dict(input_name="event_time") if _has_input_name else dict(),
-    )
-    estimate = _check_estimate_1d(estimate, event_time)
-
-    if not np.issubdtype(event_indicator.dtype, np.bool_):
-        raise ValueError(
-            "only boolean arrays are supported as class labels for survival analysis, got {0}".format(
-                event_indicator.dtype
-            )
-        )
-
-    if len(event_time) < 2:
-        raise ValueError("Need a minimum of two samples")
-
-    if not event_indicator.any():
-        raise ValueError("All samples are censored")
-
-    return event_indicator, event_time, estimate
 
 
 def _check_times(test_time, times):
@@ -526,7 +496,7 @@ def _estimate_concordance_index(
 
         est = estimate[order[mask]]
 
-        if not event_i:
+        if not event_i:  # pragma: no cover
             raise RuntimeError("got censored sample at index %d, but expected uncensored" % order[ind])
 
         ties = np.absolute(est - est_i) <= tied_tol

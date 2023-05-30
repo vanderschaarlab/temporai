@@ -1,6 +1,7 @@
 # pylint: disable=redefined-outer-name
 
 from typing import TYPE_CHECKING, Callable, Dict
+from unittest.mock import Mock
 
 import pandas as pd
 import pytest
@@ -43,6 +44,19 @@ def test_sanity(get_test_plugin: Callable, plugin_from: str) -> None:
     assert test_plugin is not None
     assert test_plugin.name == "synctwin_regressor"
     assert len(test_plugin.hyperparameter_space()) == 5
+
+
+def test_fit_first_runtime_error(get_test_plugin: Callable, monkeypatch):
+    from tempor.data.dataset import OneOffTreatmentEffectsDataset
+
+    test_plugin = get_test_plugin("from_api", INIT_KWARGS, device="cpu")
+    monkeypatch.setattr(test_plugin, "_fit", Mock())
+
+    test_plugin.fit(Mock(OneOffTreatmentEffectsDataset))
+    test_plugin.model = None
+
+    with pytest.raises(RuntimeError, match=".*[Ff]it.*first.*"):
+        test_plugin.predict_counterfactuals(Mock(OneOffTreatmentEffectsDataset))
 
 
 @pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)

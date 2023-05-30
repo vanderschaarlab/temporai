@@ -14,11 +14,11 @@ from tempor.plugins.core._params import CategoricalParams, FloatParams, IntegerP
 
 class OutputTimeToEventAnalysis:
     @abc.abstractmethod
-    def fit(self, X: pd.DataFrame, T: pd.Series, Y: pd.Series) -> Self:
+    def fit(self, X: pd.DataFrame, T: pd.Series, Y: pd.Series) -> Self:  # pragma: no cover
         ...
 
     @abc.abstractmethod
-    def predict_risk(self, X: pd.DataFrame, time_horizons: List) -> pd.DataFrame:
+    def predict_risk(self, X: pd.DataFrame, time_horizons: List) -> pd.DataFrame:  # pragma: no cover
         ...
 
 

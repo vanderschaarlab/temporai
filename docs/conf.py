@@ -10,6 +10,7 @@
 import os
 import shutil
 import sys
+import time
 
 # -- Path setup --------------------------------------------------------------
 
@@ -43,7 +44,7 @@ except FileNotFoundError:
 try:
     import sphinx
 
-    cmd_line = f"sphinx-apidoc --implicit-namespaces -f -o {output_dir} {module_dir}"
+    cmd_line = f"sphinx-apidoc --implicit-namespaces -e -f -o {output_dir} {module_dir}"
 
     args = cmd_line.split(" ")
     if tuple(sphinx.__version__.split(".")) >= ("1", "7"):
@@ -93,7 +94,24 @@ myst_enable_extensions = [
     "smartquotes",
     "substitution",
     "tasklist",
+    "attrs_inline",
+    "attrs_block",
 ]
+
+# MyST URL schemes.
+myst_url_schemes = {
+    "http": None,
+    "https": None,
+    "ftp": None,
+    "mailto": None,
+    "repo-code": "https://github.com/vanderschaarlab/temporai/tree/main/{{path}}#{{fragment}}",
+    # "doi": "https://doi.org/{{path}}",
+    # "gh-issue": {
+    #     "url": "https://github.com/executablebooks/MyST-Parser/issue/{{path}}#{{fragment}}",
+    #     "title": "Issue #{{path}}",
+    #     "classes": ["github"],
+    # },
+}
 
 # The suffix of source filenames.
 source_suffix = [".rst", ".md"]
@@ -106,7 +124,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "TemporAI"
-copyright = "2022, van der Schaar Lab"  # pylint: disable=redefined-builtin
+copyright = f"{time.strftime('%Y')}, van der Schaar Lab"  # pylint: disable=redefined-builtin
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -155,7 +173,8 @@ default_role = "py:obj"
 # show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = "sphinx"
+# https://pygments.org/styles/
+pygments_style = "tango"
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
@@ -190,6 +209,8 @@ html_theme = "sphinx_material"
 html_theme_options = {
     # Set the name of the project to appear in the navigation.
     "nav_title": "TemporAI",
+    # Icon,
+    "logo_icon": "timelapse",  # TODO: Remove once the actual logo is fixed.
     # Set you GA account ID to enable tracking
     # "google_analytics_account": "UA-XXXXX",
     #
@@ -205,7 +226,7 @@ html_theme_options = {
     "repo_url": "https://github.com/vanderschaarlab/temporai",
     "repo_name": "temporai",
     # Visible levels of the global TOC; -1 means unlimited
-    "globaltoc_depth": 2,
+    "globaltoc_depth": 3,
     # If False, expand all TOC entries
     "globaltoc_collapse": True,
     # If True, show hidden TOC entries
@@ -224,12 +245,12 @@ html_theme_options = {
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = "assets/TemporAI_Logo.svg"
+# html_logo = "assets/TemporAI_Logo.svg"
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-# html_favicon = None
+html_favicon = "assets/TemporAI_Logo_Icon.ico"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

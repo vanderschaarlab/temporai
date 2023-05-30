@@ -19,6 +19,8 @@ class BasePredictor(estimator.BaseEstimator):
         *args,
         **kwargs,
     ) -> Any:  # TODO: Narrow down output formats later.
+        if not self.is_fitted:
+            raise ValueError("The model was not fitted, call `fit` first")
         if not data.predict_ready:
             raise ValueError(
                 f"The dataset was not predict-ready, check that all necessary data components are present:\n{data}"
@@ -35,6 +37,8 @@ class BasePredictor(estimator.BaseEstimator):
         *args,
         **kwargs,
     ) -> Any:  # TODO: Narrow down output formats later.
+        if not self.is_fitted:
+            raise ValueError("The model was not fitted, call `fit` first")
         if not data.predict_ready:
             raise ValueError(
                 f"The dataset was not predict-ready, check that all necessary data components are present:\n{data}"
@@ -51,6 +55,8 @@ class BasePredictor(estimator.BaseEstimator):
         *args,
         **kwargs,
     ) -> Any:  # TODO: Narrow down output formats later.
+        if not self.is_fitted:
+            raise ValueError("The model was not fitted, call `fit` first")
         if not data.predict_ready:
             raise ValueError(
                 f"The dataset was not predict-ready, check that all necessary data components are present:\n{data}"
@@ -61,6 +67,7 @@ class BasePredictor(estimator.BaseEstimator):
 
         return prediction
 
+    # TODO: Add similar methods for predict_{proba,counterfactuals}.
     @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def fit_predict(
         self,

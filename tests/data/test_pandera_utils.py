@@ -1,16 +1,32 @@
+from unittest.mock import Mock
+
 import pandas as pd
 import pandera as pa
 import pytest
 
-from tempor.data.pandera_utils import UnionDtype
+from tempor.data.pandera_utils import UnionDtype, set_up_2level_multiindex, set_up_index
 
 
 class TestUnionDtype:
+    def test_unknown_mapping(self):
+        with pytest.raises(KeyError):
+            UnionDtype["unknown"]  # pylint: disable=pointless-statement
+
     @pytest.mark.parametrize(
         "union, df",
         [
             (
                 UnionDtype[pa.Int, pa.String],  # type: ignore
+                pd.DataFrame(
+                    {
+                        "a": [1, 2, 3, 4],
+                        "b": ["aa", "bb", "cc", "dd"],
+                    }
+                ),
+            ),
+            (
+                UnionDtype[pa.Int(), pa.String],  # type: ignore
+                # ^ Check also instantiated case.
                 pd.DataFrame(
                     {
                         "a": [1, 2, 3, 4],
@@ -162,3 +178,51 @@ class TestUnionDtype:
     )
     def test_validation_fails_dtype_directly(self, union, dtype):
         assert union().check(pandera_dtype=dtype, data_container=None) is False
+
+
+class TestHelpers:
+    def test_set_up_index_validation(self):
+        with pytest.raises(ValueError, match=".*[Ii]ndex.*not.*None.*"):
+            set_up_index(
+                schema=Mock(index=None),
+                data=Mock(),
+                dtype=Mock(),
+                name="dummy",
+                nullable=True,
+                unique=False,
+                coerce=False,
+            )
+
+    def test_set_up_2level_multiindex_validation(self):
+        with pytest.raises(ValueError, match=".*[Ii]ndex.*not.*None.*"):
+            set_up_2level_multiindex(
+                schema=Mock(index=None),
+                data=Mock(),
+                dtypes=Mock(),
+                names=Mock(),
+                nullable=Mock(),
+                coerce=Mock(),
+                unique=Mock(),
+            )
+
+        with pytest.raises(ValueError, match=".*MultiIndex.*"):
+            set_up_2level_multiindex(
+                schema=Mock(index=Mock()),
+                data=Mock(),
+                dtypes=Mock(),
+                names=Mock(),
+                nullable=Mock(),
+                coerce=Mock(),
+                unique=Mock(),
+            )
+
+        with pytest.raises(ValueError, match=".*2 levels.*"):
+            set_up_2level_multiindex(
+                schema=Mock(index=Mock(pa.MultiIndex, indexes=[])),
+                data=Mock(),
+                dtypes=Mock(),
+                names=Mock(),
+                nullable=Mock(),
+                coerce=Mock(),
+                unique=Mock(),
+            )

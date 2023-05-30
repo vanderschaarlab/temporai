@@ -39,7 +39,7 @@ class BaseTemporalRegressor(plugins.BasePredictor):
     @abc.abstractmethod
     def _predict(  # type: ignore[override]  # pylint: disable=arguments-differ
         self, data: dataset.PredictiveDataset, n_future_steps: int, *args, time_delta: int = 1, **kwargs
-    ) -> samples.TimeSeriesSamples:
+    ) -> samples.TimeSeriesSamples:  # pragma: no cover
         ...
 
 

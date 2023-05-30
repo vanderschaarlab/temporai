@@ -31,7 +31,7 @@ def value_in_df(df: pd.DataFrame, *, value: Any) -> bool:
 
 
 def set_df_column_names_inplace(df: pd.DataFrame, names: Sequence) -> pd.DataFrame:
-    if Version(pd.__version__) < Version("1.5"):
+    if Version(pd.__version__) < Version("1.5"):  # pragma: no cover
         df.set_axis(names, axis="columns", inplace=True)  # pyright: ignore
         return df
     else:

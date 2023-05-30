@@ -37,6 +37,16 @@ def test_sanity(get_test_plugin: Callable, plugin_from: str) -> None:
     assert len(test_plugin.hyperparameter_space()) == 0
 
 
+def test_no_static(get_test_plugin: Callable, get_dataset: Callable) -> None:
+    test_plugin: BaseScaler = get_test_plugin("from_api", INIT_KWARGS)
+    dataset = get_dataset("sine_data_scaled_small")
+    dataset.static = None
+
+    test_plugin.fit(dataset)
+    out = test_plugin.transform(dataset)
+    assert out.static is None
+
+
 @pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
 def test_fit(plugin_from: str, data: str, get_test_plugin: Callable, get_dataset: Callable) -> None:

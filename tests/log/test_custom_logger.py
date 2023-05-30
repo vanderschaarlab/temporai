@@ -178,6 +178,25 @@ def test_file_log_enabled(tmp_path: pathlib.Path):
     assert re.match(console_logs_part0 + "ERROR" + console_logs_part1 + "This is error\n", log_content, re_flags)
 
 
+def test_file_log_disabled(tmp_path: pathlib.Path):
+    config = tempor.get_config()
+    config.working_directory = str(tmp_path)
+    config.logging.level = "ERROR"  # NOTE: The file logging will ignore this and always log at "DEBUG".
+    config.logging.file_log = False
+    tempor.configure(config)
+
+    logger.trace("This is trace")
+    logger.debug("This is debug")
+    logger.info("This is info")
+    logger.print("This one is printed")
+    logger.warning("This is warning")
+    logger.error("This is error")
+
+    log_dir = tmp_path / "logs"
+
+    assert not os.path.exists(log_dir)
+
+
 @pytest.mark.parametrize("config_diagnose", [False, True])
 def test_exception_catch(config_diagnose, caplog, tmp_path):  # noqa: F811
     def raise_exc():

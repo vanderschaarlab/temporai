@@ -3,6 +3,7 @@
 import functools
 import warnings
 from typing import Any, Callable, Dict, Type
+from unittest.mock import Mock
 
 import optuna
 import pytest
@@ -421,6 +422,73 @@ class TestOptunaTuner:
         # Check that indeed our override params are being used. These can only be sampled as:
         # {'n_temporal_layers_hidden': 1, 'n_iter': 2}
         assert params[0] == params[1] == {"n_temporal_layers_hidden": 1, "n_iter": 2}
+
+    def test_tune_no_optimize_kwargs(
+        self,
+        helper_initialize: Callable,
+        tune_objective: Callable,
+        monkeypatch,
+    ):
+        dataset, p = helper_initialize(
+            data="sine_data_small",
+            plugin="prediction.one_off.classification.nn_classifier",
+        )
+
+        sampler = optuna.samplers.TPESampler(seed=SEED)
+
+        hp_tuner = tuner.OptunaTuner(
+            study_name="my_study",
+            direction="maximize",
+            study_sampler=sampler,
+            study_pruner=None,
+        )
+        monkeypatch.setattr(hp_tuner.study, "optimize", Mock(return_value=([], [])))
+
+        hp_tuner.tune(
+            estimator=p,
+            dataset=dataset,
+            evaluation_callback=functools.partial(
+                tune_objective,
+                evaluation_case="prediction.one_off.classification",
+                metric="accuracy",
+            ),
+            optimize_kwargs=None,  # This.
+        )
+
+    def test_tune_empty_hp_space(
+        self,
+        helper_initialize: Callable,
+        tune_objective: Callable,
+        monkeypatch,
+    ):
+        dataset, p = helper_initialize(
+            data="sine_data_small",
+            plugin="prediction.one_off.classification.nn_classifier",
+        )
+
+        sampler = optuna.samplers.TPESampler(seed=SEED)
+
+        hp_tuner = tuner.OptunaTuner(
+            study_name="my_study",
+            direction="maximize",
+            study_sampler=sampler,
+            study_pruner=None,
+        )
+        monkeypatch.setattr(p, "hyperparameter_space", Mock(return_value=[]))  # This.
+
+        scores, params = hp_tuner.tune(
+            estimator=p,
+            dataset=dataset,
+            evaluation_callback=functools.partial(
+                tune_objective,
+                evaluation_case="prediction.one_off.classification",
+                metric="accuracy",
+            ),
+            optimize_kwargs=None,
+            compute_baseline_score=False,
+        )
+
+        assert scores == params == []
 
     class TestPredictionOneOffClassification:
         @pytest.mark.parametrize("data", SETTINGS["prediction.one_off.classification"]["TEST_ON_DATASETS"])

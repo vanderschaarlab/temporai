@@ -163,6 +163,8 @@ class XGBSurvivalAnalysis(OutputTimeToEventAnalysis):
             self.model = XGBSEStackedWeibull(xgboost_params)
         elif strategy == "km":
             self.model = XGBSEKaplanNeighbors(xgboost_params)
+        else:
+            raise ValueError(f"Unknown strategy: {strategy}")
 
         self.time_points = time_points
 
@@ -173,7 +175,7 @@ class XGBSurvivalAnalysis(OutputTimeToEventAnalysis):
         obs_times = T[Y == 1]
 
         lower_bound = max(censored_times.min(), obs_times.min()) + 1
-        if pd.isna(lower_bound):
+        if pd.isna(lower_bound):  # pragma: no cover
             lower_bound = T.min()
         upper_bound = T.max()
 

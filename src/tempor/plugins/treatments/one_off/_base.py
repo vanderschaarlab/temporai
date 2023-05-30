@@ -36,7 +36,7 @@ class BaseOneOffTreatmentEffects(plugins.BasePredictor):
         return super().predict(data, *args, **kwargs)
 
     @abc.abstractmethod
-    def _predict(self, data: dataset.PredictiveDataset, *args, **kwargs) -> samples.StaticSamples:
+    def _predict(self, data: dataset.PredictiveDataset, *args, **kwargs) -> samples.StaticSamples:  # pragma: no cover
         ...
 
     @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
@@ -50,5 +50,5 @@ class BaseOneOffTreatmentEffects(plugins.BasePredictor):
         return super().predict_counterfactuals(data, *args, **kwargs)
 
     @abc.abstractmethod
-    def _predict_counterfactuals(self, data: dataset.PredictiveDataset, *args, **kwargs) -> List:
+    def _predict_counterfactuals(self, data: dataset.PredictiveDataset, *args, **kwargs) -> List:  # pragma: no cover
         ...

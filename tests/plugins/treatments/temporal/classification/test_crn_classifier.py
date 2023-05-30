@@ -1,6 +1,7 @@
 # pylint: disable=redefined-outer-name
 
 from typing import TYPE_CHECKING, Callable, Dict
+from unittest.mock import Mock
 
 import pytest
 
@@ -39,6 +40,46 @@ def test_sanity(get_test_plugin: Callable, plugin_from: str) -> None:
     assert test_plugin is not None
     assert test_plugin.name == "crn_classifier"
     assert len(test_plugin.hyperparameter_space()) == 8
+
+
+def test_validations(get_test_plugin: Callable, monkeypatch):
+    from tempor.data.dataset import TemporalTreatmentEffectsDataset
+
+    test_plugin = get_test_plugin("from_api", INIT_KWARGS, device="cpu")
+    monkeypatch.setattr(test_plugin, "_fit", Mock())
+
+    test_plugin.fit(Mock(TemporalTreatmentEffectsDataset))
+    test_plugin.model = None
+
+    with pytest.raises(RuntimeError, match=".*[Ff]it.*first.*"):
+        test_plugin.predict(Mock(TemporalTreatmentEffectsDataset), horizons=[[]])
+
+    with pytest.raises(RuntimeError, match=".*[Ff]it.*first.*"):
+        test_plugin.predict_counterfactuals(
+            Mock(TemporalTreatmentEffectsDataset), horizons=[[]], treatment_scenarios=[[]]
+        )
+
+    test_plugin = get_test_plugin("from_api", INIT_KWARGS, device="cpu")
+    monkeypatch.setattr(test_plugin, "_fit", Mock())
+    test_plugin._fitted = True  # pylint: disable=protected-access
+    test_plugin.model = Mock()
+
+    with pytest.raises(ValueError, match=".*horizons.*length.*"):
+        test_plugin.predict(Mock(TemporalTreatmentEffectsDataset, __len__=Mock(return_value=3)), horizons=[[1], [1]])
+
+    with pytest.raises(ValueError, match=".*horizons.*length.*"):
+        test_plugin.predict_counterfactuals(
+            Mock(TemporalTreatmentEffectsDataset, __len__=Mock(return_value=3)),
+            horizons=[[1], [1]],
+            treatment_scenarios=[[]],
+        )
+
+    with pytest.raises(ValueError, match=".*treatment.*scenarios.*length.*"):
+        test_plugin.predict_counterfactuals(
+            Mock(TemporalTreatmentEffectsDataset, __len__=Mock(return_value=3)),
+            horizons=[[1], [1], [1]],
+            treatment_scenarios=[[1], [1], [1], [2]],
+        )
 
 
 @pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)

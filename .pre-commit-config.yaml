@@ -6,6 +6,7 @@ repos:
   hooks:
   - id: trailing-whitespace
     args: ['--markdown-linebreak-ext=md']
+    exclude: 'docs/user_guide'  # Auto-generated, leave as is.
   - id: check-added-large-files
     args: ['--maxkb=1000']
   - id: check-ast
@@ -18,6 +19,7 @@ repos:
   - id: check-executables-have-shebangs
   - id: debug-statements
   - id: end-of-file-fixer
+    exclude: 'docs/user_guide'  # Auto-generated, leave as is.
   - id: pretty-format-json
     args: ['--autofix', '--indent=4', '--no-sort-keys']
   - id: requirements-txt-fixer
@@ -45,6 +47,7 @@ repos:
   hooks:
   - id: blacken-docs
     additional_dependencies: [black]
+    exclude: 'docs/user_guide'  # Auto-generated, leave as is.
 
 - repo: https://github.com/PyCQA/flake8
   rev: 6.0.0

@@ -2,10 +2,16 @@
 
 from typing import TYPE_CHECKING, Callable, Dict
 
+import numpy as np
+import pandas as pd
 import pytest
 
 from tempor.benchmarks.evaluation import evaluate_time_to_event
-from tempor.plugins.time_to_event.plugin_ts_coxph import CoxPHTimeToEventAnalysis
+from tempor.plugins.time_to_event.plugin_ts_coxph import (
+    CoxPHSurvivalAnalysis,
+    CoxPHTimeToEventAnalysis,
+    drop_constant_columns,
+)
 from tempor.utils.serialization import load, save
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -102,3 +108,31 @@ def test_benchmark(
 
     assert (score.loc[:, "errors"] == 0).all()
     assert score.loc["c_index", "mean"] > 0.5  # pyright: ignore
+
+
+class TestCoxPHSurvivalAnalysis:
+    def test_drop_constant_columns(self):
+        df = pd.DataFrame(data=np.asarray([[1, 1, 1], [1, 2, 1], [2, 2, 2]]).T, columns=["a", "b", "c"])
+        print(df)
+        const_cols = drop_constant_columns(df)
+        assert const_cols == ["a", "c"]
+
+    def test_init_fit_options(self):
+        model = CoxPHSurvivalAnalysis(fit_options=None)
+        assert model.fit_options == {"step_size": 0.1}
+        model = CoxPHSurvivalAnalysis(fit_options={"step_size": 0.5})
+        assert model.fit_options == {"step_size": 0.5}
+
+    @pytest.mark.filterwarnings("ignore::lifelines.utils.ConvergenceWarning")  # Expected.
+    def test_predict_risk(self):
+        model = CoxPHSurvivalAnalysis()
+        X = pd.DataFrame({"f1": [11, 22, 11], "f2": [0.11, 0.91, 0.13]})
+        Y = pd.Series([True, False, True])
+        T = pd.Series([2, 5, 19])
+        model.fit(X, T, Y)
+
+        out1 = model.predict_risk(X, time_horizons=[3])
+        out2 = model.predict_risk(X, time_horizons=[100])  # Case: eval times all > survival times
+
+        assert out1.shape == (3, 1)
+        assert out2.shape == (3, 1)

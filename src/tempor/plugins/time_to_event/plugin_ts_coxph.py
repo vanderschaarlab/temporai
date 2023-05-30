@@ -31,7 +31,7 @@ def monkeypatch_lifelines_pd2_compatibility():
         # so the workaround is needed for lifelines < 0.27.6.
         return Version(pd.__version__) >= Version("2.0.0rc0") and Version(lifelines.__version__) < Version("0.27.6")
 
-    if problem_versions():
+    if problem_versions():  # pragma: no cover
         # Monkeypatch `pandas.DataFrame.describe`.
 
         original_pd_df_describe = pd.DataFrame.describe
@@ -47,7 +47,7 @@ def monkeypatch_lifelines_pd2_compatibility():
         yield
 
     finally:
-        if problem_versions():
+        if problem_versions():  # pragma: no cover
             # Restore `pandas.DataFrame.describe`.
             pd.DataFrame.describe = original_pd_df_describe  # pyright: ignore
 

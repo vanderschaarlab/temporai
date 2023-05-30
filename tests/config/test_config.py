@@ -30,6 +30,15 @@ def test_default_config(mock_updated_on_configure):
     assert config == tempor.config.get_config()
 
 
+def test_change_config_file_log(mock_updated_on_configure):
+    config = tempor.get_config()
+    config.logging.file_log = False
+    tempor.configure(config)
+    assert isinstance(config, TemporConfig)
+    assert config.logging.file_log is False
+    assert config == tempor.config.get_config()
+
+
 @pytest.mark.parametrize("str_path", [False, True])
 def test_change_config_yaml_file(tmp_path_factory, str_path, mock_updated_on_configure):
     yaml_file_path = tmp_path_factory.mktemp("my_config") / "config.yaml"
@@ -76,6 +85,18 @@ def test_change_config_via_hydra(tmp_path_factory, mock_updated_on_configure):
         assert isinstance(lib_config, TemporConfig)
         assert lib_config.logging.level == "VALUE_SET_VIA_HYDRA"
         assert lib_config == tempor.get_config()
+
+
+def test_change_config_fails_wrong_type():
+    with pytest.raises(TypeError, match=".*type.*not supported.*"):
+        tempor.configure([])  # type: ignore
+
+
+@pytest.mark.parametrize("wd_raw", ["~", "$PWD"])
+def test_get_working_dir(wd_raw):
+    c = TemporConfig(logging=Mock(), working_directory=wd_raw)
+    wd = c.get_working_dir()
+    assert wd_raw not in wd
 
 
 def test_observer(monkeypatch):

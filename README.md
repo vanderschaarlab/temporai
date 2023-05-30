@@ -25,26 +25,41 @@
 
 # <img src="docs/assets/TemporAI_Logo_Icon.png" height=25> TemporAI
 
+<!-- exclude_docs -->
 > **⚗️ Status:** This project is still in *alpha*, and the API may change without warning.  
+<!-- exclude_docs_end -->
+<!-- include_docs
+:::{important}
+**Status:** This project is still in *alpha*, and the API may change without warning.  
+:::
+include_docs_end -->
 
-*TemporAI* is a Machine Learning-centric time-series library for medicine.  The tasks that are currently of focus in TemporAI are: time-series prediction, time-to-event (a.k.a. survival) analysis with time-series data, and counterfactual inference (i.e. \[individualized\] treatment effects).
 
-*TemporAI* provides data preprocessing methods (including scaling and imputation methods for static and temporal covariates). AutoML tools for hyperparameter tuning and pipeline selection are available.
+## 📃 Overview
 
-In future versions, the library also aims to provide the user with understanding of their data, model, and problem, through e.g. integration with interpretability methods.
+*TemporAI* is a Machine Learning-centric time-series library for medicine.  The tasks that are currently of focus in TemporAI are: time-to-event (survival) analysis with time-series data, treatment effects (causal inference) over time, and time-series prediction. Data preprocessing methods, including missing value imputation for static and temporal covariates, are provided. AutoML tools for hyperparameter tuning and pipeline selection are also available.
 
-Key concepts:
+### How is TemporAI unique?
+
+* **🏥 Medicine-first:** Focused on use cases for medicine and healthcare, such as temporal treatment effects, survival analysis over time, imputation methods, models with built-in and post-hoc interpretability, ... See [methods](./#-methods).
+* **🏗️ Fast prototyping:** A plugin design allowing for on-the-fly integration of new methods by the users.
+* **🚀 From research to practice:** Relevant novel models from research community adapted for practical use.
+* **🌍 A healthcare ecosystem vision:** A range of interactive demonstration apps, new medical problem settings, interpretability tools, data-centric tools etc. are planned.
+
+### Key concepts
 
 <div align="center">
 
 <!-- exclude_docs -->
-<img src="docs/assets/Conceptual.png" width="650" alt="key concepts">
+<img src="docs/assets/Conceptual.png" alt="key concepts">
 <!-- exclude_docs_end -->
 <!-- include_docs
-<img src="docs/assets/Conceptual.png" width="750" alt="key concepts">
+<img src="docs/assets/Conceptual.png" alt="key concepts">
 include_docs_end -->
 
 </div>
+
+
 
 ## 🚀 Installation
 
@@ -56,6 +71,8 @@ or from source, using
 $ pip install .
 ```
 
+
+
 ## 💥 Sample Usage
 * List the available plugins
 ```python
@@ -64,7 +81,63 @@ from tempor.plugins import plugin_loader
 print(plugin_loader.list())
 ```
 
-* Use an imputer
+* Use a time-to-event (survival) analysis model
+```python
+from tempor.utils.dataloaders import PBCDataLoader
+from tempor.plugins import plugin_loader
+
+# Load a time-to-event dataset:
+dataset = PBCDataLoader().load()
+
+# Initialize the model:
+model = plugin_loader.get("time_to_event.dynamic_deephit")
+
+# Train:
+model.fit(dataset)
+
+# Make risk predictions:
+prediction = model.predict(dataset, horizons=[0.25, 0.50, 0.75])
+```
+
+* Use a temporal treatment effects model
+```python
+import numpy as np
+
+from tempor.utils.dataloaders import DummyTemporalTreatmentEffectsDataLoader
+from tempor.plugins import plugin_loader
+
+# Load a dataset with temporal treatments and outcomes:
+dataset = DummyTemporalTreatmentEffectsDataLoader(
+    temporal_covariates_missing_prob=0.0,
+    temporal_treatments_n_features=1,
+    temporal_treatments_n_categories=2,
+).load()
+
+# Initialize the model:
+model = plugin_loader.get("treatments.temporal.regression.crn_regressor", epochs=20)
+
+# Train:
+model.fit(dataset)
+
+# Define target variable horizons for each sample:
+horizons = [
+    tc.time_indexes()[0][len(tc.time_indexes()[0]) // 2 :] for tc in dataset.time_series
+]
+
+# Define treatment scenarios for each sample:
+treatment_scenarios = [
+    [np.asarray([1] * len(h)), np.asarray([0] * len(h))] for h in horizons
+]
+
+# Predict counterfactuals:
+counterfactuals = model.predict_counterfactuals(
+    dataset,
+    horizons=horizons,
+    treatment_scenarios=treatment_scenarios,
+)
+```
+
+* Use a missing data imputer
 ```python
 from tempor.utils.dataloaders import SineDataLoader
 from tempor.plugins import plugin_loader
@@ -77,7 +150,7 @@ print(static_data_n_missing, temporal_data_n_missing)
 assert static_data_n_missing > 0
 assert temporal_data_n_missing > 0
 
-# Load the model:
+# Initialize the model:
 model = plugin_loader.get("preprocessing.imputation.temporal.bfill")
 
 # Train:
@@ -91,14 +164,14 @@ print(static_data_n_missing, temporal_data_n_missing)
 assert temporal_data_n_missing == 0
 ```
 
-* Use a classifier
+* Use a one-off classifier (prediction)
 ```python
 from tempor.utils.dataloaders import SineDataLoader
 from tempor.plugins import plugin_loader
 
 dataset = SineDataLoader().load()
 
-# Load the model:
+# Initialize the model:
 model = plugin_loader.get("prediction.one_off.classification.nn_classifier", n_iter=50)
 
 # Train:
@@ -108,54 +181,59 @@ model.fit(dataset)
 prediction = model.predict(dataset)
 ```
 
-* Use a regressor
+* Use a temporal regressor (forecasting)
 ```python
-from tempor.utils.dataloaders import SineDataLoader
+from tempor.utils.dataloaders import DummyTemporalPredictionDataLoader
 from tempor.plugins import plugin_loader
 
-dataset = SineDataLoader().load()
+# Load a dataset with temporal targets.
+dataset = DummyTemporalPredictionDataLoader(temporal_covariates_missing_prob=0.0).load()
 
-# Load the model:
-model = plugin_loader.get("prediction.one_off.regression.nn_regressor", n_iter=50)
+# Initialize the model:
+model = plugin_loader.get("prediction.temporal.regression.seq2seq_regressor", epochs=10)
 
 # Train:
 model.fit(dataset)
 
 # Predict:
-prediction = model.predict(dataset)
+prediction = model.predict(dataset, n_future_steps=5)
 ```
 
-* Benchmark models
-Classification task
+* Benchmark models, time-to-event task
 ```python
 from tempor.benchmarks import benchmark_models
 from tempor.plugins import plugin_loader
 from tempor.plugins.pipeline import pipeline
-from tempor.utils.dataloaders import SineDataLoader
+from tempor.utils.dataloaders import PBCDataLoader
 
 testcases = [
     (
         "pipeline1",
         pipeline(
             [
-                "preprocessing.scaling.static.static_minmax_scaler",
-                "prediction.one_off.classification.nn_classifier",
+                "preprocessing.scaling.temporal.ts_minmax_scaler",
+                "time_to_event.dynamic_deephit",
             ]
-        )({"nn_classifier": {"n_iter": 10}}),
+        )({"ts_coxph": {"n_iter": 100}}),
     ),
     (
         "plugin1",
-        plugin_loader.get("prediction.one_off.classification.nn_classifier", n_iter=10),
+        plugin_loader.get("time_to_event.dynamic_deephit", n_iter=100),
+    ),
+    (
+        "plugin2",
+        plugin_loader.get("time_to_event.ts_coxph", n_iter=100),
     ),
 ]
-dataset = SineDataLoader().load()
+dataset = PBCDataLoader().load()
 
 aggr_score, per_test_score = benchmark_models(
-    task_type="prediction.one_off.classification",
+    task_type="time_to_event",
     tests=testcases,
     data=dataset,
     n_splits=2,
     random_state=0,
+    horizons=[2.0, 4.0, 6.0],
 )
 
 print(aggr_score)
@@ -166,7 +244,7 @@ print(aggr_score)
 from tempor.utils.serialization import load, save
 from tempor.plugins import plugin_loader
 
-# Load the model:
+# Initialize the model:
 model = plugin_loader.get("prediction.one_off.classification.nn_classifier", n_iter=50)
 
 buff = save(model)  # Save model to bytes.
@@ -175,15 +253,15 @@ reloaded = load(buff)  # Reload model.
 # `save_to_file`, `load_from_file` also available in the serialization module.
 ```
 
-* AutoML
+* AutoML - search for the best pipeline for your task
 ```python
 from tempor.automl.seeker import PipelineSeeker
 from tempor.utils.dataloaders import SineDataLoader
 
 dataset = SineDataLoader().load()
 
-# Specify the AutoML pipeline seeker for the task of your choice, providing candidate methods, metric,
-# preprocessing steps etc.
+# Specify the AutoML pipeline seeker for the task of your choice, providing candidate methods,
+# metric, preprocessing steps etc.
 seeker = PipelineSeeker(
     study_name="my_automl_study",
     task_type="prediction.one_off.classification",
@@ -207,51 +285,14 @@ seeker = PipelineSeeker(
 best_pipelines, best_scores = seeker.search()  # doctest: +SKIP
 ```
 
+
+<!-- include_docs
+{#methods}include_docs_end -->
 ## 🔑 Methods
 
 
 
-### Prediction
-
-#### One-off
-Prediction where targets are static.
-
-* Classification (category: `prediction.one_off.classification`)
-
-| Name | Description| Reference |
-| --- | --- | --- |
-| `nn_classifier` | Neural-net based classifier. Supports multiple recurrent models, like RNN, LSTM, Transformer etc.  | --- |
-| `ode_classifier` | Classifier based on ordinary differential equation (ODE) solvers.  | --- |
-| `cde_classifier` | Classifier based Neural Controlled Differential Equations for Irregular Time Series.  | [Paper](https://arxiv.org/abs/2005.08926) |
-| `laplace_ode_classifier` | Classifier based Inverse Laplace Transform (ILT) algorithms implemented in PyTorch.  | [Paper](https://arxiv.org/abs/2206.04843) |
-
-* Regression (category: `prediction.one_off.regression`)
-
-| Name | Description| Reference |
-| --- | --- | --- |
-| `nn_regressor` | Neural-net based regressor. Supports multiple recurrent models, like RNN, LSTM, Transformer etc.  | --- |
-| `ode_regressor` | Regressor based on ordinary differential equation (ODE) solvers.  | --- |
-| `cde_regressor` | Regressor based Neural Controlled Differential Equations for Irregular Time Series.  | [Paper](https://arxiv.org/abs/2005.08926)
-| `laplace_ode_regressor` | Regressor based Inverse Laplace Transform (ILT) algorithms implemented in PyTorch.  | [Paper](https://arxiv.org/abs/2206.04843) |
-
-#### Temporal
-Prediction where targets are temporal (time series).
-
-* Classification (category: `prediction.temporal.classification`)
-
-| Name | Description| Reference |
-| --- | --- | --- |
-| `seq2seq_classifier` | Seq2Seq prediction, classification | --- |
-
-* Regression (category: `prediction.temporal.regression`)
-
-| Name | Description| Reference |
-| --- | --- | --- |
-| `seq2seq_regressor` | Seq2Seq prediction, regression | --- |
-
-
-
-### Time-to-Event
+### Time-to-Event (survival) analysis over time
 
 Risk estimation given event data (category: `time_to_event`)
 
@@ -295,6 +336,46 @@ Treatment effects estimation where treatments are temporal (time series).
 
 
 
+### Prediction
+
+#### One-off
+Prediction where targets are static.
+
+* Classification (category: `prediction.one_off.classification`)
+
+| Name | Description| Reference |
+| --- | --- | --- |
+| `nn_classifier` | Neural-net based classifier. Supports multiple recurrent models, like RNN, LSTM, Transformer etc.  | --- |
+| `ode_classifier` | Classifier based on ordinary differential equation (ODE) solvers.  | --- |
+| `cde_classifier` | Classifier based Neural Controlled Differential Equations for Irregular Time Series.  | [Paper](https://arxiv.org/abs/2005.08926) |
+| `laplace_ode_classifier` | Classifier based Inverse Laplace Transform (ILT) algorithms implemented in PyTorch.  | [Paper](https://arxiv.org/abs/2206.04843) |
+
+* Regression (category: `prediction.one_off.regression`)
+
+| Name | Description| Reference |
+| --- | --- | --- |
+| `nn_regressor` | Neural-net based regressor. Supports multiple recurrent models, like RNN, LSTM, Transformer etc.  | --- |
+| `ode_regressor` | Regressor based on ordinary differential equation (ODE) solvers.  | --- |
+| `cde_regressor` | Regressor based Neural Controlled Differential Equations for Irregular Time Series.  | [Paper](https://arxiv.org/abs/2005.08926)
+| `laplace_ode_regressor` | Regressor based Inverse Laplace Transform (ILT) algorithms implemented in PyTorch.  | [Paper](https://arxiv.org/abs/2206.04843) |
+
+#### Temporal
+Prediction where targets are temporal (time series).
+
+* Classification (category: `prediction.temporal.classification`)
+
+| Name | Description| Reference |
+| --- | --- | --- |
+| `seq2seq_classifier` | Seq2Seq prediction, classification | --- |
+
+* Regression (category: `prediction.temporal.regression`)
+
+| Name | Description| Reference |
+| --- | --- | --- |
+| `seq2seq_regressor` | Seq2Seq prediction, regression | --- |
+
+
+
 ### Preprocessing
 
 #### Imputation
@@ -332,7 +413,7 @@ Treatment effects estimation where treatments are temporal (time series).
 
 
 
-## Tutorials
+## 📖 Tutorials
 
 ### Data
 
@@ -387,8 +468,9 @@ pytest -vsx
 For development and contribution to TemporAI, see:
 * 📓 [Extending TemporAI tutorials](./tutorials/extending/)
 * 📃 [Contribution guide](./CONTRIBUTING.md)
+* 👩‍💻 [Developer's guide](./docs/dev_guide.md)
 
-## Citing
+## ✍️ Citing
 
 If you use this code, please cite the associated paper:
 ```
