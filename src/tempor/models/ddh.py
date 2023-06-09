@@ -109,6 +109,7 @@ class DynamicDeepHitModel:
         self.model: Optional[DynamicDeepHitLayers] = None
 
     def _setup_model(self, inputdim: int, seqlen: int, risks: int) -> "DynamicDeepHitLayers":
+        """"""
         return (
             DynamicDeepHitLayers(
                 inputdim,
