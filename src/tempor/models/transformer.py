@@ -83,4 +83,5 @@ class TransformerModel(nn.Module):
         ).to(device)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Return """
         return self.model(x)  # pylint: disable=not-callable
