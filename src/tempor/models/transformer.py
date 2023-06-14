@@ -8,20 +8,52 @@ from .constants import DEVICE
 
 
 class Permute(nn.Module):
+    """Base class for making permutations."""
+
     def __init__(self, *dims: Any) -> None:
+        """Invokes parent's init method. Adds attribute dimensions essential to further permutations."""
+
         super().__init__()
         self.dims = dims
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Makes next permutation of data.
+
+        Args:
+            x: tensor containing data to permutation.
+
+        Returns:
+            x: original tensor with its dimensions permuted.
+
+        """
+
         return x.permute(self.dims)
 
 
 class Transpose(nn.Module):
+    """Base class for transposing data."""
+
     def __init__(self, *dims: Any, contiguous: bool = False) -> None:
+        """Invokes parent's init method. Receives dimensions of data in tuple.
+        Controls, whether data is contiguous.
+        """
+
         super().__init__()
         self.dims, self.contiguous = dims, contiguous
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Method transposes given data. Checks, whether data is contiguous.
+        The output data varies depending on this fact.
+
+        Args:
+            x: tensor containing data dimensions to transposing.
+
+        Returns:
+            x: original tensor with swapped data. Returned values are different for contiguous
+            and not contiguous data.
+
+        """
+
         if self.contiguous:
             return x.transpose(*self.dims).contiguous()
         else:
@@ -29,6 +61,10 @@ class Transpose(nn.Module):
 
 
 class TransformerModel(nn.Module):
+    """Class sets up neural network which render context.
+    This class is crucial for forecasting and working with data.
+    """
+
     def __init__(
         self,
         n_units_in: int,
@@ -83,5 +119,14 @@ class TransformerModel(nn.Module):
         ).to(device)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Return """
+        """Creates new model. Makes set of operations on given data.
+
+        Args:
+            x: tensor with raw data.
+
+        Returns:
+            model: original tensor which data have been packed in model layer and changed.
+
+        """
+
         return self.model(x)  # pylint: disable=not-callable
