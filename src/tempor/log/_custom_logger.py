@@ -20,11 +20,14 @@ _log_like_base = (
     "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> | "
     "<level>" + _nl_replace + "{message}</level>\n{exception}"
 )
+
+# Variables essential to properly work of _log_like_formatter function
 _log_like_newline = _log_like_base.replace(_nl_replace, "\n")
 _log_like_no_newline = _log_like_base.replace(_nl_replace, "")
 
 
 def _log_like_formatter(record) -> str:
+    """Ternary operator adds newline to the log message if it is multiline."""
     return _log_like_newline if "\n" in record["message"] else _log_like_no_newline
 
 
@@ -52,6 +55,7 @@ def _print_filter(record):
 
 
 def _logger_print(message: str):
+    """Function assigns call stack and prints message."""
     logger.bind(print=True).opt(depth=1).info(message)
 
 
@@ -60,6 +64,13 @@ logger.print = _logger_print  # type: ignore
 
 
 def _configure_loggers(config: conf.TemporConfig):
+    """Main-line function which receives configuration data, removes default logger.
+    Then sets up common settings, fills up _ADD_CONFIGS dictionary and sends it to console.
+    If config.logging.file_log exists, function will append it to list storage of current ID's.
+
+    Args:
+        config: object containing default configuration data.
+    """
     # Reset _LOGGERS, _ADD_CONFIGS
     _this_module._LOGGERS = []  # type: ignore  # pylint: disable=protected-access
     _this_module._ADD_CONFIGS = dict()  # type: ignore  # pylint: disable=protected-access
@@ -113,8 +124,10 @@ def _configure_loggers(config: conf.TemporConfig):
         _LOGGERS.append(file_logger)
 
 
+# Create initial configuration
 _configure_loggers(_initial_config)
 
+# Update configuration state
 conf.updated_on_configure.add(_configure_loggers)
 
 

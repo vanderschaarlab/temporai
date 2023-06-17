@@ -1,4 +1,5 @@
 class DataValidationException(ValueError):
+    """Raise this exception when the user provides invalid data values  for training."""
     pass
 
 
