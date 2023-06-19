@@ -27,6 +27,7 @@ DEFAULT_CONFIG_FILE_PATH = os.path.join(
 
 @dataclasses.dataclass
 class LoggingConfig:
+    """The class creates backbone for configuration data in the login process."""
     level: str = omegaconf.MISSING
     diagnose: bool = omegaconf.MISSING
     backtrace: bool = omegaconf.MISSING
@@ -35,10 +36,15 @@ class LoggingConfig:
 
 @dataclasses.dataclass
 class TemporConfig:
+    """The class contains data necessary for temporary configuration.
+    It plays a key role during the execution of the configure_loggers function.
+    """
+
     logging: LoggingConfig
     working_directory: str = omegaconf.MISSING
 
     def get_working_dir(self):
+        """Return working directory regardless operating system."""
         if self.working_directory.startswith("$PWD"):
             return self.working_directory.replace("$PWD", os.getcwd(), 1)
         elif self.working_directory.startswith("~"):
@@ -68,10 +74,21 @@ _this_module = sys.modules[__name__]  # Needed to directly set `config` on this 
 
 # pylint: disable=protected-access
 def get_config() -> TemporConfig:
+    """Return module configuration data wrapped in an dataclass object.
+    This method is used to initialize configuration data during the login process.
+    """
     return _this_module._config
 
 
 def _load(loaded_config: omegaconf.DictConfig) -> TemporConfig:
+    """Receive new configuration data, merge it and wrapp into dataclass object.
+    The function also verifies whether the result of the operation is a TemporConfig object.
+
+    Returns:
+            config_as_dataclass: instance of dataclass with new configuration data.
+
+    """
+
     if hasattr(_this_module, "_config"):
         merge_into = _this_module._config
     else:
@@ -87,6 +104,10 @@ def _load(loaded_config: omegaconf.DictConfig) -> TemporConfig:
 
 
 def load_yaml_file(path: Union[str, pathlib.Path]) -> TemporConfig:
+    """Function receives a file path, converts it to omegaconf.DictConfig type
+    and then passes it to the _load function.
+    """
+
     loaded = OmegaConf.load(path)
     if TYPE_CHECKING:  # pragma: no cover
         assert isinstance(loaded, omegaconf.DictConfig)  # nosec B101
@@ -94,6 +115,7 @@ def load_yaml_file(path: Union[str, pathlib.Path]) -> TemporConfig:
 
 
 def load_dictconfig(config_node: omegaconf.DictConfig) -> TemporConfig:
+    """Send dictionary with configuration data to _load function."""
     return _load(config_node)
 
 
@@ -102,6 +124,14 @@ _config: TemporConfig = load_yaml_file(path=DEFAULT_CONFIG_FILE_PATH)
 
 
 def configure(new_config: Union[TemporConfig, omegaconf.DictConfig, str, pathlib.Path]) -> TemporConfig:
+    """Main-line function which sets up new configuration regardless of the type of the allowed batch object.
+     Then updates it.
+
+    Returns:
+        _this_module._config: instance of dataclass with new configuration data.
+
+    """
+
     if isinstance(new_config, (str, pathlib.Path)):
         _this_module._config = load_yaml_file(path=new_config)  # type: ignore
     elif isinstance(new_config, omegaconf.DictConfig):
