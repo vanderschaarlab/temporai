@@ -14,6 +14,10 @@ from .utils import GumbelSoftmax, get_nonlin
 
 
 class LinearLayer(nn.Module):
+    """Intermediate layer with implemented essential data and mechanisms.
+    It contains core data structure for other layers.
+    """
+
     @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def __init__(
         self,
@@ -24,6 +28,10 @@ class LinearLayer(nn.Module):
         nonlin: Optional[Nonlin] = "relu",
         device: Any = constants.DEVICE,
     ) -> None:
+        """Set up crucial parameters. Invoke parent __init__ method.
+        Create device, layers and model mechanisms.
+        """
+
         super(LinearLayer, self).__init__()
 
         self.device = device
@@ -43,10 +51,12 @@ class LinearLayer(nn.Module):
 
     @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def forward(self, X: torch.Tensor) -> torch.Tensor:
+        """Assign formatted data to model and send it to device."""
         return self.model(X.float()).to(self.device)  # pylint: disable=not-callable
 
 
 class ResidualLayer(LinearLayer):
+    """Layer for the rest of data."""
     @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def __init__(
         self,
@@ -57,6 +67,8 @@ class ResidualLayer(LinearLayer):
         nonlin: Optional[Nonlin] = "relu",
         device: Any = constants.DEVICE,
     ) -> None:
+        """Set up crucial parameters. Invoke parent __init__ method."""
+
         super(ResidualLayer, self).__init__(
             n_units_in,
             n_units_out,
@@ -70,6 +82,10 @@ class ResidualLayer(LinearLayer):
 
     @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def forward(self, X: torch.Tensor) -> torch.Tensor:
+        """Method checks that the object is not empty.
+        Concatenates original tensor and converted data and sends them to device.
+        """
+
         if X.shape[-1] == 0:
             return torch.zeros((*X.shape[:-1], self.n_units_out)).to(self.device)
 
@@ -85,6 +101,10 @@ class MultiActivationHead(nn.Module):
         activations: List[Tuple[nn.Module, int]],
         device: Any = constants.DEVICE,
     ) -> None:
+        """Invoke parent __init__ method.
+        Create activations mechanisms.
+        """
+
         super(MultiActivationHead, self).__init__()
         self.activations = []
         self.activation_lengths = []
@@ -96,6 +116,10 @@ class MultiActivationHead(nn.Module):
 
     @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def forward(self, X: torch.Tensor) -> torch.Tensor:
+        """Check if the number of dimensions matches the number of activation_lengths.
+        Then prepare data and make activations.
+        """
+
         if X.shape[-1] != np.sum(self.activation_lengths):
             raise RuntimeError(
                 f"Shape mismatch for the activations: expected {np.sum(self.activation_lengths)}. Got shape {X.shape}."
@@ -113,6 +137,9 @@ class MultiActivationHead(nn.Module):
 
 
 class MLP(nn.Module):
+    """Layer for MLP operations.
+    Instances of this class will be the results of the work of several mainline methods.
+    """
     @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def __init__(
         self,
@@ -293,6 +320,16 @@ class MLP(nn.Module):
                 self.loss = nn.MSELoss()
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> "MLP":
+        """Convert args into torch.Tensor objects. Then train it.
+
+        Args:
+            X: tensor with data to create a dataset.
+            y: tensor with data to create a dataset.
+
+        Returns:
+            "MLP": MLP object with data after training.
+        """
+
         Xt = self._check_tensor(X)
         yt = self._check_tensor(y)
 
@@ -302,6 +339,10 @@ class MLP(nn.Module):
 
     @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
+        """Limit the scope of the task to classification.
+        Then make the prediction and return formatted data.
+        """
+
         if self.task_type != "classification":
             raise ValueError(f"Invalid task type for predict_proba {self.task_type}")
 
@@ -314,6 +355,7 @@ class MLP(nn.Module):
 
     @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def predict(self, X: np.ndarray) -> np.ndarray:
+        """Make prediction and return formatted data."""
         with torch.no_grad():
             Xt = self._check_tensor(X)
 
@@ -325,6 +367,16 @@ class MLP(nn.Module):
                 return yt.cpu().numpy().squeeze()
 
     def score(self, X: np.ndarray, y: np.ndarray) -> float:
+        """Make prediction and rate its accuracy.
+
+        Args:
+            X: data to prediction.
+            y: data to comparison.
+
+        Returns:
+            outcome: percentage of correct predictions.
+        """
+
         y_pred = self.predict(X)
         if self.task_type == "classification":
             return np.mean(y_pred == y)
@@ -333,9 +385,11 @@ class MLP(nn.Module):
 
     @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
     def forward(self, X: torch.Tensor) -> torch.Tensor:
+        """Assign formatted data to model."""
         return self.model(X.float())  # pylint: disable=not-callable
 
     def _train_epoch(self, loader: torch.utils.data.DataLoader) -> float:
+        """"""
         train_loss = []
 
         for batch_ndx, sample in enumerate(loader):  # pylint: disable=unused-variable
@@ -364,6 +418,16 @@ class MLP(nn.Module):
         return torch.mean(torch.Tensor(train_loss)).item()
 
     def _train(self, X: torch.Tensor, y: torch.Tensor) -> "MLP":
+        """Do essential preparations to training data and train it.
+
+        Args:
+            X: tensor with data to create a dataset.
+            y: tensor with data to create a dataset.
+
+        Returns:
+            "MLP": MLP object with data after training.
+        """
+
         X = self._check_tensor(X).float()
         y = self._check_tensor(y).squeeze().float()
         if self.task_type == "classification":
@@ -409,10 +473,16 @@ class MLP(nn.Module):
         return self
 
     def _check_tensor(self, X: Union[torch.Tensor, np.ndarray]) -> torch.Tensor:
+        """Make sure whether object is torch.Tensor instance.
+        If object is np.ndarray, it will be converted to torch.Tensor object.
+        The result is sent to device.
+        """
+
         if isinstance(X, torch.Tensor):
             return X.to(self.device)
         else:
             return torch.from_numpy(np.asarray(X)).to(self.device)
 
     def __len__(self) -> int:
+        """Return size of model's data."""
         return len(self.model)
