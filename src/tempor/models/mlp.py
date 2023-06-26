@@ -323,8 +323,8 @@ class MLP(nn.Module):
         """Convert args into torch.Tensor objects. Then train it.
 
         Args:
-            X: tensor with data to create a dataset.
-            y: tensor with data to create a dataset.
+            X: tensor with data to create a X-axis of dataset.
+            y: tensor with data to create a y-axis of dataset.
 
         Returns:
             "MLP": MLP object with data after training.
@@ -389,7 +389,14 @@ class MLP(nn.Module):
         return self.model(X.float())  # pylint: disable=not-callable
 
     def _train_epoch(self, loader: torch.utils.data.DataLoader) -> float:
-        """"""
+        """Broke down data into small batches. All batches will be fed into model and trained at once.
+
+        Args:
+            loader: object with wrapped data. Crucial is that loader is iterable.
+
+        Returns:
+            outcome: percentage of lost batches.
+        """
         train_loss = []
 
         for batch_ndx, sample in enumerate(loader):  # pylint: disable=unused-variable
@@ -421,8 +428,8 @@ class MLP(nn.Module):
         """Do essential preparations to training data and train it.
 
         Args:
-            X: tensor with data to create a dataset.
-            y: tensor with data to create a dataset.
+            X: tensor with data to create a X-axis of dataset.
+            y: tensor with data to create a y-axis of dataset.
 
         Returns:
             "MLP": MLP object with data after training.

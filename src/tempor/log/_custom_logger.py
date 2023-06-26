@@ -64,7 +64,7 @@ logger.print = _logger_print  # type: ignore
 
 
 def _configure_loggers(config: conf.TemporConfig):
-    """Main-line function which receives configuration data, removes default logger.
+    """Mainline function which receives configuration data, removes default logger.
     Then sets up common settings, fills up _ADD_CONFIGS dictionary and sends it to console.
     If config.logging.file_log exists, function will append it to list storage of current ID's.
 

@@ -40,12 +40,12 @@ class BaseSampler(torch.utils.data.sampler.Sampler):
 
 
 class ImbalancedDatasetSampler(BaseSampler):
-    """Samples elements randomly from a given list of indices for imbalanced dataset."""
+    """Class samples elements randomly from a given list of indices for imbalanced dataset."""
 
     @validate_arguments(config=dict(arbitrary_types_allowed=True))
     def __init__(self, labels: List, train_size: float = 0.8) -> None:
-        """Sets up essential attributes for testing and training. Maps indices for training.
-        Creates DataFrame and searches it by train index.
+        """Set up essential attributes for testing and training. Map indices for training.
+        Create DataFrame and search it by train index.
         Args are parsed and validated before function call.
          """
 
@@ -76,7 +76,7 @@ class ImbalancedDatasetSampler(BaseSampler):
 
     def __iter__(self) -> Generator:
         """This is essential method to implement. It provides a way to iterate over indices.
-        Method .
+        Method activates mapping mechanism.
         """
 
         return (
@@ -85,9 +85,9 @@ class ImbalancedDatasetSampler(BaseSampler):
         )
 
     def __len__(self) -> int:
-        """This is essential method to implement. Returns amount of indices to train."""
+        """This is essential method to implement. It returns amount of indices to train."""
         return len(self.train_idx)
 
     def train_test(self) -> Tuple:
-        """Returns index of test currently trained text."""
+        """Return indices of currently trained test."""
         return self.train_idx, self.test_idx
