@@ -3,12 +3,14 @@
 # pylint: disable=unnecessary-ellipsis
 
 import abc
+import contextlib
 from typing import TYPE_CHECKING, Any, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
 import pandera as pa
 import pydantic
+from packaging.version import Version
 from typing_extensions import Self
 
 import tempor.exc
@@ -292,6 +294,35 @@ class StaticSamples(DataSamples):
         )
 
 
+@contextlib.contextmanager
+def workaround_pandera_pd2_1_0_multiindex_compatibility(schema: pa.DataFrameSchema, data: pd.DataFrame):
+    """A version compatibility issue exists between pandera and pandas 2.1.0, as reported here:
+    https://github.com/unionai-oss/pandera/issues/1328
+
+    The error pertains to multiindex uniqueness validation giving an unexpected error.
+
+    This is a workaround that will "manually" throw an error that is expected from pandera.
+    """
+
+    def problem_versions() -> bool:
+        return Version(pd.__version__) >= Version("2.1.0")
+        # TODO: When/if fixed in pandera, add the below condition:
+        # and Version(pa.__version__) < Version("0.XX.YY")
+
+    try:
+        yield
+
+    except ValueError as ex:
+        if problem_versions() and "Columns with duplicate values are not supported in stack" in str(ex):
+            cols = data.index.names
+            raise pa.errors.SchemaError(schema=schema, data=data, message=f"columns {cols} not unique")
+        else:
+            raise
+
+    finally:
+        pass
+
+
 class TimeSeriesSamples(DataSamples):
     _data: pd.DataFrame
     _schema: pa.DataFrameSchema
@@ -397,7 +428,8 @@ class TimeSeriesSamples(DataSamples):
             coerce=False,
             unique=multiindex_unique_def,
         )
-        self._data = schema.validate(data)
+        with workaround_pandera_pd2_1_0_multiindex_compatibility(schema, data):
+            self._data = schema.validate(data)
 
         logger.debug(f"Final schema:\n{schema}")
         self._schema = schema
