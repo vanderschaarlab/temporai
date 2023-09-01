@@ -45,7 +45,7 @@ jobs:
       CODECOV_PYTHON: ${{ matrix.python-version }}
     steps:
       - name: Free runner disk space
-        if: matrix.os != 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest'
         # As per this: https://github.com/orgs/community/discussions/26351
         run: |
           df -h
