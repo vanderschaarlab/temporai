@@ -609,7 +609,6 @@ class TestPipelineSeeker:
                 override_hp_space=override_hp_space,  # type: ignore
             )
 
-    @pytest.mark.filterwarnings("ignore:.*bool8.*:DeprecationWarning")  # Expected.
     @pytest.mark.parametrize(
         "task_type,estimator_names,metric",
         [

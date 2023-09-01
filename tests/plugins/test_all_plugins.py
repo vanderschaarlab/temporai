@@ -16,7 +16,6 @@ def test_init_success(plugin_fqn):
 
 
 # DeprecationWarning expected for preprocessing.imputation.temporal.ts_tabular_imputer:
-@pytest.mark.filterwarnings("ignore:.*bool8.*:DeprecationWarning")
 @pytest.mark.parametrize("plugin_fqn", PLUGIN_FQNS)
 def test_sample_hyperparameters(plugin_fqn):
     PluginCls = plugin_loader.get_class(plugin_fqn)
