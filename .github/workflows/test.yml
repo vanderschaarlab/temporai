@@ -44,6 +44,15 @@ jobs:
       CODECOV_OS: ${{ matrix.os }}
       CODECOV_PYTHON: ${{ matrix.python-version }}
     steps:
+      - name: Free runner disk space
+        # As per this: https://github.com/orgs/community/discussions/26351
+        run: |
+          df -h
+          sudo swapoff -a
+          sudo rm -f /swapfile
+          sudo apt clean
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          df -h
       - uses: actions/checkout@v3
         with:
           submodules: true
