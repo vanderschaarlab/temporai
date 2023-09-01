@@ -1,4 +1,4 @@
-exclude: '^docs/conf.py'
+# exclude: '^docs/conf.py' # If need global exclude.
 
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -22,7 +22,7 @@ repos:
     exclude: 'docs/user_guide'  # Auto-generated, leave as is.
   - id: pretty-format-json
     args: ['--autofix', '--indent=4', '--no-sort-keys']
-    exclude: 'tutorials/'  # ipynb may get treated as JSON, don't want that.
+    exclude: '.*.ipynb'  # ipynb may get treated as JSON, don't want that.
   - id: requirements-txt-fixer
     exclude: docs/requirements.txt
   - id: mixed-line-ending
@@ -38,9 +38,6 @@ repos:
   hooks:
   - id: black-jupyter
     language_version: python3
-    args: [
-      "--force-exclude=docs/conf.py"
-    ]
 
 # If like to embrace black styles even in the docs:
 - repo: https://github.com/asottile/blacken-docs
@@ -54,8 +51,6 @@ repos:
   rev: 6.1.0
   hooks:
   - id: flake8
-  ## You can add flake8 plugins via `additional_dependencies`:
-  #  additional_dependencies: [flake8-bugbear]
 
 -   repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.5.1
