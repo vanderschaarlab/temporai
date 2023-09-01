@@ -73,7 +73,6 @@ def as_loguru_logs(records: List[Any]) -> str:
 
 
 def test_console_logging_at_trace(caplog):  # noqa: F811
-
     config = tempor.get_config()
     config.logging.level = "TRACE"
     tempor.configure(config)
@@ -97,7 +96,6 @@ def test_console_logging_at_trace(caplog):  # noqa: F811
 
 
 def test_console_logging_at_info(caplog):  # noqa: F811
-
     config = tempor.get_config()
     config.logging.level = "INFO"
     tempor.configure(config)
@@ -121,7 +119,6 @@ def test_console_logging_at_info(caplog):  # noqa: F811
 
 
 def test_console_logging_at_error(caplog):  # noqa: F811
-
     config = tempor.get_config()
     config.logging.level = "ERROR"
     tempor.configure(config)

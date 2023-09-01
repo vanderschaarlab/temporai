@@ -89,7 +89,6 @@ class SineDataLoader(dataloader.OneOffPredictionDataLoader):
         # Generate sine data.
 
         for i in range(self.no):
-
             # Initialize each time-series
             local = list()
 
@@ -97,7 +96,6 @@ class SineDataLoader(dataloader.OneOffPredictionDataLoader):
             seq_len = self.seq_len
 
             for k in range(self.temporal_dim):  # pylint: disable=unused-variable
-
                 # Randomly drawn frequency and phase:
                 freq = np.random.beta(2, 2)
                 phase = np.random.normal()
