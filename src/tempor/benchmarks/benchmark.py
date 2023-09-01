@@ -132,7 +132,6 @@ def benchmark_models(
 
 @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
 def visualize_benchmark(results: Dict[str, pd.DataFrame], palette: str = "viridis") -> Any:
-
     # Pre-format DF for plotting.
     for k, v in results.items():
         v["method"] = k

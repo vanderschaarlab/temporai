@@ -332,7 +332,6 @@ class ClassifierMetrics:
         return utils.evaluate_auc_multiclass(y_test, y_pred_proba)[0]
 
     def average_precision_score(self, y_test: np.ndarray, y_pred_proba: np.ndarray) -> float:
-
         return utils.evaluate_auc_multiclass(y_test, y_pred_proba)[1]
 
 

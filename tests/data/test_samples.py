@@ -29,7 +29,6 @@ class DFsTest:
 
 
 def set_up_dfs_test():
-
     # --- Static. ---
 
     categories = ["A", "B", "C"]

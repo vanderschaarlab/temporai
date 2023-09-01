@@ -53,9 +53,15 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: "pip" # Caching pip dependencies.
       - name: Install dependencies
+        if: matrix.python-version != '3.7'
         run: |
           pip install --upgrade pip
           pip install .[dev]
+      - name: Install dependencies (python 3.7, use legacy resolver)
+        if: matrix.python-version == '3.7'
+        run: |
+          pip install --upgrade pip
+          pip install .[dev] --use-deprecated=legacy-resolver
       - name: Test with pytest (xdist)
         if: matrix.os != 'ubuntu-latest'
         run: pytest -vvvx -n auto -m "not slow and not extra and not skipci" --durations=50 --cov

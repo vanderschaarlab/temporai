@@ -1,4 +1,4 @@
-exclude: '^docs/conf.py'
+# exclude: '^docs/conf.py' # If need global exclude.
 
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -22,6 +22,7 @@ repos:
     exclude: 'docs/user_guide'  # Auto-generated, leave as is.
   - id: pretty-format-json
     args: ['--autofix', '--indent=4', '--no-sort-keys']
+    exclude: '.*.ipynb'  # ipynb may get treated as JSON, don't want that.
   - id: requirements-txt-fixer
     exclude: docs/requirements.txt
   - id: mixed-line-ending
@@ -33,39 +34,34 @@ repos:
   - id: isort
 
 - repo: https://github.com/psf/black
-  rev: 22.12.0
+  rev: 23.7.0
   hooks:
   - id: black-jupyter
     language_version: python3
-    args: [
-      "--force-exclude=docs/conf.py"
-    ]
 
 # If like to embrace black styles even in the docs:
 - repo: https://github.com/asottile/blacken-docs
-  rev: v1.12.1
+  rev: 1.16.0
   hooks:
   - id: blacken-docs
     additional_dependencies: [black]
     exclude: 'docs/user_guide'  # Auto-generated, leave as is.
 
 - repo: https://github.com/PyCQA/flake8
-  rev: 6.0.0
+  rev: 6.1.0
   hooks:
   - id: flake8
-  ## You can add flake8 plugins via `additional_dependencies`:
-  #  additional_dependencies: [flake8-bugbear]
 
 -   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.1.1
+    rev: v1.5.1
     hooks:
     -   id: mypy
         files: "^src/"
         args: [--config-file=mypy.ini]
-        additional_dependencies: [pydantic]
+        additional_dependencies: [pydantic<2]
 
 - repo: https://github.com/PyCQA/bandit
-  rev: 1.7.4
+  rev: 1.7.5
   hooks:
   - id: bandit
     args: ["-c", "pyproject.toml", "-q"]

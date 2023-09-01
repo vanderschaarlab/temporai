@@ -191,6 +191,7 @@ def as_covariates_dataset() -> Callable:
 
 # --- Reusable datasets. ---
 
+
 # Sine data: full.
 @pytest.fixture(scope="session")
 def _sine_data_full():

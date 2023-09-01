@@ -80,7 +80,6 @@ class DynamicDeepHitModel:
         clipping_value: int = 1,
         output_mode: str = "MLP",
     ) -> None:
-
         self.split = split
         self.split_time = None
 
