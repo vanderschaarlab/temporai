@@ -22,6 +22,7 @@ repos:
     exclude: 'docs/user_guide'  # Auto-generated, leave as is.
   - id: pretty-format-json
     args: ['--autofix', '--indent=4', '--no-sort-keys']
+    exclude: 'tutorials/'  # ipynb may get treated as JSON, don't want that.
   - id: requirements-txt-fixer
     exclude: docs/requirements.txt
   - id: mixed-line-ending
