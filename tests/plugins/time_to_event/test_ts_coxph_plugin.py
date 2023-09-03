@@ -116,7 +116,6 @@ def test_benchmark(
 class TestCoxPHSurvivalAnalysis:
     def test_drop_constant_columns(self):
         df = pd.DataFrame(data=np.asarray([[1, 1, 1], [1, 2, 1], [2, 2, 2]]).T, columns=["a", "b", "c"])
-        print(df)
         const_cols = drop_constant_columns(df)
         assert const_cols == ["a", "c"]
 
