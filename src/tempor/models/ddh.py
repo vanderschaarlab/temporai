@@ -289,7 +289,7 @@ class DynamicDeepHitModel:
         t: List,
         risk: int = 1,
         all_step: bool = False,
-        bs: int = 100,
+        batch_size: int = 100,
     ) -> np.ndarray:
         if self.model is None:
             raise RuntimeError(
@@ -310,10 +310,10 @@ class DynamicDeepHitModel:
         t = self.discretize([t], self.split, self.split_time)[0][0]  # type: ignore
 
         x_in_tensor: torch.Tensor = self._preprocess_test_data(x_in)
-        batches = int(len(x) / bs) + 1
+        batches = int(len(x) / batch_size) + 1
         scores: dict = {t_: [] for t_ in t}
         for j in range(batches):
-            xb = x_in_tensor[j * self.batch_size : (j + 1) * self.batch_size]
+            xb = x_in_tensor[j * batch_size : (j + 1) * batch_size]
             _, f = self.model(xb)  # pylint: disable=not-callable
             for t_ in t:
                 pred = torch.cumsum(f[int(risk) - 1], dim=1)[:, t_].squeeze().detach().cpu().numpy().tolist()
