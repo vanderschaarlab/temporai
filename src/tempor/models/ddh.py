@@ -131,12 +131,15 @@ class DynamicDeepHitModel:
         t: np.ndarray,
         e: np.ndarray,
     ) -> Self:
+        print("e", e)
         discretized_t, self.split_time = self.discretize(t, self.split, self.split_time)
         processed_data = self._preprocess_training_data(x, discretized_t, e)
         x_train, t_train, e_train, x_val, t_val, e_val = processed_data
         inputdim = x_train.shape[-1]
         seqlen = x_train.shape[-2]
 
+        print("e_train", e_train)
+        print("e_val", e_val)
         maxrisk = int(np.nanmax(e_train.cpu().numpy()))
 
         self.model = self._setup_model(inputdim, seqlen, risks=maxrisk)

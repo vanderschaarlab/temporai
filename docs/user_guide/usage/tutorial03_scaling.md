@@ -1,5 +1,5 @@
 # User Guide Tutorial 03: Preprocessing › Scaling
-[![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial03_scaling.ipynb)
+[![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/usage/tutorial03_scaling.ipynb)
 
 This tutorial shows how to use TemporAI `preprocessing.scaling` plugins.
 

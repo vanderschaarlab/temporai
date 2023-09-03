@@ -1,5 +1,5 @@
 # User Guide Tutorial 02: Preprocessing › Imputation
-[![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial02_imputation.ipynb)
+[![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/usage/tutorial02_imputation.ipynb)
 
 This tutorial shows how to use TemporAI `preprocessing.imputation` plugins.
 

@@ -16,6 +16,7 @@ from tempor.plugins.preprocessing.encoding._base import BaseEncoder
 
 # TODO: Handle SklearnArrayLike rather than just list, requires dropping OmegaConf stuff.
 # TODO: Remember the column positions - esp. relevant for when inverse_transform is introduced.
+# TODO: Possibly a way to automatically detect categorical features and encode those.
 
 
 @dataclasses.dataclass

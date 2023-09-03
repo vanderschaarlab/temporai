@@ -1,5 +1,5 @@
 # User Guide Tutorial 09: AutoML
-[![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial09_automl.ipynb)
+[![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/usage/tutorial09_automl.ipynb)
 
 TemporAI provides AutoML tools for finding the best model for your use case in `tempor.automl`, these are demonstrated here.
 

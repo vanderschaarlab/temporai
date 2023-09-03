@@ -378,6 +378,20 @@ Prediction where targets are temporal (time series).
 
 ### Preprocessing
 
+#### Feature Encoding
+
+* Static data (category: `preprocessing.encoding.static`)
+
+| Name | Description| Reference |
+| --- | --- | --- |
+| `static_onehot_encoder` | One-hot encode categorical static features | --- |
+
+* Temporal data (category: `preprocessing.encoding.temporal`)
+
+| Name | Description| Reference |
+| --- | --- | --- |
+| `ts_onehot_encoder` | One-hot encode categorical time series features | --- |
+
 #### Imputation
 
 * Static data (category: `preprocessing.imputation.static`)
