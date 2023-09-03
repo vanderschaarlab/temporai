@@ -11,7 +11,7 @@
 
 [![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/release/python-370/)
 [![PyPI-Server](https://img.shields.io/pypi/v/temporai?color=blue)](https://pypi.org/project/temporai/)
-[![](https://pepy.tech/badge/temporai)](https://pypi.org/project/temporai/)
+[![Downloads](https://static.pepy.tech/badge/temporai)](https://pepy.tech/project/temporai)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/vanderschaarlab/temporai/tree/main/LICENSE.txt)
 
 [![Tests](https://github.com/vanderschaarlab/temporai/actions/workflows/test.yml/badge.svg)](https://github.com/vanderschaarlab/temporai/actions/workflows/test.yml)
