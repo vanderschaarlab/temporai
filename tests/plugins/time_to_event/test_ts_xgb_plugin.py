@@ -44,7 +44,9 @@ def test_sanity(get_test_plugin: Callable, plugin_from: str) -> None:
     assert len(test_plugin.hyperparameter_space()) == 23
 
 
-@pytest.mark.filterwarnings("ignore:.*Validation.*small.*:UserWarning")  # Exp. for small datasets with DDH embedding.
+@pytest.mark.filterwarnings(
+    "ignore:.*Validation.*small.*:RuntimeWarning"
+)  # Exp. for small datasets with DDH embedding.
 @pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
 @pytest.mark.parametrize("device", DEVICES)
@@ -54,7 +56,9 @@ def test_fit(plugin_from: str, data: str, device: str, get_test_plugin: Callable
     test_plugin.fit(dataset)
 
 
-@pytest.mark.filterwarnings("ignore:.*Validation.*small.*:UserWarning")  # Exp. for small datasets with DDH embedding.
+@pytest.mark.filterwarnings(
+    "ignore:.*Validation.*small.*:RuntimeWarning"
+)  # Exp. for small datasets with DDH embedding.
 @pytest.mark.filterwarnings("ignore:RNN.*contiguous.*:UserWarning")  # Expected: problem with current serialization.
 @pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
@@ -85,7 +89,9 @@ def test_predict(
     assert output.numpy().shape == (len(dataset.time_series), len(horizons), 1)
 
 
-@pytest.mark.filterwarnings("ignore:.*Validation.*small.*:UserWarning")  # Exp. for small datasets with DDH embedding.
+@pytest.mark.filterwarnings(
+    "ignore:.*Validation.*small.*:RuntimeWarning"
+)  # Exp. for small datasets with DDH embedding.
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
 @pytest.mark.parametrize("device", DEVICES)
 def test_benchmark(

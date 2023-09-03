@@ -69,13 +69,13 @@ class TestEnableReproducibility:
         monkeypatch.setattr(torch.version, "cuda", cuda_version)
 
         if warn_CLB:
-            with pytest.warns(UserWarning, match=".*CUDA_LAUNCH_BLOCKING.*"):
+            with pytest.warns(RuntimeWarning, match=".*CUDA_LAUNCH_BLOCKING.*"):
                 utils.enable_reproducibility(
                     random_seed=42,
                     torch_use_deterministic_algorithms=True,
                 )
         elif warn_CWC:
-            with pytest.warns(UserWarning, match=".*CUBLAS_WORKSPACE_CONFIG.*"):
+            with pytest.warns(RuntimeWarning, match=".*CUBLAS_WORKSPACE_CONFIG.*"):
                 utils.enable_reproducibility(
                     random_seed=42,
                     torch_use_deterministic_algorithms=True,

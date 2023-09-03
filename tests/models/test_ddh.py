@@ -102,7 +102,7 @@ def test_val_set_fail(get_test_data):
 def test_val_set_too_small_warning(get_test_data):
     x, t, e, _ = get_test_data
     model = DynamicDeepHitModel(n_iter=10, clipping_value=0, val_size=(5 / len(x)))
-    with pytest.warns(UserWarning, match=".*[Vv]alidation.*small.*"):
+    with pytest.warns(RuntimeWarning, match=".*[Vv]alidation.*small.*"):
         model.fit(x=x, t=t, e=e)
 
 

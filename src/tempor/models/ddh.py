@@ -132,15 +132,12 @@ class DynamicDeepHitModel:
         t: np.ndarray,
         e: np.ndarray,
     ) -> Self:
-        print("e", e)
         discretized_t, self.split_time = self.discretize(t, self.split, self.split_time)
         processed_data = self._preprocess_training_data(x, discretized_t, e)
         x_train, t_train, e_train, x_val, t_val, e_val = processed_data
         inputdim = x_train.shape[-1]
         seqlen = x_train.shape[-2]
 
-        print("e_train", e_train)
-        print("e_val", e_val)
         maxrisk = int(np.nanmax(e_train.cpu().numpy()))
 
         self.model = self._setup_model(inputdim, seqlen, risks=maxrisk)
@@ -255,11 +252,11 @@ class DynamicDeepHitModel:
                 f"`val_size` was {val_size} and total number of samples in dataset was {x_train.shape[0]}."
             )
         if val_size < 10:
-            # Raise a UserWarning if the validation set is very small.
+            # Raise a RuntimeWarning if the validation set is very small.
             warnings.warn(
                 f"Validation set is very small ({val_size} samples). "
                 "Consider increasing `val_size` or using a larger dataset.",
-                UserWarning,
+                RuntimeWarning,
             )
 
         x_val, t_val, e_val = x_train[-val_size:], t_train[-val_size:], e_train[-val_size:]

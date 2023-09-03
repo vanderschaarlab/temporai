@@ -151,7 +151,7 @@ def visualize_benchmark(results: Dict[str, pd.DataFrame], palette: str = "viridi
         )
         out.set(**set_options)
         axes.append(out)
-        print(f"Plotting bar plot for metric: {metric}")
+        log.print(f"Plotting bar plot for metric: {metric}")  # type: ignore [attr-defined]
         plt.show()
 
     return axes

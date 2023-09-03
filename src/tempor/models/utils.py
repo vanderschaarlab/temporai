@@ -40,7 +40,7 @@ def enable_reproducibility(
         torch_disable_cudnn_benchmark (bool, optional):
             Whether to set ``torch.backends.cudnn.benchmark = False``. Defaults to `False`.
         warn_cuda_env_vars (bool, optional):
-            Whether to raise a `UserWarning` in case `torch` deterministic algorithms are enabled but the
+            Whether to raise a `RuntimeWarning` in case `torch` deterministic algorithms are enabled but the
             ``"CUDA_LAUNCH_BLOCKING"``/``"CUBLAS_WORKSPACE_CONFIG"`` environment variable has not been set.
             More details at https://pytorch.org/docs/stable/generated/torch.nn.LSTM.html#torch.nn.LSTM.
             Defaults to `True`.
@@ -67,7 +67,7 @@ def enable_reproducibility(
                 warnings.warn(
                     "When setting torch.use_deterministic_algorithms and using CUDA 10.1, the environment variable "
                     "CUDA_LAUNCH_BLOCKING must be set to 1, else RNN/LSTM algorithms will not be deterministic.",
-                    UserWarning,
+                    RuntimeWarning,
                 )
             if cuda_version >= Version("10.2") and (
                 os.environ.get("CUBLAS_WORKSPACE_CONFIG", None) not in (":4096:2", ":16:8")
@@ -76,7 +76,7 @@ def enable_reproducibility(
                     "When setting torch.use_deterministic_algorithms and using CUDA 10.2 or later, the environment "
                     "variable CUBLAS_WORKSPACE_CONFIG must be set to :4096:2 or :16:8, else RNN/LSTM algorithms will "
                     "not be deterministic.",
-                    UserWarning,
+                    RuntimeWarning,
                 )
     # If enabled, set the CuDNN deterministic option.
     if torch_set_cudnn_deterministic:
