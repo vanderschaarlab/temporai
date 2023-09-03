@@ -49,6 +49,7 @@ def test_sanity(get_test_plugin: Callable, plugin_from: str) -> None:
     assert len(test_plugin.hyperparameter_space()) == 12
 
 
+@pytest.mark.filterwarnings("ignore:.*Validation.*small.*:UserWarning")  # Exp. for small datasets with DDH embedding.
 @pytest.mark.filterwarnings("ignore::lifelines.utils.ConvergenceWarning")  # Expected.
 @pytest.mark.filterwarnings("ignore:.*Index constructor.*:FutureWarning")
 @pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)
@@ -60,6 +61,7 @@ def test_fit(plugin_from: str, data: str, device: str, get_test_plugin: Callable
     test_plugin.fit(dataset)
 
 
+@pytest.mark.filterwarnings("ignore:.*Validation.*small.*:UserWarning")  # Exp. for small datasets with DDH embedding.
 @pytest.mark.filterwarnings("ignore:RNN.*contiguous.*:UserWarning")  # Expected: problem with current serialization.
 @pytest.mark.filterwarnings("ignore::lifelines.utils.ConvergenceWarning")  # Expected.
 @pytest.mark.filterwarnings("ignore:.*Index constructor.*:FutureWarning")
@@ -92,6 +94,7 @@ def test_predict(
     assert output.numpy().shape == (len(dataset.time_series), len(horizons), 1)
 
 
+@pytest.mark.filterwarnings("ignore:.*Validation.*small.*:UserWarning")  # Exp. for small datasets with DDH embedding.
 @pytest.mark.filterwarnings("ignore::lifelines.utils.ConvergenceWarning")  # Expected.
 @pytest.mark.filterwarnings("ignore:.*Index constructor.*:FutureWarning")
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)

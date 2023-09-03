@@ -339,6 +339,7 @@ def test_end2end_prediction_temporal_regression(
 # Category: time_to_event:
 
 
+@pytest.mark.filterwarnings("ignore:.*Validation.*small.*:UserWarning")  # Expected for small test datasets with DDH.
 @pytest.mark.parametrize(
     "plugins_str",
     [

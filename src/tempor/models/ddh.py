@@ -1,3 +1,4 @@
+import warnings
 from copy import deepcopy
 from typing import Any, List, Optional, Tuple, Union
 
@@ -248,6 +249,18 @@ class DynamicDeepHitModel:
         e_train = torch.from_numpy(e_train_np.astype(int)).float().to(self.device)
 
         val_size = int(self.val_size * x_train.shape[0])
+        if val_size == 0:
+            raise RuntimeError(
+                f"Not enough samples to create a validation set, please increase `val_size` or use a larger dataset. "
+                f"`val_size` was {val_size} and total number of samples in dataset was {x_train.shape[0]}."
+            )
+        if val_size < 10:
+            # Raise a UserWarning if the validation set is very small.
+            warnings.warn(
+                f"Validation set is very small ({val_size} samples). "
+                "Consider increasing `val_size` or using a larger dataset.",
+                UserWarning,
+            )
 
         x_val, t_val, e_val = x_train[-val_size:], t_train[-val_size:], e_train[-val_size:]
 
