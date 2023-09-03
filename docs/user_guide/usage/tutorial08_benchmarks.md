@@ -1,5 +1,5 @@
 # User Guide Tutorial 09: Benchmarks
-[![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial08_benchmarks.ipynb)
+[![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/usage/tutorial08_benchmarks.ipynb)
 
 TemporAI provides some useful benchmarking tools in `tempor.benchmarks`, these are demonstrated here.
 

@@ -1,5 +1,5 @@
 # User Guide Tutorial 01: Plugins
-[![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/user_guide/tutorial01_plugins.ipynb)
+[![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/usage/tutorial01_plugins.ipynb)
 
 This tutorial shows how to load TemporAI estimators (a.k.a. models), which are `Plugin`s.
 
