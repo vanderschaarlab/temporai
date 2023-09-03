@@ -45,7 +45,6 @@ def test_fit(plugin_from: str, data: str, get_test_plugin: Callable, get_dataset
     test_plugin.fit(dataset)
 
 
-# @pytest.mark.filterwarnings("ignore:RNN.*contiguous.*:UserWarning")  # Expected: problem with current serialization.
 @pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
 @pytest.mark.parametrize(
@@ -83,6 +82,49 @@ def test_transform(
 
     assert "categorical_feat_1" not in output.static.dataframe().columns.tolist()
     assert "categorical_feat_2" not in output.static.dataframe().columns.tolist()
+
+    new_cols = [
+        "categorical_feat_1_a",
+        "categorical_feat_1_b",
+        "categorical_feat_1_c",
+        "categorical_feat_2_D",
+        "categorical_feat_2_E",
+    ]
+
+    for new_col in new_cols:
+        assert new_col in output.static.dataframe().columns.tolist()
+
+    for new_col in new_cols:
+        assert sorted(output.static.dataframe()[new_col].unique().tolist()) == [0.0, 1.0]
+
+
+def test_no_static_data(get_test_plugin: Callable, get_dataset: Callable) -> None:
+    test_plugin: BaseEncoder = get_test_plugin("from_api", INIT_KWARGS)
+    dataset = get_dataset(TEST_ON_DATASETS[0])
+    dataset.static = None
+    test_plugin.fit(dataset)
+    output = test_plugin.transform(dataset)
+    assert output.static is None
+
+
+def test_transform_all_features(get_test_plugin: Callable, get_dataset: Callable) -> None:
+    test_plugin: BaseEncoder = get_test_plugin("from_api", {"features": None})
+    dataset = get_dataset(TEST_ON_DATASETS[0])
+
+    static_df = dataset.static.dataframe()
+    static_df.drop(
+        columns=[c for c in static_df.columns.tolist() if c not in ["categorical_feat_1", "categorical_feat_2"]],
+        inplace=True,
+    )
+    dataset.static = dataset.static.from_dataframe(static_df)
+
+    test_plugin.fit(dataset)
+    output = test_plugin.transform(dataset)
+
+    assert "categorical_feat_1" not in output.static.dataframe().columns.tolist()
+    assert "categorical_feat_2" not in output.static.dataframe().columns.tolist()
+
+    assert len(output.static.dataframe().columns) == 5
 
     new_cols = [
         "categorical_feat_1_a",
