@@ -29,7 +29,13 @@ def _dummy_data_with_categorical_features_full() -> dataset.OneOffPredictionData
     data.static = samples.StaticSamples.from_dataframe(static_df)
 
     # Add time series categorical features.
-    # TODO:
+    ts_df = data.time_series.dataframe()
+    np.random.seed(111)
+    cat1 = pd.Categorical(np.random.choice(["p", "q", "r"], size=(len(ts_df),)))
+    cat2 = pd.Categorical(np.random.choice(["S", "T"], size=(len(ts_df),)))
+    ts_df.insert(1, "categorical_feat_1", cat1)
+    ts_df["categorical_feat_2"] = cat2
+    data.time_series = samples.TimeSeriesSamples.from_dataframe(ts_df)
 
     return data
 

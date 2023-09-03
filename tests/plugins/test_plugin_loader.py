@@ -29,7 +29,7 @@ def test_tempor_plugin_loader_contents():
     assert "classification" in all_plugins["prediction"]["temporal"]
     assert "regression" in all_plugins["prediction"]["temporal"]
     assert "static" in all_plugins["preprocessing"]["encoding"]
-    # assert "temporal" in all_plugins["preprocessing"]["encoding"]
+    assert "temporal" in all_plugins["preprocessing"]["encoding"]
     assert "static" in all_plugins["preprocessing"]["imputation"]
     assert "temporal" in all_plugins["preprocessing"]["imputation"]
     assert "static" in all_plugins["preprocessing"]["scaling"]
@@ -57,7 +57,7 @@ def test_tempor_plugin_loader_contents():
     assert "nop_transformer" in all_plugins["preprocessing"]["nop"]
     # ---
     assert "static_onehot_encoder" in all_plugins["preprocessing"]["encoding"]["static"]
-    # assert "ts_onehot_encoder" in all_plugins["preprocessing"]["encoding"]["temporal"]
+    assert "ts_onehot_encoder" in all_plugins["preprocessing"]["encoding"]["temporal"]
     # ---
     assert "static_tabular_imputer" in all_plugins["preprocessing"]["imputation"]["static"]
     assert "ts_tabular_imputer" in all_plugins["preprocessing"]["imputation"]["temporal"]
