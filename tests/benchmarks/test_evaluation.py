@@ -209,7 +209,7 @@ def test_evaluate_prediction_oneoff_regressor_error(
         assert (scores["errors"] > 0).all()
 
 
-@pytest.mark.filterwarnings("ignore:.*Validation.*small.*:UserWarning")  # Expected for small test datasets with DDH.
+@pytest.mark.filterwarnings("ignore:.*Validation.*small.*:RuntimeWarning")  # Expected for small test datasets with DDH.
 @pytest.mark.parametrize("data", TEST_ON_DATASETS_TIME_TO_EVENT)
 @pytest.mark.parametrize(
     "model_template",

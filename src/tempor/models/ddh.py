@@ -252,11 +252,11 @@ class DynamicDeepHitModel:
                 f"`val_size` was {val_size} and total number of samples in dataset was {x_train.shape[0]}."
             )
         if val_size < 10:
-            # Raise a UserWarning if the validation set is very small.
+            # Raise a RuntimeWarning if the validation set is very small.
             warnings.warn(
                 f"Validation set is very small ({val_size} samples). "
                 "Consider increasing `val_size` or using a larger dataset.",
-                UserWarning,
+                RuntimeWarning,
             )
 
         x_val, t_val, e_val = x_train[-val_size:], t_train[-val_size:], e_train[-val_size:]
