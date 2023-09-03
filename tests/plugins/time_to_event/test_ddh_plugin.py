@@ -99,3 +99,30 @@ def test_benchmark(
 
     assert (score.loc[:, "errors"] == 0).all()
     assert score.loc["c_index", "mean"] > 0.5  # pyright: ignore
+
+
+@pytest.mark.parametrize("device", DEVICES)
+@pytest.mark.parametrize(
+    "batch_size",
+    [
+        128,
+        pytest.param(1, marks=pytest.mark.extra),
+        pytest.param(100, marks=pytest.mark.extra),
+    ],
+)
+def test_predict_custom_bs(
+    batch_size: int,
+    device: str,
+    get_test_plugin: Callable,
+    get_dataset: Callable,
+    get_event0_time_percentiles: Callable,
+) -> None:
+    test_plugin: "BaseTimeToEventAnalysis" = get_test_plugin("from_api", INIT_KWARGS, device=device)
+    dataset = get_dataset("pbc_data_full")
+
+    horizons = get_event0_time_percentiles(dataset, [0.25, 0.5, 0.75])
+
+    test_plugin.fit(dataset)
+    output = test_plugin.predict(dataset, horizons=horizons, batch_size=batch_size)
+
+    assert output.numpy().shape == (len(dataset.time_series), len(horizons), 1)

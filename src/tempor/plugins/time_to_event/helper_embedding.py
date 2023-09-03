@@ -172,7 +172,7 @@ class DDHEmbeddingTimeToEventAnalysis(DDHEmbedding):
         **kwargs,
     ) -> samples.TimeSeriesSamples:
         # NOTE: kwargs will be passed to DynamicDeepHitModel.predict_emb().
-        # E.g. `bs` batch size parameter can be provided this way.
+        # E.g. `batch_size` batch size parameter can be provided this way.
         processed_data = self.prepare_predict(data, horizons, *args, **kwargs)
 
         embeddings = self.emb_model.predict_emb(processed_data)
