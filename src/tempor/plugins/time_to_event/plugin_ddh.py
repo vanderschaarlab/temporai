@@ -36,8 +36,10 @@ class DynamicDeepHitTimeToEventAnalysisParams:
     """Network dropout value."""
     device: str = "cpu"
     """PyTorch Device."""
+    val_size: float = 0.1
+    """Early stopping: size of validation set."""
     patience: int = 20
-    """Training patience without any improvement."""
+    """Early stopping: training patience without any improvement."""
     output_mode: OutputMode = "MLP"
     """Output network, on of `OutputMode`."""
     random_state: int = 0
@@ -76,6 +78,7 @@ class DynamicDeepHitTimeToEventAnalysis(BaseTimeToEventAnalysis, DDHEmbedding):
             beta=self.params.beta,
             sigma=self.params.sigma,
             dropout=self.params.dropout,
+            val_size=self.params.val_size,
             patience=self.params.patience,
             lr=self.params.lr,
             batch_size=self.params.batch_size,
