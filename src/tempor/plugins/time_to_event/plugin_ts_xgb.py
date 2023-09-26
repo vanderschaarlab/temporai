@@ -1,8 +1,11 @@
+import contextlib
 import dataclasses
 from typing import Any, List
 
 import numpy as np
 import pandas as pd
+import xgboost as xgb
+from packaging.version import Version
 from typing_extensions import Literal, Self
 from xgbse import XGBSEDebiasedBCE, XGBSEKaplanNeighbors, XGBSEStackedWeibull
 from xgbse.converters import convert_to_structured
@@ -20,9 +23,63 @@ XGBObjective = Literal["aft", "cox"]
 XGBStrategy = Literal["weibull", "debiased_bce", "km"]
 
 
+# TODO: Docstrings.
+
+
+@contextlib.contextmanager
+def monkeypatch_xgbse_xgboost2_compatibility():
+    """There is a bug that occurs in `xgbse` with `xgboost` 2.0+.
+
+    ``AttributeError: `best_iteration` is only defined when early stopping is used.`` will be thrown when
+    ``early_stopping_rounds`` parameter has not been set.
+
+    This monkeypatch fixes this issue, until the problem is addressed by `xgbse` in a future version.
+    """
+
+    def problem_versions() -> bool:
+        # Issue occurs with xgboost 2.0+.
+        return Version(xgb.__version__) >= Version("2.0.0")
+        # NOTE: Once `xgbse` is updated with a fix, add a condition above like:
+        # `and Version(xgbse.__version__) < Version("?.?.?")`
+        # where "?.?.?" is the first version of `xgbse` with the fix.
+
+    if problem_versions():  # pragma: no cover
+        # Monkeypatch `xgb.Booster.best_iteration`.
+
+        original_xgb_booster_best_iteration = xgb.Booster.best_iteration
+        original_xgb_booster_best_iteration_fget = xgb.Booster.best_iteration.fget  # type: ignore [attr-defined]
+        original_xgb_booster_best_iteration_fset = xgb.Booster.best_iteration.fset  # type: ignore [attr-defined]
+        original_xgb_booster_best_iteration_fdel = xgb.Booster.best_iteration.fdel  # type: ignore [attr-defined]
+
+        def monkeypatched_best_iteration_getter(*args, **kwargs):
+            # Use try-catch to fall back to the default returning of 999 as in previous versions of xgboost.
+            try:
+                return original_xgb_booster_best_iteration_fget(*args, **kwargs)
+            except AttributeError as ex:
+                if "best_iteration" in str(ex):
+                    return 999
+
+        setattr(
+            xgb.Booster,
+            "best_iteration",
+            property(
+                fget=monkeypatched_best_iteration_getter,
+                fset=original_xgb_booster_best_iteration_fset,
+                fdel=original_xgb_booster_best_iteration_fdel,
+            ),
+        )
+
+    try:
+        yield
+
+    finally:
+        if problem_versions():  # pragma: no cover
+            # Restore `xgb.Booster.best_iteration`.
+            setattr(xgb.Booster, "best_iteration", original_xgb_booster_best_iteration)
+
+
 @dataclasses.dataclass
 class XGBTimeToEventAnalysisParams:
-    # TODO: Docstring.
     # Output model:
     xgb_n_estimators: int = 100
     """Respective parameter for `xgbse` ``XGBSE<Method>`` class initializer ``xgb_params``."""
@@ -183,7 +240,8 @@ class XGBSurvivalAnalysis(OutputTimeToEventAnalysis):
 
         time_bins = np.linspace(lower_bound, upper_bound, self.time_points, dtype=int)
 
-        self.model.fit(X, y, time_bins=time_bins)
+        with monkeypatch_xgbse_xgboost2_compatibility():
+            self.model.fit(X, y, time_bins=time_bins)
         return self
 
     def _find_nearest(self, array: np.ndarray, value: float) -> float:
@@ -198,7 +256,8 @@ class XGBSurvivalAnalysis(OutputTimeToEventAnalysis):
         preds_ = []
         for chunk in np.array_split(X, chunks):
             local_preds_ = np.zeros([len(chunk), len(time_horizons)])
-            surv = self.model.predict(chunk)
+            with monkeypatch_xgbse_xgboost2_compatibility():
+                surv = self.model.predict(chunk)
             surv = surv.loc[:, ~surv.columns.duplicated()]  # pyright: ignore
             time_bins = surv.columns
             for t, eval_time in enumerate(time_horizons):
