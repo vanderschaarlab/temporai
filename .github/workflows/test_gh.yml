@@ -1,12 +1,10 @@
-name: Tests
+name: Tests (GH)
 
 on:
   push:
     branches: [main]
-  pull_request:
-    types: [opened, synchronize, reopened]
   schedule:
-    # Shared cron time with test_gh.yml.
+    # Shared cron time with test.yml.
     - cron: "21 5 * * 1"
   workflow_dispatch:
 
@@ -36,13 +34,14 @@ jobs:
   # Run tests with pytest.
   Tests:
     needs: [Linter]
-    runs-on:
-      - self-hosted
-      - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         python-version: ["3.7", "3.8", "3.9", "3.10"]
-        os: [Linux, Windows, macOS]
+        os: [macos-latest, ubuntu-latest, windows-latest]
+    env:
+      CODECOV_OS: ${{ matrix.os }}
+      CODECOV_PYTHON: ${{ matrix.python-version }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -63,9 +62,30 @@ jobs:
           pip install --upgrade pip
           pip install .[dev] --use-deprecated=legacy-resolver
       - name: Test with pytest (xdist)
+        if: matrix.os != 'ubuntu-latest'
         run: pytest -vvvx -n auto -m "not slow and not extra and not skipci" --durations=50 --cov
-      # Note: to update to codecov, test_gh.yml workflow needs to be run.
+      - name: Test with pytest
+        # Avoid xdist on 'ubuntu-latest', as this has worse performance.
+        if: matrix.os == 'ubuntu-latest'
+        run: pytest -vvvx -m "not slow and not extra and not skipci" --durations=50 --cov
+      - name: Upload coverage report to codecov
+        uses: codecov/codecov-action@v3
+        # Currently we only upload in one of the matrix cases: ubuntu + py38:
+        if: (matrix.os == 'ubuntu-latest') && (matrix.python-version == '3.8')
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: test  # {test,test_full}
+          env_vars: CODECOV_OS,CODECOV_PYTHON
+          name: upload_test_${{ matrix.os }}_python${{ matrix.python-version }}
+          fail_ci_if_error: false  # Whether CI fails if this step fails.
+          os: ${{ runner.os }}
+          verbose: true
       - name: Run doctests with pytest (xdist)
+        if: matrix.os != 'ubuntu-latest'
         run: pytest -vvvx -n auto src/ --doctest-modules --durations=50
+      - name: Run doctests with pytest
+        # Avoid xdist on 'ubuntu-latest', as this has worse performance.
+        if: matrix.os == 'ubuntu-latest'
+        run: pytest -vvvx src/ --doctest-modules --durations=50
       - name: Test notebooks run without error
         run: python tests/nb_eval.py --nb_dir ./
