@@ -55,7 +55,7 @@ MANIFEST
 
 ### Custom ###
 *.csv
-dev/**
+.dev/**
 logs/**
 outputs/**
 data/**
