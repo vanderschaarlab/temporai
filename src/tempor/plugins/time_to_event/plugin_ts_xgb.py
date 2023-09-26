@@ -36,7 +36,7 @@ def monkeypatch_xgbse_xgboost2_compatibility():
     This monkeypatch fixes this issue, until the problem is addressed by `xgbse` in a future version.
     """
 
-    def problem_versions() -> bool:
+    def problem_versions() -> bool:  # pragma: no cover
         # Issue occurs with xgboost 2.0+.
         return Version(xgb.__version__) >= Version("2.0.0")
         # NOTE: Once `xgbse` is updated with a fix, add a condition above like:

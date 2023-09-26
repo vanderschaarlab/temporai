@@ -304,7 +304,7 @@ def workaround_pandera_pd2_1_0_multiindex_compatibility(schema: pa.DataFrameSche
     This is a workaround that will "manually" throw an error that is expected from pandera.
     """
 
-    def problem_versions() -> bool:
+    def problem_versions() -> bool:  # pragma: no cover
         return Version(pd.__version__) >= Version("2.1.0")
         # TODO: When/if fixed in pandera, add the below condition:
         # and Version(pa.__version__) < Version("0.XX.YY")
@@ -313,10 +313,12 @@ def workaround_pandera_pd2_1_0_multiindex_compatibility(schema: pa.DataFrameSche
         yield
 
     except ValueError as ex:
-        if problem_versions() and "Columns with duplicate values are not supported in stack" in str(ex):
+        if problem_versions() and (
+            "Columns with duplicate values are not supported in stack" in str(ex)
+        ):  # pragma: no cover
             cols = data.index.names
             raise pa.errors.SchemaError(schema=schema, data=data, message=f"columns {cols} not unique")
-        else:
+        else:  # pragma: no cover
             raise
 
     finally:
