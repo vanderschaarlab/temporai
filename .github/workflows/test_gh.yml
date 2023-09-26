@@ -1,8 +1,6 @@
 name: Tests (GH)
 
 on:
-  push:
-    branches: [main]
   schedule:
     # Shared cron time with test.yml.
     - cron: "21 5 * * 1"
