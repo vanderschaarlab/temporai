@@ -1,0 +1,65 @@
+name: "Tests (GH): Full"
+
+on:
+  schedule:
+    # Shared cron time with test_full.yml.
+    - cron: "17 4 * * 3"
+  workflow_dispatch:
+
+jobs:
+  Tests:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        os: [macos-latest, ubuntu-latest, windows-latest]
+    env:
+      CODECOV_OS: ${{ matrix.os }}
+      CODECOV_PYTHON: ${{ matrix.python-version }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip" # Caching pip dependencies.
+      - name: Install dependencies
+        if: matrix.python-version != '3.7'
+        run: |
+          pip install --upgrade pip
+          pip install .[dev]
+      - name: Install dependencies (python 3.7, use legacy resolver)
+        if: matrix.python-version == '3.7'
+        run: |
+          pip install --upgrade pip
+          pip install .[dev] --use-deprecated=legacy-resolver
+      - name: Test with pytest (xdist)
+        if: matrix.os != 'ubuntu-latest'
+        run: pytest -vvvx -n auto -m "not skipci" --durations=50 --cov
+      - name: Test with pytest
+        # Avoid xdist on 'ubuntu-latest', as this has worse performance.
+        if: matrix.os == 'ubuntu-latest'
+        run: pytest -vvvx -m "not skipci" --durations=50 --cov
+      - name: Upload coverage report to codecov
+        uses: codecov/codecov-action@v3
+        # Currently we only upload in one of the matrix cases: ubuntu + py38:
+        if: (matrix.os == 'ubuntu-latest') && (matrix.python-version == '3.8')
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: test_full  # {test,test_full}
+          env_vars: CODECOV_OS,CODECOV_PYTHON
+          name: upload_test_full_${{ matrix.os }}_python${{ matrix.python-version }}
+          fail_ci_if_error: false  # Whether CI fails if this step fails.
+          os: ${{ runner.os }}
+          verbose: true
+      - name: Run doctests with pytest (xdist)
+        if: matrix.os != 'ubuntu-latest'
+        run: pytest -vvvx -n auto src/ --doctest-modules --durations=50
+      - name: Run doctests with pytest
+        # Avoid xdist on 'ubuntu-latest', as this has worse performance.
+        if: matrix.os == 'ubuntu-latest'
+        run: pytest -vvvx src/ --doctest-modules --durations=50
+      - name: Test notebooks run without error
+        run: python tests/nb_eval.py --nb_dir ./
