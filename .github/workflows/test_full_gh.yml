@@ -1,4 +1,4 @@
-name: "Tests (GH): Full"
+name: "Tests: Full [GH]"
 
 on:
   schedule:

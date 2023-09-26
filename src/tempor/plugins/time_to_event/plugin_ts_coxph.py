@@ -26,7 +26,7 @@ def monkeypatch_lifelines_pd2_compatibility():
     `lifelines`.
     """
 
-    def problem_versions() -> bool:
+    def problem_versions() -> bool:  # pragma: no cover
         # lifelines is compatible with pandas 2 version 0.27.6 onwards,
         # so the workaround is needed for lifelines < 0.27.6.
         return Version(pd.__version__) >= Version("2.0.0rc0") and Version(lifelines.__version__) < Version("0.27.6")
