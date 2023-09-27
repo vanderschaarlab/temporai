@@ -23,17 +23,16 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-          cache: "pip" # Caching pip dependencies.
       - name: Install dependencies
         if: matrix.python-version != '3.7'
         run: |
           pip install --upgrade pip
-          pip install .[dev]
+          pip install .[testing]
       - name: Install dependencies (python 3.7, use legacy resolver)
         if: matrix.python-version == '3.7'
         run: |
           pip install --upgrade pip
-          pip install .[dev] --use-deprecated=legacy-resolver
+          pip install .[testing] --use-deprecated=legacy-resolver
       - name: Test with pytest (xdist)
         run: pytest -vvvx -n auto -m "not skipci" --durations=50 --cov
       # Note: to update to codecov, test_full_gh.yml workflow needs to be run.
