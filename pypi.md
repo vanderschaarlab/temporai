@@ -472,11 +472,16 @@ See the project documentation [here](https://temporai.readthedocs.io/en/latest/)
 
 Install the testing dependencies using:
 ```bash
-pip install .[dev]
+pip install .[testing]
 ```
 The tests can be executed using:
 ```bash
 pytest -vsx
+```
+
+For local development, we recommend that you should install the `[dev]` extra, which includes `[testing]` and some additional dependencies:
+```bash
+pip install .[dev]
 ```
 
 For development and contribution to TemporAI, see:

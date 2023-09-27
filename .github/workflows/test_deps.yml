@@ -33,7 +33,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install .[dev]
+          pip install .[testing]
           pip install "${{ matrix.python-version }}"
       - name: Test with pytest (xdist)
         if: matrix.os != 'ubuntu-latest'
