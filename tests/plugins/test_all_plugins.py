@@ -9,13 +9,16 @@ from tempor.plugins.core._base_estimator import EmptyParamsDefinition
 PLUGIN_FQNS = plugin_loader.list_fqns()
 
 
+@pytest.mark.filterwarnings("ignore:.*validate_arguments.*:DeprecationWarning")  # Exp pydantic2 warns from HI.
+@pytest.mark.filterwarnings("ignore:.*conflict.*:UserWarning")  # Exp pydantic2 warns from HI.
 @pytest.mark.parametrize("plugin_fqn", PLUGIN_FQNS)
 def test_init_success(plugin_fqn):
     PluginCls = plugin_loader.get_class(plugin_fqn)
     PluginCls()  # Should successfully initialize with all default params.
 
 
-# DeprecationWarning expected for preprocessing.imputation.temporal.ts_tabular_imputer:
+@pytest.mark.filterwarnings("ignore:.*validate_arguments.*:DeprecationWarning")  # Exp pydantic2 warns from HI.
+@pytest.mark.filterwarnings("ignore:.*conflict.*:UserWarning")  # Exp pydantic2 warns from HI.
 @pytest.mark.parametrize("plugin_fqn", PLUGIN_FQNS)
 def test_sample_hyperparameters(plugin_fqn):
     PluginCls = plugin_loader.get_class(plugin_fqn)
@@ -24,6 +27,8 @@ def test_sample_hyperparameters(plugin_fqn):
         PluginCls(**args)
 
 
+@pytest.mark.filterwarnings("ignore:.*validate_arguments.*:DeprecationWarning")  # Exp pydantic2 warns from HI.
+@pytest.mark.filterwarnings("ignore:.*conflict.*:UserWarning")  # Exp pydantic2 warns from HI.
 @pytest.mark.parametrize("plugin_fqn", PLUGIN_FQNS)
 def test_repr(plugin_fqn):
     PluginCls = plugin_loader.get_class(plugin_fqn)

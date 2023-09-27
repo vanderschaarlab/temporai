@@ -5,7 +5,7 @@ import copy
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Type, Union
 
 import optuna
-from pydantic import validate_arguments
+import pydantic
 from typing_extensions import Protocol, runtime_checkable
 
 from tempor.data.dataset import PredictiveDataset
@@ -40,7 +40,7 @@ class EvaluationCallback(Protocol):
 
 
 class BaseTuner(abc.ABC):
-    @validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def __init__(
         self,
         study_name: str,
@@ -95,7 +95,7 @@ class BaseTuner(abc.ABC):
 
 
 class OptunaTuner(BaseTuner):
-    @validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def __init__(
         self,
         study_name: str,

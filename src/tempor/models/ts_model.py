@@ -41,7 +41,7 @@ TSModelMode = Literal[
 
 
 class TimeSeriesModel(nn.Module):
-    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def __init__(
         self,
         task_type: ModelTaskType,
@@ -219,7 +219,7 @@ class TimeSeriesModel(nn.Module):
             weight_decay=weight_decay,
         )  # optimize all rnn parameters
 
-    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def forward(
         self,
         static_data: torch.Tensor,
@@ -254,7 +254,7 @@ class TimeSeriesModel(nn.Module):
 
         return pred
 
-    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def predict(
         self,
         static_data: Union[List, np.ndarray],
@@ -286,7 +286,7 @@ class TimeSeriesModel(nn.Module):
             else:
                 return yt.cpu().numpy()
 
-    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def predict_proba(
         self,
         static_data: Union[List, np.ndarray],
@@ -330,7 +330,7 @@ class TimeSeriesModel(nn.Module):
         else:
             return np.mean(np.inner(outcome - y_pred, outcome - y_pred) / 2.0)
 
-    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def fit(
         self,
         static_data: Union[List, np.ndarray],
@@ -348,7 +348,7 @@ class TimeSeriesModel(nn.Module):
 
         return self._train(static_data_t, temporal_data_t, observation_times_t, outcome_t)
 
-    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def _train(
         self,
         static_data: List[torch.Tensor],
@@ -691,7 +691,7 @@ class TimeSeriesLayer(nn.Module):
 
 
 class WindowLinearLayer(nn.Module):
-    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def __init__(
         self,
         n_static_units_in: int,
@@ -720,7 +720,7 @@ class WindowLinearLayer(nn.Module):
             device=device,
         )
 
-    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def forward(self, static_data: torch.Tensor, temporal_data: torch.Tensor) -> torch.Tensor:
         if self.n_static_units_in > 0 and len(static_data) != len(temporal_data):
             raise ValueError("Length mismatch between static and temporal data")

@@ -23,7 +23,7 @@ def print_score(mean: pd.Series, std: pd.Series) -> pd.Series:
     return mean + " +/- " + std
 
 
-@pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+@pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
 def benchmark_models(
     task_type: PredictiveTaskType,
     tests: List[Tuple[str, Any]],  # [ ( Test name, Model to evaluate (unfitted) ), ... ]
@@ -130,7 +130,7 @@ def benchmark_models(
     return aggr, results
 
 
-@pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+@pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
 def visualize_benchmark(results: Dict[str, pd.DataFrame], palette: str = "viridis") -> Any:
     # Pre-format DF for plotting.
     for k, v in results.items():

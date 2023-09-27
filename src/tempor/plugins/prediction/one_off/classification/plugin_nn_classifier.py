@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 import numpy as np
 from typing_extensions import Self, get_args
@@ -129,6 +129,9 @@ class NeuralNetClassifier(BaseOneOffClassifier):
             patience=self.params.patience,
             train_ratio=self.params.train_ratio,
         )
+
+        if TYPE_CHECKING:  # pragma: no cover
+            assert isinstance(self.model, TimeSeriesModel)  # nosec B101
 
         self.model.fit(static, temporal, observation_times, outcome)
         return self

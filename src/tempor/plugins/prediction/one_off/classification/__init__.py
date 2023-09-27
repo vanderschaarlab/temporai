@@ -26,7 +26,7 @@ class BaseOneOffClassifier(plugins.BasePredictor):
         super().fit(data, *args, **kwargs)
         return self
 
-    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def predict(
         self,
         data: dataset.PredictiveDataset,
@@ -36,7 +36,7 @@ class BaseOneOffClassifier(plugins.BasePredictor):
         check_data_class(data)
         return super().predict(data, *args, **kwargs)
 
-    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def predict_proba(
         self,
         data: dataset.PredictiveDataset,

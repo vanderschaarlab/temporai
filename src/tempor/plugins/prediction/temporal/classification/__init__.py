@@ -24,7 +24,7 @@ class BaseTemporalClassifier(plugins.BasePredictor):
         super().fit(data, *args, **kwargs)
         return self
 
-    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def predict(  # type: ignore[override]  # pylint: disable=arguments-differ
         self,
         data: dataset.PredictiveDataset,
@@ -36,7 +36,7 @@ class BaseTemporalClassifier(plugins.BasePredictor):
         check_data_class(data)
         return super().predict(data, n_future_steps, *args, time_delta=time_delta, **kwargs)
 
-    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def predict_proba(  # type: ignore[override]  # pylint: disable=arguments-differ
         self,
         data: dataset.PredictiveDataset,

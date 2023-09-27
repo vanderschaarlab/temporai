@@ -1,4 +1,5 @@
 import sys
+import warnings
 
 if sys.version_info[:2] >= (3, 8):  # pragma: no cover
     from importlib.metadata import PackageNotFoundError, version
@@ -17,6 +18,17 @@ finally:
 
 # Import the config type and the configure function:
 from .config import TemporConfig, configure, get_config
+
+# Import the config type and the configure function:
+# Global warnings suppression:
+warnings.filterwarnings("ignore", message=".*validate_arguments.*", category=DeprecationWarning)
+
+# NOTE:
+# Currently, migrating to Pydantic 2.0's validate_call decorator is not possible due to several incompatibilities, e.g.:
+# - cloudpickle fails to pickle objects: TypeError: cannot pickle 'EncodedFile' object.
+# - PipelineMeta setup is incompatible, triggers: TypeError: can't apply this __setattr__ to ABCMeta object.
+# For the time being, reasonable to stick to validate_arguments and silence Pydantic 2.0's deprecation warning.
+
 
 __all__ = [
     "get_config",
