@@ -481,7 +481,7 @@ class NeuralODE(torch.nn.Module):
         out = self.output(z_T)
         return out.reshape(-1, *self.output_shape)
 
-    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def predict(
         self,
         static_data: Union[List, np.ndarray, torch.Tensor],
@@ -513,7 +513,7 @@ class NeuralODE(torch.nn.Module):
             else:
                 return yt.cpu().numpy()
 
-    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def predict_proba(
         self,
         static_data: Union[List, np.ndarray, torch.Tensor],
@@ -558,7 +558,7 @@ class NeuralODE(torch.nn.Module):
         else:
             return np.mean(np.inner(outcome - y_pred, outcome - y_pred) / 2.0)
 
-    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def fit(
         self,
         static_data: Union[List, np.ndarray, torch.Tensor],
@@ -576,7 +576,7 @@ class NeuralODE(torch.nn.Module):
 
         return self._train(static_data_t, temporal_data_t, observation_times_t, outcome_t)
 
-    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def _train(
         self,
         static_data: List[torch.Tensor],

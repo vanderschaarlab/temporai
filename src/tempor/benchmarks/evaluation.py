@@ -171,12 +171,10 @@ class _InternalScores(pydantic.BaseModel):
     metrics: Dict[str, np.ndarray] = {}  # np.ndarray expected to be 1D, contain floats.
     errors: List[int] = []
     durations: List[float] = []
-
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
 
 
-@pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+@pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
 def _postprocess_results(results: _InternalScores) -> pd.DataFrame:
     output = pd.DataFrame([], columns=output_metrics)
 
@@ -220,7 +218,7 @@ def _postprocess_results(results: _InternalScores) -> pd.DataFrame:
 
 
 class ClassifierMetrics:
-    @pydantic.validate_arguments
+    @pydantic.validate_arguments  # type: ignore [operator]
     def __init__(
         self,
         metric: Union[ClassifierSupportedMetric, Sequence[ClassifierSupportedMetric]] = classifier_supported_metrics,
@@ -335,7 +333,7 @@ class ClassifierMetrics:
         return utils.evaluate_auc_multiclass(y_test, y_pred_proba)[1]
 
 
-@pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+@pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
 def evaluate_prediction_oneoff_classifier(  # pylint: disable=unused-argument
     estimator: Any,
     data: dataset.PredictiveDataset,
@@ -424,7 +422,7 @@ def evaluate_prediction_oneoff_classifier(  # pylint: disable=unused-argument
     return _postprocess_results(results)
 
 
-@pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+@pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
 def evaluate_prediction_oneoff_regressor(  # pylint: disable=unused-argument
     estimator: Any,
     data: dataset.PredictiveDataset,
@@ -585,7 +583,7 @@ def _compute_time_to_event_metric(
     return avg_metric
 
 
-@pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+@pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
 def evaluate_time_to_event(  # pylint: disable=unused-argument
     estimator: Any,
     data: dataset.TimeToEventAnalysisDataset,

@@ -26,13 +26,13 @@ class BaseEstimator(Plugin, abc.ABC):
     _fitted: bool
 
     class _InitArgsValidator(pydantic.BaseModel):
-        params: Optional[Dict[str, Any]]
+        params: Optional[Dict[str, Any]] = None
         ParamsDefinitionClass: Type
 
         # Output:
         params_processed: Optional[omegaconf.DictConfig] = None
 
-        @pydantic.root_validator
+        @pydantic.model_validator(mode="before")
         def root_checks(cls, values: Dict):  # pylint: disable=no-self-argument
             params = values.get("params", dict())
             ParamsDefinitionClass = values.get("ParamsDefinitionClass")
@@ -54,8 +54,7 @@ class BaseEstimator(Plugin, abc.ABC):
             values["params_processed"] = defined_params
             return values
 
-        class Config:
-            arbitrary_types_allowed = True
+        model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
 
     def __init__(self, **params) -> None:
         Plugin.__init__(self)
@@ -79,7 +78,7 @@ class BaseEstimator(Plugin, abc.ABC):
     def __repr__(self) -> str:
         return rich.pretty.pretty_repr(self)
 
-    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def fit(
         self,
         data: dataset.BaseDataset,

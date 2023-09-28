@@ -25,7 +25,7 @@ class BaseTimeToEventAnalysis(plugins.BasePredictor):
         super().fit(data, *args, **kwargs)
         return self
 
-    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def predict(  # type: ignore[override]  # pylint: disable=arguments-differ
         self,
         data: dataset.PredictiveDataset,

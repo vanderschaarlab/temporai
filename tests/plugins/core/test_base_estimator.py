@@ -135,7 +135,7 @@ class TestBaseEstimator:
             def _fit(self, data, *args, **kwargs):
                 pass
 
-        with pytest.raises(ValueError, match=".*not.*float.*"):
+        with pytest.raises(ValueError, match=".*not.*float.*|valid.*number"):
             _ = MyModel(foo="string")
 
     def test_repr(self):

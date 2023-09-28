@@ -25,7 +25,7 @@ class BaseTemporalTreatmentEffects(plugins.BasePredictor):
         super().fit(data, *args, **kwargs)
         return self
 
-    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def predict(
         self,
         data: dataset.PredictiveDataset,
@@ -41,7 +41,7 @@ class BaseTemporalTreatmentEffects(plugins.BasePredictor):
     ) -> samples.TimeSeriesSamples:  # pragma: no cover
         ...
 
-    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def predict_counterfactuals(
         self,
         data: dataset.PredictiveDataset,

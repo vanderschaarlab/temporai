@@ -1,6 +1,7 @@
 from typing import Any, Type
 
 import pydantic
+from packaging.version import Version
 
 # Currently unused.
 # def exclusive_args(
@@ -19,7 +20,10 @@ import pydantic
 
 
 def is_pydantic_dataclass(cls: Type) -> bool:
-    return hasattr(cls, "__dataclass__")
+    if Version(pydantic.__version__) < Version("2.0.0"):  # pragma: no cover
+        return hasattr(cls, "__dataclass__")
+    else:
+        return any([x for x in dir(cls) if "pydantic" in x])
 
 
 PYDANTIC_DATACLASS_WORKAROUND_DICT = dict()

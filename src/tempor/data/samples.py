@@ -161,7 +161,7 @@ class StaticSamples(DataSamples):
     _data: pd.DataFrame
     _schema: pa.DataFrameSchema
 
-    @pydantic.validate_arguments(config={"arbitrary_types_allowed": True, "smart_union": True})
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def __init__(
         self,
         data: data_typing.DataContainer,
@@ -333,7 +333,7 @@ class TimeSeriesSamples(DataSamples):
     def modality(self) -> data_typing.DataModality:
         return data_typing.DataModality.TIME_SERIES
 
-    @pydantic.validate_arguments(config={"arbitrary_types_allowed": True, "smart_union": True})
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def __init__(
         self,
         data: data_typing.DataContainer,
@@ -604,7 +604,7 @@ class EventSamples(DataSamples):
     def modality(self) -> data_typing.DataModality:
         return data_typing.DataModality.EVENT
 
-    @pydantic.validate_arguments(config={"arbitrary_types_allowed": True, "smart_union": True})
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def __init__(
         self,
         data: data_typing.DataContainer,
@@ -743,7 +743,7 @@ class EventSamples(DataSamples):
     def num_features(self) -> int:
         return self._data.shape[1]
 
-    @pydantic.validate_arguments(config={"arbitrary_types_allowed": True})
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def split(self, time_feature_suffix: str = _DEFAULT_EVENTS_TIME_FEATURE_SUFFIX) -> pd.DataFrame:
         """Return a `pandas.DataFrame` where the time component of each event feature has been split off to its own
         column. The new columns that contain the times will be named ``"<original column name><time_feature_suffix>"``

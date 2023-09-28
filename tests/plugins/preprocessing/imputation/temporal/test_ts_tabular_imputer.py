@@ -31,6 +31,8 @@ def get_test_plugin(get_plugin: Callable):
     return func
 
 
+@pytest.mark.filterwarnings("ignore:.*validate_arguments.*:DeprecationWarning")  # Exp pydantic2 warns from HI.
+@pytest.mark.filterwarnings("ignore:.*conflict.*:UserWarning")  # Exp pydantic2 warns from HI.
 @pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)
 def test_sanity(get_test_plugin: Callable, plugin_from: str) -> None:
     test_plugin = get_test_plugin(plugin_from, INIT_KWARGS)
@@ -39,6 +41,8 @@ def test_sanity(get_test_plugin: Callable, plugin_from: str) -> None:
     assert len(test_plugin.hyperparameter_space()) == 1
 
 
+@pytest.mark.filterwarnings("ignore:.*validate_arguments.*:DeprecationWarning")  # Exp pydantic2 warns from HI.
+@pytest.mark.filterwarnings("ignore:.*conflict.*:UserWarning")  # Exp pydantic2 warns from HI.
 @pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
 def test_fit(plugin_from: str, data: str, get_test_plugin: Callable, get_dataset: Callable) -> None:
@@ -48,6 +52,8 @@ def test_fit(plugin_from: str, data: str, get_test_plugin: Callable, get_dataset
     test_plugin.fit(dataset)
 
 
+@pytest.mark.filterwarnings("ignore:.*validate_arguments.*:DeprecationWarning")  # Exp pydantic2 warns from HI.
+@pytest.mark.filterwarnings("ignore:.*conflict.*:UserWarning")  # Exp pydantic2 warns from HI.
 @pytest.mark.parametrize("plugin_from", PLUGIN_FROM_OPTIONS)
 @pytest.mark.parametrize("data", TEST_ON_DATASETS)
 @pytest.mark.parametrize(
@@ -84,6 +90,8 @@ def test_transform(
     assert output.time_series.dataframe().isna().sum().sum() == 0
 
 
+@pytest.mark.filterwarnings("ignore:.*validate_arguments.*:DeprecationWarning")  # Exp pydantic2 warns from HI.
+@pytest.mark.filterwarnings("ignore:.*conflict.*:UserWarning")  # Exp pydantic2 warns from HI.
 @pytest.mark.filterwarnings("ignore:.*nonzero.*0d.*:DeprecationWarning")  # Expected for EM imputer.
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")  # Expected for EM imputer.
 @pytest.mark.filterwarnings("ignore::sklearn.exceptions.ConvergenceWarning")  # May happen in some cases.

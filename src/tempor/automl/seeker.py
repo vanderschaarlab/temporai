@@ -187,7 +187,7 @@ def evaluation_callback_dispatch(
 
 
 class BaseSeeker(abc.ABC):
-    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def __init__(
         self,
         study_name: str,
@@ -480,7 +480,7 @@ class BaseSeeker(abc.ABC):
 
 
 class MethodSeeker(BaseSeeker):
-    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def __init__(
         self,
         study_name: str,
@@ -589,7 +589,7 @@ class MethodSeeker(BaseSeeker):
 
 
 class PipelineSeeker(BaseSeeker):
-    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def __init__(
         self,
         study_name: str,

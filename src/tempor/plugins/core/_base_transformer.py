@@ -24,7 +24,7 @@ class BaseTransformer(estimator.BaseEstimator):
 
         return transformed_data
 
-    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def fit_transform(
         self,
         data: dataset.BaseDataset,

@@ -14,7 +14,7 @@ from .utils import GumbelSoftmax, get_nonlin
 
 
 class LinearLayer(nn.Module):
-    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def __init__(
         self,
         n_units_in: int,
@@ -41,13 +41,13 @@ class LinearLayer(nn.Module):
 
         self.model = nn.Sequential(*layers).to(self.device)
 
-    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def forward(self, X: torch.Tensor) -> torch.Tensor:
         return self.model(X.float()).to(self.device)  # pylint: disable=not-callable
 
 
 class ResidualLayer(LinearLayer):
-    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def __init__(
         self,
         n_units_in: int,
@@ -68,7 +68,7 @@ class ResidualLayer(LinearLayer):
         self.device = device
         self.n_units_out = n_units_out
 
-    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def forward(self, X: torch.Tensor) -> torch.Tensor:
         if X.shape[-1] == 0:
             return torch.zeros((*X.shape[:-1], self.n_units_out)).to(self.device)
@@ -94,7 +94,7 @@ class MultiActivationHead(nn.Module):
             self.activations.append(activation)
             self.activation_lengths.append(length)
 
-    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def forward(self, X: torch.Tensor) -> torch.Tensor:
         if X.shape[-1] != np.sum(self.activation_lengths):
             raise RuntimeError(
@@ -113,7 +113,7 @@ class MultiActivationHead(nn.Module):
 
 
 class MLP(nn.Module):
-    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def __init__(
         self,
         task_type: constants.ModelTaskType,
@@ -300,7 +300,7 @@ class MLP(nn.Module):
 
         return self
 
-    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
         if self.task_type != "classification":
             raise ValueError(f"Invalid task type for predict_proba {self.task_type}")
@@ -312,7 +312,7 @@ class MLP(nn.Module):
 
             return yt.cpu().numpy().squeeze()
 
-    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def predict(self, X: np.ndarray) -> np.ndarray:
         with torch.no_grad():
             Xt = self._check_tensor(X)
@@ -331,7 +331,7 @@ class MLP(nn.Module):
         else:
             return np.mean(np.inner(y - y_pred, y - y_pred) / 2.0)
 
-    @pydantic.validate_arguments(config=dict(arbitrary_types_allowed=True))
+    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
     def forward(self, X: torch.Tensor) -> torch.Tensor:
         return self.model(X.float())  # pylint: disable=not-callable
 

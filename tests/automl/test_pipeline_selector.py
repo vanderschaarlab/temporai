@@ -185,6 +185,8 @@ def assert_actual_params(pipe, sample, method):
         assert getattr(estimator.params, k) == v
 
 
+@pytest.mark.filterwarnings("ignore:.*validate_arguments.*:DeprecationWarning")  # Exp pydantic2 warns from HI.
+@pytest.mark.filterwarnings("ignore:.*conflict.*:UserWarning")  # Exp pydantic2 warns from HI.
 @pytest.mark.parametrize("task_type,predictor", TEST_PREDICTOR_CASES)
 @pytest.mark.parametrize("static_imputers", TEST_STATIC_IMPUTERS_CASES)
 @pytest.mark.parametrize("static_scalers", TEST_STATIC_SCALERS_CASES)
