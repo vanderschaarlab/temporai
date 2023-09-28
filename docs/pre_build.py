@@ -8,7 +8,7 @@ The code will:
 import os
 import re
 
-from pre_build_nbconvert import do_conversion
+from pre_build_notebooks import do_pre_build_notebooks_tasks
 
 REPO_URL_ROOT = "https://github.com/vanderschaarlab/temporai/"
 REPO_URL_TREE = f"{REPO_URL_ROOT}tree/main/"
@@ -95,4 +95,4 @@ with open(PYPI_README_PATH, "w", encoding="utf8") as file:
 
 
 # Convert tutorial notebooks into user guide pages.
-do_conversion()
+do_pre_build_notebooks_tasks()

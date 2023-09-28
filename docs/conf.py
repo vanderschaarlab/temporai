@@ -73,6 +73,10 @@ extensions = [
     "sphinx.ext.ifconfig",
     "sphinx.ext.mathjax",
     "sphinx.ext.napoleon",
+    "sphinx_immaterial",
+    # "sphinx_immaterial.apidoc.python.apigen"
+    # ^ Enable this if wishing to use https://jbms.github.io/sphinx-immaterial/apidoc/python/apigen.html
+    "nbsphinx",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -156,7 +160,7 @@ release = version
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", ".venv"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", ".venv", ".dev"]
 
 # The reST default role (used for this markup: `text`) to use for all documents.
 default_role = "py:obj"
@@ -182,6 +186,10 @@ pygments_style = "tango"
 # If true, keep warnings as "system message" paragraphs in the built documents.
 # keep_warnings = False
 
+# A list of warning types to suppress arbitrary warning messages.
+# https://www.sphinx-doc.org/en/master/usage/configuration.html#confval-suppress_warnings
+suppress_warnings = ["misc.highlighting_failure"]
+
 # If this is True, todo emits a warning for each TODO entries. The default is False.
 todo_emit_warnings = True
 
@@ -199,7 +207,8 @@ autodoc_member_order = "bysource"
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = "sphinx_material"
+# We use this theme: https://jbms.github.io/sphinx-immaterial/
+html_theme = "sphinx_immaterial"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -207,45 +216,102 @@ html_theme = "sphinx_material"
 
 # Material theme options (see theme.conf for more information)
 html_theme_options = {
-    # Set the name of the project to appear in the navigation.
-    "nav_title": "TemporAI",
-    # Icon,
-    "logo_icon": "timelapse",  # TODO: Remove once the actual logo is fixed.
-    # Set you GA account ID to enable tracking
-    # "google_analytics_account": "UA-XXXXX",
-    #
-    # TODO: Sitemap.
-    # Specify a base_url used to generate sitemap.xml. If not
-    # specified, then no sitemap will be built.
-    # 'base_url': 'https://project.github.io/project',
-    #
-    # Set the color and the accent color
-    "color_primary": "blue",
-    "color_accent": "light-blue",
-    # Set the repo location to get a badge with stats
-    "repo_url": "https://github.com/vanderschaarlab/temporai",
-    "repo_name": "temporai",
-    # Visible levels of the global TOC; -1 means unlimited
-    "globaltoc_depth": 3,
-    # If False, expand all TOC entries
+    "icon": {
+        "repo": "fontawesome/brands/github",
+        "edit": "material/file-edit-outline",
+    },
+    "site_url": "https://www.temporai.vanderschaar-lab.com/",
+    "repo_url": "https://github.com/vanderschaarlab/temporai/",
+    "repo_name": "TemporAI",
+    "edit_uri": "blob/main/docs",
     "globaltoc_collapse": True,
-    # If True, show hidden TOC entries
-    "globaltoc_includehidden": False,
+    "features": [
+        "navigation.expand",
+        # "navigation.tabs",
+        # "toc.integrate",
+        "navigation.sections",
+        # "navigation.instant",
+        # "header.autohide",
+        "navigation.top",
+        # "navigation.tracking",
+        # "search.highlight",
+        "search.share",
+        "toc.follow",
+        "toc.sticky",
+        "content.tabs.link",
+        "announce.dismiss",
+    ],
+    "palette": [
+        {
+            "media": "(prefers-color-scheme: light)",
+            "scheme": "default",
+            "primary": "light-blue",
+            "accent": "indigo",
+            "toggle": {
+                "icon": "material/lightbulb-outline",
+                "name": "Switch to dark mode",
+            },
+        },
+        {
+            "media": "(prefers-color-scheme: dark)",
+            "scheme": "slate",
+            "primary": "indigo",
+            "accent": "deep-purple",
+            "toggle": {
+                "icon": "material/lightbulb",
+                "name": "Switch to light mode",
+            },
+        },
+    ],
+    # BEGIN: version_dropdown
+    "version_dropdown": False,
+    "version_info": [
+        {
+            "version": "https://temporai.readthedocs.io/en/latest/",
+            "title": "ReadTheDocs",
+            "aliases": [],
+        },
+        # {
+        #     "version": "https://jbms.github.io/sphinx-immaterial",
+        #     "title": "Github Pages",
+        #     "aliases": [],
+        # },
+    ],
+    # END: version_dropdown
+    "toc_title_is_page_title": True,
+    # BEGIN: social icons
+    "social": [
+        {
+            "icon": "fontawesome/brands/github",
+            "link": "https://github.com/vanderschaarlab/temporai/",
+            "name": "Source on github.com",
+        },
+        {
+            "icon": "fontawesome/brands/python",
+            "link": "https://pypi.org/project/temporai/",
+        },
+    ],
+    # END: social icons
 }
+
+# Sphinx immaterial theme's python apigen options:
+# python_apigen_modules = {
+#     "tempor": "src/tempor/",
+# }
 
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = []
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
-# html_title = None
+html_title = "TemporAI documentation"
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
-# html_short_title = None
+html_short_title = "TemporAI"
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-# html_logo = "assets/TemporAI_Logo.svg"
+html_logo = "assets/TemporAI_Logo_Icon.ico"
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
@@ -266,7 +332,7 @@ html_static_path = ["_static"]
 # html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
-html_sidebars = {"**": ["logo-text.html", "globaltoc.html", "localtoc.html", "searchbox.html"]}
+# html_sidebars = {"**": ["logo-text.html", "globaltoc.html", "localtoc.html", "searchbox.html"]}
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
