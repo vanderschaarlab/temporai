@@ -1,3 +1,5 @@
+import re
+
 import pytest
 from typing_extensions import Literal
 
@@ -149,3 +151,25 @@ class TestGetFromArgsOrKwargs:
 
 
 # Test get_from_args_or_kwargs (end) -----
+
+
+# Test get_class_full_name ----------
+
+
+class MyClass:
+    pass
+
+
+my_class = MyClass()
+my_str = str()
+
+
+class TestGetClassFullName:
+    def test_non_builtin(self):
+        assert re.match(r".*test_core_utils\.MyClass", utils.get_class_full_name(my_class))
+
+    def test_builtin(self):
+        assert utils.get_class_full_name(my_str) == "str"
+
+
+# Test get_class_full_name (end) ----------
