@@ -76,6 +76,7 @@ extensions = [
     "sphinx_immaterial",
     # "sphinx_immaterial.apidoc.python.apigen"
     # ^ Enable this if wishing to use https://jbms.github.io/sphinx-immaterial/apidoc/python/apigen.html
+    "nbsphinx",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
