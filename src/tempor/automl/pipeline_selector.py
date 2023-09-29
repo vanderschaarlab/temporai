@@ -230,7 +230,7 @@ class PipelineSelector:
                 pipeline_def.append(get_fqn(prefix, selected))
                 pipeline_init_params[selected] = selected_hps
 
-        pipeline_def.append(self.predictor.fqn())
+        pipeline_def.append(self.predictor.full_name())
         predictor_hps = self._get_relevant_hps(self.predictor.name, hps)
         pipeline_init_params[self.predictor.name] = predictor_hps
 

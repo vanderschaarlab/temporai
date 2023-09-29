@@ -44,6 +44,20 @@ class DummyPluginTempor(plugin_core.Plugin):
 
 """
 
+plugin_different_type_file = """
+import tempor.plugins.core._plugin as plugin_core
+
+
+@plugin_core.register_plugin(
+    name="dummy_different_type_plugin",
+    category="dummy_different_type_category",
+    plugin_type="my_plugin_type",
+)
+class DummyPluginDifferentCategory(plugin_core.Plugin):
+    pass
+
+"""
+
 
 def test_import_plugins(tmp_path: pathlib.Path, patch_plugins_core_module):
     test_plugins_dir = tmp_path / tempor.import_name / "dummy_plugins"
@@ -54,8 +68,13 @@ def test_import_plugins(tmp_path: pathlib.Path, patch_plugins_core_module):
         f.write(plugin_file_2)
     with open(test_plugins_dir / "plugin_tempor_file.py", "w", encoding="utf8") as f:
         f.write(plugin_tempor_file)
+    with open(test_plugins_dir / "plugin_different_type_file.py", "w", encoding="utf8") as f:
+        f.write(plugin_different_type_file)
 
     plugin_core.register_plugin_category("dummy_category", expected_class=plugin_core.Plugin)
+    plugin_core.register_plugin_category(
+        "dummy_different_type_category", expected_class=plugin_core.Plugin, plugin_type="my_plugin_type"
+    )
 
     init_file = os.path.join(str(test_plugins_dir), "__init__.py")
     plugin_core.importing.import_plugins(init_file)
@@ -63,15 +82,17 @@ def test_import_plugins(tmp_path: pathlib.Path, patch_plugins_core_module):
 
     assert sorted(
         [
-            "dummy_category.dummy_plugin_a",
-            "dummy_category.dummy_plugin_b",
-            "dummy_category.dummy_plugin_c",
-            "dummy_category.dummy_tempor_plugin",
+            "[default].dummy_category.dummy_plugin_a",
+            "[default].dummy_category.dummy_plugin_b",
+            "[default].dummy_category.dummy_plugin_c",
+            "[default].dummy_category.dummy_tempor_plugin",
+            "[my_plugin_type].dummy_different_type_category.dummy_different_type_plugin",
         ]
     ) == sorted(plugin_core.PLUGIN_REGISTRY.keys())
 
     assert sorted(
         [
+            "tempor.dummy_plugins.plugin_different_type_file",
             "tempor.dummy_plugins.plugin_tempor_file",
             "tempor.dummy_plugins.plugin_file_2",
             "tempor.dummy_plugins.plugin_file_1",

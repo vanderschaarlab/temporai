@@ -5,30 +5,147 @@ import importlib.util
 import os
 import os.path
 import sys
-from typing import TYPE_CHECKING, Any, Callable, ClassVar, Dict, List, Type, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, ClassVar, Dict, List, Tuple, Type, TypeVar, Union
 
-from typing_extensions import ParamSpec
+from typing_extensions import Literal, ParamSpec
 
 import tempor
+from tempor.core.utils import get_from_args_or_kwargs
 from tempor.log import logger
 
 from . import utils
 
 PLUGIN_NAME_NOT_SET = "NOT_SET"
 PLUGIN_CATEGORY_NOT_SET = "NOT_SET"
+PLUGIN_TYPE_NOT_SET = "NOT_SET"
+
 
 P = ParamSpec("P")
 T = TypeVar("T")
 
+# Type aliases:
+PLUGIN_TYPE_DEFAULT = "default"
+PluginType = Union[Literal["default"], str]
+PluginName = str
+PluginFullName = str
+PluginCategory = str
+# Internal:
+_PluginFqn = str
+_PluginCategoryFqn = str
+
+
+# Local helpers. ---
+
+
+def create_fqn(suffix: Union[PluginCategory, PluginFullName], plugin_type: PluginType) -> str:
+    """Create a fully-qualified name for a plugin or category, like `[plugin_type].category.name` or
+    `[plugin_type].category` respectively.
+
+    Args:
+        suffix (Union[PluginCategory, PluginFullName]): Plugin category or plugin full name.
+        plugin_type (PluginType): Plugin type.
+
+    Returns:
+        str: Fully-qualified name.
+    """
+    return f"[{plugin_type}].{suffix}"
+
+
+def filter_list_by_plugin_type(lst: List[_PluginFqn], plugin_type: PluginType) -> List[PluginFullName]:
+    """Filter a list of plugin FQNs by plugin type.
+
+    Args:
+        lst (List[_PluginFqn]): List of plugin FQNs.
+        plugin_type (PluginType): Plugin type.
+
+    Returns:
+        List[PluginFullName]: Filtered list which will only include FQNs with the specified ``plugin_type``.
+    """
+    return [x for x in lst if x.split(".")[0] == f"[{plugin_type}]"]
+
+
+def filter_dict_by_plugin_type(d: Dict[_PluginFqn, Any], plugin_type: PluginType) -> Dict[PluginFullName, Any]:
+    """Filter a dictionary with plugin FQN keys by plugin type.
+
+    Args:
+        d (Dict[_PluginFqn, Any]): Dictionary to filter.
+        plugin_type (PluginType): Plugin type.
+
+    Returns:
+        Dict[PluginFullName, Any]: Filtered dictionary which will only include items where FQN keys match the \
+            specified ``plugin_type``.
+    """
+    return {k: v for k, v in d.items() if k.split(".")[0] == f"[{plugin_type}]"}
+
+
+def _parse_fqn_format(fqn: str) -> Tuple[PluginType, str]:
+    """Parse a plugin FQN or category FQN into its plugin type and remainder (``category`` or ``category.name``) parts.
+
+    Args:
+        fqn (str): Plugin FQN or category FQN.
+
+    Raises:
+        ValueError: Raised if the FQN is of incorrect format, that is, doesn't begin with ``[<plugin_type>].<...>``.
+
+    Returns:
+        Tuple[PluginType, str]: Plugin type, remainder (``category`` or ``category.name``).
+    """
+    first_element = fqn.split(".")[0]
+    if not (first_element[0] == "[" and first_element[-1] == "]"):
+        raise ValueError(f"FQN '{fqn}' is of incorrect format, expected to begin with `[<plugin_type>].<...>`")
+    plugin_type = first_element[1:-1]
+    remainder = ".".join(fqn.split(".")[1:])
+    return plugin_type, remainder
+
+
+def remove_plugin_type_from_fqn(fqn: Union[_PluginCategoryFqn, _PluginFqn]) -> Union[PluginCategory, PluginFullName]:
+    """Remove the plugin type part of a plugin FQN or category FQN.
+
+    Args:
+        fqn (Union[_PluginCategoryFqn, _PluginFqn]): Plugin FQN of plugin category FQN.
+
+    Returns:
+        str: The FQN with the plugin type part removed.
+    """
+    _, remainder = _parse_fqn_format(fqn)
+    return remainder
+
+
+def get_plugin_type_from_fqn(fqn: Union[_PluginCategoryFqn, _PluginFqn]) -> PluginType:
+    """Get the plugin type part of a plugin FQN or category FQN.
+
+    Args:
+        fqn (Union[_PluginCategoryFqn, _PluginFqn]): Plugin FQN of plugin category FQN.
+
+    Returns:
+        PluginType: The plugin type.
+    """
+    plugin_type, _ = _parse_fqn_format(fqn)
+    return plugin_type
+
+
+# Local helpers (end). ---
+
 
 class Plugin:
-    name: ClassVar[str] = PLUGIN_NAME_NOT_SET
-    category: ClassVar[str] = PLUGIN_CATEGORY_NOT_SET
+    name: ClassVar[PluginName] = PLUGIN_NAME_NOT_SET
+    category: ClassVar[PluginCategory] = PLUGIN_CATEGORY_NOT_SET
+    plugin_type: ClassVar[PluginType] = PLUGIN_TYPE_NOT_SET
 
     @classmethod
-    def fqn(cls) -> str:
-        """The fully-qualified name of the plugin: category.name"""
+    def full_name(cls) -> str:
+        """The full name of the plugin with its category: category.name"""
         return f"{cls.category}.{cls.name}"
+
+    @classmethod
+    def _fqn(cls) -> _PluginFqn:
+        """The fully-qualified name of the plugin with its plugin type: [plugin_type].category.name"""
+        return f"{create_fqn(cls.category, cls.plugin_type)}.{cls.name}"
+
+    @classmethod
+    def _category_fqn(cls) -> _PluginCategoryFqn:
+        """The fully-qualified name of the plugin's category: [plugin_type].category"""
+        return f"{create_fqn(cls.category, cls.plugin_type)}"
 
     def __init__(self) -> None:
         if self.name == PLUGIN_NAME_NOT_SET:
@@ -37,25 +154,27 @@ class Plugin:
             raise ValueError(
                 f"Plugin {self.__class__.__name__} `category` was not set, use @{register_plugin.__name__}"
             )
-
-
-# Type aliases:
-PluginFqn = str
-PluginCategory = str
+        if self.plugin_type == PLUGIN_TYPE_NOT_SET:
+            raise ValueError(
+                f"Plugin {self.__class__.__name__} `plugin_type` was not set, use @{register_plugin.__name__}"
+            )
 
 
 # Important dicts that store plugin information:
-PLUGIN_CATEGORY_REGISTRY: Dict[PluginCategory, Type[Plugin]] = dict()
-PLUGIN_REGISTRY: Dict[PluginFqn, Type[Plugin]] = dict()
+PLUGIN_CATEGORY_REGISTRY: Dict[_PluginCategoryFqn, Type[Plugin]] = dict()
+PLUGIN_REGISTRY: Dict[_PluginFqn, Type[Plugin]] = dict()
 
 
-def register_plugin_category(category: PluginCategory, expected_class: Type) -> None:
+def register_plugin_category(
+    category: PluginCategory, expected_class: Type, plugin_type: PluginType = PLUGIN_TYPE_DEFAULT
+) -> None:
     logger.debug(f"Registering plugin category {category}")
-    if category in PLUGIN_CATEGORY_REGISTRY:
-        raise TypeError(f"Plugin category {category} already registered")
+    category_fqn = create_fqn(suffix=category, plugin_type=plugin_type)
+    if category_fqn in PLUGIN_CATEGORY_REGISTRY:
+        raise TypeError(f"Plugin category {category} already registered under plugin type {plugin_type}")
     if not issubclass(expected_class, Plugin):
         raise TypeError(f"Plugin expected class for category should be a subclass of {Plugin} but was {expected_class}")
-    PLUGIN_CATEGORY_REGISTRY[category] = expected_class
+    PLUGIN_CATEGORY_REGISTRY[category_fqn] = expected_class
 
 
 def _check_same_class(class_1, class_2) -> bool:
@@ -66,7 +185,7 @@ def _check_same_class(class_1, class_2) -> bool:
     )
 
 
-def register_plugin(name: str, category: PluginCategory):
+def register_plugin(name: str, category: PluginCategory, plugin_type: PluginType = PLUGIN_TYPE_DEFAULT):
     def class_decorator(cls: Callable[P, T]) -> Callable[P, T]:
         # NOTE:
         # The Callable[<ParamSpec>, <TypeVar>] approach allows to preserve the type annotation of the parameters of the
@@ -82,46 +201,61 @@ def register_plugin(name: str, category: PluginCategory):
         logger.debug(f"Registering plugin of class {cls}")
         cls.name = name
         cls.category = category
+        cls.plugin_type = plugin_type
 
-        if cls.category not in PLUGIN_CATEGORY_REGISTRY:
+        category_fqn = create_fqn(suffix=category, plugin_type=plugin_type)
+
+        if category_fqn not in PLUGIN_CATEGORY_REGISTRY:
             raise TypeError(
-                f"Found plugin category {cls.category} which has not been registered with "
-                f"@{register_plugin_category.__name__}"
+                f"Found plugin category '{cls.category}' under plugin type '{cls.plugin_type}' which "
+                f"has not been registered with `@{register_plugin_category.__name__}`"
             )
         if not issubclass(cls, Plugin):
-            raise TypeError(f"Expected plugin class {cls.__name__} to be a subclass of {Plugin} but was {cls}")
-        if not issubclass(cls, PLUGIN_CATEGORY_REGISTRY[cls.category]):
+            raise TypeError(f"Expected plugin class `{cls.__name__}` to be a subclass of `{Plugin}` but was `{cls}`")
+        if not issubclass(cls, PLUGIN_CATEGORY_REGISTRY[category_fqn]):
             raise TypeError(
-                f"Expected plugin class {cls.__name__} to be a subclass of "
-                f"{PLUGIN_CATEGORY_REGISTRY[cls.category]} but was {cls}"
+                f"Expected plugin class `{cls.__name__}` to be a subclass of "
+                f"`{PLUGIN_CATEGORY_REGISTRY[category_fqn]}` but was `{cls}`"
             )
-        if cls.fqn() in PLUGIN_REGISTRY:
-            if not _check_same_class(cls, PLUGIN_REGISTRY[cls.fqn()]):
+        # pylint: disable-next=protected-access
+        if cls._fqn() in PLUGIN_REGISTRY:
+            # pylint: disable-next=protected-access
+            if not _check_same_class(cls, PLUGIN_REGISTRY[cls._fqn()]):
                 raise TypeError(
-                    f"Plugin with fully-qualified name {cls.fqn()} already registered (as class "
-                    f"{PLUGIN_REGISTRY[cls.fqn()]})"
+                    # pylint: disable-next=protected-access
+                    f"Plugin (plugin type '{cls.plugin_type}') with full name '{cls.full_name()}' has already been "
+                    f"registered (as class `{PLUGIN_REGISTRY[cls._fqn()]}`)"
                 )
             else:
                 # The same class is being reimported, do not raise error.
                 pass
         for existing_cls in PLUGIN_REGISTRY.values():
             # Cannot have the same plugin name (not just fqn), as this is not supported by Pipeline.
+            # TODO: Fix this - make non-unique name work with pipeline.
             if cls.name == existing_cls.name:
                 if not _check_same_class(cls, existing_cls):
-                    raise TypeError(f"Plugin with name {cls.name} already registered (as class {existing_cls})")
+                    raise TypeError(
+                        f"Plugin (plugin type '{cls.plugin_type}') with name '{cls.name}' has already been "
+                        f"registered (as class `{existing_cls}`). Must use a unique plugin name."
+                    )
                 else:  # pragma: no cover
                     # The same class is being reimported, do not raise error.
-                    # Some kind of coverage issues - this case *is* covered by test:
+                    # Some kind of coverage issue - this case *is* covered by test:
                     # test_plugins.py::TestRegistration::test_category_registration_reimport_allowed
                     pass
 
-        PLUGIN_REGISTRY[cls.fqn()] = cls
+        # pylint: disable-next=protected-access
+        PLUGIN_REGISTRY[cls._fqn()] = cls
 
         return cls
 
     return class_decorator
 
 
+# TODO: Add "list all" option, perhaps when "None" is passed in to plugin_type, in all the relevant listing methods.
+# TODO: Add "list types".
+# TODO: Add check plugin type exists before listing.
+# TODO: Consider whether to enforce common base class across plugin_type/category.
 class PluginLoader:
     def __init__(self) -> None:
         self._refresh()
@@ -129,49 +263,73 @@ class PluginLoader:
     def _refresh(self):
         self._plugin_registry: Dict[str, Type[Plugin]] = PLUGIN_REGISTRY
 
-        name_by_category: Dict = dict()
+        name_by_category_nested: Dict = dict()
         for plugin_class in self._plugin_registry.values():
-            name_by_category = utils.append_by_dot_path(
-                name_by_category, key_path=plugin_class.category, value=plugin_class.name
+            name_by_category_nested = utils.append_by_dot_path(
+                name_by_category_nested,
+                key_path=plugin_class._category_fqn(),  # pylint: disable=protected-access
+                value=plugin_class.name,
             )
-        self._plugin_name_by_category = name_by_category
+        self._plugin_name_by_category_nested = name_by_category_nested
 
-        class_by_category: Dict = dict()
+        class_by_category_nested: Dict = dict()
         for plugin_class in self._plugin_registry.values():
-            class_by_category = utils.append_by_dot_path(
-                class_by_category, key_path=plugin_class.category, value=plugin_class
+            class_by_category_nested = utils.append_by_dot_path(
+                class_by_category_nested,
+                key_path=plugin_class._category_fqn(),  # pylint: disable=protected-access
+                value=plugin_class,
             )
-        self._plugin_class_by_category = class_by_category
+        self._plugin_class_by_category_nested = class_by_category_nested
 
-    def list(self) -> Dict:
+    def list(self, plugin_type: PluginType = PLUGIN_TYPE_DEFAULT) -> Dict:
         self._refresh()
-        return self._plugin_name_by_category
+        return self._plugin_name_by_category_nested[f"[{plugin_type}]"]
 
-    def list_fqns(self) -> List[str]:
+    def list_full_names(self, plugin_type: PluginType = PLUGIN_TYPE_DEFAULT) -> List[PluginFullName]:
         self._refresh()
-        return list(self._plugin_registry.keys())
+        plugin_fqns = list(self._plugin_registry.keys())
+        plugin_fqns_filtered_by_type = filter_list_by_plugin_type(lst=plugin_fqns, plugin_type=plugin_type)
+        return [remove_plugin_type_from_fqn(n) for n in plugin_fqns_filtered_by_type]
 
-    def list_classes(self) -> Dict:
+    def list_classes(self, plugin_type: PluginType = PLUGIN_TYPE_DEFAULT) -> Dict:
         self._refresh()
-        return self._plugin_class_by_category
+        return self._plugin_class_by_category_nested[f"[{plugin_type}]"]
 
-    def list_categories(self) -> Dict[str, Type[Plugin]]:
+    def list_categories(self, plugin_type: PluginType = PLUGIN_TYPE_DEFAULT) -> Dict[PluginFullName, Type[Plugin]]:
         self._refresh()
-        return PLUGIN_CATEGORY_REGISTRY
+        categories_filtered_by_type = filter_dict_by_plugin_type(d=PLUGIN_CATEGORY_REGISTRY, plugin_type=plugin_type)
+        return {remove_plugin_type_from_fqn(k): v for k, v in categories_filtered_by_type.items()}
 
-    def _raise_plugin_does_not_exist_error(self, name: str):
-        if name not in self._plugin_registry:
-            raise ValueError(f"Plugin {name} does not exist.")
+    def _raise_plugin_does_not_exist_error(self, fqn: str):
+        plugin_type = get_plugin_type_from_fqn(fqn)
+        plugin_full_name = remove_plugin_type_from_fqn(fqn)
+        if fqn not in self._plugin_registry:
+            raise ValueError(f"Plugin '{plugin_full_name}' (plugin type: {plugin_type}) does not exist.")
 
-    def get(self, name: PluginFqn, *args, **kwargs) -> Any:
+    def _handle_get_args_kwargs(self, args, kwargs) -> Tuple[Any, Tuple, Dict]:
+        # "Pop" the `plugin_type` argument if such is found in args (position 0) or kwargs.
+        # If appears to be provided in both ways, prefer the value from kwargs and leave the string in args as is.
+        # If not, `plugin_type` will fall back to its default value.
+        plugin_type, args, kwargs = get_from_args_or_kwargs(
+            args, kwargs, argument_name="plugin_type", argument_type=str, position_if_args=0, prefer="kwarg"
+        )
+        if plugin_type is None:
+            plugin_type = PLUGIN_TYPE_DEFAULT
+        return plugin_type, args, kwargs
+
+    # TODO: Write type overloads.
+    def get(self, name: PluginFullName, *args, **kwargs) -> Any:
+        plugin_type, args, kwargs = self._handle_get_args_kwargs(args, kwargs)
         self._refresh()
-        self._raise_plugin_does_not_exist_error(name)
-        return self._plugin_registry[name](*args, **kwargs)
+        fqn = create_fqn(suffix=name, plugin_type=plugin_type)
+        self._raise_plugin_does_not_exist_error(fqn)
+        return self._plugin_registry[fqn](*args, **kwargs)
 
-    def get_class(self, name: PluginFqn) -> Type:
+    def get_class(self, name: PluginFullName, plugin_type: PluginType = PLUGIN_TYPE_DEFAULT) -> Type:
         self._refresh()
-        self._raise_plugin_does_not_exist_error(name)
-        return self._plugin_registry[name]
+        fqn = create_fqn(suffix=name, plugin_type=plugin_type)
+        self._raise_plugin_does_not_exist_error(fqn)
+        return self._plugin_registry[fqn]
 
 
 PLUGIN_FILENAME_PREFIX = "plugin_"

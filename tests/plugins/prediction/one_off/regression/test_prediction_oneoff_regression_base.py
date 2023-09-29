@@ -18,6 +18,7 @@ from unittest.mock import Mock
 class DummyOneOffRegressor(BaseOneOffRegressor):
     name = "dummy"
     category = "dummy_cat"
+    plugin_type = "dummy_type"
 
     def _predict(self, data: "PredictiveDataset", *args, **kwargs) -> "StaticSamples":
         raise NotImplementedError

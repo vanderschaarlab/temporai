@@ -37,7 +37,7 @@ def test_sanity(get_test_plugin: Callable, plugin_from: str) -> None:
     test_plugin = get_test_plugin(plugin_from, INIT_KWARGS, device="cpu")
     assert test_plugin is not None
     assert test_plugin.name == "cde_classifier"
-    assert test_plugin.fqn() == "prediction.one_off.classification.cde_classifier"
+    assert test_plugin.full_name() == "prediction.one_off.classification.cde_classifier"
     assert len(test_plugin.hyperparameter_space()) == 9
 
 
