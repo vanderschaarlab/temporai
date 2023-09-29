@@ -131,7 +131,7 @@ def benchmark_models(
 
 
 @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
-def visualize_benchmark(results: Dict[str, pd.DataFrame], palette: str = "viridis") -> Any:
+def visualize_benchmark(results: Dict[str, pd.DataFrame], palette: str = "viridis", plot_block: bool = True) -> Any:
     # Pre-format DF for plotting.
     for k, v in results.items():
         v["method"] = k
@@ -152,6 +152,6 @@ def visualize_benchmark(results: Dict[str, pd.DataFrame], palette: str = "viridi
         out.set(**set_options)
         axes.append(out)
         log.print(f"Plotting bar plot for metric: {metric}")  # type: ignore [attr-defined]
-        plt.show()
+        plt.show(block=plot_block)
 
     return axes
