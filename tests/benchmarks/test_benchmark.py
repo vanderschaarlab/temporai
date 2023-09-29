@@ -67,7 +67,7 @@ def test_classifier_benchmark(data: str, request: pytest.FixtureRequest) -> None
     if not sys.platform.startswith(("win", "darwin")):
         # TODO: There appears to be a problem running this on GH runners for Windows and MaxOS, hence disabled.
         # Investigate and resolve.
-        visualize_benchmark(per_test_score, plot_block=True)
+        visualize_benchmark(per_test_score, plot_block=False)
 
 
 @pytest.mark.parametrize("data", TEST_ON_DATASETS_REGRESSOR)
