@@ -39,11 +39,17 @@ class Plugin:
             )
 
 
-PLUGIN_CATEGORY_REGISTRY: Dict[str, Type[Plugin]] = dict()
-PLUGIN_REGISTRY: Dict[str, Type[Plugin]] = dict()
+# Type aliases:
+PluginFqn = str
+PluginCategory = str
 
 
-def register_plugin_category(category: str, expected_class: Type) -> None:
+# Important dicts that store plugin information:
+PLUGIN_CATEGORY_REGISTRY: Dict[PluginCategory, Type[Plugin]] = dict()
+PLUGIN_REGISTRY: Dict[PluginFqn, Type[Plugin]] = dict()
+
+
+def register_plugin_category(category: PluginCategory, expected_class: Type) -> None:
     logger.debug(f"Registering plugin category {category}")
     if category in PLUGIN_CATEGORY_REGISTRY:
         raise TypeError(f"Plugin category {category} already registered")
@@ -60,7 +66,7 @@ def _check_same_class(class_1, class_2) -> bool:
     )
 
 
-def register_plugin(name: str, category: str):
+def register_plugin(name: str, category: PluginCategory):
     def class_decorator(cls: Callable[P, T]) -> Callable[P, T]:
         # NOTE:
         # The Callable[<ParamSpec>, <TypeVar>] approach allows to preserve the type annotation of the parameters of the
@@ -157,12 +163,12 @@ class PluginLoader:
         if name not in self._plugin_registry:
             raise ValueError(f"Plugin {name} does not exist.")
 
-    def get(self, name: str, *args, **kwargs) -> Any:
+    def get(self, name: PluginFqn, *args, **kwargs) -> Any:
         self._refresh()
         self._raise_plugin_does_not_exist_error(name)
         return self._plugin_registry[name](*args, **kwargs)
 
-    def get_class(self, name: str) -> Type:
+    def get_class(self, name: PluginFqn) -> Type:
         self._refresh()
         self._raise_plugin_does_not_exist_error(name)
         return self._plugin_registry[name]
