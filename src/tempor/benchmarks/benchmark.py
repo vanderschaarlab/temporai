@@ -1,9 +1,11 @@
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import pydantic
 import seaborn as sns
+from packaging.version import Version
 
 from tempor.core.types import PredictiveTaskType
 from tempor.data import data_typing, dataset
@@ -146,9 +148,22 @@ def visualize_benchmark(results: Dict[str, pd.DataFrame], palette: str = "viridi
     axes = []
     for metric in err.index:
         set_options = dict(title=f"Benchmark results: {metric}", ylabel=f"{metric} (CV mean)", xlabel="Benchmark case")
-        out = sns.barplot(
-            df_sns[df_sns["metric"] == metric], x="method", y="mean", palette=palette, yerr=err.loc[metric, :]
-        )
+        try:
+            out = sns.barplot(
+                df_sns[df_sns["metric"] == metric], x="method", y="mean", palette=palette, yerr=err.loc[metric, :]
+            )
+        except ValueError as ex:
+            if "'yerr'" in str(ex) and Version(sns.__version__) >= Version("0.13.0"):  # pragma: no cover
+                # Known issue with seaborn 0.13.0+. If the y values are non-unique, it seems to expect the yerr values
+                # only as many as there are unique y values. We hence remap using numpy.unique with index return.
+                values = df_sns[df_sns["metric"] == metric]["mean"]
+                _, unique_indexes = np.unique(values, return_index=True)
+                err_remapped = err.loc[metric, :][unique_indexes]
+                out = sns.barplot(
+                    df_sns[df_sns["metric"] == metric], x="method", y="mean", palette=palette, yerr=err_remapped
+                )
+            else:  # pragma: no cover
+                raise
         out.set(**set_options)
         axes.append(out)
         log.print(f"Plotting bar plot for metric: {metric}")  # type: ignore [attr-defined]
