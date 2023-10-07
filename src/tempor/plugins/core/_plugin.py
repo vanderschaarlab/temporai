@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any, Callable, ClassVar, Dict, List, Tuple, Ty
 from typing_extensions import Literal, ParamSpec, get_args
 
 import tempor
-from tempor.core.utils import get_from_args_or_kwargs
+import tempor.core.utils as core_utils
 from tempor.log import logger
 
 from . import utils
@@ -339,7 +339,6 @@ def register_plugin(name: str, category: PluginCategory, plugin_type: PluginType
 
 
 # TODO: Add "list all" option, perhaps when "None" is passed in to plugin_type, in all the relevant listing methods.
-# TODO: Add "list types".
 # TODO: Add check plugin type exists before listing.
 # TODO: Consider whether to enforce common base class across plugin_type/category.
 class PluginLoader:
@@ -433,6 +432,17 @@ class PluginLoader:
         categories_filtered_by_type = filter_dict_by_plugin_type(d=PLUGIN_CATEGORY_REGISTRY, plugin_type=plugin_type)
         return {remove_plugin_type_from_fqn(k): v for k, v in categories_filtered_by_type.items()}
 
+    def list_plugin_types(self) -> List[PluginType]:
+        """List all plugin types.
+
+        Returns:
+            List[PluginType]: A list of plugin types.
+        """
+        self._refresh()
+        return core_utils.unique_in_order_of_appearance(
+            [get_plugin_type_from_fqn(fqn) for fqn in self._plugin_registry.keys()]
+        )
+
     def _raise_plugin_does_not_exist_error(self, fqn: str):
         plugin_type = get_plugin_type_from_fqn(fqn)
         plugin_full_name = remove_plugin_type_from_fqn(fqn)
@@ -443,7 +453,7 @@ class PluginLoader:
         # "Pop" the `plugin_type` argument if such is found in args (position 0) or kwargs.
         # If appears to be provided in both ways, prefer the value from kwargs and leave the string in args as is.
         # If not, `plugin_type` will fall back to its default value.
-        plugin_type, args, kwargs = get_from_args_or_kwargs(
+        plugin_type, args, kwargs = core_utils.get_from_args_or_kwargs(
             args, kwargs, argument_name="plugin_type", argument_type=str, position_if_args=0, prefer="kwarg"
         )
         if plugin_type is None:

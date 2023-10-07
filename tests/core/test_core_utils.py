@@ -259,3 +259,14 @@ class TestGetClassFullName:
 
 
 # Test get_class_full_name (end) ----------
+
+
+class TestUniqueInOrderOfAppearance:
+    def test_strs(self):
+        assert utils.unique_in_order_of_appearance(["a", "a", "b", "c", "c", "a", "b"]) == ["a", "b", "c"]
+
+    def test_ints(self):
+        assert utils.unique_in_order_of_appearance([1, 2, 2, 3, 3, 1, 1, 2]) == [1, 2, 3]
+
+    def test_mixed(self):
+        assert utils.unique_in_order_of_appearance([1, "a", 2, "a", 2, 3, 3, 1, 1, 2]) == [1, "a", 2, 3]

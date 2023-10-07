@@ -565,6 +565,11 @@ class TestPluginLoader:
         }
 
     @pytest.mark.parametrize("loader", [plugin_core.PluginLoader(), plugin_loader])
+    def test_list_plugin_types(self, loader):
+        listed_types = loader.list_plugin_types()
+        assert listed_types == [plugin_type_foo, plugin_type_bar]
+
+    @pytest.mark.parametrize("loader", [plugin_core.PluginLoader(), plugin_loader])
     def test_get_plugin_type_provided_as_kwarg(self, loader):
         # Cases: plugin_type provided as kwarg:
 

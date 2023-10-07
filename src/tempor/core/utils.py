@@ -1,4 +1,4 @@
-from typing import Any, Dict, Tuple, Type
+from typing import Any, Dict, Iterable, List, Tuple, Type
 
 from typing_extensions import Literal, get_args
 
@@ -122,3 +122,18 @@ def get_from_args_or_kwargs(
             f"expected type `{argument_type}`"
         )
     return from_args if from_args is not None else from_kwargs, args, kwargs
+
+
+def unique_in_order_of_appearance(iterable: Iterable) -> List:
+    """Return unique elements from ``iterable`` in order of their appearance.
+
+    Note:
+        All items in ``iterable`` must be hashable.
+
+    Args:
+        iterable (Iterable): The iterable to get unique elements from.
+
+    Returns:
+        List: List of unique elements in order of their appearance.
+    """
+    return list(dict.fromkeys(iterable))
