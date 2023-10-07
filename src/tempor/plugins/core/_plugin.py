@@ -342,7 +342,6 @@ def register_plugin(name: str, category: PluginCategory, plugin_type: PluginType
 
 
 # TODO: Add "list all" option, perhaps when "None" is passed in to plugin_type, in all the relevant listing methods.
-# TODO: Add check plugin type exists before listing.
 # TODO: Consider whether to enforce common base class across plugin_type/category.
 class PluginLoader:
     """A class to load plugins. Provides functionality to list and get plugins."""
@@ -385,7 +384,7 @@ class PluginLoader:
             Dict: A dictionary as described above.
         """
         self._refresh()
-        plugin_type = parse_plugin_type(plugin_type)
+        plugin_type = parse_plugin_type(plugin_type, must_be_one_of=self.list_plugin_types())
         return self._plugin_name_by_category_nested[f"[{plugin_type}]"]
 
     def list_full_names(self, plugin_type: PluginType = None) -> List[PluginFullName]:
@@ -400,7 +399,7 @@ class PluginLoader:
         """
         self._refresh()
         plugin_fqns = list(self._plugin_registry.keys())
-        plugin_type = parse_plugin_type(plugin_type)
+        plugin_type = parse_plugin_type(plugin_type, must_be_one_of=self.list_plugin_types())
         plugin_fqns_filtered_by_type = filter_list_by_plugin_type(lst=plugin_fqns, plugin_type=plugin_type)
         return [remove_plugin_type_from_fqn(n) for n in plugin_fqns_filtered_by_type]
 
@@ -416,7 +415,7 @@ class PluginLoader:
             Dict: A dictionary as described above.
         """
         self._refresh()
-        plugin_type = parse_plugin_type(plugin_type)
+        plugin_type = parse_plugin_type(plugin_type, must_be_one_of=self.list_plugin_types())
         return self._plugin_class_by_category_nested[f"[{plugin_type}]"]
 
     def list_categories(self, plugin_type: PluginType = None) -> Dict[PluginFullName, Type[Plugin]]:
@@ -431,15 +430,15 @@ class PluginLoader:
             Dict[PluginFullName, Type[Plugin]]: A dictionary as described above.
         """
         self._refresh()
-        plugin_type = parse_plugin_type(plugin_type)
+        plugin_type = parse_plugin_type(plugin_type, must_be_one_of=self.list_plugin_types())
         categories_filtered_by_type = filter_dict_by_plugin_type(d=PLUGIN_CATEGORY_REGISTRY, plugin_type=plugin_type)
         return {remove_plugin_type_from_fqn(k): v for k, v in categories_filtered_by_type.items()}
 
-    def list_plugin_types(self) -> List[PluginType]:
+    def list_plugin_types(self) -> List[str]:
         """List all plugin types.
 
         Returns:
-            List[PluginType]: A list of plugin types.
+            List[str]: A list of plugin types.
         """
         self._refresh()
         return core_utils.unique_in_order_of_appearance(
@@ -460,7 +459,7 @@ class PluginLoader:
             args, kwargs, argument_name="plugin_type", argument_type=str, position_if_args=0, prefer="kwarg"
         )
         if plugin_type is None:
-            plugin_type = parse_plugin_type(plugin_type)
+            plugin_type = parse_plugin_type(None)
         return plugin_type, args, kwargs
 
     # Explicitly listing all the overloads for clarity of documentation.
@@ -511,7 +510,7 @@ class PluginLoader:
         """
         plugin_type, args, kwargs = self._handle_get_args_kwargs(args, kwargs)
         self._refresh()
-        plugin_type = parse_plugin_type(plugin_type)
+        plugin_type = parse_plugin_type(plugin_type, must_be_one_of=self.list_plugin_types())
         fqn = create_fqn(suffix=name, plugin_type=plugin_type)
         self._raise_plugin_does_not_exist_error(fqn)
         return self._plugin_registry[fqn](*args, **kwargs)
@@ -532,7 +531,7 @@ class PluginLoader:
             Type: Plugin class (not instance).
         """
         self._refresh()
-        plugin_type = parse_plugin_type(plugin_type)
+        plugin_type = parse_plugin_type(plugin_type, must_be_one_of=self.list_plugin_types())
         fqn = create_fqn(suffix=name, plugin_type=plugin_type)
         self._raise_plugin_does_not_exist_error(fqn)
         return self._plugin_registry[fqn]

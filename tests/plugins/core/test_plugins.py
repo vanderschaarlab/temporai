@@ -22,7 +22,7 @@ class TestHelpers:
         plugin_type_must_be_one_of_ok = plugin_core.parse_plugin_type("a", must_be_one_of=["a", "b", "c"])
         assert plugin_type_must_be_one_of_ok == "a"
 
-        with pytest.raises(ValueError, match=".*one of.*"):
+        with pytest.raises(ValueError, match=".*Plugin type.*one of.*"):
             plugin_core.parse_plugin_type("x", must_be_one_of=["a", "b", "c"])
 
     def test_create_fqn(self):
@@ -621,6 +621,11 @@ class TestPluginLoader:
     def test_get_fails_no_such_plugin(self, loader):
         with pytest.raises(ValueError, match=".*[Pp]lugin.*not.*exist.*"):
             loader.get_class("category_a.no_such_plugin")
+
+    @pytest.mark.parametrize("loader", [plugin_core.PluginLoader(), plugin_loader])
+    def test_get_fails_no_such_plugin_type(self, loader):
+        with pytest.raises(ValueError, match=".*Plugin type.*one of.*"):
+            loader.get_class("category_a.no_such_plugin", plugin_type="no_such_plugin_type")
 
     @pytest.mark.parametrize("loader", [plugin_core.PluginLoader(), plugin_loader])
     def test_plugin_added_live(self, loader: plugin_core.PluginLoader):
