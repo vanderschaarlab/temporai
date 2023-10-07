@@ -24,10 +24,12 @@ P = ParamSpec("P")
 T = TypeVar("T")
 
 # Type aliases:
-PluginTypeAll = Literal["all"]
+PluginType = str
+"""Type alias to indicate plugin type, such as ``'method'``."""
+PluginTypeArgAll = Literal["all"]
 """Literal for argument options indicating all plugin types."""
-PluginType = Union[None, PluginTypeAll, str]
-"""Plugin type argument type."""
+PluginTypeArg = Union[None, PluginTypeArgAll, str]
+"""Plugin type argument type. May be `PluginType` (`str`), None, or `PluginTypeArgAll` (``"all"``)"""
 PluginName = str
 """Type alias to indicate plugin name, such as ``'my_nn_classifier'``."""
 PluginFullName = str
@@ -55,11 +57,15 @@ DEFAULT_PLUGIN_TYPE = "method"
 (plugin type set to ``None``).
 """
 
+# All plugin types indicator:
+ALL_PLUGIN_TYPES_INDICATOR = get_args(PluginTypeArgAll)[0]
+"""A string that indicates all plugins."""
+
 
 # Local helpers. ---
 
 
-def parse_plugin_type(plugin_type: PluginType, must_be_one_of: Optional[List[str]] = None) -> PluginType:
+def parse_plugin_type(plugin_type: PluginTypeArg, must_be_one_of: Optional[List[str]] = None) -> PluginTypeArg:
     """Get the default plugin type if ``plugin_type`` is ``None``. If ``plugin_type`` is ``"all"``, raise error,
     as that is a reserved value.
 
@@ -70,7 +76,7 @@ def parse_plugin_type(plugin_type: PluginType, must_be_one_of: Optional[List[str
     Returns:
         PluginType: Default plugin type if ``plugin_type`` is ``None``, otherwise ``plugin_type``.
     """
-    if plugin_type == get_args(PluginTypeAll)[0]:
+    if plugin_type == ALL_PLUGIN_TYPES_INDICATOR:
         raise ValueError(f"Plugin type cannot be '{plugin_type}' as that is a reserved value.")
     if plugin_type is None:
         return DEFAULT_PLUGIN_TYPE
@@ -79,7 +85,7 @@ def parse_plugin_type(plugin_type: PluginType, must_be_one_of: Optional[List[str
     return plugin_type
 
 
-def create_fqn(suffix: Union[PluginCategory, PluginFullName], plugin_type: PluginType) -> str:
+def create_fqn(suffix: Union[PluginCategory, PluginFullName], plugin_type: PluginTypeArg) -> str:
     """Create a fully-qualified name for a plugin or category, like `[plugin_type].category.name` or
     `[plugin_type].category` respectively.
 
@@ -95,7 +101,7 @@ def create_fqn(suffix: Union[PluginCategory, PluginFullName], plugin_type: Plugi
     return f"[{plugin_type}].{suffix}"
 
 
-def filter_list_by_plugin_type(lst: List[_PluginFqn], plugin_type: PluginType) -> List[PluginFullName]:
+def filter_list_by_plugin_type(lst: List[_PluginFqn], plugin_type: PluginTypeArg) -> List[PluginFullName]:
     """Filter a list of plugin FQNs by plugin type.
 
     Args:
@@ -108,7 +114,7 @@ def filter_list_by_plugin_type(lst: List[_PluginFqn], plugin_type: PluginType) -
     return [x for x in lst if x.split(".")[0] == f"[{plugin_type}]"]
 
 
-def filter_dict_by_plugin_type(d: Dict[_PluginFqn, Any], plugin_type: PluginType) -> Dict[PluginFullName, Any]:
+def filter_dict_by_plugin_type(d: Dict[_PluginFqn, Any], plugin_type: PluginTypeArg) -> Dict[PluginFullName, Any]:
     """Filter a dictionary with plugin FQN keys by plugin type.
 
     Args:
@@ -122,7 +128,7 @@ def filter_dict_by_plugin_type(d: Dict[_PluginFqn, Any], plugin_type: PluginType
     return {k: v for k, v in d.items() if k.split(".")[0] == f"[{plugin_type}]"}
 
 
-def _parse_fqn_format(fqn: str) -> Tuple[PluginType, str]:
+def _parse_fqn_format(fqn: str) -> Tuple[PluginTypeArg, str]:
     """Parse a plugin FQN or category FQN into its plugin type and remainder (``category`` or ``category.name``) parts.
 
     Args:
@@ -155,7 +161,7 @@ def remove_plugin_type_from_fqn(fqn: Union[_PluginCategoryFqn, _PluginFqn]) -> U
     return remainder
 
 
-def get_plugin_type_from_fqn(fqn: Union[_PluginCategoryFqn, _PluginFqn]) -> PluginType:
+def get_plugin_type_from_fqn(fqn: Union[_PluginCategoryFqn, _PluginFqn]) -> PluginTypeArg:
     """Get the plugin type part of a plugin FQN or category FQN.
 
     Args:
@@ -180,13 +186,13 @@ class Plugin:
     """Plugin category, such as ``'prediction.one_off.classification'``.
     Must be set by the plugin class using ``@register_plugin``.
     """
-    plugin_type: ClassVar[PluginType] = PLUGIN_TYPE_NOT_SET
+    plugin_type: ClassVar[PluginTypeArg] = PLUGIN_TYPE_NOT_SET
     """Plugin type, such as ``'method'``. May be optionally set by the plugin class using ``@register_plugin``,
     else will set the default plugin type.
     """
 
     @classmethod
-    def full_name(cls) -> str:
+    def full_name(cls) -> PluginFullName:
         """The full name of the plugin with its category: ``category.subcategory.name``.
         There may be 0 or more subcategories.
         """
@@ -224,7 +230,7 @@ PLUGIN_REGISTRY: Dict[_PluginFqn, Type[Plugin]] = dict()
 ``'[plugin_type].category.<0 or more subcategories if applicable>.plugin_name'``."""
 
 
-def register_plugin_category(category: PluginCategory, expected_class: Type, plugin_type: PluginType = None) -> None:
+def register_plugin_category(category: PluginCategory, expected_class: Type, plugin_type: PluginTypeArg = None) -> None:
     """A decorator to register a plugin category (with optional subcategories). If ``plugin_type`` is provided,
     this will also be assigned, otherwise the default plugin type will be used.
 
@@ -259,7 +265,7 @@ def _check_same_class(class_1, class_2) -> bool:
     )
 
 
-def register_plugin(name: str, category: PluginCategory, plugin_type: PluginType = None):
+def register_plugin(name: str, category: PluginCategory, plugin_type: PluginTypeArg = None):
     """A decorator to register a plugin class. If ``plugin_type`` is provided, this will also be assigned,
     otherwise the default plugin type will be used. The ``category`` must have already been registered with
     ``@register_plugin_category`` before this can be used to register a plugin.
@@ -341,7 +347,6 @@ def register_plugin(name: str, category: PluginCategory, plugin_type: PluginType
     return _class_decorator
 
 
-# TODO: Add "list all" option, perhaps when "None" is passed in to plugin_type, in all the relevant listing methods.
 # TODO: Consider whether to enforce common base class across plugin_type/category.
 class PluginLoader:
     """A class to load plugins. Provides functionality to list and get plugins."""
@@ -372,9 +377,29 @@ class PluginLoader:
             )
         self._plugin_class_by_category_nested = class_by_category_nested
 
-    def list(self, plugin_type: PluginType = None) -> Dict:
+    def _handle_all_plugin_types_case(self, pt: PluginTypeArg, method: Callable, *args, **kwargs) -> Dict:
+        # If ``pt`` (plugin type) is "all", will call ``method`` for all plugin types and return a nested dictionary.
+        # Otherwise, just calls ``method`` and return what it returns.
+        # In either case, plugin type value(s) will be passed to ``method`` by ``plugin_type`` kwarg.
+        if pt == ALL_PLUGIN_TYPES_INDICATOR:
+            output = dict()
+            for actual_pt in self.list_plugin_types():
+                output[actual_pt] = method(*args, **kwargs, plugin_type=actual_pt)
+            return output
+        else:
+            return method(*args, **kwargs, plugin_type=pt)
+
+    def _list(self, plugin_type: PluginTypeArg = None) -> Dict:
+        self._refresh()
+        plugin_type = parse_plugin_type(plugin_type, must_be_one_of=self.list_plugin_types())
+        return self._plugin_name_by_category_nested[f"[{plugin_type}]"]
+
+    def list(self, plugin_type: PluginTypeArg = None) -> Dict:
         """List all plugins of ``plugin_type`` as a nested dictionary, where the keys are the plugin categories
         and optional subcategories. The values of the dictionary are the plugin names.
+
+        If ``plugin_type`` is ``"all"``, will list for all plugin types, outputting inside a nested dictionary
+        with plugin type keys.
 
         Args:
             plugin_type (PluginType, optional): Plugin type for which to list. Use default category if `None`. \
@@ -383,29 +408,46 @@ class PluginLoader:
         Returns:
             Dict: A dictionary as described above.
         """
-        self._refresh()
-        plugin_type = parse_plugin_type(plugin_type, must_be_one_of=self.list_plugin_types())
-        return self._plugin_name_by_category_nested[f"[{plugin_type}]"]
+        return self._handle_all_plugin_types_case(plugin_type, self._list)
 
-    def list_full_names(self, plugin_type: PluginType = None) -> List[PluginFullName]:
-        """List all plugins of ``plugin_type`` as a list of plugin full names (including categories).
-
-        Args:
-            plugin_type (PluginType, optional): Plugin type for which to list. Use default category if `None`. \
-                Defaults to `None`.
-
-        Returns:
-            List[PluginFullName]: A list as described above.
-        """
+    def _list_full_names(self, plugin_type: PluginTypeArg = None) -> List[PluginFullName]:
         self._refresh()
         plugin_fqns = list(self._plugin_registry.keys())
         plugin_type = parse_plugin_type(plugin_type, must_be_one_of=self.list_plugin_types())
         plugin_fqns_filtered_by_type = filter_list_by_plugin_type(lst=plugin_fqns, plugin_type=plugin_type)
         return [remove_plugin_type_from_fqn(n) for n in plugin_fqns_filtered_by_type]
 
-    def list_classes(self, plugin_type: PluginType = None) -> Dict:
+    def list_full_names(
+        self, plugin_type: PluginTypeArg = None
+    ) -> Union[List[PluginFullName], Dict[str, List[PluginFullName]]]:
+        """List all plugins of ``plugin_type`` as a list of plugin full names (including categories).
+
+        If ``plugin_type`` is ``"all"``, will list for all plugin types, outputting inside a nested dictionary
+        with plugin type keys.
+
+        Args:
+            plugin_type (PluginType, optional): Plugin type for which to list. Use default category if `None`. \
+                Defaults to `None`.
+
+        Returns:
+            Union[List[PluginFullName], Dict[str, List[PluginFullName]]]: A list as \
+                described above (``List[PluginFullName]``) if ``plugin_type`` is not ``"all"``. \
+                Otherwise a nested dictionary with plugin type keys and such lists as values \
+                (``Dict[str, List[PluginFullName]]]``).
+        """
+        return self._handle_all_plugin_types_case(plugin_type, self._list_full_names)
+
+    def _list_classes(self, plugin_type: PluginTypeArg = None) -> Dict:
+        self._refresh()
+        plugin_type = parse_plugin_type(plugin_type, must_be_one_of=self.list_plugin_types())
+        return self._plugin_class_by_category_nested[f"[{plugin_type}]"]
+
+    def list_classes(self, plugin_type: PluginTypeArg = None) -> Dict:
         """List all plugin classes of ``plugin_type`` as a nested dictionary, where the keys are the plugin categories
         and optional subcategories. The values of the dictionary are the plugin **classes**.
+
+        If ``plugin_type`` is ``"all"``, will list for all plugin types, outputting inside a nested dictionary
+        with plugin type keys.
 
         Args:
             plugin_type (PluginType, optional): Plugin type for which to list. Use default category if `None`. \
@@ -414,27 +456,36 @@ class PluginLoader:
         Returns:
             Dict: A dictionary as described above.
         """
+        return self._handle_all_plugin_types_case(plugin_type, self._list_classes)
+
+    def _list_categories(self, plugin_type: PluginTypeArg = None) -> Dict[PluginFullName, Type[Plugin]]:
         self._refresh()
         plugin_type = parse_plugin_type(plugin_type, must_be_one_of=self.list_plugin_types())
-        return self._plugin_class_by_category_nested[f"[{plugin_type}]"]
+        categories_filtered_by_type = filter_dict_by_plugin_type(d=PLUGIN_CATEGORY_REGISTRY, plugin_type=plugin_type)
+        return {remove_plugin_type_from_fqn(k): v for k, v in categories_filtered_by_type.items()}
 
-    def list_categories(self, plugin_type: PluginType = None) -> Dict[PluginFullName, Type[Plugin]]:
+    def list_categories(
+        self, plugin_type: PluginTypeArg = None
+    ) -> Union[Dict[PluginFullName, Type[Plugin]], Dict[PluginType, Dict[PluginFullName, Type[Plugin]]]]:
         """List all plugin categories of ``plugin_type`` as a dictionary, where the keys are the plugin category names
         (including optional subcategories) and the values are the **expected plugin classes** for that category.
+
+        If ``plugin_type`` is ``"all"``, will list for all plugin types, outputting inside a nested dictionary
+        with plugin type keys.
 
         Args:
             plugin_type (PluginType, optional): Plugin type for which to list. Use default category if `None`. \
                 Defaults to `None`.
 
         Returns:
-            Dict[PluginFullName, Type[Plugin]]: A dictionary as described above.
+            Union[Dict[PluginFullName, Type[Plugin]], Dict[PluginType, Dict[PluginFullName, Type[Plugin]]]]: A \
+                dictionary as described above (``Dict[PluginFullName, Type[Plugin]]``) if ``plugin_type`` is \
+                not ``"all"``. Otherwise a nested dictionary with plugin type keys and such dictionaries as values \
+                (``Dict[PluginType, Dict[PluginFullName, Type[Plugin]]]``).
         """
-        self._refresh()
-        plugin_type = parse_plugin_type(plugin_type, must_be_one_of=self.list_plugin_types())
-        categories_filtered_by_type = filter_dict_by_plugin_type(d=PLUGIN_CATEGORY_REGISTRY, plugin_type=plugin_type)
-        return {remove_plugin_type_from_fqn(k): v for k, v in categories_filtered_by_type.items()}
+        return self._handle_all_plugin_types_case(plugin_type, self._list_categories)
 
-    def list_plugin_types(self) -> List[str]:
+    def list_plugin_types(self) -> List[PluginType]:
         """List all plugin types.
 
         Returns:
@@ -464,15 +515,27 @@ class PluginLoader:
 
     # Explicitly listing all the overloads for clarity of documentation.
     @overload
-    def get(self, name: PluginFullName, *args, **kwargs) -> Type:
+    def get(self, name: PluginFullName, *args, **kwargs) -> Type:  # pragma: co cover
         ...
 
     @overload
-    def get(self, name: PluginFullName, plugin_type: PluginType, *args, **kwargs) -> Type:  # type: ignore [misc]
+    def get(  # type: ignore [misc]
+        self,
+        name: PluginFullName,
+        plugin_type: PluginTypeArg,
+        *args,
+        **kwargs,
+    ) -> Type:  # pragma: co cover
         ...
 
     @overload
-    def get(self, name: PluginFullName, *args, plugin_type: PluginType = None, **kwargs) -> Type:  # type: ignore [misc]
+    def get(  # type: ignore [misc]
+        self,
+        name: PluginFullName,
+        *args,
+        plugin_type: PluginTypeArg = None,
+        **kwargs,
+    ) -> Type:  # pragma: co cover
         ...
 
     def get(self, name: PluginFullName, *args, **kwargs) -> Any:
@@ -515,7 +578,7 @@ class PluginLoader:
         self._raise_plugin_does_not_exist_error(fqn)
         return self._plugin_registry[fqn](*args, **kwargs)
 
-    def get_class(self, name: PluginFullName, plugin_type: PluginType = None) -> Type:
+    def get_class(self, name: PluginFullName, plugin_type: PluginTypeArg = None) -> Type:
         """Get a plugin class (not instance) by its full name (including category, i.e. of form
         ``'my_category.my_subcategory.my_plugin'``). If the plugin is not of the default plugin type, must provide
         ``plugin_type``.

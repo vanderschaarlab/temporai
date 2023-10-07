@@ -517,6 +517,23 @@ class TestPluginLoader:
         }
 
     @pytest.mark.parametrize("loader", [plugin_core.PluginLoader(), plugin_loader])
+    def test_list_all(self, loader):
+        listed_all = loader.list(plugin_type="all")
+
+        assert listed_all == {
+            plugin_type_foo: {
+                "category_a": ["plugin_a1", "plugin_a2"],
+                "category_b": {
+                    "x": ["plugin_bx1", "plugin_bx2"],
+                    "y": ["plugin_by1", "plugin_by2"],
+                },
+            },
+            plugin_type_bar: {
+                "category_c": ["plugin_c1", "plugin_c2"],
+            },
+        }
+
+    @pytest.mark.parametrize("loader", [plugin_core.PluginLoader(), plugin_loader])
     def test_list_classes(self, loader):
         listed_foo = loader.list_classes(plugin_type=plugin_type_foo)
 
@@ -532,6 +549,23 @@ class TestPluginLoader:
 
         assert listed_bar == {
             "category_c": [MockPluginBarC1, MockPluginBarC2],
+        }
+
+    @pytest.mark.parametrize("loader", [plugin_core.PluginLoader(), plugin_loader])
+    def test_list_classes_all(self, loader):
+        listed_all = loader.list_classes(plugin_type="all")
+
+        assert listed_all == {
+            plugin_type_foo: {
+                "category_a": [MockPluginFooA1, MockPluginFooA2],
+                "category_b": {
+                    "x": [MockPluginFooBX1, MockPluginFooBX2],
+                    "y": [MockPluginFooBY1, MockPluginFooBY2],
+                },
+            },
+            plugin_type_bar: {
+                "category_c": [MockPluginBarC1, MockPluginBarC2],
+            },
         }
 
     @pytest.mark.parametrize("loader", [plugin_core.PluginLoader(), plugin_loader])
@@ -555,6 +589,25 @@ class TestPluginLoader:
         ]
 
     @pytest.mark.parametrize("loader", [plugin_core.PluginLoader(), plugin_loader])
+    def test_list_full_names_all(self, loader):
+        listed_all = loader.list_full_names(plugin_type="all")
+
+        assert listed_all == {
+            plugin_type_foo: [
+                "category_a.plugin_a1",
+                "category_a.plugin_a2",
+                "category_b.x.plugin_bx1",
+                "category_b.x.plugin_bx2",
+                "category_b.y.plugin_by1",
+                "category_b.y.plugin_by2",
+            ],
+            plugin_type_bar: [
+                "category_c.plugin_c1",
+                "category_c.plugin_c2",
+            ],
+        }
+
+    @pytest.mark.parametrize("loader", [plugin_core.PluginLoader(), plugin_loader])
     def test_list_categories(self, loader):
         listed_foo = loader.list_categories(plugin_type=plugin_type_foo)
 
@@ -568,6 +621,21 @@ class TestPluginLoader:
 
         assert listed_bar == {
             "category_c": PluginTypeBarCategoryCExpectedClass,
+        }
+
+    @pytest.mark.parametrize("loader", [plugin_core.PluginLoader(), plugin_loader])
+    def test_list_categories_all(self, loader):
+        listed_all = loader.list_categories(plugin_type="all")
+
+        assert listed_all == {
+            plugin_type_foo: {
+                "category_a": PluginTypeFooCategoryAExpectedClass,
+                "category_b.x": PluginTypeFooCategoryBXExpectedClass,
+                "category_b.y": PluginTypeFooCategoryBYExpectedClass,
+            },
+            plugin_type_bar: {
+                "category_c": PluginTypeBarCategoryCExpectedClass,
+            },
         }
 
     @pytest.mark.parametrize("loader", [plugin_core.PluginLoader(), plugin_loader])
