@@ -5,7 +5,7 @@ import importlib.util
 import os
 import os.path
 import sys
-from typing import TYPE_CHECKING, Any, Callable, ClassVar, Dict, List, Tuple, Type, TypeVar, Union, overload
+from typing import TYPE_CHECKING, Any, Callable, ClassVar, Dict, List, Optional, Tuple, Type, TypeVar, Union, overload
 
 from typing_extensions import Literal, ParamSpec, get_args
 
@@ -59,12 +59,13 @@ DEFAULT_PLUGIN_TYPE = "method"
 # Local helpers. ---
 
 
-def parse_plugin_type(plugin_type: PluginType) -> PluginType:
+def parse_plugin_type(plugin_type: PluginType, must_be_one_of: Optional[List[str]] = None) -> PluginType:
     """Get the default plugin type if ``plugin_type`` is ``None``. If ``plugin_type`` is ``"all"``, raise error,
     as that is a reserved value.
 
     Args:
         plugin_type (PluginType): Plugin type.
+        must_be_one_of (List[str]): List of plugin types that ``plugin_type`` must be one of.
 
     Returns:
         PluginType: Default plugin type if ``plugin_type`` is ``None``, otherwise ``plugin_type``.
@@ -73,6 +74,8 @@ def parse_plugin_type(plugin_type: PluginType) -> PluginType:
         raise ValueError(f"Plugin type cannot be '{plugin_type}' as that is a reserved value.")
     if plugin_type is None:
         return DEFAULT_PLUGIN_TYPE
+    if must_be_one_of and plugin_type not in must_be_one_of:
+        raise ValueError(f"Plugin type must be one of {must_be_one_of} but was '{plugin_type}'")
     return plugin_type
 
 
@@ -460,12 +463,17 @@ class PluginLoader:
             plugin_type = parse_plugin_type(plugin_type)
         return plugin_type, args, kwargs
 
+    # Explicitly listing all the overloads for clarity of documentation.
     @overload
-    def get(self, name: PluginFullName, plugin_type: PluginType, *args, **kwargs) -> Type:
+    def get(self, name: PluginFullName, *args, **kwargs) -> Type:
         ...
 
     @overload
-    def get(self, name: PluginFullName, *args, plugin_type: PluginType = None, **kwargs) -> Type:
+    def get(self, name: PluginFullName, plugin_type: PluginType, *args, **kwargs) -> Type:  # type: ignore [misc]
+        ...
+
+    @overload
+    def get(self, name: PluginFullName, *args, plugin_type: PluginType = None, **kwargs) -> Type:  # type: ignore [misc]
         ...
 
     def get(self, name: PluginFullName, *args, **kwargs) -> Any:
