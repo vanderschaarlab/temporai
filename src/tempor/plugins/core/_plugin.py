@@ -232,7 +232,8 @@ PLUGIN_REGISTRY: Dict[_PluginFqn, Type[Plugin]] = dict()
 
 def register_plugin_category(category: PluginCategory, expected_class: Type, plugin_type: PluginTypeArg = None) -> None:
     """A decorator to register a plugin category (with optional subcategories). If ``plugin_type`` is provided,
-    this will also be assigned, otherwise the default plugin type will be used.
+    this will also be assigned (or created, if such plugin type doesn't yet exist), otherwise the default plugin type
+    will be used.
 
     Args:
         category (PluginCategory): Plugin category, dot-separated, with optional subcategories, \
@@ -515,8 +516,8 @@ class PluginLoader:
 
     # Explicitly listing all the overloads for clarity of documentation.
     @overload
-    def get(self, name: PluginFullName, *args, **kwargs) -> Type:  # pragma: co cover
-        ...
+    def get(self, name: PluginFullName, *args, **kwargs) -> Type:
+        ...  # pragma: co cover
 
     @overload
     def get(  # type: ignore [misc]
@@ -525,8 +526,8 @@ class PluginLoader:
         plugin_type: PluginTypeArg,
         *args,
         **kwargs,
-    ) -> Type:  # pragma: co cover
-        ...
+    ) -> Type:
+        ...  # pragma: co cover
 
     @overload
     def get(  # type: ignore [misc]
@@ -535,8 +536,8 @@ class PluginLoader:
         *args,
         plugin_type: PluginTypeArg = None,
         **kwargs,
-    ) -> Type:  # pragma: co cover
-        ...
+    ) -> Type:
+        ...  # pragma: co cover
 
     def get(self, name: PluginFullName, *args, **kwargs) -> Any:
         """Get a plugin by its full name (including category, i.e. of form
