@@ -8,7 +8,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 def _generate_pipeline_seq_impl(plugins: Tuple[Type, ...]) -> Callable:
     def pipeline_seq_impl(*args: Any) -> str:  # pylint: disable=unused-argument
-        return "->".join(p.fqn() for p in plugins)
+        return "->".join(p.full_name() for p in plugins)
 
     return pipeline_seq_impl
 

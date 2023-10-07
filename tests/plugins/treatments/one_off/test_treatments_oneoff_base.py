@@ -19,6 +19,7 @@ mock_predict_proba = Mock()
 class DummyOneOffTreatmentEffects(BaseOneOffTreatmentEffects):
     name = "dummy"
     category = "dummy_cat"
+    plugin_type = "dummy_type"
 
     def _predict(
         self,

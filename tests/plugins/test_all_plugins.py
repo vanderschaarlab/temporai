@@ -6,7 +6,7 @@ import pytest
 from tempor.plugins import plugin_loader
 from tempor.plugins.core._base_estimator import EmptyParamsDefinition
 
-PLUGIN_FQNS = plugin_loader.list_fqns()
+PLUGIN_FQNS = plugin_loader.list_full_names()
 
 
 @pytest.mark.filterwarnings("ignore:.*validate_arguments.*:DeprecationWarning")  # Exp pydantic2 warns from HI.
@@ -41,6 +41,8 @@ def test_repr(plugin_fqn):
         f"{plugin.name}"
         r"'.*category='"
         f"{plugin.category}"
+        r"'.*plugin_type='"
+        f"{plugin.plugin_type}"
         r"'.*params=.?\{.*\}.*\)",
         repr_,
         re.S | re.DOTALL,

@@ -25,6 +25,7 @@ class TestBaseEstimator:
         class MyModel(tempor.plugins.core.BaseEstimator):
             name = "my_model"
             category = "my_category"
+            plugin_type = "my_plugin_type"
 
             @staticmethod
             def hyperparameter_space(*args: Any, **kwargs: Any):
@@ -43,6 +44,7 @@ class TestBaseEstimator:
             ParamsDefinition = self.MyModelParams
             name = "my_model"
             category = "my_category"
+            plugin_type = "my_plugin_type"
 
             @staticmethod
             def hyperparameter_space(*args: Any, **kwargs: Any):
@@ -59,6 +61,7 @@ class TestBaseEstimator:
         class MyModel(tempor.plugins.core.BaseEstimator):
             name = "my_model"
             category = "my_category"
+            plugin_type = "my_plugin_type"
             ParamsDefinition = self.MyModelParams
 
             @staticmethod
@@ -76,6 +79,7 @@ class TestBaseEstimator:
         class MyModel(tempor.plugins.core.BaseEstimator):
             name = "my_model"
             category = "my_category"
+            plugin_type = "my_plugin_type"
 
             ParamsDefinition = self.MyModelParamsWithNoDefault
 
@@ -93,6 +97,7 @@ class TestBaseEstimator:
         class MyModel(tempor.plugins.core.BaseEstimator):
             name = "my_model"
             category = "my_category"
+            plugin_type = "my_plugin_type"
             ParamsDefinition = self.MyModelParamsWithNoDefault
 
             @staticmethod
@@ -110,6 +115,7 @@ class TestBaseEstimator:
         class MyModel(tempor.plugins.core.BaseEstimator):
             name = "my_model"
             category = "my_category"
+            plugin_type = "my_plugin_type"
             ParamsDefinition = self.MyModelParams
 
             @staticmethod
@@ -126,6 +132,7 @@ class TestBaseEstimator:
         class MyModel(tempor.plugins.core.BaseEstimator):
             name = "my_model"
             category = "my_category"
+            plugin_type = "my_plugin_type"
             ParamsDefinition = self.MyModelParams
 
             @staticmethod
@@ -142,6 +149,7 @@ class TestBaseEstimator:
         class MyModel(tempor.plugins.core.BaseEstimator):
             name = "my_model"
             category = "my_category"
+            plugin_type = "my_plugin_type"
             ParamsDefinition = self.MyModelParams
 
             @staticmethod
@@ -164,6 +172,7 @@ class TestBaseEstimator:
         class MyModel(tempor.plugins.core.BaseEstimator):
             name = "my_model"
             category = "my_category"
+            plugin_type = "my_plugin_type"
             ParamsDefinition = self.MyModelParams
 
             @staticmethod
@@ -188,6 +197,7 @@ class TestBaseEstimator:
         class MyModel(tempor.plugins.core.BaseEstimator):
             name = "my_model"
             category = "my_category"
+            plugin_type = "my_plugin_type"
             ParamsDefinition = self.MyModelParams
 
             @staticmethod
@@ -214,6 +224,7 @@ class TestBaseEstimator:
         class MyModel(tempor.plugins.core.BaseEstimator):
             name = "my_model"
             category = "my_category"
+            plugin_type = "my_plugin_type"
             ParamsDefinition = self.MyModelParams
 
             @staticmethod

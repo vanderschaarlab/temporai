@@ -39,7 +39,7 @@ def test_sanity(get_test_plugin: Callable, plugin_from: str) -> None:
     test_plugin: "BaseTimeToEventAnalysis" = get_test_plugin(plugin_from, INIT_KWARGS, device="cpu")
     assert test_plugin is not None
     assert test_plugin.name == "dynamic_deephit"
-    assert test_plugin.fqn() == "time_to_event.dynamic_deephit"
+    assert test_plugin.full_name() == "time_to_event.dynamic_deephit"
     assert len(test_plugin.hyperparameter_space()) == 10
 
 

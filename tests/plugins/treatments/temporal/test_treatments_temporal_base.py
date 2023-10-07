@@ -16,6 +16,7 @@ from unittest.mock import Mock
 class DummyTemporalTreatmentEffects(BaseTemporalTreatmentEffects):
     name = "dummy"
     category = "dummy_cat"
+    plugin_type = "dummy_type"
 
     def _predict(
         self,

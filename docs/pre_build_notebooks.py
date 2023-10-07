@@ -56,6 +56,7 @@ def modify_and_copy_nb(notebook_path: str, output_path: str, notebook_link: str)
     # Add links to Colab notebook.
     # Add notebook_link as the first cell
     link_cell = nbformat.v4.new_markdown_cell(notebook_link)
+    link_cell.id = ""
     new_cells.insert(0, link_cell)  # Insert at the beginning
     nb.cells = new_cells
 

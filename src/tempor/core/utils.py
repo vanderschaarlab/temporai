@@ -1,6 +1,6 @@
-from typing import Any, Dict, Tuple, Type
+from typing import Any, Dict, Iterable, List, Tuple, Type
 
-from typing_extensions import get_args
+from typing_extensions import Literal, get_args
 
 
 def get_class_full_name(o: object):
@@ -46,8 +46,16 @@ def ensure_literal_matches_dict_keys(
         )
 
 
+PreferArgOrKwarg = Literal["arg", "kwarg", "raise"]
+
+
 def get_from_args_or_kwargs(
-    args: Tuple, kwargs: Dict, argument_name: str, argument_type: Type, position_if_args: int
+    args: Tuple,
+    kwargs: Dict,
+    argument_name: str,
+    argument_type: Type,
+    position_if_args: int,
+    prefer: PreferArgOrKwarg = "raise",
 ) -> Tuple[Any, Tuple, Dict]:
     """Will attempt to get the function argument as defined by ``argument_name``, ``argument_type``, and
     ``position_if_args`` from ``args`` and ``kwargs``. Will return `None` if no such argument found.
@@ -56,7 +64,9 @@ def get_from_args_or_kwargs(
     Algorithm:
         1. Check if an ``arg`` of type ``argument_type`` is found at index ``position_if_args`` in ``args``.
         2. Check if a ``kwarg`` by key ``argument_name`` is found in ``kwargs``.
-        3. If both 1 and 2 are found raise `RuntimeError`.
+        3. If both 1 and 2 are found raise `RuntimeError` if ``prefer`` is set to ``"raise"``. Otherwise take the \
+            ``arg`` or ``kwarg`` item as specified by ``prefer`` accordingly. The other item will be left as it was \
+            originally provided in ``args``/``kwargs``.
         4. If ``kwarg`` from 2 is not of type ``argument_type`` raise `TypeError`.
         5. Return 1 or 2 if argument is found, else return `None`. Also return ``args`` and ``kwargs``\
             with the argument "popped".
@@ -72,6 +82,9 @@ def get_from_args_or_kwargs(
             The type of the argument to confirm.
         position_if_args (int):
             The index in ``args`` at which the argument should be found, if it is provided by ``args``.
+        prefer (PreferArgOrKwarg, optional):
+            Whether to prefer the ``arg`` or the ``kwarg`` if both are found, or to raise an exception if this is set \
+            to ``"raise"``. Defaults to ``"raise"``.
 
     Raises:
         RuntimeError: Error in case the argument appears to have been provided by both ``args`` and ``kwargs``.
@@ -90,13 +103,37 @@ def get_from_args_or_kwargs(
             args = tuple([x for i, x in enumerate(args) if i != position_if_args])
     from_kwargs = kwargs.pop(argument_name, None)
     if from_args is not None and from_kwargs is not None:
-        raise RuntimeError(
-            f"Argument `{argument_name}` appears to have been passed as `kwargs` (by key '{argument_name}') "
-            f"and as `args` (at position {position_if_args}), but it should be passed in only one of these ways"
-        )
+        if prefer == "raise":
+            raise RuntimeError(
+                f"Argument `{argument_name}` appears to have been passed as `kwargs` (by key '{argument_name}') "
+                f"and as `args` (at position {position_if_args}), but it should be passed in only one of these ways"
+            )
+        elif prefer == "kwarg":
+            args_list = list(args)
+            args_list.insert(position_if_args, from_args)
+            args = tuple(args_list)
+            from_args = None
+        else:
+            kwargs[argument_name] = from_kwargs
+            from_kwargs = None
     if from_kwargs is not None and not isinstance(from_kwargs, argument_type):
         raise TypeError(
             f"Argument `{argument_name}` was passed as `kwargs` (by key '{argument_name}') but was not of "
             f"expected type `{argument_type}`"
         )
     return from_args if from_args is not None else from_kwargs, args, kwargs
+
+
+def unique_in_order_of_appearance(iterable: Iterable) -> List:
+    """Return unique elements from ``iterable`` in order of their appearance.
+
+    Note:
+        All items in ``iterable`` must be hashable.
+
+    Args:
+        iterable (Iterable): The iterable to get unique elements from.
+
+    Returns:
+        List: List of unique elements in order of their appearance.
+    """
+    return list(dict.fromkeys(iterable))

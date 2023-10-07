@@ -19,6 +19,7 @@ class TestBasePredictor:
         class MyModel(tempor.plugins.core.BasePredictor):
             name = "my_model"
             category = "my_category"
+            plugin_type = "my_plugin_type"
             ParamsDefinition = self.MyModelParams
 
             @staticmethod
@@ -53,6 +54,7 @@ class TestBasePredictor:
         class MyModel(tempor.plugins.core.BasePredictor):
             name = "my_model"
             category = "my_category"
+            plugin_type = "my_plugin_type"
             ParamsDefinition = self.MyModelParams
 
             @staticmethod
@@ -83,6 +85,7 @@ class TestBasePredictor:
         class MyModel(tempor.plugins.core.BasePredictor):
             name = "my_model"
             category = "my_category"
+            plugin_type = "my_plugin_type"
             ParamsDefinition = self.MyModelParams
 
             @staticmethod
@@ -118,6 +121,7 @@ class TestBasePredictor:
         class MyModel(tempor.plugins.core.BasePredictor):
             name = "my_model"
             category = "my_category"
+            plugin_type = "my_plugin_type"
             ParamsDefinition = self.MyModelParams
 
             @staticmethod
