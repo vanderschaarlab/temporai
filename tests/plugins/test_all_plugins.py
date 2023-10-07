@@ -41,6 +41,8 @@ def test_repr(plugin_fqn):
         f"{plugin.name}"
         r"'.*category='"
         f"{plugin.category}"
+        r"'.*plugin_type='"
+        f"{plugin.plugin_type}"
         r"'.*params=.?\{.*\}.*\)",
         repr_,
         re.S | re.DOTALL,

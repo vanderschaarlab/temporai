@@ -73,6 +73,7 @@ class BaseEstimator(Plugin, abc.ABC):
     def __rich_repr__(self):
         yield "name", self.name
         yield "category", self.category
+        yield "plugin_type", self.plugin_type
         yield "params", omegaconf.OmegaConf.to_container(self.params)
 
     def __repr__(self) -> str:
