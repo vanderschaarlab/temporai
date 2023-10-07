@@ -1,8 +1,8 @@
 from tempor.plugins import plugin_loader
 
 
-def test_tempor_plugin_loader_contents():
-    all_plugins = plugin_loader.list()
+def test_tempor_plugin_loader_methods_contents():
+    all_plugins = plugin_loader.list(plugin_type="method")
 
     # Do some checks that expected plugins have been registered.
     # Update as plugins get added / reorganized.
@@ -76,3 +76,9 @@ def test_tempor_plugin_loader_contents():
     assert "crn_classifier" in all_plugins["treatments"]["temporal"]["classification"]
     assert "crn_regressor" in all_plugins["treatments"]["temporal"]["regression"]
     assert "synctwin_regressor" in all_plugins["treatments"]["one_off"]["regression"]
+
+
+def test_presence_plugin_types():
+    plugin_types = plugin_loader.list_plugin_types()
+
+    assert "method" in plugin_types
