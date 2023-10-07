@@ -9,6 +9,16 @@ from tempor.plugins import plugin_loader
 
 
 class TestHelpers:
+    def test_parse_plugin_type(self):
+        plugin_type_normal = plugin_core.parse_plugin_type("my_plugin_type")
+        assert plugin_type_normal == "my_plugin_type"
+
+        plugin_type_default = plugin_core.parse_plugin_type(None)
+        assert plugin_type_default == plugin_core.DEFAULT_PLUGIN_TYPE
+
+        with pytest.raises(ValueError, match=".*all.*reserved.*"):
+            plugin_core.parse_plugin_type("all")
+
     def test_create_fqn(self):
         fqn = plugin_core.create_fqn(suffix="my_category.my_subcategory.my_plugin", plugin_type="my_plugin_type")
         assert fqn == "[my_plugin_type].my_category.my_subcategory.my_plugin"
