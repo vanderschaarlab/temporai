@@ -3,7 +3,7 @@ from typing import Callable
 
 import pytest
 
-from tempor.benchmarks import (  # visualize_benchmark,
+from tempor.benchmarks import (
     benchmark_models,
     classifier_supported_metrics,
     regression_supported_metrics,
@@ -24,6 +24,7 @@ PREDICTOR_REGRESSION = "prediction.one_off.regression.nn_regressor"
 PREDICTOR_TIME_TO_EVENT = "time_to_event.dynamic_deephit"
 
 
+@pytest.mark.filterwarnings("ignore:.*All-NaN.*:RuntimeWarning")  # Expected matplotlib warnings.
 @pytest.mark.filterwarnings("ignore:.*Matplotlib.*:UserWarning")
 @pytest.mark.parametrize("data", TEST_ON_DATASETS_CLASSIFIER)
 def test_classifier_benchmark(data: str, request: pytest.FixtureRequest) -> None:

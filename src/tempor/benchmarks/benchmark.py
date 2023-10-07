@@ -150,7 +150,12 @@ def visualize_benchmark(results: Dict[str, pd.DataFrame], palette: str = "viridi
         set_options = dict(title=f"Benchmark results: {metric}", ylabel=f"{metric} (CV mean)", xlabel="Benchmark case")
         try:
             out = sns.barplot(
-                df_sns[df_sns["metric"] == metric], x="method", y="mean", palette=palette, yerr=err.loc[metric, :]
+                df_sns[df_sns["metric"] == metric],
+                x="method",
+                y="mean",
+                palette=palette,
+                hue="method",
+                yerr=err.loc[metric, :],
             )
         except ValueError as ex:
             if "'yerr'" in str(ex) and Version(sns.__version__) >= Version("0.13.0"):  # pragma: no cover
@@ -160,7 +165,12 @@ def visualize_benchmark(results: Dict[str, pd.DataFrame], palette: str = "viridi
                 _, unique_indexes = np.unique(values, return_index=True)
                 err_remapped = err.loc[metric, :][unique_indexes]
                 out = sns.barplot(
-                    df_sns[df_sns["metric"] == metric], x="method", y="mean", palette=palette, yerr=err_remapped
+                    df_sns[df_sns["metric"] == metric],
+                    x="method",
+                    y="mean",
+                    palette=palette,
+                    hue="method",
+                    yerr=err_remapped,
                 )
             else:  # pragma: no cover
                 raise
