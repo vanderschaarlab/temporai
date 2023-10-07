@@ -10,14 +10,20 @@ from tempor.plugins import plugin_loader
 
 class TestHelpers:
     def test_parse_plugin_type(self):
-        plugin_type_normal = plugin_core.parse_plugin_type("my_plugin_type")
+        plugin_type_normal = plugin_core.parse_plugin_type("my_plugin_type", must_be_one_of=None)
         assert plugin_type_normal == "my_plugin_type"
 
-        plugin_type_default = plugin_core.parse_plugin_type(None)
+        plugin_type_default = plugin_core.parse_plugin_type(None, must_be_one_of=None)
         assert plugin_type_default == plugin_core.DEFAULT_PLUGIN_TYPE
 
         with pytest.raises(ValueError, match=".*all.*reserved.*"):
-            plugin_core.parse_plugin_type("all")
+            plugin_core.parse_plugin_type("all", must_be_one_of=None)
+
+        plugin_type_must_be_one_of_ok = plugin_core.parse_plugin_type("a", must_be_one_of=["a", "b", "c"])
+        assert plugin_type_must_be_one_of_ok == "a"
+
+        with pytest.raises(ValueError, match=".*one of.*"):
+            plugin_core.parse_plugin_type("x", must_be_one_of=["a", "b", "c"])
 
     def test_create_fqn(self):
         fqn = plugin_core.create_fqn(suffix="my_category.my_subcategory.my_plugin", plugin_type="my_plugin_type")
