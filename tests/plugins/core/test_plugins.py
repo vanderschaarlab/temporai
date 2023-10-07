@@ -13,6 +13,10 @@ class TestHelpers:
         fqn = plugin_core.create_fqn(suffix="my_category.my_subcategory.my_plugin", plugin_type="my_plugin_type")
         assert fqn == "[my_plugin_type].my_category.my_subcategory.my_plugin"
 
+    def test_create_fqn_fails_plugin_type_none(self):
+        with pytest.raises(ValueError, match=".*[Pp]lugin type.*None.*"):
+            plugin_core.create_fqn(suffix="my_category.my_subcategory.my_plugin", plugin_type=None)
+
     def test_filter_list_by_plugin_type(self):
         lst = [
             "[my_plugin_type_A].my_category.my_subcategory.my_plugin_A1",
@@ -123,6 +127,9 @@ class TestRegistration:
     @pytest.fixture(autouse=True)
     def always_patch_module_in_this_test_class(self, patch_plugins_core_module):
         pass
+
+    def test_default_plugin_type(self):
+        assert plugin_core.DEFAULT_PLUGIN_TYPE == "method"
 
     def test_register_plugin_and_category_success(self):
         plugin_core.register_plugin_category(
@@ -341,10 +348,10 @@ class TestRegistration:
 
         plugin = DummyPlugin()
 
-        assert plugin.plugin_type == "default"
+        assert plugin.plugin_type == plugin_core.DEFAULT_PLUGIN_TYPE
         assert plugin.full_name() == "dummy_category.dummy_plugin"
-        assert plugin._fqn() == "[default].dummy_category.dummy_plugin"
-        assert "[default].dummy_category" in plugin_core.PLUGIN_CATEGORY_REGISTRY
+        assert plugin._fqn() == f"[{plugin_core.DEFAULT_PLUGIN_TYPE}].dummy_category.dummy_plugin"
+        assert f"[{plugin_core.DEFAULT_PLUGIN_TYPE}].dummy_category" in plugin_core.PLUGIN_CATEGORY_REGISTRY
 
 
 # Prepare things for TestPluginLoader. ---

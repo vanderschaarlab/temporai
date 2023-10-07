@@ -7,7 +7,7 @@ import os.path
 import sys
 from typing import TYPE_CHECKING, Any, Callable, ClassVar, Dict, List, Tuple, Type, TypeVar, Union
 
-from typing_extensions import Literal, ParamSpec
+from typing_extensions import ParamSpec
 
 import tempor
 from tempor.core.utils import get_from_args_or_kwargs
@@ -24,8 +24,7 @@ P = ParamSpec("P")
 T = TypeVar("T")
 
 # Type aliases:
-PLUGIN_TYPE_DEFAULT = "default"
-PluginType = Union[Literal["default"], str]
+PluginType = Union[None, str]
 PluginName = str
 PluginFullName = str
 PluginCategory = str
@@ -33,8 +32,25 @@ PluginCategory = str
 _PluginFqn = str
 _PluginCategoryFqn = str
 
+# Default plugin type:
+DEFAULT_PLUGIN_TYPE = "method"
+
 
 # Local helpers. ---
+
+
+def get_default_plugin_type(plugin_type: PluginType) -> PluginType:
+    """Get the default plugin type if ``plugin_type`` is ``None``.
+
+    Args:
+        plugin_type (PluginType): Plugin type.
+
+    Returns:
+        PluginType: Default plugin type if ``plugin_type`` is ``None``, otherwise ``plugin_type``.
+    """
+    if plugin_type is None:
+        return DEFAULT_PLUGIN_TYPE
+    return plugin_type
 
 
 def create_fqn(suffix: Union[PluginCategory, PluginFullName], plugin_type: PluginType) -> str:
@@ -48,6 +64,8 @@ def create_fqn(suffix: Union[PluginCategory, PluginFullName], plugin_type: Plugi
     Returns:
         str: Fully-qualified name.
     """
+    if plugin_type is None:
+        raise ValueError("Plugin type cannot be `None`. Did you forget to call `get_default_plugin_type`?")
     return f"[{plugin_type}].{suffix}"
 
 
@@ -165,9 +183,9 @@ PLUGIN_CATEGORY_REGISTRY: Dict[_PluginCategoryFqn, Type[Plugin]] = dict()
 PLUGIN_REGISTRY: Dict[_PluginFqn, Type[Plugin]] = dict()
 
 
-def register_plugin_category(
-    category: PluginCategory, expected_class: Type, plugin_type: PluginType = PLUGIN_TYPE_DEFAULT
-) -> None:
+def register_plugin_category(category: PluginCategory, expected_class: Type, plugin_type: PluginType = None) -> None:
+    plugin_type = get_default_plugin_type(plugin_type)
+    logger.debug(f"Registering plugin type {plugin_type}")
     logger.debug(f"Registering plugin category {category}")
     category_fqn = create_fqn(suffix=category, plugin_type=plugin_type)
     if category_fqn in PLUGIN_CATEGORY_REGISTRY:
@@ -185,7 +203,7 @@ def _check_same_class(class_1, class_2) -> bool:
     )
 
 
-def register_plugin(name: str, category: PluginCategory, plugin_type: PluginType = PLUGIN_TYPE_DEFAULT):
+def register_plugin(name: str, category: PluginCategory, plugin_type: PluginType = None):
     def class_decorator(cls: Callable[P, T]) -> Callable[P, T]:
         # NOTE:
         # The Callable[<ParamSpec>, <TypeVar>] approach allows to preserve the type annotation of the parameters of the
@@ -201,9 +219,11 @@ def register_plugin(name: str, category: PluginCategory, plugin_type: PluginType
         logger.debug(f"Registering plugin of class {cls}")
         cls.name = name
         cls.category = category
-        cls.plugin_type = plugin_type
 
-        category_fqn = create_fqn(suffix=category, plugin_type=plugin_type)
+        _plugin_type = get_default_plugin_type(plugin_type)
+        cls.plugin_type = _plugin_type
+
+        category_fqn = create_fqn(suffix=category, plugin_type=_plugin_type)
 
         if category_fqn not in PLUGIN_CATEGORY_REGISTRY:
             raise TypeError(
@@ -281,22 +301,26 @@ class PluginLoader:
             )
         self._plugin_class_by_category_nested = class_by_category_nested
 
-    def list(self, plugin_type: PluginType = PLUGIN_TYPE_DEFAULT) -> Dict:
+    def list(self, plugin_type: PluginType = None) -> Dict:
         self._refresh()
+        plugin_type = get_default_plugin_type(plugin_type)
         return self._plugin_name_by_category_nested[f"[{plugin_type}]"]
 
-    def list_full_names(self, plugin_type: PluginType = PLUGIN_TYPE_DEFAULT) -> List[PluginFullName]:
+    def list_full_names(self, plugin_type: PluginType = None) -> List[PluginFullName]:
         self._refresh()
         plugin_fqns = list(self._plugin_registry.keys())
+        plugin_type = get_default_plugin_type(plugin_type)
         plugin_fqns_filtered_by_type = filter_list_by_plugin_type(lst=plugin_fqns, plugin_type=plugin_type)
         return [remove_plugin_type_from_fqn(n) for n in plugin_fqns_filtered_by_type]
 
-    def list_classes(self, plugin_type: PluginType = PLUGIN_TYPE_DEFAULT) -> Dict:
+    def list_classes(self, plugin_type: PluginType = None) -> Dict:
         self._refresh()
+        plugin_type = get_default_plugin_type(plugin_type)
         return self._plugin_class_by_category_nested[f"[{plugin_type}]"]
 
-    def list_categories(self, plugin_type: PluginType = PLUGIN_TYPE_DEFAULT) -> Dict[PluginFullName, Type[Plugin]]:
+    def list_categories(self, plugin_type: PluginType = None) -> Dict[PluginFullName, Type[Plugin]]:
         self._refresh()
+        plugin_type = get_default_plugin_type(plugin_type)
         categories_filtered_by_type = filter_dict_by_plugin_type(d=PLUGIN_CATEGORY_REGISTRY, plugin_type=plugin_type)
         return {remove_plugin_type_from_fqn(k): v for k, v in categories_filtered_by_type.items()}
 
@@ -314,19 +338,21 @@ class PluginLoader:
             args, kwargs, argument_name="plugin_type", argument_type=str, position_if_args=0, prefer="kwarg"
         )
         if plugin_type is None:
-            plugin_type = PLUGIN_TYPE_DEFAULT
+            plugin_type = get_default_plugin_type(plugin_type)
         return plugin_type, args, kwargs
 
     # TODO: Write type overloads.
     def get(self, name: PluginFullName, *args, **kwargs) -> Any:
         plugin_type, args, kwargs = self._handle_get_args_kwargs(args, kwargs)
         self._refresh()
+        plugin_type = get_default_plugin_type(plugin_type)
         fqn = create_fqn(suffix=name, plugin_type=plugin_type)
         self._raise_plugin_does_not_exist_error(fqn)
         return self._plugin_registry[fqn](*args, **kwargs)
 
-    def get_class(self, name: PluginFullName, plugin_type: PluginType = PLUGIN_TYPE_DEFAULT) -> Type:
+    def get_class(self, name: PluginFullName, plugin_type: PluginType = None) -> Type:
         self._refresh()
+        plugin_type = get_default_plugin_type(plugin_type)
         fqn = create_fqn(suffix=name, plugin_type=plugin_type)
         self._raise_plugin_does_not_exist_error(fqn)
         return self._plugin_registry[fqn]

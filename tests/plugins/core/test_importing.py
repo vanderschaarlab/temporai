@@ -82,10 +82,10 @@ def test_import_plugins(tmp_path: pathlib.Path, patch_plugins_core_module):
 
     assert sorted(
         [
-            "[default].dummy_category.dummy_plugin_a",
-            "[default].dummy_category.dummy_plugin_b",
-            "[default].dummy_category.dummy_plugin_c",
-            "[default].dummy_category.dummy_tempor_plugin",
+            f"[{plugin_core.DEFAULT_PLUGIN_TYPE}].dummy_category.dummy_plugin_a",
+            f"[{plugin_core.DEFAULT_PLUGIN_TYPE}].dummy_category.dummy_plugin_b",
+            f"[{plugin_core.DEFAULT_PLUGIN_TYPE}].dummy_category.dummy_plugin_c",
+            f"[{plugin_core.DEFAULT_PLUGIN_TYPE}].dummy_category.dummy_tempor_plugin",
             "[my_plugin_type].dummy_different_type_category.dummy_different_type_plugin",
         ]
     ) == sorted(plugin_core.PLUGIN_REGISTRY.keys())
