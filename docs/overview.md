@@ -40,14 +40,34 @@
 
 ## 🚀 Installation
 
+### Instal with `pip`
+
+From [the Python Package Index (PyPI)](https://pypi.org/):
 ```bash
 $ pip install temporai
 ```
-or from source, using
+
+Or from source:
 ```bash
+$ git clone https://github.com/vanderschaarlab/temporai.git
+$ cd temporai
 $ pip install .
 ```
 
+### Install in a [conda](https://docs.conda.io/en/latest/) environment
+
+While have not yet published TemporAI on `conda-forge`, you can still install TemporAI in your conda environment using `pip` as follows:
+
+Create and activate conda environment as normal:
+```bash
+$ conda create -n <my_environment>
+$ conda activate <my_environment>
+```
+
+Then install inside your `conda` environment with pip:
+```bash
+$ pip install temporai
+```
 
 
 ## 💥 Sample Usage
