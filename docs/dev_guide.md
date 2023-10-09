@@ -39,7 +39,8 @@ tempor
   benchmarks: Benchmarking tools
   config: Library config
   core: Core code, such as global utils
-  data: format
+  data: Data format
+    datasources: Data sources for provided datasets
   exc: Exceptions
   log: Logger
   models: Model components
@@ -51,7 +52,6 @@ tempor
     time_to_event: Time-to-event plugins
     treatments: Treatment effects plugins
   utils: Utilities
-    dataloaders: Data loaders for provided datasets
     serialization: Serialization tools
 -->
 ```
@@ -61,7 +61,8 @@ tempor
     ├── benchmarks: Benchmarking tools
     ├── config: Library config
     ├── core: Core code, such as global utils
-    ├── data: format
+    ├── data: Data format/
+    │   └── datasources: Data sources for provided datasets
     ├── exc: Exceptions
     ├── log: Logger
     ├── models: Model components
@@ -73,7 +74,6 @@ tempor
     │   ├── time_to_event: Time-to-event plugins
     │   └── treatments: Treatment effects plugins
     └── utils: Utilities/
-        ├── dataloaders: Data loaders for provided datasets
         └── serialization: Serialization tools
 ```
 
@@ -104,7 +104,7 @@ Please familiarize yourself with the data format we use.
 2. See the following parts of the full API (module) reference:
     1. [Data samples reference](api/tempor.data.samples),
     2. [Dataset reference](api/tempor.data.dataset),
-    3. [Dataloader reference](api/tempor.data.dataloader).
+    3. [Dataloader reference](api/tempor.data.datasources.datasource).
 
 
 
@@ -126,6 +126,7 @@ It is recommended to go through the [usage tutorials](user_guide/usage/index.md)
 Generating class diagrams can be done with the below command
 (requires graphviz to by installed on the system, and pylint via pip):
 ```sh
+cd src/  # Needs to be run from within the src/ directory.
 pyreverse -o png \
 "tempor.methods" \
 --class \
@@ -144,6 +145,7 @@ tempor.methods.treatments.one_off._base.BaseOneOffTreatmentEffects,
 tempor.methods.treatments.temporal._base.BaseTemporalTreatmentEffects
 " \
 -ASmy
+# Then move the diagrams to docs/assets.class_diagrams
 ```
 --->
 The [sklearn](https://scikit-learn.org/)-inspired `fit/transform/predict` API is used for the methods. This section briefly describes the base classes used to achieve this. Full details are available in the API documentation linked for each class.
