@@ -56,12 +56,12 @@ $ pip install .
 :hide:
 import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
 
-from tempor.plugins import plugin_loader
+from tempor.methods import plugin_loader
 
 print(plugin_loader.list())
 ```
 ```python
-from tempor.plugins import plugin_loader
+from tempor.methods import plugin_loader
 
 print(plugin_loader.list())
 ```
@@ -72,7 +72,7 @@ print(plugin_loader.list())
 import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
 
 from tempor.utils.dataloaders import PBCDataLoader
-from tempor.plugins import plugin_loader
+from tempor.methods import plugin_loader
 
 # Load a time-to-event dataset:
 dataset = PBCDataLoader().load()
@@ -88,7 +88,7 @@ prediction = model.predict(dataset, horizons=[0.25, 0.50, 0.75])
 ```
 ```python
 from tempor.utils.dataloaders import PBCDataLoader
-from tempor.plugins import plugin_loader
+from tempor.methods import plugin_loader
 
 # Load a time-to-event dataset:
 dataset = PBCDataLoader().load()
@@ -111,7 +111,7 @@ import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
 import numpy as np
 
 from tempor.utils.dataloaders import DummyTemporalTreatmentEffectsDataLoader
-from tempor.plugins import plugin_loader
+from tempor.methods import plugin_loader
 
 # Load a dataset with temporal treatments and outcomes:
 dataset = DummyTemporalTreatmentEffectsDataLoader(
@@ -147,7 +147,7 @@ counterfactuals = model.predict_counterfactuals(
 import numpy as np
 
 from tempor.utils.dataloaders import DummyTemporalTreatmentEffectsDataLoader
-from tempor.plugins import plugin_loader
+from tempor.methods import plugin_loader
 
 # Load a dataset with temporal treatments and outcomes:
 dataset = DummyTemporalTreatmentEffectsDataLoader(
@@ -186,7 +186,7 @@ counterfactuals = model.predict_counterfactuals(
 import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
 
 from tempor.utils.dataloaders import SineDataLoader
-from tempor.plugins import plugin_loader
+from tempor.methods import plugin_loader
 
 dataset = SineDataLoader(with_missing=True).load()
 static_data_n_missing = dataset.static.dataframe().isna().sum().sum()
@@ -211,7 +211,7 @@ assert temporal_data_n_missing == 0
 ```
 ```python
 from tempor.utils.dataloaders import SineDataLoader
-from tempor.plugins import plugin_loader
+from tempor.methods import plugin_loader
 
 dataset = SineDataLoader(with_missing=True).load()
 static_data_n_missing = dataset.static.dataframe().isna().sum().sum()
@@ -241,7 +241,7 @@ assert temporal_data_n_missing == 0
 import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
 
 from tempor.utils.dataloaders import SineDataLoader
-from tempor.plugins import plugin_loader
+from tempor.methods import plugin_loader
 
 dataset = SineDataLoader().load()
 
@@ -256,7 +256,7 @@ prediction = model.predict(dataset)
 ```
 ```python
 from tempor.utils.dataloaders import SineDataLoader
-from tempor.plugins import plugin_loader
+from tempor.methods import plugin_loader
 
 dataset = SineDataLoader().load()
 
@@ -276,7 +276,7 @@ prediction = model.predict(dataset)
 import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
 
 from tempor.utils.dataloaders import DummyTemporalPredictionDataLoader
-from tempor.plugins import plugin_loader
+from tempor.methods import plugin_loader
 
 # Load a dataset with temporal targets.
 dataset = DummyTemporalPredictionDataLoader(temporal_covariates_missing_prob=0.0).load()
@@ -292,7 +292,7 @@ prediction = model.predict(dataset, n_future_steps=5)
 ```
 ```python
 from tempor.utils.dataloaders import DummyTemporalPredictionDataLoader
-from tempor.plugins import plugin_loader
+from tempor.methods import plugin_loader
 
 # Load a dataset with temporal targets.
 dataset = DummyTemporalPredictionDataLoader(temporal_covariates_missing_prob=0.0).load()
@@ -313,8 +313,8 @@ prediction = model.predict(dataset, n_future_steps=5)
 import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
 
 from tempor.benchmarks import benchmark_models
-from tempor.plugins import plugin_loader
-from tempor.plugins.pipeline import pipeline
+from tempor.methods import plugin_loader
+from tempor.methods.pipeline import pipeline
 from tempor.utils.dataloaders import PBCDataLoader
 
 testcases = [
@@ -351,8 +351,8 @@ print(aggr_score)
 ```
 ```python
 from tempor.benchmarks import benchmark_models
-from tempor.plugins import plugin_loader
-from tempor.plugins.pipeline import pipeline
+from tempor.methods import plugin_loader
+from tempor.methods.pipeline import pipeline
 from tempor.utils.dataloaders import PBCDataLoader
 
 testcases = [
@@ -394,7 +394,7 @@ print(aggr_score)
 import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
 
 from tempor.utils.serialization import load, save
-from tempor.plugins import plugin_loader
+from tempor.methods import plugin_loader
 
 # Initialize the model:
 model = plugin_loader.get("prediction.one_off.classification.nn_classifier", n_iter=50)
@@ -406,7 +406,7 @@ reloaded = load(buff)  # Reload model.
 ```
 ```python
 from tempor.utils.serialization import load, save
-from tempor.plugins import plugin_loader
+from tempor.methods import plugin_loader
 
 # Initialize the model:
 model = plugin_loader.get("prediction.one_off.classification.nn_classifier", n_iter=50)

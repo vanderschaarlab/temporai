@@ -10,8 +10,8 @@ from tempor.benchmarks import (
     time_to_event_supported_metrics,
     visualize_benchmark,
 )
-from tempor.plugins import plugin_loader
-from tempor.plugins.pipeline import pipeline
+from tempor.methods import plugin_loader
+from tempor.methods.pipeline import pipeline
 
 N_ITER = 5
 
