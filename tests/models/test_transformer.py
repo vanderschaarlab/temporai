@@ -2,9 +2,9 @@ import numpy as np
 import pytest
 import torch
 
+from tempor.data.datasources import GoogleStocksDataLoader, SineDataLoader
 from tempor.models.constants import DEVICE
 from tempor.models.transformer import TransformerModel, Transpose
-from tempor.utils.dataloaders import GoogleStocksDataLoader, SineDataLoader
 
 
 def unpack_dataset(source):

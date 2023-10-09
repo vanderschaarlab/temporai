@@ -72,7 +72,7 @@ class CDEClassifier(BaseOneOffClassifier):
                 Parameters and defaults as defined in :class:`CDEClassifierParams`.
 
         Example:
-            >>> from tempor.utils.dataloaders import SineDataLoader
+            >>> from tempor.data.datasources import SineDataLoader
             >>> from tempor.methods import plugin_loader
             >>>
             >>> dataset = SineDataLoader().load()

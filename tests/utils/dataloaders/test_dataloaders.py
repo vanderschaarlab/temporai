@@ -2,21 +2,21 @@ from typing import Type
 
 import pytest
 
+from tempor.data import datasources
 from tempor.data.dataloader import DataLoader
 from tempor.data.dataset import PredictiveDataset
-from tempor.utils import dataloaders
 
 
 @pytest.mark.parametrize(
     "dataloader_cls",
     [
-        dataloaders.SineDataLoader,
-        dataloaders.GoogleStocksDataLoader,
-        dataloaders.PKPDDataLoader,
-        dataloaders.PBCDataLoader,
-        dataloaders.DummyTemporalPredictionDataLoader,
-        dataloaders.DummyTemporalTreatmentEffectsDataLoader,
-        dataloaders.UCIDiabetesDataLoader,
+        datasources.SineDataLoader,
+        datasources.GoogleStocksDataLoader,
+        datasources.PKPDDataLoader,
+        datasources.PBCDataLoader,
+        datasources.DummyTemporalPredictionDataLoader,
+        datasources.DummyTemporalTreatmentEffectsDataLoader,
+        datasources.UCIDiabetesDataLoader,
     ],
 )
 def test_init_load_and_basic_methods(dataloader_cls: Type[DataLoader]):
@@ -38,9 +38,9 @@ def test_init_load_and_basic_methods(dataloader_cls: Type[DataLoader]):
 @pytest.mark.parametrize(
     "dataloader_cls",
     [
-        dataloaders.GoogleStocksDataLoader,
-        dataloaders.PBCDataLoader,
-        dataloaders.UCIDiabetesDataLoader,
+        datasources.GoogleStocksDataLoader,
+        datasources.PBCDataLoader,
+        datasources.UCIDiabetesDataLoader,
     ],
 )
 def test_download_and_local(dataloader_cls, tmpdir, monkeypatch):

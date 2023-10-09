@@ -73,7 +73,7 @@ class LaplaceODERegressor(BaseOneOffRegressor):
                 Parameters and defaults as defined in :class:`LaplaceODERegressorParams`.
 
         Example:
-            >>> from tempor.utils.dataloaders import GoogleStocksDataLoader
+            >>> from tempor.data.datasources import GoogleStocksDataLoader
             >>> from tempor.methods import plugin_loader
             >>>
             >>> dataset = GoogleStocksDataLoader().load()

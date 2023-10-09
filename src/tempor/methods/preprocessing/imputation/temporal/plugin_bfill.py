@@ -19,7 +19,7 @@ class BFillImputer(BaseImputer):
             Then ``bfill``, ``ffill`` and ``fillna(0.0)``` will be called in that order.
 
         Example:
-            >>> from tempor.utils.dataloaders import SineDataLoader
+            >>> from tempor.data.datasources import SineDataLoader
             >>> from tempor.methods import plugin_loader
             >>>
             >>> dataset = SineDataLoader(with_missing = True).load()

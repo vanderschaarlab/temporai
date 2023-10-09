@@ -64,7 +64,7 @@ class StaticOneHotEncoder(BaseEncoder):
                 Parameters and defaults as defined in :class:`StaticOneHotEncoderParams`.
 
         Example:
-            >>> from tempor.utils.dataloaders import DummyTemporalPredictionDataLoader
+            >>> from tempor.data.datasources import DummyTemporalPredictionDataLoader
             >>> from tempor.methods import plugin_loader
             >>>
             >>> dataset = DummyTemporalPredictionDataLoader().load()

@@ -6,8 +6,8 @@ from unittest.mock import Mock
 import numpy as np
 import pytest
 
+from tempor.data.datasources import PBCDataLoader
 from tempor.models.ddh import DynamicDeepHitLayers, DynamicDeepHitModel
-from tempor.utils.dataloaders import PBCDataLoader
 
 
 @pytest.fixture(scope="module")

@@ -4,9 +4,9 @@ import numpy as np
 import pytest
 import torch
 
+from tempor.data.datasources import GoogleStocksDataLoader, SineDataLoader
 from tempor.models.constants import ODEBackend
 from tempor.models.ts_ode import NeuralODE
-from tempor.utils.dataloaders import GoogleStocksDataLoader, SineDataLoader
 
 
 def unpack_dataset(source):

@@ -4,8 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from tempor.data import dataset, samples
-from tempor.utils import dataloaders
+from tempor.data import dataset, datasources, samples
 
 # --- Reusable datasets. ---
 
@@ -13,7 +12,7 @@ from tempor.utils import dataloaders
 # Dummy data: full, with categoricals.
 @pytest.fixture(scope="session")
 def _dummy_data_with_categorical_features_full() -> dataset.OneOffPredictionDataset:
-    data = dataloaders.DummyTemporalPredictionDataLoader(
+    data = datasources.DummyTemporalPredictionDataLoader(
         static_covariates_missing_prob=0.0,
         temporal_covariates_missing_prob=0.0,
         random_state=777,

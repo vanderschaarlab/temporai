@@ -6,8 +6,8 @@ import pytest
 import torch
 from typing_extensions import get_args
 
+from tempor.data.datasources import GoogleStocksDataLoader, SineDataLoader
 from tempor.models.ts_model import ModelTaskType, TimeSeriesLayer, TimeSeriesModel, TSModelMode, WindowLinearLayer
-from tempor.utils.dataloaders import GoogleStocksDataLoader, SineDataLoader
 
 
 def unpack_dataset(source):

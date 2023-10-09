@@ -1,3 +1,6 @@
+# TODO: Move to data/sources
+# TODO: Rename DataLoader to DataSource
+
 from .dummy import DummyTemporalPredictionDataLoader, DummyTemporalTreatmentEffectsDataLoader
 from .google_stocks import GoogleStocksDataLoader
 from .pbc import PBCDataLoader

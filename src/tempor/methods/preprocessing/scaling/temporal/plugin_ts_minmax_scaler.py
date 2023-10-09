@@ -43,7 +43,7 @@ class TimeSeriesMinMaxScaler(BaseScaler):
                 Parameters and defaults as defined in :class:`TimeSeriesMinMaxScalerParams`.
 
         Example:
-            >>> from tempor.utils.dataloaders import SineDataLoader
+            >>> from tempor.data.datasources import SineDataLoader
             >>> from tempor.methods import plugin_loader
             >>>
             >>> dataset = SineDataLoader().load()

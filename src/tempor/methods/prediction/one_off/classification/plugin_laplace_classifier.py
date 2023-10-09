@@ -74,7 +74,7 @@ class LaplaceODEClassifier(BaseOneOffClassifier):
                 Parameters and defaults as defined in :class:`LaplaceODEClassifierParams`.
 
         Example:
-            >>> from tempor.utils.dataloaders import GoogleStocksDataLoader
+            >>> from tempor.data.datasources import GoogleStocksDataLoader
             >>> from tempor.methods import plugin_loader
             >>>
             >>> dataset = GoogleStocksDataLoader().load()

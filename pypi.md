@@ -83,7 +83,7 @@ print(plugin_loader.list())
 
 * Use a time-to-event (survival) analysis model
 ```python
-from tempor.utils.dataloaders import PBCDataLoader
+from tempor.data.datasources import PBCDataLoader
 from tempor.methods import plugin_loader
 
 # Load a time-to-event dataset:
@@ -103,7 +103,7 @@ prediction = model.predict(dataset, horizons=[0.25, 0.50, 0.75])
 ```python
 import numpy as np
 
-from tempor.utils.dataloaders import DummyTemporalTreatmentEffectsDataLoader
+from tempor.data.datasources import DummyTemporalTreatmentEffectsDataLoader
 from tempor.methods import plugin_loader
 
 # Load a dataset with temporal treatments and outcomes:
@@ -139,7 +139,7 @@ counterfactuals = model.predict_counterfactuals(
 
 * Use a missing data imputer
 ```python
-from tempor.utils.dataloaders import SineDataLoader
+from tempor.data.datasources import SineDataLoader
 from tempor.methods import plugin_loader
 
 dataset = SineDataLoader(with_missing=True).load()
@@ -166,7 +166,7 @@ assert temporal_data_n_missing == 0
 
 * Use a one-off classifier (prediction)
 ```python
-from tempor.utils.dataloaders import SineDataLoader
+from tempor.data.datasources import SineDataLoader
 from tempor.methods import plugin_loader
 
 dataset = SineDataLoader().load()
@@ -183,7 +183,7 @@ prediction = model.predict(dataset)
 
 * Use a temporal regressor (forecasting)
 ```python
-from tempor.utils.dataloaders import DummyTemporalPredictionDataLoader
+from tempor.data.datasources import DummyTemporalPredictionDataLoader
 from tempor.methods import plugin_loader
 
 # Load a dataset with temporal targets.
@@ -204,7 +204,7 @@ prediction = model.predict(dataset, n_future_steps=5)
 from tempor.benchmarks import benchmark_models
 from tempor.methods import plugin_loader
 from tempor.methods.pipeline import pipeline
-from tempor.utils.dataloaders import PBCDataLoader
+from tempor.data.datasources import PBCDataLoader
 
 testcases = [
     (
@@ -256,7 +256,7 @@ reloaded = load(buff)  # Reload model.
 * AutoML - search for the best pipeline for your task
 ```python
 from tempor.automl.seeker import PipelineSeeker
-from tempor.utils.dataloaders import SineDataLoader
+from tempor.data.datasources import SineDataLoader
 
 dataset = SineDataLoader().load()
 
