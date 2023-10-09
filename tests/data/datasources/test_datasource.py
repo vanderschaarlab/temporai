@@ -2,7 +2,7 @@ from tempor.data import data_typing, dataset
 from tempor.data.datasources import datasource
 
 
-def test_dataloaders():
+def test_datasources():
     class MyOneOffPredictionDataSource(datasource.OneOffPredictionDataSource):
         def load(self, **kwargs) -> dataset.OneOffPredictionDataset:
             raise NotImplementedError

@@ -5,7 +5,7 @@ from .pkpd import PKPDDataSource
 from .sine import SineDataSource
 from .uci_diabetes import UCIDiabetesDataSource
 
-all_dataloaders = [
+all_datasources = [
     DummyTemporalPredictionDataSource,
     DummyTemporalTreatmentEffectsDataSource,
     GoogleStocksDataSource,
@@ -15,4 +15,4 @@ all_dataloaders = [
     UCIDiabetesDataSource,
 ]
 
-__all__ = [x.__name__ for x in all_dataloaders]  # pyright: ignore
+__all__ = [x.__name__ for x in all_datasources]  # pyright: ignore
