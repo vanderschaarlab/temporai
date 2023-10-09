@@ -7,7 +7,7 @@ from packaging.version import Version
 from sklearn.preprocessing import OneHotEncoder
 from typing_extensions import Literal, Self
 
-import tempor.methods.core as plugins
+import tempor.core.plugins as plugins
 from tempor.data import dataset
 from tempor.data.data_typing import FeatureIndex
 from tempor.data.samples import StaticSamples

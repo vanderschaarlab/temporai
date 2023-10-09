@@ -3,7 +3,7 @@ from typing import Any, Dict, List
 
 from typing_extensions import Self, get_args
 
-import tempor.methods.core as plugins
+import tempor.core.plugins as plugins
 from tempor.data import dataset
 from tempor.data.samples import StaticSamples
 from tempor.methods.core._params import CategoricalParams, Params

@@ -1,4 +1,4 @@
-import tempor.methods.core as plugins
+import tempor.core.plugins as plugins
 from tempor.methods.treatments.temporal._base import BaseTemporalTreatmentEffects
 
 plugins.register_plugin_category("treatments.temporal.classification", BaseTemporalTreatmentEffects)

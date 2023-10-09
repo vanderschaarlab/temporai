@@ -1,13 +1,14 @@
 from typing_extensions import Self
 
-import tempor.methods.core as plugins
+import tempor.core.plugins as plugins
+import tempor.methods.core as methods_core
 from tempor.data import dataset
 
-plugins.register_plugin_category("preprocessing.nop", plugins.BaseTransformer)
+plugins.register_plugin_category("preprocessing.nop", methods_core.BaseTransformer)
 
 
 @plugins.register_plugin(name="nop_transformer", category="preprocessing.nop")
-class NopTransformer(plugins.BaseTransformer):
+class NopTransformer(methods_core.BaseTransformer):
     def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
         super().__init__(**params)
 

@@ -3,8 +3,9 @@ import abc
 import pydantic
 from typing_extensions import Any, Self
 
+import tempor.core.plugins as plugins
 import tempor.exc
-import tempor.methods.core as plugins
+import tempor.methods.core as methods_core
 from tempor.data import data_typing, dataset, samples
 
 
@@ -16,7 +17,7 @@ def check_data_class(data):
         )
 
 
-class BaseTimeToEventAnalysis(plugins.BasePredictor):
+class BaseTimeToEventAnalysis(methods_core.BasePredictor):
     def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
         super().__init__(**params)
 

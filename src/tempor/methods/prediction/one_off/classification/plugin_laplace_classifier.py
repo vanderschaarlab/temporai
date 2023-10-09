@@ -4,7 +4,7 @@ from typing import Optional
 import numpy as np
 from typing_extensions import Self
 
-import tempor.methods.core as plugins
+import tempor.core.plugins as plugins
 from tempor.data import dataset, samples
 from tempor.methods.core._params import CategoricalParams, FloatParams, IntegerParams
 from tempor.methods.prediction.one_off.classification import BaseOneOffClassifier

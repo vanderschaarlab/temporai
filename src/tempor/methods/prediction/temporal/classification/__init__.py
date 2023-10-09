@@ -3,7 +3,8 @@ import abc
 import pydantic
 from typing_extensions import Self
 
-import tempor.methods.core as plugins
+import tempor.core.plugins as plugins
+import tempor.methods.core as methods_core
 from tempor.data import dataset, samples
 
 
@@ -15,7 +16,7 @@ def check_data_class(data):
         )
 
 
-class BaseTemporalClassifier(plugins.BasePredictor):
+class BaseTemporalClassifier(methods_core.BasePredictor):
     def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
         super().__init__(**params)
 

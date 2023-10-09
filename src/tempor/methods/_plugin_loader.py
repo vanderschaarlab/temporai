@@ -1,4 +1,4 @@
-import tempor.methods.core as plugins
+import tempor.core.plugins as plugins
 
 from . import prediction, preprocessing, time_to_event, treatments
 

@@ -1,6 +1,6 @@
 from typing_extensions import Literal
 
-import tempor.methods.core as plugins
+import tempor.methods.core as methods_core
 
 TabularImputerType = Literal[
     "mean",
@@ -21,6 +21,6 @@ TabularImputerType = Literal[
 ]
 
 
-class BaseImputer(plugins.BaseTransformer):
+class BaseImputer(methods_core.BaseTransformer):
     def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
         super().__init__(**params)

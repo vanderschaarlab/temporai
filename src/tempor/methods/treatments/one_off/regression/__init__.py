@@ -1,4 +1,4 @@
-import tempor.methods.core as plugins
+import tempor.core.plugins as plugins
 from tempor.methods.treatments.one_off._base import BaseOneOffTreatmentEffects
 
 plugins.register_plugin_category("treatments.one_off.regression", BaseOneOffTreatmentEffects)

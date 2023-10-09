@@ -4,7 +4,7 @@ from typing import List
 import pydantic
 from typing_extensions import Self
 
-import tempor.methods.core as plugins
+import tempor.methods.core as methods_core
 from tempor.data import dataset, samples
 
 
@@ -16,7 +16,7 @@ def check_data_class(data):
         )
 
 
-class BaseTemporalTreatmentEffects(plugins.BasePredictor):
+class BaseTemporalTreatmentEffects(methods_core.BasePredictor):
     def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
         super().__init__(**params)
 

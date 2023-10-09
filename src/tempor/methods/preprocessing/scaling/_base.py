@@ -1,6 +1,6 @@
-import tempor.methods.core as plugins
+import tempor.methods.core as methods_core
 
 
-class BaseScaler(plugins.BaseTransformer):
+class BaseScaler(methods_core.BaseTransformer):
     def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
         super().__init__(**params)

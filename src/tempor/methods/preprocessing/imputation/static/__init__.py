@@ -1,4 +1,4 @@
-import tempor.methods.core as plugins
+import tempor.core.plugins as plugins
 
 from .._base import BaseImputer
 

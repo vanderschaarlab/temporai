@@ -10,7 +10,7 @@ from typing_extensions import Literal, Self
 from xgbse import XGBSEDebiasedBCE, XGBSEKaplanNeighbors, XGBSEStackedWeibull
 from xgbse.converters import convert_to_structured
 
-import tempor.methods.core as plugins
+import tempor.core.plugins as plugins
 from tempor.data import data_typing, dataset, samples
 from tempor.methods.core._params import CategoricalParams, FloatParams, IntegerParams
 from tempor.methods.time_to_event import BaseTimeToEventAnalysis
