@@ -49,6 +49,9 @@ def modify_and_copy_nb(notebook_path: str, output_path: str, notebook_link: str)
         # Remove the installation cell.
         if cell.cell_type == "code" and "pip install temporai" in cell.source:
             continue
+        # Clear `execution_count` if present.
+        if cell.cell_type == "code" and hasattr(cell, "execution_count"):
+            cell.execution_count = None
         new_cells.append(cell)
 
     nb.cells = new_cells
