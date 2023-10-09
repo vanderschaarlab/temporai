@@ -175,7 +175,7 @@ class CoxPHTimeToEventAnalysis(BaseTimeToEventAnalysis):
         """CoxPH survival analysis model.
 
         Args:
-            **params:
+            params:
                 Parameters and defaults as defined in :class:`CoxPHTimeToEventAnalysisParams`.
         """
         super().__init__(**params)

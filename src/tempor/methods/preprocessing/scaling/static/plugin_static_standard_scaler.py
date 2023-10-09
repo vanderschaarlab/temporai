@@ -32,7 +32,7 @@ class StaticStandardScaler(BaseScaler):
         Standardize the static features by removing the mean and scaling to unit variance.
 
         Args:
-            **params:
+            params:
                 Parameters and defaults as defined in :class:`StaticStandardScalerParams`.
 
         Example:

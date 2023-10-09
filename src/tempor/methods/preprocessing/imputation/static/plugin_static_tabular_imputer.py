@@ -36,7 +36,7 @@ class StaticTabularImputer(BaseImputer):
         """Impute the static covariates using any tabular imputer from the `hyperimpute` library.
 
         Args:
-            **params:
+            params:
                 Parameters and defaults as defined in :class:`StaticTabularImputerParams`.
 
         Example:

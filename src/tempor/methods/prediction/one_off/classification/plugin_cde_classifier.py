@@ -68,7 +68,7 @@ class CDEClassifier(BaseOneOffClassifier):
         """Neural Controlled Differential Equations for Irregular Time Series.
 
         Args:
-            **params:
+            params:
                 Parameters and defaults as defined in :class:`CDEClassifierParams`.
 
         Example:

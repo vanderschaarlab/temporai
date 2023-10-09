@@ -7,7 +7,6 @@ from tempor.data.clv2conv import clairvoyance2_dataset_to_tempor_dataset
 from tempor.data.datasources import datasource
 
 
-# TODO: Docstring.
 class DummyTemporalPredictionDataSource(datasource.TemporalPredictionDataSource):
     def __init__(
         self,
@@ -22,6 +21,31 @@ class DummyTemporalPredictionDataSource(datasource.TemporalPredictionDataSource)
         random_state: int = 12345,
         **kwargs,
     ) -> None:
+        """Dummy data source for temporal prediction tasks; generates a dataset with random data.
+
+        Args:
+            n_samples (int, optional):
+                Number of samples. Defaults to ``100``.
+            temporal_covariates_n_features (int, optional):
+                Number of time series covariates features. Defaults to ``5``.
+            temporal_covariates_max_len (int, optional):
+                Maximum number of time steps in time series covariates. Defaults to ``20``.
+            temporal_covariates_missing_prob (float, optional):
+                The missingness probability of time series covariates. Defaults to ``0.1``.
+            static_covariates_n_features (int, optional):
+                Number of static covariates features. Defaults to ``3``.
+            static_covariates_missing_prob (float, optional):
+                The missingness probability of static covariates. Defaults to ``0.0``.
+            temporal_targets_n_features (int, optional):
+                Number of time series target features. Defaults to 2.
+            temporal_targets_n_categories (Optional[int], optional):
+                Number of categories in time series targets features. If `None`, the target features will be real \
+                rather than categorical. Defaults to `None`.
+            random_state (int, optional):
+                Random state to use. Defaults to ``12345``.
+            kwargs (Any):
+                Any additional keyword arguments will be passed to `~tempor.data.datasources.DataSource`.
+        """
         super().__init__(**kwargs)
 
         self.n_samples = n_samples
@@ -61,7 +85,6 @@ class DummyTemporalPredictionDataSource(datasource.TemporalPredictionDataSource)
         return data
 
 
-# TODO: Docstring.
 class DummyTemporalTreatmentEffectsDataSource(datasource.TemporalTreatmentEffectsDataSource):
     def __init__(
         self,
@@ -78,6 +101,36 @@ class DummyTemporalTreatmentEffectsDataSource(datasource.TemporalTreatmentEffect
         random_state: int = 12345,
         **kwargs,
     ) -> None:
+        """Dummy data source for temporal treatment effects tasks; generates a dataset with random data.
+
+        Args:
+            n_samples (int, optional):
+                Number of samples. Defaults to ``100``.
+            temporal_covariates_n_features (int, optional):
+                Number of time series covariates features. Defaults to ``5``.
+            temporal_covariates_max_len (int, optional):
+                Maximum number of time steps in time series covariates. Defaults to ``20``.
+            temporal_covariates_missing_prob (float, optional):
+                The missingness probability of time series covariates. Defaults to ``0.1``.
+            static_covariates_n_features (int, optional):
+                Number of static covariates features. Defaults to ``3``.
+            static_covariates_missing_prob (float, optional):
+                The missingness probability of static covariates. Defaults to ``0.0``.
+            temporal_targets_n_features (int, optional):
+                Number of time series target features. Defaults to 2.
+            temporal_targets_n_categories (Optional[int], optional):
+                Number of categories in time series targets features. If `None`, the target features will be real \
+                rather than categorical. Defaults to `None`.
+            temporal_treatments_n_features (int, optional):
+                Number of time series treatment features. Defaults to ``2``.
+            temporal_treatments_n_categories (Optional[int], optional):
+                Number of categories in time series treatment features. If `None`, the target features will be real \
+                rather than categorical. Defaults to `None`.
+            random_state (int, optional):
+                Random state to use. Defaults to ``12345``.
+            kwargs (Any):
+                Any additional keyword arguments will be passed to `~tempor.data.datasources.DataSource`.
+        """
         super().__init__(**kwargs)
 
         self.n_samples = n_samples

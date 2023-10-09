@@ -60,7 +60,7 @@ class DynamicDeepHitTimeToEventAnalysis(BaseTimeToEventAnalysis, DDHEmbedding):
                 - Risk prediction for time points beyond the last event time in the dataset may throw errors.
 
         Args:
-            **params:
+            params:
                 Parameters and defaults as defined in :class:`DynamicDeepHitTimeToEventAnalysisParams`.
 
         References:

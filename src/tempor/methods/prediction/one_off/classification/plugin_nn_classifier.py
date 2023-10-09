@@ -62,11 +62,11 @@ class NeuralNetClassifier(BaseOneOffClassifier):
     ParamsDefinition = NeuralNetClassifierParams
     params: NeuralNetClassifierParams  # type: ignore
 
-    def __init__(self, **param) -> None:
+    def __init__(self, **params) -> None:
         """Neural-net classifier.
 
         Args:
-            **params:
+            params:
                 Parameters and defaults as defined in :class:`NeuralNetClassifierParams`.
 
         Example:
@@ -85,7 +85,7 @@ class NeuralNetClassifier(BaseOneOffClassifier):
             >>> # Predict:
             >>> assert model.predict(dataset).numpy().shape == (len(dataset), 1)
         """
-        super().__init__(**param)
+        super().__init__(**params)
 
         self.device = model_utils.get_device(self.params.device)
         self.dataloader_sampler = model_utils.get_sampler(self.params.dataloader_sampler)

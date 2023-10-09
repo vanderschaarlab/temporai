@@ -69,7 +69,7 @@ class LaplaceODERegressor(BaseOneOffRegressor):
         Riemann stereographic projection for better global representation of the complex Laplace domain.
 
         Args:
-            **params:
+            params:
                 Parameters and defaults as defined in :class:`LaplaceODERegressorParams`.
 
         Example:

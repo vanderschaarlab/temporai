@@ -65,7 +65,7 @@ class NeuralNetRegressor(BaseOneOffRegressor):
         """Neural-net regressor.
 
         Args:
-            **params:
+            params:
                 Parameters and defaults as defined in :class:`NeuralNetRegressorParams`.
 
         Example:

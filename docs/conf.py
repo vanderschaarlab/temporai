@@ -189,6 +189,8 @@ pygments_style = "tango"
 # A list of warning types to suppress arbitrary warning messages.
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#confval-suppress_warnings
 suppress_warnings = ["misc.highlighting_failure"]
+# ^ Highlighting failures seem to be common under this setup when types appear in literal blocks, since these are not
+# critical, we suppress highlighting warnings.
 
 # If this is True, todo emits a warning for each TODO entries. The default is False.
 todo_emit_warnings = True

@@ -67,7 +67,7 @@ class ODERegressor(BaseOneOffRegressor):
         """Regressor based on ordinary differential equation (ODE) solvers.
 
         Args:
-            **params:
+            params:
                 Parameters and defaults as defined in :class:`ODERegressorParams`.
 
         Example:

@@ -30,11 +30,7 @@ class DataSource(abc.ABC):
         """Initializer for `DataSource`.
 
         Args:
-            dataset_dir (Optional[str]):
-                Pass in the subdirectory within ``data_root_dir`` where the data source files will be stored,
-                if relevant.
-            **kwargs:
-                Any additional keyword arguments for the :class:`DataSource`.
+            kwargs: Any additional keyword arguments for the :class:`DataSource`.
         """
         os.makedirs(self.data_root_dir, exist_ok=True)
         dataset_dir = self.dataset_dir()
@@ -45,7 +41,7 @@ class DataSource(abc.ABC):
     @abc.abstractmethod
     def dataset_dir() -> Optional[str]:  # pragma: no cover
         """The path to the directory where the data file(s) will be stored, if relevant.
-        If the data loader has no data files, return `None`
+        If the data source has no data files, return `None`.
 
         Note:
             the path should correspond to a subdirectory within ``data_root_dir``.

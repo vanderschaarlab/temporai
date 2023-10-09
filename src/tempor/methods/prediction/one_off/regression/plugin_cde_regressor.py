@@ -67,7 +67,7 @@ class CDERegressor(BaseOneOffRegressor):
         """Neural Controlled Differential Equations for Irregular Time Series.
 
         Args:
-            **params:
+            params:
                 Parameters and defaults as defined in :class:`CDERegressorParams`.
 
         Example:

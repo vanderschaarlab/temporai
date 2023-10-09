@@ -36,7 +36,7 @@ class StaticMinMaxScaler(BaseScaler):
         each feature individually such that it is in the given range on the training set, e.g. between zero and one.
 
         Args:
-            **params:
+            params:
                 Parameters and defaults as defined in :class:`StaticMinMaxScalerParams`.
 
         Example:

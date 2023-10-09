@@ -58,7 +58,7 @@ class TimeSeriesOneHotEncoder(BaseEncoder):
         Specify ``features`` list to encode only a subset of the features.
 
         Args:
-            **params:
+            params:
                 Parameters and defaults as defined in :class:`TimeSeriesOneHotEncoderParams`.
 
         Example:

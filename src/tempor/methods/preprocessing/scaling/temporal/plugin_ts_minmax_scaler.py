@@ -39,7 +39,7 @@ class TimeSeriesMinMaxScaler(BaseScaler):
         and the scaling will be applied to this dataframe.
 
         Args:
-            **params:
+            params:
                 Parameters and defaults as defined in :class:`TimeSeriesMinMaxScalerParams`.
 
         Example:

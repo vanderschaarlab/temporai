@@ -61,7 +61,7 @@ class Seq2seqRegressor(BaseTemporalRegressor):
         """Seq2seq regressor.
 
         Args:
-            **params:
+            params:
                 Parameters and defaults as defined in :class:`Seq2seqClassifierParams`.
 
         Example:
