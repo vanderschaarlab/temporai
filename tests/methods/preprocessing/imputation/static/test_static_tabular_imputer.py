@@ -123,6 +123,8 @@ def test_imputer_types(data: str, imputer: TabularImputerType, get_test_plugin: 
     assert transformed.static.dataframe().isna().sum().sum() == 0  # pyright: ignore
 
 
+@pytest.mark.filterwarnings("ignore:.*validate_arguments.*:DeprecationWarning")  # Exp pydantic2 warns from HI.
+@pytest.mark.filterwarnings("ignore:.*conflict.*:UserWarning")  # Exp pydantic2 warns from HI.
 def test_random_state(get_test_plugin: Callable):
     p: BaseImputer = get_test_plugin("from_module", INIT_KWARGS)
     assert p.params.random_state == INIT_KWARGS["random_state"]
