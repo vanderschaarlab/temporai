@@ -40,10 +40,10 @@ class StaticTabularImputer(BaseImputer):
                 Parameters and defaults as defined in :class:`StaticTabularImputerParams`.
 
         Example:
-            >>> from tempor.data.datasources import SineDataLoader
+            >>> from tempor.data.datasources import SineDataSource
             >>> from tempor.methods import plugin_loader
             >>>
-            >>> dataset = SineDataLoader(with_missing = True).load()
+            >>> dataset = SineDataSource(with_missing = True).load()
             >>> assert dataset.static.dataframe().isna().sum().sum() != 0
             >>>
             >>> # Load the model:

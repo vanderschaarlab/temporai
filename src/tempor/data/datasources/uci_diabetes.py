@@ -8,13 +8,14 @@ import requests
 from clairvoyance2.datasets.uci import uci_diabetes
 from clairvoyance2.preprocessing.convenience import TemporalTargetsExtractor
 
-from tempor.data import dataloader, dataset
+from tempor.data import dataset
 from tempor.data.clv2conv import clairvoyance2_dataset_to_tempor_dataset
+from tempor.data.datasources import datasource
 from tempor.log import logger
 
 
 # TODO: Docstring.
-class UCIDiabetesDataLoader(dataloader.TemporalPredictionDataLoader):
+class UCIDiabetesDataSource(datasource.TemporalPredictionDataSource):
     def __init__(
         self,
         make_regular: bool = False,
@@ -33,7 +34,7 @@ class UCIDiabetesDataLoader(dataloader.TemporalPredictionDataLoader):
 
     @staticmethod
     def dataset_dir() -> str:
-        return str(Path(UCIDiabetesDataLoader.data_root_dir) / "uci_diabetes")
+        return str(Path(UCIDiabetesDataSource.data_root_dir) / "uci_diabetes")
 
     def load(self, **kwargs) -> dataset.TemporalPredictionDataset:
         download_retries = 3
@@ -44,7 +45,7 @@ class UCIDiabetesDataLoader(dataloader.TemporalPredictionDataLoader):
             # make tests resilient to internet connection failures.
             try:
                 clv_dataset = uci_diabetes(
-                    data_home=UCIDiabetesDataLoader.data_root_dir,
+                    data_home=UCIDiabetesDataSource.data_root_dir,
                     refresh_cache=True,
                     redownload=False,
                     make_regular=self.make_regular,

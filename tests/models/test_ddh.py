@@ -6,7 +6,7 @@ from unittest.mock import Mock
 import numpy as np
 import pytest
 
-from tempor.data.datasources import PBCDataLoader
+from tempor.data.datasources import PBCDataSource
 from tempor.models.ddh import DynamicDeepHitLayers, DynamicDeepHitModel
 
 
@@ -14,7 +14,7 @@ from tempor.models.ddh import DynamicDeepHitLayers, DynamicDeepHitModel
 def get_test_data():
     # This is module-scoped such that tests can run quicker.
 
-    data = PBCDataLoader().load()
+    data = PBCDataSource().load()
     assert data.predictive.targets is not None
 
     x: Any = [df.to_numpy() for df in data.time_series.list_of_dataframes()]

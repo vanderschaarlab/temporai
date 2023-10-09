@@ -19,10 +19,10 @@ class FFillImputer(BaseImputer):
             Then ``ffill``, ``bfill`` and ``fillna(0.0)``` will be called in that order.
 
         Example:
-            >>> from tempor.data.datasources import SineDataLoader
+            >>> from tempor.data.datasources import SineDataSource
             >>> from tempor.methods import plugin_loader
             >>>
-            >>> dataset = SineDataLoader(with_missing = True).load()
+            >>> dataset = SineDataSource(with_missing = True).load()
             >>> assert dataset.time_series.dataframe().isna().sum().sum() != 0
             >>>
             >>> # Load the model:

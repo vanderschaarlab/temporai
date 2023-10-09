@@ -7,18 +7,19 @@ import requests
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 
-from tempor.data import dataloader, dataset, utils
+from tempor.data import dataset, utils
+from tempor.data.datasources import datasource
 
 
 # TODO: Docstring to explain the dataset.
-class PBCDataLoader(dataloader.TimeToEventAnalysisDataLoader):
+class PBCDataSource(datasource.TimeToEventAnalysisDataSource):
     def __init__(self, **kwargs) -> None:
         self.datafile_path = os.path.join(self.dataset_dir(), "pbc2.csv")
         super().__init__(**kwargs)
 
     @staticmethod
     def dataset_dir() -> str:
-        return os.path.join(PBCDataLoader.data_root_dir, "pbc/")
+        return os.path.join(PBCDataSource.data_root_dir, "pbc/")
 
     @staticmethod
     def url() -> str:

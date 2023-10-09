@@ -72,10 +72,10 @@ class ODEClassifier(BaseOneOffClassifier):
                 Parameters and defaults as defined in :class:`ODEClassifierParams`.
 
         Example:
-            >>> from tempor.data.datasources import SineDataLoader
+            >>> from tempor.data.datasources import SineDataSource
             >>> from tempor.methods import plugin_loader
             >>>
-            >>> dataset = SineDataLoader().load()
+            >>> dataset = SineDataSource().load()
             >>>
             >>> # Load the model:
             >>> model = plugin_loader.get("prediction.one_off.classification.ode_classifier", n_iter=50)

@@ -83,11 +83,11 @@ print(plugin_loader.list())
 
 * Use a time-to-event (survival) analysis model
 ```python
-from tempor.data.datasources import PBCDataLoader
+from tempor.data.datasources import PBCDataSource
 from tempor.methods import plugin_loader
 
 # Load a time-to-event dataset:
-dataset = PBCDataLoader().load()
+dataset = PBCDataSource().load()
 
 # Initialize the model:
 model = plugin_loader.get("time_to_event.dynamic_deephit")
@@ -103,11 +103,11 @@ prediction = model.predict(dataset, horizons=[0.25, 0.50, 0.75])
 ```python
 import numpy as np
 
-from tempor.data.datasources import DummyTemporalTreatmentEffectsDataLoader
+from tempor.data.datasources import DummyTemporalTreatmentEffectsDataSource
 from tempor.methods import plugin_loader
 
 # Load a dataset with temporal treatments and outcomes:
-dataset = DummyTemporalTreatmentEffectsDataLoader(
+dataset = DummyTemporalTreatmentEffectsDataSource(
     temporal_covariates_missing_prob=0.0,
     temporal_treatments_n_features=1,
     temporal_treatments_n_categories=2,
@@ -139,10 +139,10 @@ counterfactuals = model.predict_counterfactuals(
 
 * Use a missing data imputer
 ```python
-from tempor.data.datasources import SineDataLoader
+from tempor.data.datasources import SineDataSource
 from tempor.methods import plugin_loader
 
-dataset = SineDataLoader(with_missing=True).load()
+dataset = SineDataSource(with_missing=True).load()
 static_data_n_missing = dataset.static.dataframe().isna().sum().sum()
 temporal_data_n_missing = dataset.time_series.dataframe().isna().sum().sum()
 
@@ -166,10 +166,10 @@ assert temporal_data_n_missing == 0
 
 * Use a one-off classifier (prediction)
 ```python
-from tempor.data.datasources import SineDataLoader
+from tempor.data.datasources import SineDataSource
 from tempor.methods import plugin_loader
 
-dataset = SineDataLoader().load()
+dataset = SineDataSource().load()
 
 # Initialize the model:
 model = plugin_loader.get("prediction.one_off.classification.nn_classifier", n_iter=50)
@@ -183,11 +183,11 @@ prediction = model.predict(dataset)
 
 * Use a temporal regressor (forecasting)
 ```python
-from tempor.data.datasources import DummyTemporalPredictionDataLoader
+from tempor.data.datasources import DummyTemporalPredictionDataSource
 from tempor.methods import plugin_loader
 
 # Load a dataset with temporal targets.
-dataset = DummyTemporalPredictionDataLoader(temporal_covariates_missing_prob=0.0).load()
+dataset = DummyTemporalPredictionDataSource(temporal_covariates_missing_prob=0.0).load()
 
 # Initialize the model:
 model = plugin_loader.get("prediction.temporal.regression.seq2seq_regressor", epochs=10)
@@ -204,7 +204,7 @@ prediction = model.predict(dataset, n_future_steps=5)
 from tempor.benchmarks import benchmark_models
 from tempor.methods import plugin_loader
 from tempor.methods.pipeline import pipeline
-from tempor.data.datasources import PBCDataLoader
+from tempor.data.datasources import PBCDataSource
 
 testcases = [
     (
@@ -225,7 +225,7 @@ testcases = [
         plugin_loader.get("time_to_event.ts_coxph", n_iter=100),
     ),
 ]
-dataset = PBCDataLoader().load()
+dataset = PBCDataSource().load()
 
 aggr_score, per_test_score = benchmark_models(
     task_type="time_to_event",
@@ -256,9 +256,9 @@ reloaded = load(buff)  # Reload model.
 * AutoML - search for the best pipeline for your task
 ```python
 from tempor.automl.seeker import PipelineSeeker
-from tempor.data.datasources import SineDataLoader
+from tempor.data.datasources import SineDataSource
 
-dataset = SineDataLoader().load()
+dataset = SineDataSource().load()
 
 # Specify the AutoML pipeline seeker for the task of your choice, providing candidate methods,
 # metric, preprocessing steps etc.

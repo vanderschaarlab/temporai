@@ -67,11 +67,11 @@ class Seq2seqRegressor(BaseTemporalRegressor):
         Example:
             >>> import doctest; doctest.ELLIPSIS_MARKER = "[...]"  # Doctest config, ignore.
             >>>
-            >>> from tempor.data.datasources import SineDataLoader
+            >>> from tempor.data.datasources import SineDataSource
             >>> from tempor.data import dataset
             >>> from tempor.methods import plugin_loader
             >>>
-            >>> raw_data = SineDataLoader(temporal_dim=5).load()
+            >>> raw_data = SineDataSource(temporal_dim=5).load()
             >>> data = dataset.TemporalPredictionDataset(
             ...    time_series=raw_data.time_series.dataframe(),
             ...    static=raw_data.static.dataframe(),

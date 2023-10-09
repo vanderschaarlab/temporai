@@ -2,12 +2,13 @@ from typing import Optional, cast
 
 from clairvoyance2.datasets.dummy import dummy_dataset
 
-from tempor.data import dataloader, dataset
+from tempor.data import dataset
 from tempor.data.clv2conv import clairvoyance2_dataset_to_tempor_dataset
+from tempor.data.datasources import datasource
 
 
 # TODO: Docstring.
-class DummyTemporalPredictionDataLoader(dataloader.TemporalPredictionDataLoader):
+class DummyTemporalPredictionDataSource(datasource.TemporalPredictionDataSource):
     def __init__(
         self,
         n_samples: int = 100,
@@ -61,7 +62,7 @@ class DummyTemporalPredictionDataLoader(dataloader.TemporalPredictionDataLoader)
 
 
 # TODO: Docstring.
-class DummyTemporalTreatmentEffectsDataLoader(dataloader.TemporalTreatmentEffectsDataLoader):
+class DummyTemporalTreatmentEffectsDataSource(datasource.TemporalTreatmentEffectsDataSource):
     def __init__(
         self,
         n_samples: int = 100,

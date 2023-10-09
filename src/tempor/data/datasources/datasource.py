@@ -1,10 +1,12 @@
+# pylint: disable=unnecessary-ellipsis
+
 import abc
 import os
-from typing import ClassVar, Optional, Type  # pylint: disable=unused-import
+from typing import ClassVar, Optional, Type
 
 import tempor
 
-from . import data_typing, dataset
+from .. import data_typing, dataset
 
 DATA_DIR = "data"
 """The subdirectory on the user's system where all data source files will be stored.
@@ -16,8 +18,8 @@ The full directory will be ``< tempor -> config -> working_directory > / DATA_DI
 # TODO: Unit test.
 
 
-class DataLoader(abc.ABC):
-    """`DataLoader` class to ``load`` a `~tempor.data.dataset.DataSet`."""
+class DataSource(abc.ABC):
+    """`DataSource` class to ``load`` a `~tempor.data.dataset.DataSet`."""
 
     data_root_dir: ClassVar[str] = os.path.join(tempor.get_config().get_working_dir(), DATA_DIR)
     """The automatically determined root directory for data on the user's system.
@@ -25,14 +27,14 @@ class DataLoader(abc.ABC):
     """
 
     def __init__(self, **kwargs) -> None:  # pylint: disable=unused-argument
-        """Initializer for `DataLoader`.
+        """Initializer for `DataSource`.
 
         Args:
             dataset_dir (Optional[str]):
                 Pass in the subdirectory within ``data_root_dir`` where the data source files will be stored,
                 if relevant.
             **kwargs:
-                Any additional keyword arguments for the :class:`DataLoader`.
+                Any additional keyword arguments for the :class:`DataSource`.
         """
         os.makedirs(self.data_root_dir, exist_ok=True)
         dataset_dir = self.dataset_dir()
@@ -51,7 +53,7 @@ class DataLoader(abc.ABC):
         Returns:
             Optional[str]: The path of the directory where the data file(s) will be stored, if relevant, else `None`.
         """
-        ...  # pylint: disable=unnecessary-ellipsis
+        ...
 
     @staticmethod
     @abc.abstractmethod
@@ -61,17 +63,17 @@ class DataLoader(abc.ABC):
         Returns:
             Optional[str]: The URL of the data source, if relevant, otherwise `None`.
         """
-        ...  # pylint: disable=unnecessary-ellipsis
+        ...
 
     @classmethod
-    def requires_internet(cls: "Type[DataLoader]") -> bool:
-        """A `classmethod` that returns true if the `DataLoader` requires access to the Internet to `load`
+    def requires_internet(cls: "Type[DataSource]") -> bool:
+        """A `classmethod` that returns true if the `DataSource` requires access to the Internet to `load`
         (at least before it is saved locally).
 
         Returns `True` if `cls.url()` is not `None`, else returns `False`.
 
         Returns:
-            bool: Whether the `DataLoader` requires Internet access to `load`.
+            bool: Whether the `DataSource` requires Internet access to `load`.
         """
         return cls.url() is not None
 
@@ -83,7 +85,7 @@ class DataLoader(abc.ABC):
         Returns:
             data_typing.PredictiveTask: Predictive task of loaded `~tempor.data.dataset.DataSet`.
         """
-        ...  # pylint: disable=unnecessary-ellipsis
+        ...
 
     @abc.abstractmethod
     def load(self, **kwargs) -> dataset.PredictiveDataset:  # pragma: no cover
@@ -93,10 +95,10 @@ class DataLoader(abc.ABC):
         Returns:
             dataset.Dataset: The loaded `~tempor.data.dataset.DataSet`.
         """
-        ...  # pylint: disable=unnecessary-ellipsis
+        ...
 
 
-class OneOffPredictionDataLoader(DataLoader):
+class OneOffPredictionDataSource(DataSource):
     @property
     def predictive_task(self) -> data_typing.PredictiveTask:
         return data_typing.PredictiveTask.ONE_OFF_PREDICTION
@@ -106,7 +108,7 @@ class OneOffPredictionDataLoader(DataLoader):
         ...
 
 
-class TemporalPredictionDataLoader(DataLoader):
+class TemporalPredictionDataSource(DataSource):
     @property
     def predictive_task(self) -> data_typing.PredictiveTask:
         return data_typing.PredictiveTask.TEMPORAL_PREDICTION
@@ -116,7 +118,7 @@ class TemporalPredictionDataLoader(DataLoader):
         ...
 
 
-class TimeToEventAnalysisDataLoader(DataLoader):
+class TimeToEventAnalysisDataSource(DataSource):
     @property
     def predictive_task(self) -> data_typing.PredictiveTask:
         return data_typing.PredictiveTask.TIME_TO_EVENT_ANALYSIS
@@ -126,7 +128,7 @@ class TimeToEventAnalysisDataLoader(DataLoader):
         ...
 
 
-class OneOffTreatmentEffectsDataLoader(DataLoader):
+class OneOffTreatmentEffectsDataSource(DataSource):
     @property
     def predictive_task(self) -> data_typing.PredictiveTask:
         return data_typing.PredictiveTask.ONE_OFF_TREATMENT_EFFECTS
@@ -136,7 +138,7 @@ class OneOffTreatmentEffectsDataLoader(DataLoader):
         ...
 
 
-class TemporalTreatmentEffectsDataLoader(DataLoader):
+class TemporalTreatmentEffectsDataSource(DataSource):
     @property
     def predictive_task(self) -> data_typing.PredictiveTask:
         return data_typing.PredictiveTask.TEMPORAL_TREATMENT_EFFECTS

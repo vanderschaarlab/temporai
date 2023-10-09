@@ -1,21 +1,18 @@
-# TODO: Move to data/sources
-# TODO: Rename DataLoader to DataSource
-
-from .dummy import DummyTemporalPredictionDataLoader, DummyTemporalTreatmentEffectsDataLoader
-from .google_stocks import GoogleStocksDataLoader
-from .pbc import PBCDataLoader
-from .pkpd import PKPDDataLoader
-from .sine import SineDataLoader
-from .uci_diabetes import UCIDiabetesDataLoader
+from .dummy import DummyTemporalPredictionDataSource, DummyTemporalTreatmentEffectsDataSource
+from .google_stocks import GoogleStocksDataSource
+from .pbc import PBCDataSource
+from .pkpd import PKPDDataSource
+from .sine import SineDataSource
+from .uci_diabetes import UCIDiabetesDataSource
 
 all_dataloaders = [
-    DummyTemporalPredictionDataLoader,
-    DummyTemporalTreatmentEffectsDataLoader,
-    GoogleStocksDataLoader,
-    PBCDataLoader,
-    PKPDDataLoader,
-    SineDataLoader,
-    UCIDiabetesDataLoader,
+    DummyTemporalPredictionDataSource,
+    DummyTemporalTreatmentEffectsDataSource,
+    GoogleStocksDataSource,
+    PBCDataSource,
+    PKPDDataSource,
+    SineDataSource,
+    UCIDiabetesDataSource,
 ]
 
 __all__ = [x.__name__ for x in all_dataloaders]  # pyright: ignore

@@ -44,10 +44,10 @@ class TemporalTabularImputer(BaseImputer):
                 Parameters and defaults as defined in :class:`TemporalTabularImputerParams`.
 
         Example:
-            >>> from tempor.data.datasources import SineDataLoader
+            >>> from tempor.data.datasources import SineDataSource
             >>> from tempor.methods import plugin_loader
             >>>
-            >>> dataset = SineDataLoader(with_missing = True).load()
+            >>> dataset = SineDataSource(with_missing = True).load()
             >>> assert dataset.time_series.dataframe().isna().sum().sum() != 0
             >>>
             >>> # Load the model:

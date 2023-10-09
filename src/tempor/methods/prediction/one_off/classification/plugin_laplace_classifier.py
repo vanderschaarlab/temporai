@@ -74,10 +74,10 @@ class LaplaceODEClassifier(BaseOneOffClassifier):
                 Parameters and defaults as defined in :class:`LaplaceODEClassifierParams`.
 
         Example:
-            >>> from tempor.data.datasources import GoogleStocksDataLoader
+            >>> from tempor.data.datasources import GoogleStocksDataSource
             >>> from tempor.methods import plugin_loader
             >>>
-            >>> dataset = GoogleStocksDataLoader().load()
+            >>> dataset = GoogleStocksDataSource().load()
             >>>
             >>> # Load the model:
             >>> model = plugin_loader.get("prediction.one_off.classification.laplace_ode_classifier", n_iter=50)
@@ -93,7 +93,7 @@ class LaplaceODEClassifier(BaseOneOffClassifier):
             "Neural Laplace: Learning diverse classes of differential equations in the Laplace domain",
             Holt, Samuel I and Qian, Zhaozhi and van der Schaar, Mihaela.
         """
-        # TODO: Model currently fails to run with SineDataLoader data. Investigate and resolve.
+        # TODO: Model currently fails to run with SineDataSource data. Investigate and resolve.
 
         super().__init__(**params)
 

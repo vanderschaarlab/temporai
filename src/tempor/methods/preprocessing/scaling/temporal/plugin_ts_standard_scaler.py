@@ -38,10 +38,10 @@ class TimeSeriesStandardScaler(BaseScaler):
                 Parameters and defaults as defined in :class:`TimeSeriesStandardScalerParams`.
 
         Example:
-            >>> from tempor.data.datasources import SineDataLoader
+            >>> from tempor.data.datasources import SineDataSource
             >>> from tempor.methods import plugin_loader
             >>>
-            >>> dataset = SineDataLoader().load()
+            >>> dataset = SineDataSource().load()
             >>>
             >>> # Load the model:
             >>> model = plugin_loader.get("preprocessing.scaling.temporal.ts_standard_scaler")

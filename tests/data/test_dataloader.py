@@ -1,8 +1,9 @@
-from tempor.data import data_typing, dataloader, dataset
+from tempor.data import data_typing, dataset
+from tempor.data.datasources import datasource
 
 
 def test_dataloaders():
-    class MyOneOffPredictionDataLoader(dataloader.OneOffPredictionDataLoader):
+    class MyOneOffPredictionDataSource(datasource.OneOffPredictionDataSource):
         def load(self, **kwargs) -> dataset.OneOffPredictionDataset:
             raise NotImplementedError
 
@@ -14,7 +15,7 @@ def test_dataloaders():
         def url() -> None:
             return None
 
-    class MyTemporalPredictionDataLoader(dataloader.TemporalPredictionDataLoader):
+    class MyTemporalPredictionDataSource(datasource.TemporalPredictionDataSource):
         def load(self, **kwargs) -> dataset.OneOffPredictionDataset:
             raise NotImplementedError
 
@@ -26,7 +27,7 @@ def test_dataloaders():
         def url() -> None:
             return None
 
-    class MyTimeToEventAnalysisDataLoader(dataloader.TimeToEventAnalysisDataLoader):
+    class MyTimeToEventAnalysisDataSource(datasource.TimeToEventAnalysisDataSource):
         def load(self, **kwargs) -> dataset.OneOffPredictionDataset:
             raise NotImplementedError
 
@@ -38,7 +39,7 @@ def test_dataloaders():
         def url() -> None:
             return None
 
-    class MyOneOffTreatmentEffectsDataLoader(dataloader.OneOffTreatmentEffectsDataLoader):
+    class MyOneOffTreatmentEffectsDataSource(datasource.OneOffTreatmentEffectsDataSource):
         def load(self, **kwargs) -> dataset.OneOffPredictionDataset:
             raise NotImplementedError
 
@@ -50,7 +51,7 @@ def test_dataloaders():
         def url() -> None:
             return None
 
-    class MyTemporalTreatmentEffectsDataLoader(dataloader.TemporalTreatmentEffectsDataLoader):
+    class MyTemporalTreatmentEffectsDataSource(datasource.TemporalTreatmentEffectsDataSource):
         def load(self, **kwargs) -> dataset.OneOffPredictionDataset:
             raise NotImplementedError
 
@@ -62,11 +63,11 @@ def test_dataloaders():
         def url() -> None:
             return None
 
-    dl_oneoff_pred = MyOneOffPredictionDataLoader()
-    dl_temporal_pred = MyTemporalPredictionDataLoader()
-    dl_tte = MyTimeToEventAnalysisDataLoader()
-    dl_oneoff_tr = MyOneOffTreatmentEffectsDataLoader()
-    dl_temporal_tr = MyTemporalTreatmentEffectsDataLoader()
+    dl_oneoff_pred = MyOneOffPredictionDataSource()
+    dl_temporal_pred = MyTemporalPredictionDataSource()
+    dl_tte = MyTimeToEventAnalysisDataSource()
+    dl_oneoff_tr = MyOneOffTreatmentEffectsDataSource()
+    dl_temporal_tr = MyTemporalTreatmentEffectsDataSource()
 
     assert dl_oneoff_pred.dataset_dir() is None
     assert dl_oneoff_pred.url() is None
@@ -90,7 +91,7 @@ def test_dataloaders():
 
 
 def test_requires_internet():
-    class CaseUrl(dataloader.OneOffPredictionDataLoader):
+    class CaseUrl(datasource.OneOffPredictionDataSource):
         def load(self, **kwargs) -> dataset.OneOffPredictionDataset:
             raise NotImplementedError
 
@@ -102,7 +103,7 @@ def test_requires_internet():
         def url():
             return "some_url"
 
-    class CaseNoUrl(dataloader.OneOffPredictionDataLoader):
+    class CaseNoUrl(datasource.OneOffPredictionDataSource):
         def load(self, **kwargs) -> dataset.OneOffPredictionDataset:
             raise NotImplementedError
 

@@ -69,10 +69,10 @@ class NeuralNetRegressor(BaseOneOffRegressor):
                 Parameters and defaults as defined in :class:`NeuralNetRegressorParams`.
 
         Example:
-            >>> from tempor.data.datasources import SineDataLoader
+            >>> from tempor.data.datasources import SineDataSource
             >>> from tempor.methods import plugin_loader
             >>>
-            >>> dataset = SineDataLoader().load()
+            >>> dataset = SineDataSource().load()
             >>>
             >>> # Load the model:
             >>> model = plugin_loader.get("prediction.one_off.regression.nn_regressor", n_iter=50)

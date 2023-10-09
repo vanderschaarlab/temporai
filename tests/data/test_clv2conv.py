@@ -154,12 +154,12 @@ class TestClairvoyance2DatasetToTemporDataset:
 
 @pytest.fixture(scope="module")
 def load_sine():
-    return datasources.SineDataLoader().load()
+    return datasources.SineDataSource().load()
 
 
 @pytest.fixture(scope="module")
 def load_pbc():
-    return datasources.PBCDataLoader().load()
+    return datasources.PBCDataSource().load()
 
 
 class TestTemporDatasetToClairvoyance2Dataset:

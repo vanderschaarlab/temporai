@@ -70,10 +70,10 @@ class NeuralNetClassifier(BaseOneOffClassifier):
                 Parameters and defaults as defined in :class:`NeuralNetClassifierParams`.
 
         Example:
-            >>> from tempor.data.datasources import SineDataLoader
+            >>> from tempor.data.datasources import SineDataSource
             >>> from tempor.methods import plugin_loader
             >>>
-            >>> dataset = SineDataLoader().load()
+            >>> dataset = SineDataSource().load()
             >>>
             >>> # Load the model:
             >>> model = plugin_loader.get("prediction.one_off.classification.nn_classifier", n_iter=50)

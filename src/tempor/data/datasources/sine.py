@@ -1,10 +1,11 @@
 import numpy as np
 import pandas as pd
 
-from tempor.data import dataloader, dataset
+from tempor.data import dataset
+from tempor.data.datasources import datasource
 
 
-class SineDataLoader(dataloader.OneOffPredictionDataLoader):
+class SineDataSource(datasource.OneOffPredictionDataSource):
     def __init__(
         self,
         no: int = 100,
