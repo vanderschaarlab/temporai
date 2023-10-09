@@ -1,6 +1,6 @@
 import pytest
 
-import tempor.methods.core.utils as utils
+import tempor.core.plugins._utils as plugin_utils
 
 
 @pytest.mark.parametrize(
@@ -30,7 +30,7 @@ import tempor.methods.core.utils as utils
 )
 def test_add_by_dot_path(initial_dict, key_path, final_dict):
     value_to_add = 99
-    dictionary = utils.add_by_dot_path(initial_dict, key_path, value_to_add)
+    dictionary = plugin_utils.add_by_dot_path(initial_dict, key_path, value_to_add)
     assert dictionary == final_dict
 
 
@@ -48,7 +48,7 @@ def test_add_by_dot_path(initial_dict, key_path, final_dict):
     ],
 )
 def test_get_by_dot_path(dictionary, key_path):
-    assert utils.get_by_dot_path(dictionary, key_path) == 99
+    assert plugin_utils.get_by_dot_path(dictionary, key_path) == 99
 
 
 @pytest.mark.parametrize(
@@ -68,5 +68,5 @@ def test_get_by_dot_path(dictionary, key_path):
 )
 def test_append_by_dot_path(initial_dict, key_path, final_dict):
     value_to_add = 99
-    dictionary = utils.append_by_dot_path(initial_dict, key_path, value_to_add)
+    dictionary = plugin_utils.append_by_dot_path(initial_dict, key_path, value_to_add)
     assert dictionary == final_dict

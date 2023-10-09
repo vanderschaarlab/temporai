@@ -9,11 +9,11 @@ import rich.pretty
 from typing_extensions import Self
 
 from tempor.core import pydantic_utils, utils
+from tempor.core.plugins import Plugin
 from tempor.data import dataset
 from tempor.log import logger
 
 from ._params import Params
-from ._plugin import Plugin
 
 
 @dataclasses.dataclass
