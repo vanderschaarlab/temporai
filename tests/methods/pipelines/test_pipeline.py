@@ -8,6 +8,8 @@ import pytest
 from tempor.methods.pipeline import PipelineBase, pipeline, pipeline_classes
 
 
+@pytest.mark.filterwarnings("ignore:.*validate_arguments.*:DeprecationWarning")  # Exp pydantic2 warns from HI.
+@pytest.mark.filterwarnings("ignore:.*conflict.*:UserWarning")  # Exp pydantic2 warns from HI.
 @pytest.mark.parametrize(
     "plugins_str",
     [
