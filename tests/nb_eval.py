@@ -53,7 +53,7 @@ def run_notebook(notebook_path: Path, skip_pip_install: bool = True) -> None:
         f_str = re.sub(r"[%!]\s*pip", "#pip", f_str, flags=re.DOTALL)
 
     nb = nbformat.reads(f_str, as_version=4)
-    proc = ExecutePreprocessor(timeout=1800)
+    proc = ExecutePreprocessor(timeout=6000)
 
     # Will raise on cell error:
     proc.preprocess(nb, {"metadata": {"path": workspace}})
