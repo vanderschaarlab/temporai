@@ -13,15 +13,16 @@ from .pkpd import PKPDDataSource
 from .sine import SineDataSource
 from .uci_diabetes import UCIDiabetesDataSource
 
-all_datasources = [
-    # Base classes:
+base_classes = [
     DataSource,
     OneOffPredictionDataSource,
     OneOffTreatmentEffectsDataSource,
     TemporalPredictionDataSource,
     TemporalTreatmentEffectsDataSource,
     TimeToEventAnalysisDataSource,
-    # Concrete classes:
+]
+
+all_datasources = [
     DummyTemporalPredictionDataSource,
     DummyTemporalTreatmentEffectsDataSource,
     GoogleStocksDataSource,
@@ -31,4 +32,4 @@ all_datasources = [
     UCIDiabetesDataSource,
 ]
 
-__all__ = [x.__name__ for x in all_datasources]  # pyright: ignore
+__all__ = [x.__name__ for x in base_classes] + [x.__name__ for x in all_datasources]  # pyright: ignore
