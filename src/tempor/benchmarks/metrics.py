@@ -24,7 +24,7 @@ def check_y_survival(y_or_event: np.ndarray, *args, allow_all_censored=False) ->
             Structured array with two fields, or boolean array. If a structured array, it must contain the binary
             event indicator as first field, and time of event or time of censoring as second field. Otherwise, it is
             assumed that a boolean array representing the event indicator is passed.
-        *args:
+        args:
             List of array-likes. Any number of array-like objects representing time information. Elements that are
             `None` are passed along in the return value.
         allow_all_censored (bool, optional):

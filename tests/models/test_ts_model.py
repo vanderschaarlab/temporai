@@ -6,8 +6,9 @@ import pytest
 import torch
 from typing_extensions import get_args
 
+from tempor.datasources.prediction.one_off.plugin_google_stocks import GoogleStocksDataSource
+from tempor.datasources.prediction.one_off.plugin_sine import SineDataSource
 from tempor.models.ts_model import ModelTaskType, TimeSeriesLayer, TimeSeriesModel, TSModelMode, WindowLinearLayer
-from tempor.utils.dataloaders import GoogleStocksDataLoader, SineDataLoader
 
 
 def unpack_dataset(source):
@@ -60,7 +61,7 @@ def test_rnn_sanity(mode: TSModelMode, task_type: ModelTaskType) -> None:
 
 
 @pytest.mark.parametrize("mode", get_args(TSModelMode))
-@pytest.mark.parametrize("source", [GoogleStocksDataLoader, SineDataLoader])
+@pytest.mark.parametrize("source", [GoogleStocksDataSource, SineDataSource])
 @pytest.mark.parametrize("use_horizon_condition", [True, False])
 def test_rnn_regression_fit_predict(mode: TSModelMode, source: Any, use_horizon_condition: bool) -> None:
     static, temporal, observation_times, outcome = unpack_dataset(source)
@@ -91,7 +92,7 @@ def test_rnn_regression_fit_predict(mode: TSModelMode, source: Any, use_horizon_
 
 
 @pytest.mark.parametrize("mode", get_args(TSModelMode))
-@pytest.mark.parametrize("source", [SineDataLoader, GoogleStocksDataLoader])
+@pytest.mark.parametrize("source", [SineDataSource, GoogleStocksDataSource])
 def test_rnn_classification_fit_predict(mode: TSModelMode, source: Any) -> None:
     static, temporal, observation_times, outcome = unpack_dataset(source)  # pylint: disable=unused-variable
     static_fake, temporal_fake = np.random.randn(*static.shape), np.random.randn(*temporal.shape)

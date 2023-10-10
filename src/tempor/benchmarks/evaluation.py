@@ -19,9 +19,9 @@ from . import metrics as tempor_metrics
 from . import utils
 
 if TYPE_CHECKING:  # pragma: no cover
-    from tempor.plugins.prediction.one_off.classification import BaseOneOffClassifier
-    from tempor.plugins.prediction.one_off.regression import BaseOneOffRegressor
-    from tempor.plugins.time_to_event import BaseTimeToEventAnalysis
+    from tempor.methods.prediction.one_off.classification import BaseOneOffClassifier
+    from tempor.methods.prediction.one_off.regression import BaseOneOffRegressor
+    from tempor.methods.time_to_event import BaseTimeToEventAnalysis
 
 # TODO: Benchmarking workflow for missing cases.
 

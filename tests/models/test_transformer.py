@@ -2,9 +2,10 @@ import numpy as np
 import pytest
 import torch
 
+from tempor.datasources.prediction.one_off.plugin_google_stocks import GoogleStocksDataSource
+from tempor.datasources.prediction.one_off.plugin_sine import SineDataSource
 from tempor.models.constants import DEVICE
 from tempor.models.transformer import TransformerModel, Transpose
-from tempor.utils.dataloaders import GoogleStocksDataLoader, SineDataLoader
 
 
 def unpack_dataset(source):
@@ -21,7 +22,7 @@ def unpack_dataset(source):
     return static, temporal, observation_times, outcome
 
 
-@pytest.mark.parametrize("source", [GoogleStocksDataLoader, SineDataLoader])
+@pytest.mark.parametrize("source", [GoogleStocksDataSource, SineDataSource])
 def test_sanity(source) -> None:
     _, temporal, _, _ = unpack_dataset(source)
 

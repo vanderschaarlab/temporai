@@ -2,7 +2,7 @@ from typing import Type, Union
 
 from typing_extensions import Literal
 
-from tempor.plugins.core import BasePredictor
+from tempor.methods.core import BasePredictor
 
 from .pipeline_selector import PipelineSelector
 

@@ -2,14 +2,14 @@ from typing import Any, Dict, List, Optional, Tuple, Type
 
 import optuna
 
+from tempor import plugin_loader
 from tempor.core import utils
 from tempor.core.types import PredictiveTaskType
-from tempor.plugins import plugin_loader
-from tempor.plugins.core import BaseEstimator, BasePredictor
-from tempor.plugins.core._params import CategoricalParams, Params
-from tempor.plugins.pipeline import PipelineBase, pipeline
-from tempor.plugins.preprocessing.imputation import BaseImputer
-from tempor.plugins.preprocessing.scaling import BaseScaler
+from tempor.methods.core import BaseEstimator, BasePredictor
+from tempor.methods.core._params import CategoricalParams, Params
+from tempor.methods.pipeline import PipelineBase, pipeline
+from tempor.methods.preprocessing.imputation import BaseImputer
+from tempor.methods.preprocessing.scaling import BaseScaler
 
 PREFIX_STATIC_IMPUTERS = "preprocessing.imputation.static"
 PREFIX_STATIC_SCALERS = "preprocessing.scaling.static"

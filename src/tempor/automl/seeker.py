@@ -11,14 +11,14 @@ import optuna
 import pydantic
 from typing_extensions import Literal, Type, get_args
 
+from tempor import plugin_loader
 from tempor.benchmarks import evaluation
 from tempor.core.types import PredictiveTaskType
 from tempor.data import data_typing
 from tempor.data.dataset import PredictiveDataset, TimeToEventAnalysisDataset
 from tempor.log import logger
-from tempor.plugins import plugin_loader
-from tempor.plugins.core import BasePredictor
-from tempor.plugins.core._params import Params
+from tempor.methods.core import BasePredictor
+from tempor.methods.core._params import Params
 
 from ._types import AutoMLCompatibleEstimator, OptimDirection
 from .pipeline_selector import (

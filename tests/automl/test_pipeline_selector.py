@@ -3,7 +3,7 @@ from typing import List
 import pytest
 
 from tempor.automl import pipeline_selector
-from tempor.plugins.pipeline import PipelineBase
+from tempor.methods.pipeline import PipelineBase
 
 TEST_PREDICTOR_CASES = [
     ("prediction.one_off.classification", "nn_classifier"),
@@ -163,7 +163,7 @@ def test_sample_hyperparameters(
 
 
 def test_sample_hyperparameters_predictor_override():
-    from tempor.plugins.core._params import IntegerParams, Params
+    from tempor.methods.core._params import IntegerParams, Params
 
     task_type = "prediction.one_off.classification"
     predictor = "nn_classifier"
@@ -229,7 +229,7 @@ def test_pipeline_from_hps(task_type, predictor, static_imputers, static_scalers
 
 
 def test_pipeline_from_hps_predictor_override():
-    from tempor.plugins.core._params import IntegerParams, Params
+    from tempor.methods.core._params import IntegerParams, Params
 
     task_type = "prediction.one_off.classification"
     predictor = "nn_classifier"

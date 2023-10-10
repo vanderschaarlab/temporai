@@ -9,12 +9,12 @@ import optuna
 import pytest
 from packaging.version import Version
 
+from tempor import plugin_loader
 from tempor.automl import OptimDirection, tuner
 from tempor.benchmarks import evaluation
 from tempor.data.dataset import PredictiveDataset, TimeToEventAnalysisDataset
-from tempor.plugins import plugin_loader
-from tempor.plugins.core._base_predictor import BasePredictor
-from tempor.plugins.core._params import IntegerParams
+from tempor.methods.core._base_predictor import BasePredictor
+from tempor.methods.core._params import IntegerParams
 
 # To ignore warnings in parametrization:
 warnings.filterwarnings("ignore", category=optuna.exceptions.ExperimentalWarning)

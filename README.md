@@ -63,31 +63,50 @@ include_docs_end -->
 
 ## 🚀 Installation
 
+### Instal with `pip`
+
+From [the Python Package Index (PyPI)](https://pypi.org/):
 ```bash
 $ pip install temporai
 ```
-or from source, using
+
+Or from source:
 ```bash
+$ git clone https://github.com/vanderschaarlab/temporai.git
+$ cd temporai
 $ pip install .
 ```
 
+### Install in a [conda](https://docs.conda.io/en/latest/) environment
+
+While have not yet published TemporAI on `conda-forge`, you can still install TemporAI in your conda environment using `pip` as follows:
+
+Create and activate conda environment as normal:
+```bash
+$ conda create -n <my_environment>
+$ conda activate <my_environment>
+```
+
+Then install inside your `conda` environment with pip:
+```bash
+$ pip install temporai
+```
 
 
 ## 💥 Sample Usage
 * List the available plugins
 ```python
-from tempor.plugins import plugin_loader
+from tempor import plugin_loader
 
 print(plugin_loader.list())
 ```
 
 * Use a time-to-event (survival) analysis model
 ```python
-from tempor.utils.dataloaders import PBCDataLoader
-from tempor.plugins import plugin_loader
+from tempor import plugin_loader
 
 # Load a time-to-event dataset:
-dataset = PBCDataLoader().load()
+dataset = plugin_loader.get("time_to_event.pbc", plugin_type="datasource").load()
 
 # Initialize the model:
 model = plugin_loader.get("time_to_event.dynamic_deephit")
@@ -103,11 +122,12 @@ prediction = model.predict(dataset, horizons=[0.25, 0.50, 0.75])
 ```python
 import numpy as np
 
-from tempor.utils.dataloaders import DummyTemporalTreatmentEffectsDataLoader
-from tempor.plugins import plugin_loader
+from tempor import plugin_loader
 
 # Load a dataset with temporal treatments and outcomes:
-dataset = DummyTemporalTreatmentEffectsDataLoader(
+dataset = plugin_loader.get(
+    "treatments.temporal.dummy_treatments",
+    plugin_type="datasource",
     temporal_covariates_missing_prob=0.0,
     temporal_treatments_n_features=1,
     temporal_treatments_n_categories=2,
@@ -139,10 +159,11 @@ counterfactuals = model.predict_counterfactuals(
 
 * Use a missing data imputer
 ```python
-from tempor.utils.dataloaders import SineDataLoader
-from tempor.plugins import plugin_loader
+from tempor import plugin_loader
 
-dataset = SineDataLoader(with_missing=True).load()
+dataset = plugin_loader.get(
+    "prediction.one_off.sine", plugin_type="datasource", with_missing=True
+).load()
 static_data_n_missing = dataset.static.dataframe().isna().sum().sum()
 temporal_data_n_missing = dataset.time_series.dataframe().isna().sum().sum()
 
@@ -166,10 +187,9 @@ assert temporal_data_n_missing == 0
 
 * Use a one-off classifier (prediction)
 ```python
-from tempor.utils.dataloaders import SineDataLoader
-from tempor.plugins import plugin_loader
+from tempor import plugin_loader
 
-dataset = SineDataLoader().load()
+dataset = plugin_loader.get("prediction.one_off.sine", plugin_type="datasource").load()
 
 # Initialize the model:
 model = plugin_loader.get("prediction.one_off.classification.nn_classifier", n_iter=50)
@@ -183,11 +203,14 @@ prediction = model.predict(dataset)
 
 * Use a temporal regressor (forecasting)
 ```python
-from tempor.utils.dataloaders import DummyTemporalPredictionDataLoader
-from tempor.plugins import plugin_loader
+from tempor import plugin_loader
 
 # Load a dataset with temporal targets.
-dataset = DummyTemporalPredictionDataLoader(temporal_covariates_missing_prob=0.0).load()
+dataset = plugin_loader.get(
+    "prediction.temporal.dummy_prediction",
+    plugin_type="datasource",
+    temporal_covariates_missing_prob=0.0,
+).load()
 
 # Initialize the model:
 model = plugin_loader.get("prediction.temporal.regression.seq2seq_regressor", epochs=10)
@@ -202,9 +225,8 @@ prediction = model.predict(dataset, n_future_steps=5)
 * Benchmark models, time-to-event task
 ```python
 from tempor.benchmarks import benchmark_models
-from tempor.plugins import plugin_loader
-from tempor.plugins.pipeline import pipeline
-from tempor.utils.dataloaders import PBCDataLoader
+from tempor import plugin_loader
+from tempor.methods.pipeline import pipeline
 
 testcases = [
     (
@@ -225,7 +247,7 @@ testcases = [
         plugin_loader.get("time_to_event.ts_coxph", n_iter=100),
     ),
 ]
-dataset = PBCDataLoader().load()
+dataset = plugin_loader.get("time_to_event.pbc", plugin_type="datasource").load()
 
 aggr_score, per_test_score = benchmark_models(
     task_type="time_to_event",
@@ -242,7 +264,7 @@ print(aggr_score)
 * Serialization
 ```python
 from tempor.utils.serialization import load, save
-from tempor.plugins import plugin_loader
+from tempor import plugin_loader
 
 # Initialize the model:
 model = plugin_loader.get("prediction.one_off.classification.nn_classifier", n_iter=50)
@@ -256,9 +278,8 @@ reloaded = load(buff)  # Reload model.
 * AutoML - search for the best pipeline for your task
 ```python
 from tempor.automl.seeker import PipelineSeeker
-from tempor.utils.dataloaders import SineDataLoader
 
-dataset = SineDataLoader().load()
+dataset = plugin_loader.get("prediction.one_off.sine", plugin_type="datasource").load()
 
 # Specify the AutoML pipeline seeker for the task of your choice, providing candidate methods,
 # metric, preprocessing steps etc.
@@ -433,7 +454,7 @@ Prediction where targets are temporal (time series).
 
 - [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/data/tutorial01_data_format.ipynb) - [Data Format](./tutorials/data/tutorial01_data_format.ipynb)
 - [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/data/tutorial02_datasets.ipynb) - [Datasets](./tutorials/data/tutorial02_datasets.ipynb)
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/data/tutorial03_dataloaders.ipynb) - [Data Loaders](./tutorials/data/tutorial03_dataloaders.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/data/tutorial03_datasources.ipynb) - [Data Loaders](./tutorials/data/tutorial03_datasources.ipynb)
 - [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/data/tutorial04_data_splitting.ipynb) - [Data Splitting](./tutorials/data/tutorial04_data_splitting.ipynb)
 
 ### User Guide
@@ -448,8 +469,9 @@ Prediction where targets are temporal (time series).
 - [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/usage/tutorial09_automl.ipynb) - [AutoML](./tutorials/usage/tutorial09_automl.ipynb)
 
 ### Extending TemporAI
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/extending/tutorial01_custom_plugin.ipynb) - [Writing a Custom Plugin](./tutorials/extending/tutorial01_custom_plugin.ipynb)
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/extending/tutorial02_testing_custom_plugin.ipynb) - [Testing a Custom Plugin](./tutorials/extending/tutorial02_testing_custom_plugin.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/extending/tutorial01_custom_method.ipynb) - [Writing a Custom Method Plugin](./tutorials/extending/tutorial01_custom_method.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/extending/tutorial02_testing_custom_method.ipynb) - [Testing a Custom Method Plugin](./tutorials/extending/tutorial02_testing_custom_method.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/extending/tutorial03_custom_datasource.ipynb) - [Writing a Custom Data Source Plugin](./tutorials/extending/tutorial03_custom_datasource.ipynb)
 
 
 

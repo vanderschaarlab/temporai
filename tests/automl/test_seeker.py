@@ -16,7 +16,7 @@ from tempor.automl.seeker import (
     TunerType,
 )
 from tempor.data.dataset import PredictiveDataset, TimeToEventAnalysisDataset
-from tempor.plugins.core._params import CategoricalParams, IntegerParams
+from tempor.methods.core._params import CategoricalParams, IntegerParams
 
 
 def test_init_fails_estimator_name_def_length_mismatch():
@@ -55,7 +55,7 @@ def patch_slow(monkeypatch, request):
     import pandas as pd
 
     from tempor.benchmarks import evaluation
-    from tempor.plugins.core import BasePredictor, BaseTransformer
+    from tempor.methods.core import BasePredictor, BaseTransformer
 
     def patched_fit(self, *args, **kwargs):  # pylint: disable=unused-argument
         return self
@@ -93,7 +93,7 @@ def patch_slow(monkeypatch, request):
     monkeypatch.setattr(evaluation, "evaluate_prediction_oneoff_regressor", patched_evaluate)
     monkeypatch.setattr(evaluation, "evaluate_time_to_event", patched_evaluate)
 
-    from tempor.plugins.pipeline import generators
+    from tempor.methods.pipeline import generators
 
     def patched_generate_fit():
         return patched_fit
@@ -682,7 +682,7 @@ class TestPipelineSeeker:
 
     @pytest.mark.slow
     def test_search_end2end(self, get_dataset: Callable):
-        from tempor.plugins.pipeline import PipelineBase
+        from tempor.methods.pipeline import PipelineBase
 
         estimator_names = [
             "cde_classifier",

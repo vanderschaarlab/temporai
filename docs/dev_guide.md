@@ -39,7 +39,8 @@ tempor
   benchmarks: Benchmarking tools
   config: Library config
   core: Core code, such as global utils
-  data: format
+  data: Data format
+  datasources: Data sources for provided datasets
   exc: Exceptions
   log: Logger
   models: Model components
@@ -51,7 +52,6 @@ tempor
     time_to_event: Time-to-event plugins
     treatments: Treatment effects plugins
   utils: Utilities
-    dataloaders: Data loaders for provided datasets
     serialization: Serialization tools
 -->
 ```
@@ -61,7 +61,8 @@ tempor
     ├── benchmarks: Benchmarking tools
     ├── config: Library config
     ├── core: Core code, such as global utils
-    ├── data: format
+    ├── data: Data format
+    ├── datasources: Data sources for provided datasets
     ├── exc: Exceptions
     ├── log: Logger
     ├── models: Model components
@@ -73,7 +74,6 @@ tempor
     │   ├── time_to_event: Time-to-event plugins
     │   └── treatments: Treatment effects plugins
     └── utils: Utilities/
-        ├── dataloaders: Data loaders for provided datasets
         └── serialization: Serialization tools
 ```
 
@@ -104,7 +104,7 @@ Please familiarize yourself with the data format we use.
 2. See the following parts of the full API (module) reference:
     1. [Data samples reference](api/tempor.data.samples),
     2. [Dataset reference](api/tempor.data.dataset),
-    3. [Dataloader reference](api/tempor.data.dataloader).
+    3. [Dataloader reference](api/tempor.datasources.datasource).
 
 
 
@@ -126,24 +126,26 @@ It is recommended to go through the [usage tutorials](user_guide/usage/index.md)
 Generating class diagrams can be done with the below command
 (requires graphviz to by installed on the system, and pylint via pip):
 ```sh
+cd src/  # Needs to be run from within the src/ directory.
 pyreverse -o png \
-"tempor.plugins" \
+"tempor.methods" \
 --class \
 "
-tempor.plugins.core._base_estimator.BaseEstimator,
-tempor.plugins.core._base_predictor.BasePredictor,
-tempor.plugins.core._base_transformer.BaseTransformer,
-tempor.plugins.prediction.one_off.classification.BaseOneOffClassifier,
-tempor.plugins.prediction.one_off.regression.BaseOneOffRegressor,
-tempor.plugins.prediction.temporal.classification.BaseTemporalClassifier,
-tempor.plugins.prediction.temporal.regression.BaseTemporalRegressor,
-tempor.plugins.preprocessing.imputation._base.BaseImputer,
-tempor.plugins.preprocessing.scaling._base.BaseScaler,
-tempor.plugins.time_to_event.BaseTimeToEventAnalysis,
-tempor.plugins.treatments.one_off._base.BaseOneOffTreatmentEffects,
-tempor.plugins.treatments.temporal._base.BaseTemporalTreatmentEffects
+tempor.methods.core._base_estimator.BaseEstimator,
+tempor.methods.core._base_predictor.BasePredictor,
+tempor.methods.core._base_transformer.BaseTransformer,
+tempor.methods.prediction.one_off.classification.BaseOneOffClassifier,
+tempor.methods.prediction.one_off.regression.BaseOneOffRegressor,
+tempor.methods.prediction.temporal.classification.BaseTemporalClassifier,
+tempor.methods.prediction.temporal.regression.BaseTemporalRegressor,
+tempor.methods.preprocessing.imputation._base.BaseImputer,
+tempor.methods.preprocessing.scaling._base.BaseScaler,
+tempor.methods.time_to_event.BaseTimeToEventAnalysis,
+tempor.methods.treatments.one_off._base.BaseOneOffTreatmentEffects,
+tempor.methods.treatments.temporal._base.BaseTemporalTreatmentEffects
 " \
 -ASmy
+# Then move the diagrams to docs/assets.class_diagrams
 ```
 --->
 The [sklearn](https://scikit-learn.org/)-inspired `fit/transform/predict` API is used for the methods. This section briefly describes the base classes used to achieve this. Full details are available in the API documentation linked for each class.
@@ -155,20 +157,20 @@ The [sklearn](https://scikit-learn.org/)-inspired `fit/transform/predict` API is
 ### Core base classes
 
 #### `BaseEstimator`
-All method plugins derive from [`BaseEstimator`](api/tempor.plugins.core):
+All method plugins derive from [`BaseEstimator`](api/tempor.methods.core):
 
-![BaseEstimator_class_diagram](assets/class_diagrams/tempor.plugins.core._base_estimator.BaseEstimator.png){w=500px}
+![BaseEstimator_class_diagram](assets/class_diagrams/tempor.methods.core._base_estimator.BaseEstimator.png){w=500px}
 
 Methods worth noting are: `fit` (fits model), `hyperparameter_space` (abstract method, returns the default hyperparameter space), `sample_hyperparameters` (implements sampling of said hyperparameters). The `_fit` method is the abstract method that the concrete plugins should implement (it will be called by `fit`).
 
-Note also that the `BaseEstimator` inherits from the [`Plugin`](api/tempor.plugins.core) interface, which facilitates loading of the methods by the PluginLoader.
+Note also that the `BaseEstimator` inherits from the [`Plugin`](api/tempor.methods.core) interface, which facilitates loading of the methods by the PluginLoader.
 
 `ParamsDefinition` attribute facilitates accessing the class parameters using `self.params` in the derived classes.
 
 #### `BasePredictor`
-All predictive method plugins derive from [`BasePredictor`](api/tempor.plugins.core):
+All predictive method plugins derive from [`BasePredictor`](api/tempor.methods.core):
 
-![BasePredictor_class_diagram](assets/class_diagrams/tempor.plugins.core._base_predictor.BasePredictor.png){w=550px}
+![BasePredictor_class_diagram](assets/class_diagrams/tempor.methods.core._base_predictor.BasePredictor.png){w=550px}
 
 This base class adds prediction-specific methods (analogously to `_fit/fit`):
 * `predict` (public API) and `_predict` (for concrete implementation by each plugin): return predicted values.
@@ -178,9 +180,9 @@ This base class adds prediction-specific methods (analogously to `_fit/fit`):
 Some of these methods are defined further in task-specific base classes.
 
 #### `BaseTransformer`
-All preprocessing data transformation method plugins derive from [`BaseTransformer`](api/tempor.plugins.core):
+All preprocessing data transformation method plugins derive from [`BaseTransformer`](api/tempor.methods.core):
 
-![BaseTransformer_class_diagram](assets/class_diagrams/tempor.plugins.core._base_transformer.BaseTransformer.png){w=550px}
+![BaseTransformer_class_diagram](assets/class_diagrams/tempor.methods.core._base_transformer.BaseTransformer.png){w=550px}
 
 This base class provides the `transform` (public API) and `_transform` (for concrete implementation by each plugin) methods that take in, and return a transformed version of, a `Dataset`.
 
@@ -192,25 +194,25 @@ These are the base classes for imputation (`"preprocessing.imputation"`) and sca
 
 #### `BaseTimeToEventAnalysis`
 
-[`BaseTimeToEventAnalysis`](api/tempor.plugins.time_to_event) is the base class for time-to-event (survival) analysis. Note that the `predict` method requires a `horizons` argument to specify time points for risk estimation.
+[`BaseTimeToEventAnalysis`](api/tempor.methods.time_to_event) is the base class for time-to-event (survival) analysis. Note that the `predict` method requires a `horizons` argument to specify time points for risk estimation.
 
-![BaseTimeToEventAnalysis_class_diagram](assets/class_diagrams/tempor.plugins.time_to_event.BaseTimeToEventAnalysis.png){w=750px}
+![BaseTimeToEventAnalysis_class_diagram](assets/class_diagrams/tempor.methods.time_to_event.BaseTimeToEventAnalysis.png){w=750px}
 
 This class expects [`TimeToEventAnalysisDataset`](tempor.data.dataset).
 
 #### `BaseOneOffTreatmentEffects`
 
-[`BaseOneOffTreatmentEffects`](api/tempor.plugins.treatments.one_off) is the base class for one-off treatment effects plugins. `predict_counterfactuals` returns `StaticSamples`.
+[`BaseOneOffTreatmentEffects`](api/tempor.methods.treatments.one_off) is the base class for one-off treatment effects plugins. `predict_counterfactuals` returns `StaticSamples`.
 
-![BaseOneOffTreatmentEffects_class_diagram](assets/class_diagrams/tempor.plugins.treatments.one_off._base.BaseOneOffTreatmentEffects.png){w=600px}
+![BaseOneOffTreatmentEffects_class_diagram](assets/class_diagrams/tempor.methods.treatments.one_off._base.BaseOneOffTreatmentEffects.png){w=600px}
 
 This class expects [`OneOffTreatmentEffectsDataset`](tempor.data.dataset).
 
 #### `BaseTemporalTreatmentEffects`
 
-[`BaseTemporalTreatmentEffects`](api/tempor.plugins.treatments.temporal) is the base class for temporal treatment effects plugins. `predict_counterfactuals` returns `TimeSeriesSamples`.
+[`BaseTemporalTreatmentEffects`](api/tempor.methods.treatments.temporal) is the base class for temporal treatment effects plugins. `predict_counterfactuals` returns `TimeSeriesSamples`.
 
-![BaseTemporalTreatmentEffects_class_diagram](assets/class_diagrams/tempor.plugins.treatments.temporal._base.BaseTemporalTreatmentEffects.png){w=600px}
+![BaseTemporalTreatmentEffects_class_diagram](assets/class_diagrams/tempor.methods.treatments.temporal._base.BaseTemporalTreatmentEffects.png){w=600px}
 
 This class expects [`BaseTemporalTreatmentEffectsDataset`](tempor.data.dataset).
 
@@ -218,11 +220,11 @@ This class expects [`BaseTemporalTreatmentEffectsDataset`](tempor.data.dataset).
 
 These are the base classes for the one-off prediction setting, where the targets are static values.
 
-* [`BaseOneOffClassifier`](api/tempor.plugins.prediction.one_off.classification), base class for one-off classification task plugins:
-![BaseOneOffClassifier_class_diagram](assets/class_diagrams/tempor.plugins.prediction.one_off.classification.BaseOneOffClassifier.png){w=600px}
+* [`BaseOneOffClassifier`](api/tempor.methods.prediction.one_off.classification), base class for one-off classification task plugins:
+![BaseOneOffClassifier_class_diagram](assets/class_diagrams/tempor.methods.prediction.one_off.classification.BaseOneOffClassifier.png){w=600px}
 
-* [`BaseOneOffRegressor`](api/tempor.plugins.prediction.one_off.classification), base class for one-off regression task plugins:
-![BaseOneOffRegressor_class_diagram](assets/class_diagrams/tempor.plugins.prediction.one_off.regression.BaseOneOffRegressor.png){w=600px}
+* [`BaseOneOffRegressor`](api/tempor.methods.prediction.one_off.classification), base class for one-off regression task plugins:
+![BaseOneOffRegressor_class_diagram](assets/class_diagrams/tempor.methods.prediction.one_off.regression.BaseOneOffRegressor.png){w=600px}
 
 These classes expects [`OneOffPredictionDataset`](tempor.data.dataset).
 
@@ -230,18 +232,18 @@ These classes expects [`OneOffPredictionDataset`](tempor.data.dataset).
 
 These are the base classes for the temporal prediction setting, where the targets are time series.
 
-* [`BaseTemporalClassifier`](api/tempor.plugins.prediction.temporal.classification), base class for one-off classification task plugins:
-![BaseTemporalClassifier_class_diagram](assets/class_diagrams/tempor.plugins.prediction.one_off.classification.BaseOneOffClassifier.png){w=600px}
+* [`BaseTemporalClassifier`](api/tempor.methods.prediction.temporal.classification), base class for one-off classification task plugins:
+![BaseTemporalClassifier_class_diagram](assets/class_diagrams/tempor.methods.prediction.one_off.classification.BaseOneOffClassifier.png){w=600px}
 
-* [`BaseTemporalRegressor`](api/tempor.plugins.prediction.temporal.classification), base class for one-off regression task plugins:
-![BaseTemporalRegressor_class_diagram](assets/class_diagrams/tempor.plugins.prediction.one_off.regression.BaseOneOffRegressor.png){w=600px}
+* [`BaseTemporalRegressor`](api/tempor.methods.prediction.temporal.classification), base class for one-off regression task plugins:
+![BaseTemporalRegressor_class_diagram](assets/class_diagrams/tempor.methods.prediction.one_off.regression.BaseOneOffRegressor.png){w=600px}
 
 These classes expects [`TemporalPredictionDataset`](tempor.data.dataset).
 
 
 
 ## Pipelines
-The `Pipeline` functionality is provided by the [`tempor.plugins.pipeline`](api/tempor.plugins.pipeline) module, see especially:
+The `Pipeline` functionality is provided by the [`tempor.methods.pipeline`](api/tempor.methods.pipeline) module, see especially:
 * `PipelineBase` base class (defines pipeline interface),
 * `PipelineMeta` metaclass (dynamically generates pipelines),
 * `pipeline` function (creates pipeline from its definition).

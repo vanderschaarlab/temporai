@@ -9,7 +9,7 @@ assignees: ''
 
 **Location of the documentation**
 
-[Please provide the location of the documentation, e.g. `tempor.plugins.prediction.one_off.classification.plugin_nn_classifier.NeuralNetClassifierParams` or the URL of the documentation, e.g. https://temporai.readthedocs.io/en/latest/user_guide/usage/tutorial03_scaling.html]
+[Please provide the location of the documentation, e.g. `tempor.methods.prediction.one_off.classification.plugin_nn_classifier.NeuralNetClassifierParams` or the URL of the documentation, e.g. https://temporai.readthedocs.io/en/latest/user_guide/usage/tutorial03_scaling.html]
 
 **Note**: You can check the latest versions of the documentation on `main` branch [here](https://temporai.readthedocs.io/en/latest/).
 

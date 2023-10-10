@@ -3,6 +3,7 @@ from unittest.mock import Mock
 
 import pytest
 
+from tempor import plugin_loader
 from tempor.benchmarks import (
     classifier_supported_metrics,
     evaluate_prediction_oneoff_classifier,
@@ -13,8 +14,7 @@ from tempor.benchmarks import (
     time_to_event_supported_metrics,
 )
 from tempor.benchmarks.evaluation import ClassifierMetrics
-from tempor.plugins import plugin_loader
-from tempor.plugins.pipeline import pipeline
+from tempor.methods.pipeline import pipeline
 
 N_ITER = 5
 

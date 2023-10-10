@@ -60,7 +60,7 @@ def get_from_args_or_kwargs_preset_prefer_raise(*args, **kwargs):
         argument_name="my_arg",
         argument_type=MyArgument,
         position_if_args=0,
-        prefer="raise",
+        prefer="exception",
     )
     return value, args, kwargs
 
