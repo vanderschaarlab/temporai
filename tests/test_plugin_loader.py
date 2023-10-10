@@ -3,7 +3,7 @@ import pytest
 from tempor import plugin_loader
 
 
-def test_tempor_plugin_loader_methods_contents():
+def test_methods_contents():
     all_plugins = plugin_loader.list(plugin_type="method")
 
     # Do some checks that expected plugins have been registered.
@@ -80,10 +80,35 @@ def test_tempor_plugin_loader_methods_contents():
     assert "synctwin_regressor" in all_plugins["treatments"]["one_off"]["regression"]
 
 
-def test_presence_plugin_types():
+def test_datasource_contents():
+    all_plugins = plugin_loader.list(plugin_type="datasource")
+
+    # Check categories:
+    assert "prediction" in all_plugins
+    assert "time_to_event" in all_plugins
+    assert "treatments" in all_plugins
+
+    # Check subcategories:
+    assert "one_off" in all_plugins["prediction"]
+    assert "temporal" in all_plugins["prediction"]
+    assert "one_off" in all_plugins["treatments"]
+    assert "temporal" in all_plugins["treatments"]
+
+    # Check plugins:
+    assert "sine" in all_plugins["prediction"]["one_off"]
+    assert "google_stocks" in all_plugins["prediction"]["one_off"]
+    assert "dummy_prediction" in all_plugins["prediction"]["temporal"]
+    assert "uci_diabetes" in all_plugins["prediction"]["temporal"]
+    assert "pbc" in all_plugins["time_to_event"]
+    assert "pkpd" in all_plugins["treatments"]["one_off"]
+    assert "dummy_treatments" in all_plugins["treatments"]["temporal"]
+
+
+def test_plugin_types():
     plugin_types = plugin_loader.list_plugin_types()
 
     assert "method" in plugin_types
+    assert "datasource" in plugin_types
 
 
 PLUGIN_FQNS = plugin_loader.list_full_names()
