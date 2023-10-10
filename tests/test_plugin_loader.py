@@ -1,3 +1,5 @@
+import pytest
+
 from tempor import plugin_loader
 
 
@@ -82,3 +84,14 @@ def test_presence_plugin_types():
     plugin_types = plugin_loader.list_plugin_types()
 
     assert "method" in plugin_types
+
+
+PLUGIN_FQNS = plugin_loader.list_full_names()
+
+
+@pytest.mark.filterwarnings("ignore:.*validate_arguments.*:DeprecationWarning")  # Exp pydantic2 warns from HI.
+@pytest.mark.filterwarnings("ignore:.*conflict.*:UserWarning")  # Exp pydantic2 warns from HI.
+@pytest.mark.parametrize("plugin_fqn", PLUGIN_FQNS)
+def test_init_success(plugin_fqn):
+    PluginCls = plugin_loader.get_class(plugin_fqn)
+    PluginCls()  # Should successfully initialize with all default params.
