@@ -2,9 +2,9 @@ from typing import Any, Dict, List, Optional, Tuple, Type
 
 import optuna
 
+from tempor import plugin_loader
 from tempor.core import utils
 from tempor.core.types import PredictiveTaskType
-from tempor.methods import plugin_loader
 from tempor.methods.core import BaseEstimator, BasePredictor
 from tempor.methods.core._params import CategoricalParams, Params
 from tempor.methods.pipeline import PipelineBase, pipeline

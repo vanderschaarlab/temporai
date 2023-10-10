@@ -1,4 +1,4 @@
-from tempor.methods import plugin_loader
+from tempor import plugin_loader
 
 
 def test_tempor_plugin_loader_methods_contents():

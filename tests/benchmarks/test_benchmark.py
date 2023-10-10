@@ -3,6 +3,7 @@ from typing import Callable
 
 import pytest
 
+from tempor import plugin_loader
 from tempor.benchmarks import (
     benchmark_models,
     classifier_supported_metrics,
@@ -10,7 +11,6 @@ from tempor.benchmarks import (
     time_to_event_supported_metrics,
     visualize_benchmark,
 )
-from tempor.methods import plugin_loader
 from tempor.methods.pipeline import pipeline
 
 N_ITER = 5

@@ -96,7 +96,7 @@ $ pip install temporai
 ## 💥 Sample Usage
 * List the available plugins
 ```python
-from tempor.methods import plugin_loader
+from tempor import plugin_loader
 
 print(plugin_loader.list())
 ```
@@ -104,7 +104,7 @@ print(plugin_loader.list())
 * Use a time-to-event (survival) analysis model
 ```python
 from tempor.data.datasources import PBCDataSource
-from tempor.methods import plugin_loader
+from tempor import plugin_loader
 
 # Load a time-to-event dataset:
 dataset = PBCDataSource().load()
@@ -124,7 +124,7 @@ prediction = model.predict(dataset, horizons=[0.25, 0.50, 0.75])
 import numpy as np
 
 from tempor.data.datasources import DummyTemporalTreatmentEffectsDataSource
-from tempor.methods import plugin_loader
+from tempor import plugin_loader
 
 # Load a dataset with temporal treatments and outcomes:
 dataset = DummyTemporalTreatmentEffectsDataSource(
@@ -160,7 +160,7 @@ counterfactuals = model.predict_counterfactuals(
 * Use a missing data imputer
 ```python
 from tempor.data.datasources import SineDataSource
-from tempor.methods import plugin_loader
+from tempor import plugin_loader
 
 dataset = SineDataSource(with_missing=True).load()
 static_data_n_missing = dataset.static.dataframe().isna().sum().sum()
@@ -187,7 +187,7 @@ assert temporal_data_n_missing == 0
 * Use a one-off classifier (prediction)
 ```python
 from tempor.data.datasources import SineDataSource
-from tempor.methods import plugin_loader
+from tempor import plugin_loader
 
 dataset = SineDataSource().load()
 
@@ -204,7 +204,7 @@ prediction = model.predict(dataset)
 * Use a temporal regressor (forecasting)
 ```python
 from tempor.data.datasources import DummyTemporalPredictionDataSource
-from tempor.methods import plugin_loader
+from tempor import plugin_loader
 
 # Load a dataset with temporal targets.
 dataset = DummyTemporalPredictionDataSource(temporal_covariates_missing_prob=0.0).load()
@@ -222,7 +222,7 @@ prediction = model.predict(dataset, n_future_steps=5)
 * Benchmark models, time-to-event task
 ```python
 from tempor.benchmarks import benchmark_models
-from tempor.methods import plugin_loader
+from tempor import plugin_loader
 from tempor.methods.pipeline import pipeline
 from tempor.data.datasources import PBCDataSource
 
@@ -262,7 +262,7 @@ print(aggr_score)
 * Serialization
 ```python
 from tempor.utils.serialization import load, save
-from tempor.methods import plugin_loader
+from tempor import plugin_loader
 
 # Initialize the model:
 model = plugin_loader.get("prediction.one_off.classification.nn_classifier", n_iter=50)

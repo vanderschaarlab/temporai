@@ -108,7 +108,7 @@ def get_plugin():
     # 'from_api' (using fqn), 'from_module' (using class). `kwargs` are the parameters that will be passed to the
     # plugin initializer.
     def func(plugin_from: str, fqn: str, cls: Type, kwargs: Any) -> Any:
-        from tempor.methods import plugin_loader
+        from tempor import plugin_loader
 
         if plugin_from == "from_api":
             return plugin_loader.get(fqn, **kwargs)

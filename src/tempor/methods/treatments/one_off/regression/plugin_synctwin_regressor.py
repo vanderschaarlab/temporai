@@ -38,7 +38,7 @@ class SyncTwinTreatmentsRegressor(BaseOneOffTreatmentEffects):
         """SyncTwin treatment effects estimation.
 
         Example:
-            >>> from tempor.methods import plugin_loader
+            >>> from tempor import plugin_loader
             >>>
             >>> # Load the model:
             >>> model = plugin_loader.get("treatments.one_off.regression.synctwin_regressor", n_iter=50)

@@ -75,7 +75,7 @@ class LaplaceODEClassifier(BaseOneOffClassifier):
 
         Example:
             >>> from tempor.data.datasources import GoogleStocksDataSource
-            >>> from tempor.methods import plugin_loader
+            >>> from tempor import plugin_loader
             >>>
             >>> dataset = GoogleStocksDataSource().load()
             >>>

@@ -37,7 +37,7 @@ class StaticStandardScaler(BaseScaler):
 
         Example:
             >>> from tempor.data.datasources import SineDataSource
-            >>> from tempor.methods import plugin_loader
+            >>> from tempor import plugin_loader
             >>>
             >>> dataset = SineDataSource().load()
             >>>

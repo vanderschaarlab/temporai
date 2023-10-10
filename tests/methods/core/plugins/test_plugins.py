@@ -4,9 +4,9 @@ from unittest.mock import Mock
 
 import pytest
 
+from tempor import plugin_loader
 from tempor.core import plugins
 from tempor.core.plugins import plugin_typing
-from tempor.methods import plugin_loader
 
 
 class TestHelpers:

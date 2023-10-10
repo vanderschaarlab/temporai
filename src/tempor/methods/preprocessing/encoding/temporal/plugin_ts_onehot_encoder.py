@@ -63,7 +63,7 @@ class TimeSeriesOneHotEncoder(BaseEncoder):
 
         Example:
             >>> from tempor.data.datasources import DummyTemporalPredictionDataSource
-            >>> from tempor.methods import plugin_loader
+            >>> from tempor import plugin_loader
             >>>
             >>> dataset = DummyTemporalPredictionDataSource().load()
             >>>

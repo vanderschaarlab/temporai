@@ -3,7 +3,7 @@ import re
 
 import pytest
 
-from tempor.methods import plugin_loader
+from tempor import plugin_loader
 from tempor.methods.core._base_estimator import EmptyParamsDefinition
 
 PLUGIN_FQNS = plugin_loader.list_full_names()

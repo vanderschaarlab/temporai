@@ -5,9 +5,9 @@ import omegaconf
 import rich.pretty
 from typing_extensions import Self
 
+from tempor import plugin_loader
 from tempor.data import dataset
 from tempor.log import logger
-from tempor.methods import plugin_loader
 from tempor.methods.core._params import Params
 from tempor.methods.prediction.one_off.classification import BaseOneOffClassifier
 from tempor.methods.prediction.one_off.regression import BaseOneOffRegressor

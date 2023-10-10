@@ -69,7 +69,7 @@ class Seq2seqRegressor(BaseTemporalRegressor):
             >>>
             >>> from tempor.data.datasources import SineDataSource
             >>> from tempor.data import dataset
-            >>> from tempor.methods import plugin_loader
+            >>> from tempor import plugin_loader
             >>>
             >>> raw_data = SineDataSource(temporal_dim=5).load()
             >>> data = dataset.TemporalPredictionDataset(

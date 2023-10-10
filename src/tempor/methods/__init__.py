@@ -1,5 +1,8 @@
-from ._plugin_loader import plugin_loader
+from . import prediction, preprocessing, time_to_event, treatments
 
 __all__ = [
-    "plugin_loader",
+    "prediction",
+    "preprocessing",
+    "time_to_event",
+    "treatments",
 ]

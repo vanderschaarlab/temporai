@@ -61,7 +61,7 @@ class CRNTreatmentsClassifier(BaseTemporalTreatmentEffects):
         """Counterfactual Recurrent Network treatment effects model for classification on the outcomes (targets).
 
         Example:
-            >>> from tempor.methods import plugin_loader
+            >>> from tempor import plugin_loader
             >>>
             >>> # Load the model:
             >>> model = plugin_loader.get("treatments.temporal.classification.crn_classifier", n_iter=50)

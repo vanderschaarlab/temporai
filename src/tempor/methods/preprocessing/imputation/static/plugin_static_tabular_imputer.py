@@ -41,7 +41,7 @@ class StaticTabularImputer(BaseImputer):
 
         Example:
             >>> from tempor.data.datasources import SineDataSource
-            >>> from tempor.methods import plugin_loader
+            >>> from tempor import plugin_loader
             >>>
             >>> dataset = SineDataSource(with_missing = True).load()
             >>> assert dataset.static.dataframe().isna().sum().sum() != 0

@@ -65,7 +65,7 @@ class CRNTreatmentsRegressor(BaseTemporalTreatmentEffects):
             Ioana Bica, Ahmed M. Alaa, James Jordon, Mihaela van der Schaar.
 
         Example:
-            >>> from tempor.methods import plugin_loader
+            >>> from tempor import plugin_loader
             >>>
             >>> # Load the model:
             >>> model = plugin_loader.get("treatments.temporal.regression.crn_regressor", n_iter=50)
