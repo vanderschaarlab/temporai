@@ -40,7 +40,7 @@ tempor
   config: Library config
   core: Core code, such as global utils
   data: Data format
-    datasources: Data sources for provided datasets
+  datasources: Data sources for provided datasets
   exc: Exceptions
   log: Logger
   models: Model components
@@ -61,8 +61,8 @@ tempor
     ├── benchmarks: Benchmarking tools
     ├── config: Library config
     ├── core: Core code, such as global utils
-    ├── data: Data format/
-    │   └── datasources: Data sources for provided datasets
+    ├── data: Data format
+    ├── datasources: Data sources for provided datasets
     ├── exc: Exceptions
     ├── log: Logger
     ├── models: Model components
