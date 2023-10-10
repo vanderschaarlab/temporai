@@ -52,6 +52,11 @@ def modify_and_copy_nb(notebook_path: str, output_path: str, notebook_link: str)
         # Clear `execution_count` if present.
         if cell.cell_type == "code" and hasattr(cell, "execution_count"):
             cell.execution_count = None
+        # Clear cell outputs' `execution_count` if present.
+        if hasattr(cell, "outputs"):
+            for output in cell.outputs:
+                if hasattr(output, "execution_count"):
+                    output.execution_count = None
         new_cells.append(cell)
 
     nb.cells = new_cells
