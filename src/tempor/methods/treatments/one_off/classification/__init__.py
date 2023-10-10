@@ -1,6 +1,6 @@
 # NOTE: Uncomment once have at least one treatments.one_off.classification plugin.
 
-# import tempor.core.plugins as plugins
+# from tempor.core import plugins
 # from tempor.methods.treatments.one_off import BaseOneOffTreatmentEffects
 
 # plugins.register_plugin_category("treatments.one_off.classification", BaseOneOffTreatmentEffects)

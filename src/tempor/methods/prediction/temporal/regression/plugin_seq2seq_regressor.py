@@ -6,7 +6,7 @@ from clairvoyance2.data import DEFAULT_PADDING_INDICATOR
 from clairvoyance2.prediction.seq2seq import Seq2SeqRegressor, TimeIndexHorizon
 from typing_extensions import Self
 
-import tempor.core.plugins as plugins
+from tempor.core import plugins
 from tempor.data import dataset, samples
 from tempor.data.clv2conv import _from_clv2_time_series, tempor_dataset_to_clairvoyance2_dataset
 from tempor.methods.core._params import CategoricalParams, FloatParams, IntegerParams

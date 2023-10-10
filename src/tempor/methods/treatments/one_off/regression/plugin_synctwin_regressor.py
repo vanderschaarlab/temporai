@@ -3,7 +3,7 @@ from typing import List
 
 from clairvoyance2.treatment_effects.synctwin import SyncTwinRegressor
 
-import tempor.core.plugins as plugins
+from tempor.core import plugins
 from tempor.data import dataset, samples
 from tempor.data.clv2conv import tempor_dataset_to_clairvoyance2_dataset
 from tempor.methods.core._params import FloatParams, IntegerParams

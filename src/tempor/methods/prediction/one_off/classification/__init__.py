@@ -5,8 +5,8 @@ import numpy as np
 import pydantic
 from typing_extensions import Self
 
-import tempor.core.plugins as plugins
 import tempor.methods.core as methods_core
+from tempor.core import plugins
 from tempor.data import dataset, samples
 
 

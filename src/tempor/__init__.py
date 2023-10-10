@@ -30,10 +30,11 @@ warnings.filterwarnings("ignore", message=".*validate_arguments.*", category=Dep
 # For the time being, reasonable to stick to validate_arguments and silence Pydantic 2.0's deprecation warning.
 
 
-# Prepare the plugin loader:
-import tempor.core.plugins as plugins  # noqa: E402
 import tempor.data.datasources  # noqa: E402 F401
 import tempor.methods  # noqa: E402 F401
+
+# Prepare the plugin loader:
+from tempor.core import plugins  # noqa: E402
 
 # ^ Importing of necessary package directories is necessary to trigger the registration of plugins.
 

@@ -3,7 +3,7 @@ from typing import Optional
 
 from typing_extensions import Self
 
-import tempor.core.plugins as plugins
+from tempor.core import plugins
 from tempor.data import dataset, samples
 from tempor.methods.core._params import CategoricalParams, FloatParams, IntegerParams
 from tempor.methods.prediction.one_off.regression import BaseOneOffRegressor

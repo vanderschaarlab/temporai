@@ -1,4 +1,4 @@
-import tempor.core.plugins as plugins
+from tempor.core import plugins
 
 from .._base import BaseEncoder
 

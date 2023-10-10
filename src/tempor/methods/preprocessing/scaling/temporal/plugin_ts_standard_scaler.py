@@ -5,7 +5,7 @@ import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from typing_extensions import Self
 
-import tempor.core.plugins as plugins
+from tempor.core import plugins
 from tempor.data import dataset
 from tempor.data.samples import TimeSeriesSamples
 from tempor.methods.preprocessing.scaling._base import BaseScaler

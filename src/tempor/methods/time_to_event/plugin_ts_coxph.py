@@ -9,7 +9,7 @@ from lifelines import CoxPHFitter
 from packaging.version import Version
 from typing_extensions import Self
 
-import tempor.core.plugins as plugins
+from tempor.core import plugins
 from tempor.data import data_typing, dataset, samples
 from tempor.methods.core._params import FloatParams
 from tempor.methods.time_to_event import BaseTimeToEventAnalysis

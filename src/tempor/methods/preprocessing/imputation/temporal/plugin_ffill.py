@@ -2,7 +2,7 @@ from typing import Any, List
 
 from typing_extensions import Self
 
-import tempor.core.plugins as plugins
+from tempor.core import plugins
 from tempor.data import dataset
 from tempor.data.samples import TimeSeriesSamples
 from tempor.methods.core._params import Params

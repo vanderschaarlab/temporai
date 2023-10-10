@@ -1,4 +1,4 @@
-import tempor.core.plugins as plugins
+from tempor.core import plugins
 from tempor.data.datasources import datasource
 
 plugins.register_plugin_category("prediction.one_off", datasource.OneOffPredictionDataSource, plugin_type="datasource")
