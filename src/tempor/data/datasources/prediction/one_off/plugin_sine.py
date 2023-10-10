@@ -1,10 +1,12 @@
 import numpy as np
 import pandas as pd
 
+from tempor.core import plugins
 from tempor.data import dataset
 from tempor.data.datasources import datasource
 
 
+@plugins.register_plugin(name="sine", category="prediction.one_off", plugin_type="datasource")
 class SineDataSource(datasource.OneOffPredictionDataSource):
     def __init__(
         self,

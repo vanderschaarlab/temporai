@@ -8,6 +8,7 @@ import requests
 from clairvoyance2.datasets.uci import uci_diabetes
 from clairvoyance2.preprocessing.convenience import TemporalTargetsExtractor
 
+from tempor.core import plugins
 from tempor.data import dataset
 from tempor.data.clv2conv import clairvoyance2_dataset_to_tempor_dataset
 from tempor.data.datasources import datasource
@@ -15,6 +16,7 @@ from tempor.log import logger
 
 
 # TODO: Docstring.
+@plugins.register_plugin(name="uci_diabetes", category="prediction.temporal", plugin_type="datasource")
 class UCIDiabetesDataSource(datasource.TemporalPredictionDataSource):
     def __init__(
         self,

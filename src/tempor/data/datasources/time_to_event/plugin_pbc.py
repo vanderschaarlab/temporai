@@ -7,11 +7,13 @@ import requests
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 
+from tempor.core import plugins
 from tempor.data import dataset, utils
 from tempor.data.datasources import datasource
 
 
 # TODO: Docstring to explain the dataset.
+@plugins.register_plugin(name="pbc", category="time_to_event", plugin_type="datasource")
 class PBCDataSource(datasource.TimeToEventAnalysisDataSource):
     def __init__(self, **kwargs) -> None:
         self.datafile_path = os.path.join(self.dataset_dir(), "pbc2.csv")

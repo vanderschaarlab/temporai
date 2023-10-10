@@ -6,11 +6,13 @@ import pandas as pd
 import requests
 from sklearn.preprocessing import MinMaxScaler
 
+from tempor.core import plugins
 from tempor.data import dataset
 from tempor.data.datasources import datasource
 
 
 # TODO: Docstring to explain the dataset.
+@plugins.register_plugin(name="google_stocks", category="prediction.one_off", plugin_type="datasource")
 class GoogleStocksDataSource(datasource.OneOffPredictionDataSource):
     def __init__(self, seq_len: int = 10, **kwargs) -> None:
         super().__init__(**kwargs)

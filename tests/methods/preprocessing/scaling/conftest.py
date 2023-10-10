@@ -2,7 +2,7 @@ import copy
 
 import pytest
 
-from tempor.data import dataset, datasources
+from tempor.data import dataset
 
 # --- Reusable datasets. ---
 
@@ -10,7 +10,9 @@ from tempor.data import dataset, datasources
 # Sine data: full, scaled.
 @pytest.fixture(scope="session")
 def _sine_data_scaled_full():
-    return datasources.SineDataSource(no=100, temporal_dim=5, random_state=42, static_scale=100, ts_scale=100).load()
+    from tempor.data.datasources.prediction.one_off.plugin_sine import SineDataSource
+
+    return SineDataSource(no=100, temporal_dim=5, random_state=42, static_scale=100, ts_scale=100).load()
 
 
 @pytest.fixture(scope="function")

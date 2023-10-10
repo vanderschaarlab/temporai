@@ -32,9 +32,10 @@ warnings.filterwarnings("ignore", message=".*validate_arguments.*", category=Dep
 
 # Prepare the plugin loader:
 import tempor.core.plugins as plugins  # noqa: E402
+import tempor.data.datasources  # noqa: E402 F401
 import tempor.methods  # noqa: E402 F401
 
-# ^ Importing tempor.methods is necessary to trigger the registration of the methods plugins.
+# ^ Importing of necessary package directories is necessary to trigger the registration of plugins.
 
 plugin_loader = plugins.PluginLoader()
 

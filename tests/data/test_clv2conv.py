@@ -8,7 +8,9 @@ from clairvoyance2.data import Dataset as Clairvoyance2Dataset
 from clairvoyance2.data import dataformat as clairvoyance_samples
 from clairvoyance2.datasets import dummy_dataset, simple_pkpd_dataset
 
-from tempor.data import clv2conv, dataset, datasources
+from tempor.data import clv2conv, dataset
+from tempor.data.datasources.prediction.one_off.plugin_sine import SineDataSource
+from tempor.data.datasources.time_to_event.plugin_pbc import PBCDataSource
 
 
 @pytest.fixture(scope="module")
@@ -154,12 +156,12 @@ class TestClairvoyance2DatasetToTemporDataset:
 
 @pytest.fixture(scope="module")
 def load_sine():
-    return datasources.SineDataSource().load()
+    return SineDataSource().load()
 
 
 @pytest.fixture(scope="module")
 def load_pbc():
-    return datasources.PBCDataSource().load()
+    return PBCDataSource().load()
 
 
 class TestTemporDatasetToClairvoyance2Dataset:

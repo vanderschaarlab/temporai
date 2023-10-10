@@ -4,6 +4,10 @@ from tempor.data.datasources import datasource
 
 def test_datasources():
     class MyOneOffPredictionDataSource(datasource.OneOffPredictionDataSource):
+        name = "my_one_off_prediction_datasource"
+        category = "dummy_category"
+        plugin_type = "datasource"
+
         def load(self, **kwargs) -> dataset.OneOffPredictionDataset:
             raise NotImplementedError
 
@@ -16,6 +20,10 @@ def test_datasources():
             return None
 
     class MyTemporalPredictionDataSource(datasource.TemporalPredictionDataSource):
+        name = "my_temporal_prediction_datasource"
+        category = "dummy_category"
+        plugin_type = "datasource"
+
         def load(self, **kwargs) -> dataset.OneOffPredictionDataset:
             raise NotImplementedError
 
@@ -28,6 +36,10 @@ def test_datasources():
             return None
 
     class MyTimeToEventAnalysisDataSource(datasource.TimeToEventAnalysisDataSource):
+        name = "my_time_to_event_analysis_datasource"
+        category = "dummy_category"
+        plugin_type = "datasource"
+
         def load(self, **kwargs) -> dataset.OneOffPredictionDataset:
             raise NotImplementedError
 
@@ -40,6 +52,10 @@ def test_datasources():
             return None
 
     class MyOneOffTreatmentEffectsDataSource(datasource.OneOffTreatmentEffectsDataSource):
+        name = "my_one_off_treatment_effects_datasource"
+        category = "dummy_category"
+        plugin_type = "datasource"
+
         def load(self, **kwargs) -> dataset.OneOffPredictionDataset:
             raise NotImplementedError
 
@@ -52,6 +68,10 @@ def test_datasources():
             return None
 
     class MyTemporalTreatmentEffectsDataSource(datasource.TemporalTreatmentEffectsDataSource):
+        name = "my_temporal_treatment_effects_datasource"
+        category = "dummy_category"
+        plugin_type = "datasource"
+
         def load(self, **kwargs) -> dataset.OneOffPredictionDataset:
             raise NotImplementedError
 
@@ -92,6 +112,10 @@ def test_datasources():
 
 def test_requires_internet():
     class CaseUrl(datasource.OneOffPredictionDataSource):
+        name = "dummy_name"
+        category = "dummy_category"
+        plugin_type = "datasource"
+
         def load(self, **kwargs) -> dataset.OneOffPredictionDataset:
             raise NotImplementedError
 
@@ -104,6 +128,10 @@ def test_requires_internet():
             return "some_url"
 
     class CaseNoUrl(datasource.OneOffPredictionDataSource):
+        name = "dummy_name"
+        category = "dummy_category"
+        plugin_type = "datasource"
+
         def load(self, **kwargs) -> dataset.OneOffPredictionDataset:
             raise NotImplementedError
 

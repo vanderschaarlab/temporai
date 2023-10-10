@@ -4,7 +4,8 @@ import numpy as np
 import pytest
 import torch
 
-from tempor.data.datasources import GoogleStocksDataSource, SineDataSource
+from tempor.data.datasources.prediction.one_off.plugin_google_stocks import GoogleStocksDataSource
+from tempor.data.datasources.prediction.one_off.plugin_sine import SineDataSource
 from tempor.models.constants import ODEBackend
 from tempor.models.ts_ode import NeuralODE
 

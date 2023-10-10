@@ -5,6 +5,7 @@ import os
 from typing import ClassVar, Optional, Type
 
 import tempor
+from tempor.core import plugins
 
 from .. import data_typing, dataset
 
@@ -18,7 +19,7 @@ The full directory will be ``< tempor -> config -> working_directory > / DATA_DI
 # TODO: Unit test.
 
 
-class DataSource(abc.ABC):
+class DataSource(plugins.Plugin, abc.ABC):
     """`DataSource` class to ``load`` a `~tempor.data.dataset.DataSet`."""
 
     data_root_dir: ClassVar[str] = os.path.join(tempor.get_config().get_working_dir(), DATA_DIR)
@@ -32,6 +33,8 @@ class DataSource(abc.ABC):
         Args:
             kwargs: Any additional keyword arguments for the :class:`DataSource`.
         """
+        plugins.Plugin.__init__(self)
+
         os.makedirs(self.data_root_dir, exist_ok=True)
         dataset_dir = self.dataset_dir()
         if dataset_dir is not None:

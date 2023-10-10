@@ -1,35 +1,7 @@
-from .datasource import (
-    DataSource,
-    OneOffPredictionDataSource,
-    OneOffTreatmentEffectsDataSource,
-    TemporalPredictionDataSource,
-    TemporalTreatmentEffectsDataSource,
-    TimeToEventAnalysisDataSource,
-)
-from .dummy import DummyTemporalPredictionDataSource, DummyTemporalTreatmentEffectsDataSource
-from .google_stocks import GoogleStocksDataSource
-from .pbc import PBCDataSource
-from .pkpd import PKPDDataSource
-from .sine import SineDataSource
-from .uci_diabetes import UCIDiabetesDataSource
+from . import prediction, time_to_event, treatments
 
-base_classes = [
-    DataSource,
-    OneOffPredictionDataSource,
-    OneOffTreatmentEffectsDataSource,
-    TemporalPredictionDataSource,
-    TemporalTreatmentEffectsDataSource,
-    TimeToEventAnalysisDataSource,
+__all__ = [
+    "prediction",
+    "time_to_event",
+    "treatments",
 ]
-
-all_datasources = [
-    DummyTemporalPredictionDataSource,
-    DummyTemporalTreatmentEffectsDataSource,
-    GoogleStocksDataSource,
-    PBCDataSource,
-    PKPDDataSource,
-    SineDataSource,
-    UCIDiabetesDataSource,
-]
-
-__all__ = [x.__name__ for x in base_classes] + [x.__name__ for x in all_datasources]  # pyright: ignore
