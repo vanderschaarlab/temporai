@@ -665,8 +665,9 @@ Prediction where targets are temporal (time series).
 - [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/usage/tutorial09_automl.ipynb) - [AutoML](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/usage/tutorial09_automl.ipynb)
 
 ### Extending TemporAI
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/extending/tutorial01_custom_method.ipynb) - [Writing a Custom Plugin](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/extending/tutorial01_custom_method.ipynb)
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/extending/tutorial02_testing_custom_method.ipynb) - [Testing a Custom Plugin](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/extending/tutorial02_testing_custom_method.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/extending/tutorial01_custom_method.ipynb) - [Writing a Custom Method Plugin](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/extending/tutorial01_custom_method.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/extending/tutorial02_testing_custom_method.ipynb) - [Testing a Custom Method Plugin](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/extending/tutorial02_testing_custom_method.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/extending/tutorial03_custom_datasource.ipynb) - [Writing a Custom Data Source Plugin](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/extending/tutorial03_custom_datasource.ipynb)
 
 
 
