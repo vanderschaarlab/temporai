@@ -227,8 +227,8 @@ class BaseDataset(abc.ABC):
 
         Example:
             >>> from sklearn.model_selection import KFold
-            >>> from tempor.datasources import SineDataSource
-            >>> data = SineDataSource().load()
+            >>> from tempor import plugin_loader
+            >>> data = plugin_loader.get("prediction.one_off.sine", plugin_type="datasource").load()
             >>> kfold = KFold(n_splits=5)
             >>> len([(data_train, data_test) for (data_train, data_test) in data.split(splitter=kfold)])
             5

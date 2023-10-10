@@ -73,10 +73,9 @@ class LaplaceODERegressor(BaseOneOffRegressor):
                 Parameters and defaults as defined in :class:`LaplaceODERegressorParams`.
 
         Example:
-            >>> from tempor.datasources import GoogleStocksDataSource
             >>> from tempor import plugin_loader
             >>>
-            >>> dataset = GoogleStocksDataSource().load()
+            >>> dataset = plugin_loader.get("prediction.one_off.google_stocks", plugin_type="datasource").load()
             >>>
             >>> # Load the model:
             >>> model = plugin_loader.get("prediction.one_off.regression.laplace_ode_regressor", n_iter=50)

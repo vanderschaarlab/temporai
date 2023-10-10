@@ -67,11 +67,10 @@ class Seq2seqClassifier(BaseTemporalClassifier):
         Example:
             >>> import doctest; doctest.ELLIPSIS_MARKER = "[...]"  # Doctest config, ignore.
             >>>
-            >>> from tempor.datasources import SineDataSource
             >>> from tempor.data import dataset
             >>> from tempor import plugin_loader
             >>>
-            >>> raw_data = SineDataSource(temporal_dim=5).load()
+            >>> raw_data = plugin_loader.get("prediction.one_off.sine", plugin_type="datasource", temporal_dim=5).load()
             >>> data = dataset.TemporalPredictionDataset(
             ...    time_series=raw_data.time_series.dataframe(),
             ...    static=raw_data.static.dataframe(),
