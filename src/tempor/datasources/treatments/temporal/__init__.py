@@ -1,8 +1,8 @@
 from tempor.core import plugins
-from tempor.data.datasources import datasource
+from tempor.datasources import datasource
 
 plugins.register_plugin_category(
-    "prediction.temporal", datasource.TemporalPredictionDataSource, plugin_type="datasource"
+    "treatments.temporal", datasource.TemporalTreatmentEffectsDataSource, plugin_type="datasource"
 )
 
 plugins.importing.import_plugins(__file__)

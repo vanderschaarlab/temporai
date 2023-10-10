@@ -11,7 +11,7 @@ from clairvoyance2.preprocessing.convenience import TemporalTargetsExtractor
 from tempor.core import plugins
 from tempor.data import dataset
 from tempor.data.clv2conv import clairvoyance2_dataset_to_tempor_dataset
-from tempor.data.datasources import datasource
+from tempor.datasources import datasource
 from tempor.log import logger
 
 

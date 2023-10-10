@@ -1,5 +1,5 @@
 from tempor.data import data_typing, dataset
-from tempor.data.datasources import datasource
+from tempor.datasources import datasource
 
 
 def test_datasources():

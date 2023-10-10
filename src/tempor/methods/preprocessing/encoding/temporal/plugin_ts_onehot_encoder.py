@@ -62,7 +62,7 @@ class TimeSeriesOneHotEncoder(BaseEncoder):
                 Parameters and defaults as defined in :class:`TimeSeriesOneHotEncoderParams`.
 
         Example:
-            >>> from tempor.data.datasources import DummyTemporalPredictionDataSource
+            >>> from tempor.datasources import DummyTemporalPredictionDataSource
             >>> from tempor import plugin_loader
             >>>
             >>> dataset = DummyTemporalPredictionDataSource().load()

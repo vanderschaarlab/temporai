@@ -36,7 +36,7 @@ class StaticStandardScaler(BaseScaler):
                 Parameters and defaults as defined in :class:`StaticStandardScalerParams`.
 
         Example:
-            >>> from tempor.data.datasources import SineDataSource
+            >>> from tempor.datasources import SineDataSource
             >>> from tempor import plugin_loader
             >>>
             >>> dataset = SineDataSource().load()

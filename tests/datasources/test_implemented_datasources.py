@@ -3,20 +3,18 @@ from typing import Type
 import pytest
 
 from tempor.data.dataset import PredictiveDataset
-from tempor.data.datasources.datasource import DataSource
+from tempor.datasources.datasource import DataSource
 
 
 def from_modules():
     # Import by module.
-    from tempor.data.datasources.prediction.one_off.plugin_google_stocks import GoogleStocksDataSource
-    from tempor.data.datasources.prediction.one_off.plugin_sine import SineDataSource
-    from tempor.data.datasources.prediction.temporal.plugin_dummy_prediction import DummyTemporalPredictionDataSource
-    from tempor.data.datasources.prediction.temporal.plugin_uci_diabetes import UCIDiabetesDataSource
-    from tempor.data.datasources.time_to_event.plugin_pbc import PBCDataSource
-    from tempor.data.datasources.treatments.one_off.plugin_pkpd import PKPDDataSource
-    from tempor.data.datasources.treatments.temporal.plugin_dummy_treatments import (
-        DummyTemporalTreatmentEffectsDataSource,
-    )
+    from tempor.datasources.prediction.one_off.plugin_google_stocks import GoogleStocksDataSource
+    from tempor.datasources.prediction.one_off.plugin_sine import SineDataSource
+    from tempor.datasources.prediction.temporal.plugin_dummy_prediction import DummyTemporalPredictionDataSource
+    from tempor.datasources.prediction.temporal.plugin_uci_diabetes import UCIDiabetesDataSource
+    from tempor.datasources.time_to_event.plugin_pbc import PBCDataSource
+    from tempor.datasources.treatments.one_off.plugin_pkpd import PKPDDataSource
+    from tempor.datasources.treatments.temporal.plugin_dummy_treatments import DummyTemporalTreatmentEffectsDataSource
 
     return (
         GoogleStocksDataSource,

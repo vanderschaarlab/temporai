@@ -1,5 +1,5 @@
 from tempor.core import plugins
-from tempor.data.datasources import datasource
+from tempor.datasources import datasource
 
 plugins.register_plugin_category("time_to_event", datasource.TimeToEventAnalysisDataSource, plugin_type="datasource")
 

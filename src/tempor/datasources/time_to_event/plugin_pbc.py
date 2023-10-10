@@ -9,7 +9,7 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 from tempor.core import plugins
 from tempor.data import dataset, utils
-from tempor.data.datasources import datasource
+from tempor.datasources import datasource
 
 
 # TODO: Docstring to explain the dataset.

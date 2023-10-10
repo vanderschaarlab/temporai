@@ -6,8 +6,7 @@ from typing import ClassVar, Optional, Type
 
 import tempor
 from tempor.core import plugins
-
-from .. import data_typing, dataset
+from tempor.data import data_typing, dataset
 
 DATA_DIR = "data"
 """The subdirectory on the user's system where all data source files will be stored.

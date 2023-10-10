@@ -91,7 +91,7 @@ print(plugin_loader.list())
 :hide:
 import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
 
-from tempor.data.datasources import PBCDataSource
+from tempor.datasources import PBCDataSource
 from tempor import plugin_loader
 
 # Load a time-to-event dataset:
@@ -107,7 +107,7 @@ model.fit(dataset)
 prediction = model.predict(dataset, horizons=[0.25, 0.50, 0.75])
 ```
 ```python
-from tempor.data.datasources import PBCDataSource
+from tempor.datasources import PBCDataSource
 from tempor import plugin_loader
 
 # Load a time-to-event dataset:
@@ -130,7 +130,7 @@ import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
 
 import numpy as np
 
-from tempor.data.datasources import DummyTemporalTreatmentEffectsDataSource
+from tempor.datasources import DummyTemporalTreatmentEffectsDataSource
 from tempor import plugin_loader
 
 # Load a dataset with temporal treatments and outcomes:
@@ -166,7 +166,7 @@ counterfactuals = model.predict_counterfactuals(
 ```python
 import numpy as np
 
-from tempor.data.datasources import DummyTemporalTreatmentEffectsDataSource
+from tempor.datasources import DummyTemporalTreatmentEffectsDataSource
 from tempor import plugin_loader
 
 # Load a dataset with temporal treatments and outcomes:
@@ -205,7 +205,7 @@ counterfactuals = model.predict_counterfactuals(
 :hide:
 import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
 
-from tempor.data.datasources import SineDataSource
+from tempor.datasources import SineDataSource
 from tempor import plugin_loader
 
 dataset = SineDataSource(with_missing=True).load()
@@ -230,7 +230,7 @@ print(static_data_n_missing, temporal_data_n_missing)
 assert temporal_data_n_missing == 0
 ```
 ```python
-from tempor.data.datasources import SineDataSource
+from tempor.datasources import SineDataSource
 from tempor import plugin_loader
 
 dataset = SineDataSource(with_missing=True).load()
@@ -260,7 +260,7 @@ assert temporal_data_n_missing == 0
 :hide:
 import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
 
-from tempor.data.datasources import SineDataSource
+from tempor.datasources import SineDataSource
 from tempor import plugin_loader
 
 dataset = SineDataSource().load()
@@ -275,7 +275,7 @@ model.fit(dataset)
 prediction = model.predict(dataset)
 ```
 ```python
-from tempor.data.datasources import SineDataSource
+from tempor.datasources import SineDataSource
 from tempor import plugin_loader
 
 dataset = SineDataSource().load()
@@ -295,7 +295,7 @@ prediction = model.predict(dataset)
 :hide:
 import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
 
-from tempor.data.datasources import DummyTemporalPredictionDataSource
+from tempor.datasources import DummyTemporalPredictionDataSource
 from tempor import plugin_loader
 
 # Load a dataset with temporal targets.
@@ -311,7 +311,7 @@ model.fit(dataset)
 prediction = model.predict(dataset, n_future_steps=5)
 ```
 ```python
-from tempor.data.datasources import DummyTemporalPredictionDataSource
+from tempor.datasources import DummyTemporalPredictionDataSource
 from tempor import plugin_loader
 
 # Load a dataset with temporal targets.
@@ -335,7 +335,7 @@ import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
 from tempor.benchmarks import benchmark_models
 from tempor import plugin_loader
 from tempor.methods.pipeline import pipeline
-from tempor.data.datasources import PBCDataSource
+from tempor.datasources import PBCDataSource
 
 testcases = [
     (
@@ -373,7 +373,7 @@ print(aggr_score)
 from tempor.benchmarks import benchmark_models
 from tempor import plugin_loader
 from tempor.methods.pipeline import pipeline
-from tempor.data.datasources import PBCDataSource
+from tempor.datasources import PBCDataSource
 
 testcases = [
     (
@@ -443,7 +443,7 @@ reloaded = load(buff)  # Reload model.
 import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
 
 from tempor.automl.seeker import PipelineSeeker
-from tempor.data.datasources import SineDataSource
+from tempor.datasources import SineDataSource
 
 dataset = SineDataSource().load()
 
@@ -473,7 +473,7 @@ seeker = PipelineSeeker(
 ```
 ```python
 from tempor.automl.seeker import PipelineSeeker
-from tempor.data.datasources import SineDataSource
+from tempor.datasources import SineDataSource
 
 dataset = SineDataSource().load()
 

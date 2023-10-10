@@ -8,7 +8,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 from tempor.core import plugins
 from tempor.data import dataset
-from tempor.data.datasources import datasource
+from tempor.datasources import datasource
 
 
 # TODO: Docstring to explain the dataset.

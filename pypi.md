@@ -103,7 +103,7 @@ print(plugin_loader.list())
 
 * Use a time-to-event (survival) analysis model
 ```python
-from tempor.data.datasources import PBCDataSource
+from tempor.datasources import PBCDataSource
 from tempor import plugin_loader
 
 # Load a time-to-event dataset:
@@ -123,7 +123,7 @@ prediction = model.predict(dataset, horizons=[0.25, 0.50, 0.75])
 ```python
 import numpy as np
 
-from tempor.data.datasources import DummyTemporalTreatmentEffectsDataSource
+from tempor.datasources import DummyTemporalTreatmentEffectsDataSource
 from tempor import plugin_loader
 
 # Load a dataset with temporal treatments and outcomes:
@@ -159,7 +159,7 @@ counterfactuals = model.predict_counterfactuals(
 
 * Use a missing data imputer
 ```python
-from tempor.data.datasources import SineDataSource
+from tempor.datasources import SineDataSource
 from tempor import plugin_loader
 
 dataset = SineDataSource(with_missing=True).load()
@@ -186,7 +186,7 @@ assert temporal_data_n_missing == 0
 
 * Use a one-off classifier (prediction)
 ```python
-from tempor.data.datasources import SineDataSource
+from tempor.datasources import SineDataSource
 from tempor import plugin_loader
 
 dataset = SineDataSource().load()
@@ -203,7 +203,7 @@ prediction = model.predict(dataset)
 
 * Use a temporal regressor (forecasting)
 ```python
-from tempor.data.datasources import DummyTemporalPredictionDataSource
+from tempor.datasources import DummyTemporalPredictionDataSource
 from tempor import plugin_loader
 
 # Load a dataset with temporal targets.
@@ -224,7 +224,7 @@ prediction = model.predict(dataset, n_future_steps=5)
 from tempor.benchmarks import benchmark_models
 from tempor import plugin_loader
 from tempor.methods.pipeline import pipeline
-from tempor.data.datasources import PBCDataSource
+from tempor.datasources import PBCDataSource
 
 testcases = [
     (
@@ -276,7 +276,7 @@ reloaded = load(buff)  # Reload model.
 * AutoML - search for the best pipeline for your task
 ```python
 from tempor.automl.seeker import PipelineSeeker
-from tempor.data.datasources import SineDataSource
+from tempor.datasources import SineDataSource
 
 dataset = SineDataSource().load()
 

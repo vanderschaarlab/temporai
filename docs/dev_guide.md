@@ -104,7 +104,7 @@ Please familiarize yourself with the data format we use.
 2. See the following parts of the full API (module) reference:
     1. [Data samples reference](api/tempor.data.samples),
     2. [Dataset reference](api/tempor.data.dataset),
-    3. [Dataloader reference](api/tempor.data.datasources.datasource).
+    3. [Dataloader reference](api/tempor.datasources.datasource).
 
 
 

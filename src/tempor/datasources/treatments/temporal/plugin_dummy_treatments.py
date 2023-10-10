@@ -5,7 +5,7 @@ from clairvoyance2.datasets.dummy import dummy_dataset
 from tempor.core import plugins
 from tempor.data import dataset
 from tempor.data.clv2conv import clairvoyance2_dataset_to_tempor_dataset
-from tempor.data.datasources import datasource
+from tempor.datasources import datasource
 
 
 @plugins.register_plugin(name="dummy_treatments", category="treatments.temporal", plugin_type="datasource")
@@ -53,7 +53,7 @@ class DummyTemporalTreatmentEffectsDataSource(datasource.TemporalTreatmentEffect
             random_state (int, optional):
                 Random state to use. Defaults to ``12345``.
             kwargs (Any):
-                Any additional keyword arguments will be passed to `~tempor.data.datasources.DataSource`.
+                Any additional keyword arguments will be passed to `~tempor.datasources.DataSource`.
         """
         super().__init__(**kwargs)
 

@@ -9,8 +9,8 @@ from clairvoyance2.data import dataformat as clairvoyance_samples
 from clairvoyance2.datasets import dummy_dataset, simple_pkpd_dataset
 
 from tempor.data import clv2conv, dataset
-from tempor.data.datasources.prediction.one_off.plugin_sine import SineDataSource
-from tempor.data.datasources.time_to_event.plugin_pbc import PBCDataSource
+from tempor.datasources.prediction.one_off.plugin_sine import SineDataSource
+from tempor.datasources.time_to_event.plugin_pbc import PBCDataSource
 
 
 @pytest.fixture(scope="module")

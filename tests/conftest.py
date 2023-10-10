@@ -195,7 +195,7 @@ def as_covariates_dataset() -> Callable:
 # Sine data: full.
 @pytest.fixture(scope="session")
 def _sine_data_full():
-    from tempor.data.datasources.prediction.one_off.plugin_sine import SineDataSource
+    from tempor.datasources.prediction.one_off.plugin_sine import SineDataSource
 
     return SineDataSource(no=100, temporal_dim=5, random_state=42).load()
 
@@ -209,7 +209,7 @@ def sine_data_full(_sine_data_full: "dataset.OneOffPredictionDataset") -> "datas
 # Sine data: full, missing.
 @pytest.fixture(scope="session")
 def _sine_data_missing_full():
-    from tempor.data.datasources.prediction.one_off.plugin_sine import SineDataSource
+    from tempor.datasources.prediction.one_off.plugin_sine import SineDataSource
 
     return SineDataSource(no=100, with_missing=True, temporal_dim=5, random_state=42).load()
 
@@ -307,7 +307,7 @@ def sine_data_temporal_small(
 # Google stocks data: full.
 @pytest.fixture(scope="session")
 def _google_stocks_data_full() -> "dataset.OneOffPredictionDataset":
-    from tempor.data.datasources.prediction.one_off.plugin_google_stocks import GoogleStocksDataSource
+    from tempor.datasources.prediction.one_off.plugin_google_stocks import GoogleStocksDataSource
 
     data = GoogleStocksDataSource(seq_len=50).load()
     return data
@@ -339,7 +339,7 @@ def google_stocks_data_small(
 # PBC data: full.
 @pytest.fixture(scope="session")
 def _pbc_data_full() -> "dataset.TimeToEventAnalysisDataset":
-    from tempor.data.datasources.time_to_event.plugin_pbc import PBCDataSource
+    from tempor.datasources.time_to_event.plugin_pbc import PBCDataSource
 
     data = PBCDataSource().load()
     return data
@@ -369,9 +369,7 @@ def pbc_data_small(_pbc_data_small: "dataset.TimeToEventAnalysisDataset") -> "da
 # Clairvoyance dummy data: full.
 @pytest.fixture(scope="session")
 def _clv_data_full() -> "dataset.TemporalTreatmentEffectsDataset":
-    from tempor.data.datasources.treatments.temporal.plugin_dummy_treatments import (
-        DummyTemporalTreatmentEffectsDataSource,
-    )
+    from tempor.datasources.treatments.temporal.plugin_dummy_treatments import DummyTemporalTreatmentEffectsDataSource
 
     return DummyTemporalTreatmentEffectsDataSource(
         n_samples=100,
@@ -413,7 +411,7 @@ def clv_data_small(
 # PKPD data: full.
 @pytest.fixture(scope="session")
 def _pkpd_data_full() -> "dataset.OneOffTreatmentEffectsDataset":
-    from tempor.data.datasources.treatments.one_off.plugin_pkpd import PKPDDataSource
+    from tempor.datasources.treatments.one_off.plugin_pkpd import PKPDDataSource
 
     return PKPDDataSource(
         n_timesteps=30, time_index_treatment_event=25, n_control_samples=50, n_treated_samples=50, random_state=123
@@ -428,7 +426,7 @@ def pkpd_data_full(_pkpd_data_full: "dataset.OneOffTreatmentEffectsDataset") -> 
 # PKPD data: small.
 @pytest.fixture(scope="session")
 def _pkpd_data_small() -> "dataset.OneOffTreatmentEffectsDataset":
-    from tempor.data.datasources.treatments.one_off.plugin_pkpd import PKPDDataSource
+    from tempor.datasources.treatments.one_off.plugin_pkpd import PKPDDataSource
 
     return PKPDDataSource(
         n_timesteps=6, time_index_treatment_event=3, n_control_samples=4, n_treated_samples=4, random_state=123

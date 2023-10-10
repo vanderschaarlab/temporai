@@ -12,7 +12,7 @@ from tempor.data import dataset, samples
 # Dummy data: full, with categoricals.
 @pytest.fixture(scope="session")
 def _dummy_data_with_categorical_features_full() -> dataset.OneOffPredictionDataset:
-    from tempor.data.datasources.prediction.temporal.plugin_dummy_prediction import DummyTemporalPredictionDataSource
+    from tempor.datasources.prediction.temporal.plugin_dummy_prediction import DummyTemporalPredictionDataSource
 
     data = DummyTemporalPredictionDataSource(
         static_covariates_missing_prob=0.0,

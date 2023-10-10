@@ -10,7 +10,7 @@ from tempor.data import dataset
 # Sine data: full, scaled.
 @pytest.fixture(scope="session")
 def _sine_data_scaled_full():
-    from tempor.data.datasources.prediction.one_off.plugin_sine import SineDataSource
+    from tempor.datasources.prediction.one_off.plugin_sine import SineDataSource
 
     return SineDataSource(no=100, temporal_dim=5, random_state=42, static_scale=100, ts_scale=100).load()
 

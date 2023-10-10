@@ -6,7 +6,7 @@ from unittest.mock import Mock
 import numpy as np
 import pytest
 
-from tempor.data.datasources.time_to_event.plugin_pbc import PBCDataSource
+from tempor.datasources.time_to_event.plugin_pbc import PBCDataSource
 from tempor.models.ddh import DynamicDeepHitLayers, DynamicDeepHitModel
 
 

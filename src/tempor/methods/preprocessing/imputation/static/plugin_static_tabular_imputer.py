@@ -40,7 +40,7 @@ class StaticTabularImputer(BaseImputer):
                 Parameters and defaults as defined in :class:`StaticTabularImputerParams`.
 
         Example:
-            >>> from tempor.data.datasources import SineDataSource
+            >>> from tempor.datasources import SineDataSource
             >>> from tempor import plugin_loader
             >>>
             >>> dataset = SineDataSource(with_missing = True).load()
