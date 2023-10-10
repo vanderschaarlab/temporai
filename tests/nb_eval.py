@@ -15,27 +15,45 @@ workspace = Path(__file__).parents[0] / "workspace"
 workspace.mkdir(parents=True, exist_ok=True)
 
 
-# For fine-grained control of which notebooks to test, adjust this:
+# For fine-grained control of which notebooks to test, adjust the below lists.
+
+# Tutorial notebooks that include any of the following in their file name will be included (otherwise not included):
 ENABLED_TESTS = [
-    "tutorial",  # All tutorial notebooks include "tutorial" in file name.
+    "tutorial",
+]
+
+# Tutorial notebooks that include any of the following directories in their path will be excluded (always):
+EXCLUDED_DIRS = [
+    "docs",
 ]
 
 
-def filter_notebooks(all_paths: List, enabled_tests: List) -> List:
+def filter_notebooks(all_paths: List, enabled_tests: List, excluded_dirs: List) -> List:
     """Filter out non-notebooks and notebooks that are not enabled.
 
     Args:
         all_paths (List): List of paths to notebooks.
         enabled_tests (List): List of strings that must be in the notebook name.
+        excluded_dirs (List): List of strings representing directories that must not be in the notebook path.
 
     Returns:
         List: List of paths to notebooks that are enabled.
     """
-    return [
+
+    # Filter out non-notebooks, filter by `enabled_tests`:
+    enabled_notebooks = [
         p
         for p in all_paths
         if any(val in p.name for val in enabled_tests) and p.suffix == ".ipynb" and "checkpoint" not in p.name
     ]
+
+    # Filter out notebooks in `excluded_dirs`.
+    # Only keep a notebook if none of its parent directories are in `excluded_dirs`, by way of set intersection.
+    notebooks = [
+        p for p in enabled_notebooks if not set(str(x) for x in list(p.parents)).intersection(set(excluded_dirs))
+    ]
+
+    return notebooks
 
 
 def run_notebook(notebook_path: Path, skip_pip_install: bool = True) -> None:
@@ -94,7 +112,7 @@ def main(nb_dir: Path, n_jobs: int, verbose: int) -> None:
     """
 
     nb_dir = Path(nb_dir)
-    notebook_paths = filter_notebooks(list(nb_dir.rglob("*")), ENABLED_TESTS)
+    notebook_paths = filter_notebooks(list(nb_dir.rglob("*")), ENABLED_TESTS, EXCLUDED_DIRS)
     print("Notebooks to be tested:")
     pprint.pprint([str(p) for p in notebook_paths])
 
