@@ -768,8 +768,9 @@ class PipelineSeeker(BaseSeeker):
         logger.info(f"Selected score {score} for {name} with hyperparameters:\n{hps}")
 
         pipe = estimator_cls.pipeline_from_hps(hps)
+        pipe_as_predictor = cast(BasePredictor, pipe)
 
-        if not isinstance(pipe, BasePredictor):  # pragma: no cover
+        if not isinstance(pipe_as_predictor, BasePredictor):  # pragma: no cover
             # Should not end up here.
             raise RuntimeError(f"Pipeline was not a subclass of {BasePredictor.__name__}")
-        return pipe
+        return pipe_as_predictor

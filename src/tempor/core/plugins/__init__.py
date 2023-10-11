@@ -5,7 +5,7 @@ import importlib.util
 import os
 import os.path
 import sys
-from typing import TYPE_CHECKING, Any, Callable, ClassVar, Dict, List, Optional, Tuple, Type, TypeVar, Union, overload
+from typing import Any, Callable, ClassVar, Dict, List, Optional, Tuple, Type, TypeVar, Union, cast, overload
 
 from typing_extensions import ParamSpec
 
@@ -296,40 +296,38 @@ def register_plugin(name: str, category: plugin_typing.PluginCategory, plugin_ty
         #     * https://stackoverflow.com/a/74080156
         #     * https://docs.python.org/3/library/typing.html#typing.ParamSpec
 
-        if TYPE_CHECKING:  # pragma: no cover
-            # Note that cls is in fact `Type[Plugin]`, but this allows to
-            # silence static type-checker warnings inside this function.
-            assert isinstance(cls, Plugin)  # nosec B101
+        # Cast to Type[Plugin], which is the actual expected type, such that static type checking works here.
+        cls_ = cast(Type[Plugin], cls)
 
-        logger.debug(f"Registering plugin of class {cls}")
-        cls.name = name
-        cls.category = category
+        logger.debug(f"Registering plugin of class {cls_}")
+        cls_.name = name
+        cls_.category = category
 
         _plugin_type = parse_plugin_type(plugin_type)
-        cls.plugin_type = _plugin_type
+        cls_.plugin_type = _plugin_type
 
         category_fqn = create_fqn(suffix=category, plugin_type=_plugin_type)
 
         if category_fqn not in PLUGIN_CATEGORY_REGISTRY:
             raise TypeError(
-                f"Found plugin category '{cls.category}' under plugin type '{cls.plugin_type}' which "
+                f"Found plugin category '{cls_.category}' under plugin type '{cls_.plugin_type}' which "
                 f"has not been registered with `@{register_plugin_category.__name__}`"
             )
-        if not issubclass(cls, Plugin):
-            raise TypeError(f"Expected plugin class `{cls.__name__}` to be a subclass of `{Plugin}` but was `{cls}`")
-        if not issubclass(cls, PLUGIN_CATEGORY_REGISTRY[category_fqn]):
+        if not issubclass(cls_, Plugin):
+            raise TypeError(f"Expected plugin class `{cls_.__name__}` to be a subclass of `{Plugin}` but was `{cls_}`")
+        if not issubclass(cls_, PLUGIN_CATEGORY_REGISTRY[category_fqn]):
             raise TypeError(
-                f"Expected plugin class `{cls.__name__}` to be a subclass of "
-                f"`{PLUGIN_CATEGORY_REGISTRY[category_fqn]}` but was `{cls}`"
+                f"Expected plugin class `{cls_.__name__}` to be a subclass of "
+                f"`{PLUGIN_CATEGORY_REGISTRY[category_fqn]}` but was `{cls_}`"
             )
         # pylint: disable-next=protected-access
-        if cls._fqn() in PLUGIN_REGISTRY:
+        if cls_._fqn() in PLUGIN_REGISTRY:
             # pylint: disable-next=protected-access
-            if not _check_same_class(cls, PLUGIN_REGISTRY[cls._fqn()]):
+            if not _check_same_class(cls_, PLUGIN_REGISTRY[cls_._fqn()]):
                 raise TypeError(
                     # pylint: disable-next=protected-access
-                    f"Plugin (plugin type '{cls.plugin_type}') with full name '{cls.full_name()}' has already been "
-                    f"registered (as class `{PLUGIN_REGISTRY[cls._fqn()]}`)"
+                    f"Plugin (plugin type '{cls_.plugin_type}') with full name '{cls_.full_name()}' has already been "
+                    f"registered (as class `{PLUGIN_REGISTRY[cls_._fqn()]}`)"
                 )
             else:
                 # The same class is being reimported, do not raise error.
@@ -337,10 +335,10 @@ def register_plugin(name: str, category: plugin_typing.PluginCategory, plugin_ty
         for existing_cls in PLUGIN_REGISTRY.values():
             # Cannot have the same plugin name (not just fqn), as this is not supported by Pipeline.
             # TODO: Fix this - make non-unique name work with pipeline.
-            if cls.name == existing_cls.name:
-                if not _check_same_class(cls, existing_cls):
+            if cls_.name == existing_cls.name:
+                if not _check_same_class(cls_, existing_cls):
                     raise TypeError(
-                        f"Plugin (plugin type '{cls.plugin_type}') with name '{cls.name}' has already been "
+                        f"Plugin (plugin type '{cls_.plugin_type}') with name '{cls_.name}' has already been "
                         f"registered (as class `{existing_cls}`). Must use a unique plugin name."
                     )
                 else:  # pragma: no cover
@@ -350,9 +348,10 @@ def register_plugin(name: str, category: plugin_typing.PluginCategory, plugin_ty
                     pass
 
         # pylint: disable-next=protected-access
-        PLUGIN_REGISTRY[cls._fqn()] = cls
+        PLUGIN_REGISTRY[cls_._fqn()] = cls_
 
-        return cls
+        # Cast back to Callable[P, T] (see note at the top of function).
+        return cast(Callable[P, T], cls_)
 
     return _class_decorator
 

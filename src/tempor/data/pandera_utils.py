@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Tuple, Union, cast
 
 import numpy as np
 import pandas as pd
@@ -114,7 +114,7 @@ PA_DTYPE_MAP: Dict[data_typing.Dtype, pa.DataType] = {
 """
 
 
-def get_pa_dtypes(dtypes: Iterable[data_typing.Dtype]) -> List[pa.DataType]:
+def get_pa_dtypes(dtypes: Iterable[Union[data_typing.Dtype, pa.DataType]]) -> List[pa.DataType]:
     """Return a list of `pandera.DataType` corresponding to ``dtypes``. Raises `KeyError` If not found."""
     pa_dtypes_ = []
     for dt in dtypes:
@@ -231,9 +231,7 @@ class UnionDtype(pd_engine.DataType):
 
 
 def init_schema(data: pd.DataFrame, **kwargs) -> pa.DataFrameSchema:
-    schema = pa.infer_schema(data)
-    if TYPE_CHECKING:  # pragma: no cover
-        assert isinstance(schema, pa.DataFrameSchema)  # nosec B101
+    schema = cast(pa.DataFrameSchema, pa.infer_schema(data))
     schema = update_schema(schema, **kwargs)
     return schema
 

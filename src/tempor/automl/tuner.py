@@ -2,7 +2,7 @@
 
 import abc
 import copy
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Type, Union
+from typing import Any, Dict, List, Optional, Tuple, Type, Union, cast
 
 import optuna
 import pydantic
@@ -217,9 +217,7 @@ class OptunaTuner(BaseTuner):
                 pipe_cls, pipe_hp_dict = estimator.pipeline_class_from_hps(hps)
                 hps = dict(plugin_params=pipe_hp_dict)
                 name = pipe_cls.pipeline_seq()
-                if TYPE_CHECKING:  # pragma: no cover
-                    assert issubclass(pipe_cls, BasePredictor)  # nosec B101
-                estimator_for_eval = pipe_cls
+                estimator_for_eval = cast(Type[BasePredictor], pipe_cls)
             else:
                 estimator_for_eval = estimator
                 name = estimator_for_eval.__name__
