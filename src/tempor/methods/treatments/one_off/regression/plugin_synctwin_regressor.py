@@ -79,7 +79,7 @@ class SyncTwinTreatmentsRegressor(BaseOneOffTreatmentEffects):
             "SyncTwin implementation does not currently support `predict`, only `predict_counterfactuals`"
         )
 
-    def _predict_counterfactuals(  # type: ignore[override]
+    def _predict_counterfactuals(
         self,
         data: dataset.PredictiveDataset,
         # horizons: SyncTwin can only handle the same time horizon as targets in the data.

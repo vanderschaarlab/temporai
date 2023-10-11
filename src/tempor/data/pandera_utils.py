@@ -260,7 +260,7 @@ def add_regex_column_checks(
                 dtype=dtype,
                 nullable=nullable,
                 regex=True,
-                checks=checks_list,  # type: ignore
+                checks=checks_list,
             )
         }
     )

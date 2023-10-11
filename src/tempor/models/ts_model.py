@@ -437,7 +437,7 @@ class TimeSeriesModel(nn.Module):
         if out_counts.min() > 1:
             stratify = outcome.cpu()
 
-        split: Tuple[torch.Tensor, ...] = train_test_split(  # type: ignore
+        split: Tuple[torch.Tensor, ...] = train_test_split(
             static_data.cpu(),
             temporal_data.cpu(),
             observation_times.cpu(),

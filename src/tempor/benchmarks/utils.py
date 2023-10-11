@@ -47,7 +47,7 @@ def evaluate_auc_multiclass(
         average_precision = dict()
         roc_auc: dict = dict()
 
-        y_test = label_binarize(y_test, classes=classes)  # type: ignore
+        y_test = label_binarize(y_test, classes=classes)
 
         fpr["micro"], tpr["micro"], _ = roc_curve(y_test.ravel(), y_pred_proba_tmp.ravel())
         roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])

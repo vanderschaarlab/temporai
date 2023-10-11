@@ -288,7 +288,7 @@ class StaticSamples(DataSamples):
 
     def __getitem__(self, key: data_typing.GetItemKey) -> Self:
         key_ = utils.ensure_pd_iloc_key_returns_df(key)
-        return StaticSamples(  # type: ignore[return-value]
+        return StaticSamples(
             self._data.iloc[key_, :],  # pyright: ignore
             _skip_validate=True,
         )
@@ -479,7 +479,7 @@ class TimeSeriesSamples(DataSamples):
         if feature_index is None:
             feature_index = _array_default_feature_index(array)
         if time_indexes is None:
-            time_indexes = _array_default_time_indexes(array, padding_indicator)  # type: ignore
+            time_indexes = _array_default_time_indexes(array, padding_indicator)
         if TYPE_CHECKING:  # pragma: no cover
             assert sample_index is not None and feature_index is not None and time_indexes is not None  # nosec B101
         return utils.array3d_to_multiindex_timeseries_dataframe(
@@ -586,7 +586,7 @@ class TimeSeriesSamples(DataSamples):
         key_ = utils.ensure_pd_iloc_key_returns_df(key)
         sample_index = utils.get_df_index_level0_unique(self._data)
         selected = list(sample_index[key_])  # pyright: ignore
-        return TimeSeriesSamples(  # type: ignore[return-value]
+        return TimeSeriesSamples(
             self._data.loc[(selected, slice(None)), :],  # pyright: ignore
             _skip_validate=True,
         )
@@ -793,7 +793,7 @@ class EventSamples(DataSamples):
 
     def __getitem__(self, key: data_typing.GetItemKey) -> Self:
         key_ = utils.ensure_pd_iloc_key_returns_df(key)
-        return EventSamples(  # type: ignore[return-value]
+        return EventSamples(
             self._data.iloc[key_, :],  # pyright: ignore
             _skip_validate=True,
         )

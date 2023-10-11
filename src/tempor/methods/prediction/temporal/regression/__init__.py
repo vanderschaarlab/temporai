@@ -26,7 +26,7 @@ class BaseTemporalRegressor(methods_core.BasePredictor):
         return self
 
     @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
-    def predict(  # type: ignore[override]  # pylint: disable=arguments-differ
+    def predict(  # pylint: disable=arguments-differ
         self,
         data: dataset.PredictiveDataset,
         n_future_steps: int,

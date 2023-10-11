@@ -101,10 +101,10 @@ def benchmark_models(
 
         scores = evaluator(
             plugin,
-            data=data,  # type: ignore
+            data=data,
             n_splits=n_splits,
             random_state=random_state,
-            horizons=horizons,  # type: ignore
+            horizons=horizons,
             raise_exceptions=raise_exceptions,
             silence_warnings=silence_warnings,
         )
