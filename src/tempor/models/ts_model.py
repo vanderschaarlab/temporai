@@ -580,7 +580,7 @@ class TimeSeriesLayer(nn.Module):
         }
 
         if mode in ["RNN", "LSTM", "GRU"]:
-            self.temporal_layer = temporal_models[mode](**temporal_params)
+            self.temporal_layer = temporal_models[mode](**temporal_params)  # type: ignore [no-untyped-call]
         elif mode == "MLSTM_FCN":
             self.temporal_layer = MLSTM_FCN(
                 c_in=n_temporal_units_in,

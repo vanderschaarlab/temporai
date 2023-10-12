@@ -317,7 +317,11 @@ def workaround_pandera_pd2_1_0_multiindex_compatibility(schema: pa.DataFrameSche
             "Columns with duplicate values are not supported in stack" in str(ex)
         ):  # pragma: no cover
             cols = data.index.names
-            raise pa.errors.SchemaError(schema=schema, data=data, message=f"columns {cols} not unique")
+            raise pa.errors.SchemaError(  # type: ignore [no-untyped-call]
+                schema=schema,
+                data=data,
+                message=f"columns {cols} not unique",
+            )
         else:  # pragma: no cover
             raise
 

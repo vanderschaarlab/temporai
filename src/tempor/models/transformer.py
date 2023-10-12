@@ -71,7 +71,11 @@ class TransformerModel(nn.Module):
             activation=activation,
         )
         encoder_norm = nn.LayerNorm(n_units_hidden)
-        self.transformer_encoder = TransformerEncoder(encoder_layer, n_layers_hidden, norm=encoder_norm)
+        self.transformer_encoder = TransformerEncoder(  # type: ignore [no-untyped-call]
+            encoder_layer,
+            n_layers_hidden,
+            norm=encoder_norm,
+        )
 
         self.model = nn.Sequential(
             Permute(1, 0, 2),  # bs x seq_len x nvars -> seq_len x bs x nvars

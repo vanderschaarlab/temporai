@@ -103,12 +103,12 @@ def update_multiindex(multi_index: pa.MultiIndex, **kwargs: Any) -> pa.MultiInde
 
 
 PA_DTYPE_MAP: Dict[data_typing.Dtype, pa.DataType] = {
-    bool: pa.Bool(),
-    int: pa.Int(),
-    float: pa.Float(),
-    str: pa.String(),
+    bool: pa.Bool(),  # type: ignore [no-untyped-call]
+    int: pa.Int(),  # type: ignore [no-untyped-call]
+    float: pa.Float(),  # type: ignore [no-untyped-call]
+    str: pa.String(),  # type: ignore [no-untyped-call]
     "category": pa.Category(),
-    "datetime": pa.DateTime(),
+    "datetime": pa.DateTime(),  # type: ignore [no-untyped-call]
 }
 """A mapping from dtype specified as :obj:`~tempor.data.data_typing.Dtype` to a `pandera.DataType`.
 """
@@ -134,10 +134,10 @@ def get_pa_dtypes(dtypes: Iterable[Union[data_typing.Dtype, pa.DataType]]) -> Li
         # Allow for different bits of Int and Float, rather than just what pandera defaults to.
         # Note: especially important on Windows, as pandera ends up with a different bit datatype on Windows than
         # on other systems. See: https://github.com/unionai-oss/pandera/issues/726.
-        if dt_add == pa.Int():
-            pa_dtypes_.extend([pa.Int8(), pa.Int16(), pa.Int32(), pa.Int64()])
-        if dt_add == pa.Float():
-            pa_dtypes_.extend([pa.Float16(), pa.Float32(), pa.Float64()])
+        if dt_add == pa.Int():  # type: ignore [no-untyped-call]
+            pa_dtypes_.extend([pa.Int8(), pa.Int16(), pa.Int32(), pa.Int64()])  # type: ignore [no-untyped-call]
+        if dt_add == pa.Float():  # type: ignore [no-untyped-call]
+            pa_dtypes_.extend([pa.Float16(), pa.Float32(), pa.Float64()])  # type: ignore [no-untyped-call]
 
     return list(set(pa_dtypes_))
 
