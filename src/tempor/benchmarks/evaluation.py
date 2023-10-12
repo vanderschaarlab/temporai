@@ -567,7 +567,7 @@ def _compute_time_to_event_metric(
                 f"but more than one event features found in {name}"
             )
     try:
-        float(horizons[0])
+        float(horizons[0])  # pyright: ignore
     except (TypeError, ValueError) as e:
         raise ValueError("Currently only int or float time horizons supported.") from e
     horizons = cast(List[float], horizons)

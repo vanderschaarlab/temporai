@@ -124,7 +124,7 @@ class TimeSeriesOneHotEncoder(BaseEncoder):
 
     def _transform(self, data: dataset.BaseDataset, *args: Any, **kwargs: Any) -> dataset.BaseDataset:
         df_to_encode = data.time_series.dataframe()[self.features]
-        encoded_arr = self.model.transform(df_to_encode)
+        encoded_arr = self.model.transform(df_to_encode)  # pyright: ignore
         encoded_col_names = self.model.get_feature_names_out()
 
         # Drop old columns.

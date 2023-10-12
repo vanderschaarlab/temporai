@@ -78,7 +78,11 @@ def monkeypatch_xgbse_xgboost2_compatibility() -> Generator:
     finally:
         if problem_versions():  # pragma: no cover
             # Restore `xgb.Booster.best_iteration`.
-            setattr(xgb.Booster, "best_iteration", original_xgb_booster_best_iteration)
+            setattr(
+                xgb.Booster,
+                "best_iteration",
+                original_xgb_booster_best_iteration,  # pyright: ignore  [reportUnboundVariable]
+            )
 
 
 @dataclasses.dataclass

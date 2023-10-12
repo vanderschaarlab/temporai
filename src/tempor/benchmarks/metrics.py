@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple, Union
 
 import numpy as np
 import sklearn
@@ -80,7 +80,7 @@ def _check_estimate_1d(estimate: np.ndarray, test_time: np.ndarray) -> np.ndarra
     estimate = sklearn.utils.check_array(
         estimate,
         ensure_2d=False,
-        **dict(input_name="estimate") if _has_input_name else dict(),
+        **dict(input_name="estimate") if _has_input_name else dict(),  # pyright: ignore
     )
     if estimate.ndim != 1:
         raise ValueError("Expected 1D array, got {:d}D array instead:\narray={}.\n".format(estimate.ndim, estimate))
@@ -93,7 +93,7 @@ def _check_times(test_time: np.ndarray, times: np.ndarray) -> np.ndarray:
         np.atleast_1d(times),
         ensure_2d=False,
         dtype=test_time.dtype,
-        **dict(input_name="times") if _has_input_name else dict(),
+        **dict(input_name="times") if _has_input_name else dict(),  # pyright: ignore
     )
     times = np.unique(times)
 
@@ -106,14 +106,17 @@ def _check_times(test_time: np.ndarray, times: np.ndarray) -> np.ndarray:
 
 
 def _check_estimate_2d(
-    estimate: np.ndarray, test_time: np.ndarray, time_points: np.ndarray, estimator: sklearn.base.BaseEstimator
+    estimate: np.ndarray,
+    test_time: np.ndarray,
+    time_points: np.ndarray,
+    estimator: Union[sklearn.base.BaseEstimator, str],
 ) -> Tuple[np.ndarray, np.ndarray]:
     estimate = sklearn.utils.check_array(
         estimate,
         ensure_2d=False,
         allow_nd=False,
         estimator=estimator,
-        **dict(input_name="estimate") if _has_input_name else dict(),
+        **dict(input_name="estimate") if _has_input_name else dict(),  # pyright: ignore
     )
     time_points = _check_times(test_time, time_points)
     sklearn.utils.check_consistent_length(test_time, estimate)
@@ -372,7 +375,7 @@ class SurvivalFunctionEstimator(sklearn.base.BaseEstimator):  # type: ignore [mi
             time,
             ensure_2d=False,
             estimator=self,
-            **dict(input_name="estimate") if _has_input_name else dict(),
+            **dict(input_name="estimate") if _has_input_name else dict(),  # pyright: ignore
         )
 
         # K-M is undefined if estimate at last time point is non-zero.

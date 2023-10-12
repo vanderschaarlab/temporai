@@ -132,7 +132,7 @@ class StaticOneHotEncoder(BaseEncoder):
             return data
 
         df_to_encode = data.static.dataframe()[self.features]
-        encoded_arr = self.model.transform(df_to_encode)
+        encoded_arr = self.model.transform(df_to_encode)  # pyright: ignore
         encoded_col_names = self.model.get_feature_names_out()
 
         # Drop old columns.

@@ -459,7 +459,7 @@ class NeuralODE(torch.nn.Module):
                 atol=self.atol,
                 rtol=self.rtol,
             )
-            z_T = z_T[1]
+            z_T = z_T[1]  # pyright: ignore
             z_T = z_T[:, -1, :]  # pyright: ignore  # Last time point.
         elif self.backend == "laplace":
             X_emb = self.initial_temporal(temporal_data_ext)
@@ -677,7 +677,7 @@ class NeuralODE(torch.nn.Module):
         if out_counts.min() > 1:
             stratify = outcome.cpu()
 
-        split: Tuple[torch.Tensor, ...] = train_test_split(
+        split: Tuple[torch.Tensor, ...] = train_test_split(  # pyright: ignore
             static_data.cpu(),
             temporal_data.cpu(),
             observation_times.cpu(),

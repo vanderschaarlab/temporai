@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, cast
 
 import numpy as np
 from sklearn.metrics import auc, average_precision_score, precision_recall_curve, roc_auc_score, roc_curve
@@ -47,7 +47,7 @@ def evaluate_auc_multiclass(
         average_precision = dict()
         roc_auc: dict = dict()
 
-        y_test = label_binarize(y_test, classes=classes)
+        y_test = cast(np.ndarray, label_binarize(y_test, classes=classes, sparse_output=False))
 
         fpr["micro"], tpr["micro"], _ = roc_curve(y_test.ravel(), y_pred_proba_tmp.ravel())
         roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])

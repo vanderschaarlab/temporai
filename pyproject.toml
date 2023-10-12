@@ -65,3 +65,24 @@ add-ignore = [
     "D415",
     "D202"
 ]
+
+# Configure pyright.
+# May wish to add to pre-commit eventually.
+[tool.pyright]
+exclude = [
+    # Defaults:
+    "**/node_modules",
+    "**/__pycache__",
+    "**/.*",
+    # Custom:
+    ".dev",
+    "**/logs",
+    "outputs",
+    "data",
+    "tutorials/*/data",
+    "tutorials/*/logs",
+    "codecov",
+    "workspace",
+    # Exclude tests:
+    "tests",
+]

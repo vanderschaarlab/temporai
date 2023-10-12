@@ -21,11 +21,11 @@ def _dummy_data_with_categorical_features_full() -> dataset.OneOffPredictionData
     ).load()
 
     # Add static categorical features.
-    static_df = data.static.dataframe()
+    static_df = data.static.dataframe()  # pyright: ignore
     np.random.seed(777)
     cat1 = pd.Categorical(np.random.choice(["a", "b", "c"], size=(len(static_df),)))
     cat2 = pd.Categorical(np.random.choice(["D", "E"], size=(len(static_df),)))
-    static_df.insert(1, "categorical_feat_1", cat1)
+    static_df.insert(1, "categorical_feat_1", cat1)  # pyright: ignore
     static_df["categorical_feat_2"] = cat2
     data.static = samples.StaticSamples.from_dataframe(static_df)
 
@@ -34,11 +34,11 @@ def _dummy_data_with_categorical_features_full() -> dataset.OneOffPredictionData
     np.random.seed(111)
     cat1 = pd.Categorical(np.random.choice(["p", "q", "r"], size=(len(ts_df),)))
     cat2 = pd.Categorical(np.random.choice(["S", "T"], size=(len(ts_df),)))
-    ts_df.insert(1, "categorical_feat_1", cat1)
+    ts_df.insert(1, "categorical_feat_1", cat1)  # pyright: ignore
     ts_df["categorical_feat_2"] = cat2
     data.time_series = samples.TimeSeriesSamples.from_dataframe(ts_df)
 
-    return data
+    return data  # pyright: ignore
 
 
 @pytest.fixture(scope="function")

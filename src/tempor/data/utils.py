@@ -416,7 +416,7 @@ def event_time_value_pairs_to_event_dataframe(
     Returns:
         pd.DataFrame: `pandas.DataFrame` compatible with `EventSamples`.
     """
-    series_list = [pd.Series(zip(t, v)) for t, v in event_time_value_pairs]
+    series_list = [pd.Series(zip(t, v)) for t, v in event_time_value_pairs]  # pyright: ignore
     data_input = pd.DataFrame(data=series_list).T.to_numpy()
     df = pd.DataFrame(data=data_input, index=sample_index)
     if feature_index is not None:
