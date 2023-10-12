@@ -8,6 +8,7 @@ import pydantic
 from packaging.version import Version
 
 import tempor.core.utils
+from tempor.core import pydantic_utils
 
 from . import data_typing, settings
 
@@ -45,7 +46,7 @@ def get_df_index_level0_unique(df: pd.DataFrame) -> pd.Index:
 # --- Multiindex timeseries dataframe --> 3D numpy array. ---
 
 
-@pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+@pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
 def multiindex_timeseries_dataframe_to_array3d(
     df: pd.DataFrame, *, padding_indicator: Any, max_timesteps: Optional[int] = None
 ) -> np.ndarray:
@@ -271,7 +272,7 @@ def make_sample_time_index_tuples(
     return pairs  # type: ignore
 
 
-@pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+@pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
 def array3d_to_multiindex_timeseries_dataframe(
     array: np.ndarray,
     *,
@@ -319,7 +320,7 @@ def array3d_to_multiindex_timeseries_dataframe(
 # --- List of dataframes --> Multiindex timeseries dataframe. ---
 
 
-@pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+@pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
 def list_of_dataframes_to_multiindex_timeseries_dataframe(
     list_of_dataframes: List[pd.DataFrame],
     *,
@@ -380,7 +381,7 @@ def multiindex_timeseries_dataframe_to_list_of_dataframes(df: pd.DataFrame) -> L
 # --- [(event_times, event_values), ...] --> DataFrame compatible with EventSamples. ---
 
 
-@pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+@pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
 def event_time_value_pairs_to_event_dataframe(
     event_time_value_pairs: Sequence[Tuple[data_typing.TimeIndex, List[bool]]],
     sample_index: data_typing.SampleIndex,
@@ -426,7 +427,7 @@ def event_time_value_pairs_to_event_dataframe(
 # --- Date-time time index -related ---
 
 
-@pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+@pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
 def datetime_time_index_to_float(time_index: Union[data_typing.TimeIndex, pd.Index, pd.Series]) -> np.ndarray:
     """Convert a date-time ``time_index`` to floats. The conversion is done by calling
     ``<time_index as a numpy array>.astype(float)``.

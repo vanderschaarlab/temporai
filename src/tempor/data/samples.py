@@ -14,6 +14,7 @@ from packaging.version import Version
 from typing_extensions import Self
 
 import tempor.exc
+from tempor.core import pydantic_utils
 from tempor.log import log_helpers, logger
 
 from . import data_typing, pandera_utils, utils
@@ -161,7 +162,7 @@ class StaticSamples(DataSamples):
     _data: pd.DataFrame
     _schema: pa.DataFrameSchema
 
-    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+    @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def __init__(
         self,
         data: data_typing.DataContainer,
@@ -288,7 +289,7 @@ class StaticSamples(DataSamples):
 
     def __getitem__(self, key: data_typing.GetItemKey) -> Self:
         key_ = utils.ensure_pd_iloc_key_returns_df(key)
-        return StaticSamples(
+        return StaticSamples(  # type: ignore [return-value]
             self._data.iloc[key_, :],  # pyright: ignore
             _skip_validate=True,
         )
@@ -337,7 +338,7 @@ class TimeSeriesSamples(DataSamples):
     def modality(self) -> data_typing.DataModality:
         return data_typing.DataModality.TIME_SERIES
 
-    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+    @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def __init__(
         self,
         data: data_typing.DataContainer,
@@ -590,7 +591,7 @@ class TimeSeriesSamples(DataSamples):
         key_ = utils.ensure_pd_iloc_key_returns_df(key)
         sample_index = utils.get_df_index_level0_unique(self._data)
         selected = list(sample_index[key_])  # pyright: ignore
-        return TimeSeriesSamples(
+        return TimeSeriesSamples(  # type: ignore [return-value]
             self._data.loc[(selected, slice(None)), :],  # pyright: ignore
             _skip_validate=True,
         )
@@ -608,7 +609,7 @@ class EventSamples(DataSamples):
     def modality(self) -> data_typing.DataModality:
         return data_typing.DataModality.EVENT
 
-    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+    @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def __init__(
         self,
         data: data_typing.DataContainer,
@@ -747,7 +748,7 @@ class EventSamples(DataSamples):
     def num_features(self) -> int:
         return self._data.shape[1]
 
-    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+    @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def split(self, time_feature_suffix: str = _DEFAULT_EVENTS_TIME_FEATURE_SUFFIX) -> pd.DataFrame:
         """Return a `pandas.DataFrame` where the time component of each event feature has been split off to its own
         column. The new columns that contain the times will be named ``"<original column name><time_feature_suffix>"``
@@ -797,7 +798,7 @@ class EventSamples(DataSamples):
 
     def __getitem__(self, key: data_typing.GetItemKey) -> Self:
         key_ = utils.ensure_pd_iloc_key_returns_df(key)
-        return EventSamples(
+        return EventSamples(  # type: ignore [return-value]
             self._data.iloc[key_, :],  # pyright: ignore
             _skip_validate=True,
         )

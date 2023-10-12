@@ -7,6 +7,7 @@ import pydantic
 import seaborn as sns
 from packaging.version import Version
 
+from tempor.core import pydantic_utils
 from tempor.core.types import PredictiveTaskType
 from tempor.data import data_typing, dataset
 from tempor.log import logger as log
@@ -25,7 +26,7 @@ def print_score(mean: pd.Series, std: pd.Series) -> pd.Series:
     return mean + " +/- " + std
 
 
-@pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+@pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
 def benchmark_models(
     task_type: PredictiveTaskType,
     tests: List[Tuple[str, Any]],  # [ ( Test name, Model to evaluate (unfitted) ), ... ]
@@ -132,7 +133,7 @@ def benchmark_models(
     return aggr, results
 
 
-@pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+@pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
 def visualize_benchmark(results: Dict[str, pd.DataFrame], palette: str = "viridis", plot_block: bool = True) -> Any:
     # Pre-format DF for plotting.
     for k, v in results.items():

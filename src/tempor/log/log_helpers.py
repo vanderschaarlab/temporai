@@ -1,7 +1,7 @@
 from contextlib import contextmanager
 from typing import Generator
 
-from ._custom_logger import logger
+from ._custom_logger import logger  # type: ignore [attr-defined]
 
 
 @contextmanager

@@ -12,6 +12,7 @@ from torch import nn
 from torch.utils.data import DataLoader, TensorDataset, sampler
 from typing_extensions import Literal
 
+from tempor.core import pydantic_utils
 from tempor.log import logger as log
 from tempor.models.constants import DEVICE, ModelTaskType, Nonlin, ODEBackend
 from tempor.models.mlp import MLP
@@ -481,7 +482,7 @@ class NeuralODE(torch.nn.Module):
         out = self.output(z_T)
         return out.reshape(-1, *self.output_shape)
 
-    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+    @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def predict(
         self,
         static_data: Union[List, np.ndarray, torch.Tensor],
@@ -513,7 +514,7 @@ class NeuralODE(torch.nn.Module):
             else:
                 return yt.cpu().numpy()
 
-    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+    @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def predict_proba(
         self,
         static_data: Union[List, np.ndarray, torch.Tensor],
@@ -558,7 +559,7 @@ class NeuralODE(torch.nn.Module):
         else:
             return np.mean(np.inner(outcome - y_pred, outcome - y_pred) / 2.0)
 
-    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+    @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def fit(
         self,
         static_data: Union[List, np.ndarray, torch.Tensor],
@@ -576,7 +577,7 @@ class NeuralODE(torch.nn.Module):
 
         return self._train(static_data_t, temporal_data_t, observation_times_t, outcome_t)
 
-    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+    @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def _train(
         self,
         static_data: List[torch.Tensor],
@@ -634,7 +635,10 @@ class NeuralODE(torch.nn.Module):
 
                 loss.backward()  # backpropagation, compute gradients
                 if self.clipping_value > 0:
-                    torch.nn.utils.clip_grad_norm_(self.parameters(), self.clipping_value)  # pyright: ignore
+                    torch.nn.utils.clip_grad_norm_(  # type: ignore [attr-defined] # pyright: ignore
+                        self.parameters(),
+                        self.clipping_value,
+                    )
                 self.optimizer.step()  # apply gradients
 
                 if torch.isnan(loss):  # pragma: no cover

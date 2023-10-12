@@ -332,7 +332,7 @@ def kaplan_meier_estimator(
     return uniq_times, y
 
 
-class SurvivalFunctionEstimator(sklearn.base.BaseEstimator):
+class SurvivalFunctionEstimator(sklearn.base.BaseEstimator):  # type: ignore [misc]
     """Kaplan-Meier estimate of the survival function."""
 
     def __init__(self) -> None:

@@ -13,6 +13,7 @@ from typing_extensions import Literal, Type, get_args
 
 from tempor import plugin_loader
 from tempor.benchmarks import evaluation
+from tempor.core import pydantic_utils
 from tempor.core.types import PredictiveTaskType
 from tempor.data import data_typing
 from tempor.data.dataset import PredictiveDataset, TimeToEventAnalysisDataset
@@ -190,7 +191,7 @@ def evaluation_callback_dispatch(
 
 
 class BaseSeeker(abc.ABC):
-    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+    @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def __init__(  # pylint: disable=unused-argument
         self,
         study_name: str,
@@ -483,7 +484,7 @@ class BaseSeeker(abc.ABC):
 
 
 class MethodSeeker(BaseSeeker):
-    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+    @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def __init__(
         self,
         study_name: str,
@@ -594,7 +595,7 @@ class MethodSeeker(BaseSeeker):
 
 
 class PipelineSeeker(BaseSeeker):
-    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+    @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def __init__(
         self,
         study_name: str,

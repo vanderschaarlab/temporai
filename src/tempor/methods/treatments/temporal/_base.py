@@ -5,6 +5,7 @@ import pydantic
 from typing_extensions import Self
 
 import tempor.methods.core as methods_core
+from tempor.core import pydantic_utils
 from tempor.data import dataset, samples
 
 
@@ -25,7 +26,7 @@ class BaseTemporalTreatmentEffects(methods_core.BasePredictor):
         super().fit(data, *args, **kwargs)
         return self
 
-    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+    @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def predict(
         self,
         data: dataset.PredictiveDataset,
@@ -41,7 +42,7 @@ class BaseTemporalTreatmentEffects(methods_core.BasePredictor):
     ) -> samples.TimeSeriesSamples:  # pragma: no cover
         ...
 
-    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+    @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def predict_counterfactuals(
         self,
         data: dataset.PredictiveDataset,

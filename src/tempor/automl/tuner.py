@@ -8,6 +8,7 @@ import optuna
 import pydantic
 from typing_extensions import Protocol, runtime_checkable
 
+from tempor.core import pydantic_utils
 from tempor.data.dataset import PredictiveDataset
 from tempor.log import logger
 from tempor.methods.core import Params
@@ -40,7 +41,7 @@ class EvaluationCallback(Protocol):
 
 
 class BaseTuner(abc.ABC):
-    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+    @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def __init__(  # pylint: disable=unused-argument
         self,
         study_name: str,
@@ -95,7 +96,7 @@ class BaseTuner(abc.ABC):
 
 
 class OptunaTuner(BaseTuner):
-    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+    @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def __init__(
         self,
         study_name: str,

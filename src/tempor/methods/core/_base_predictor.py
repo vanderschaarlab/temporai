@@ -3,6 +3,7 @@ from typing import Any
 
 import pydantic
 
+from tempor.core import pydantic_utils
 from tempor.data import dataset
 from tempor.log import logger
 
@@ -68,7 +69,7 @@ class BasePredictor(estimator.BaseEstimator):
         return prediction
 
     # TODO: Add similar methods for predict_{proba,counterfactuals}.
-    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+    @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def fit_predict(
         self,
         data: dataset.PredictiveDataset,

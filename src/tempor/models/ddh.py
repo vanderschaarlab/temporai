@@ -164,7 +164,7 @@ class DynamicDeepHitModel:
                 loss.backward()  # type: ignore [no-untyped-call]
 
                 if self.clipping_value > 0:
-                    torch.nn.utils.clip_grad_norm_(  # pyright: ignore [reportPrivateImportUsage]
+                    torch.nn.utils.clip_grad_norm_(  # type: ignore [attr-defined] # pyright: ignore
                         self.model.parameters(),
                         self.clipping_value,
                     )

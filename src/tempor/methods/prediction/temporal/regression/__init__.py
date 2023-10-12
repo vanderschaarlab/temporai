@@ -5,7 +5,7 @@ import pydantic
 from typing_extensions import Self
 
 import tempor.methods.core as methods_core
-from tempor.core import plugins
+from tempor.core import plugins, pydantic_utils
 from tempor.data import dataset, samples
 
 
@@ -26,8 +26,8 @@ class BaseTemporalRegressor(methods_core.BasePredictor):
         super().fit(data, *args, **kwargs)
         return self
 
-    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
-    def predict(  # pylint: disable=arguments-differ
+    @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
+    def predict(  # type: ignore [override] # pylint: disable=arguments-differ
         self,
         data: dataset.PredictiveDataset,
         n_future_steps: int,

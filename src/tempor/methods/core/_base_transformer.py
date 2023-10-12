@@ -3,6 +3,7 @@ from typing import Any
 
 import pydantic
 
+from tempor.core import pydantic_utils
 from tempor.data import dataset
 from tempor.log import logger
 
@@ -24,7 +25,7 @@ class BaseTransformer(estimator.BaseEstimator):
 
         return transformed_data
 
-    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+    @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def fit_transform(
         self,
         data: dataset.BaseDataset,

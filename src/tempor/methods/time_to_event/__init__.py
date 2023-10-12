@@ -5,7 +5,7 @@ from typing_extensions import Any, Self
 
 import tempor.exc
 import tempor.methods.core as methods_core
-from tempor.core import plugins
+from tempor.core import plugins, pydantic_utils
 from tempor.data import data_typing, dataset, samples
 
 
@@ -30,8 +30,8 @@ class BaseTimeToEventAnalysis(methods_core.BasePredictor):
     # It appears that `pydantic.validate_arguments` throws an error when `*args: Any` and `**kwargs: Any` are
     # specified here for unknown reasons. For now, we just ignore the type checking for these arguments with
     # `# type: ignore [no-untyped-def]`.
-    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
-    def predict(  # type: ignore [no-untyped-def] # pylint: disable=arguments-differ
+    @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
+    def predict(  # type: ignore [no-untyped-def, override] # pylint: disable=arguments-differ
         self,
         data: dataset.PredictiveDataset,
         horizons: data_typing.TimeIndex,
