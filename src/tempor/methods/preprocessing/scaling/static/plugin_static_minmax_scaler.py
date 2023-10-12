@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, List, Tuple
 
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
@@ -8,6 +8,7 @@ from typing_extensions import Self
 from tempor.core import plugins
 from tempor.data import dataset
 from tempor.data.samples import StaticSamples
+from tempor.methods.core import Params
 from tempor.methods.core._params import CategoricalParams
 from tempor.methods.preprocessing.scaling._base import BaseScaler
 
@@ -29,7 +30,7 @@ class StaticMinMaxScaler(BaseScaler):
     ParamsDefinition = StaticMinMaxScalerParams
     params: StaticMinMaxScalerParams  # type: ignore
 
-    def __init__(self, **params) -> None:
+    def __init__(self, **params: Any) -> None:
         """MinMax scaling for the static data.
 
         Transform the static features by scaling each feature to a given range. This estimator scales and translates
@@ -62,8 +63,8 @@ class StaticMinMaxScaler(BaseScaler):
     def _fit(
         self,
         data: dataset.BaseDataset,
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> Self:
         if data.static is None:
             return self
@@ -71,7 +72,7 @@ class StaticMinMaxScaler(BaseScaler):
         self.model.fit(data.static.dataframe())
         return self
 
-    def _transform(self, data: dataset.BaseDataset, *args, **kwargs) -> dataset.BaseDataset:
+    def _transform(self, data: dataset.BaseDataset, *args: Any, **kwargs: Any) -> dataset.BaseDataset:
         if data.static is None:
             return data
 
@@ -85,7 +86,7 @@ class StaticMinMaxScaler(BaseScaler):
         return data
 
     @staticmethod
-    def hyperparameter_space(*args, **kwargs):
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
         return [
             CategoricalParams("clip", [True, False]),
         ]

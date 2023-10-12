@@ -10,6 +10,7 @@ from typing_extensions import Self
 from tempor.core import plugins
 from tempor.data import dataset, samples
 from tempor.data.clv2conv import _from_clv2_time_series, tempor_dataset_to_clairvoyance2_dataset
+from tempor.methods.core import Params
 from tempor.methods.core._params import CategoricalParams, FloatParams, IntegerParams
 from tempor.methods.treatments.temporal._base import BaseTemporalTreatmentEffects
 
@@ -56,7 +57,7 @@ class CRNTreatmentsClassifier(BaseTemporalTreatmentEffects):
 
     def __init__(
         self,
-        **params,
+        **params: Any,
     ) -> None:
         """Counterfactual Recurrent Network treatment effects model for classification on the outcomes (targets).
 
@@ -82,8 +83,8 @@ class CRNTreatmentsClassifier(BaseTemporalTreatmentEffects):
     def _fit(
         self,
         data: dataset.BaseDataset,
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> Self:
         cl_dataset = tempor_dataset_to_clairvoyance2_dataset(data)
 
@@ -98,8 +99,8 @@ class CRNTreatmentsClassifier(BaseTemporalTreatmentEffects):
         self,
         data: dataset.PredictiveDataset,
         horizons: List[List[float]],
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> samples.TimeSeriesSamples:
         if self.model is None:
             raise RuntimeError("Fit the model first")
@@ -122,8 +123,8 @@ class CRNTreatmentsClassifier(BaseTemporalTreatmentEffects):
         data: dataset.PredictiveDataset,
         horizons: List[List[float]],
         treatment_scenarios: List[List[int]],
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> List:
         if self.model is None:
             raise RuntimeError("Fit the model first")
@@ -164,7 +165,7 @@ class CRNTreatmentsClassifier(BaseTemporalTreatmentEffects):
         return counterfactuals
 
     @staticmethod
-    def hyperparameter_space(*args, **kwargs):
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
         return [
             IntegerParams(name="encoder_hidden_size", low=10, high=500),
             IntegerParams(name="encoder_num_layers", low=1, high=10),

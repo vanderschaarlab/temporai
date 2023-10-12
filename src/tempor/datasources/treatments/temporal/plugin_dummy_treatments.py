@@ -1,4 +1,4 @@
-from typing import Optional, cast
+from typing import Any, Optional, cast
 
 from clairvoyance2.datasets.dummy import dummy_dataset
 
@@ -23,7 +23,7 @@ class DummyTemporalTreatmentEffectsDataSource(datasource.TemporalTreatmentEffect
         temporal_treatments_n_features: int = 2,
         temporal_treatments_n_categories: Optional[int] = None,
         random_state: int = 12345,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Dummy data source for temporal treatment effects tasks; generates a dataset with random data.
 
@@ -77,7 +77,7 @@ class DummyTemporalTreatmentEffectsDataSource(datasource.TemporalTreatmentEffect
     def dataset_dir() -> None:
         return None
 
-    def load(self, **kwargs) -> dataset.TemporalTreatmentEffectsDataset:
+    def load(self, **kwargs: Any) -> dataset.TemporalTreatmentEffectsDataset:
         clv_dataset = dummy_dataset(
             n_samples=self.n_samples,
             temporal_covariates_n_features=self.temporal_covariates_n_features,

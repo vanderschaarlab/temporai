@@ -24,7 +24,7 @@ _log_like_newline = _log_like_base.replace(_nl_replace, "\n")
 _log_like_no_newline = _log_like_base.replace(_nl_replace, "")
 
 
-def _log_like_formatter(record) -> str:
+def _log_like_formatter(record: Dict) -> str:
     return _log_like_newline if "\n" in record["message"] else _log_like_no_newline
 
 
@@ -46,12 +46,12 @@ _ADD_CONFIGS = dict()
 
 
 # Dynamically add print method. ---
-def _print_filter(record):
+def _print_filter(record: Dict) -> bool:
     # A filter to enable special handling of logger.print() case.
     return record["extra"].get("print", False)
 
 
-def _logger_print(message: str):
+def _logger_print(message: str) -> None:
     logger.bind(print=True).opt(depth=1).info(message)
 
 
@@ -59,7 +59,7 @@ logger.print = _logger_print  # type: ignore
 # --- --- ---
 
 
-def _configure_loggers(config: conf.TemporConfig):
+def _configure_loggers(config: conf.TemporConfig) -> None:
     # Reset _LOGGERS, _ADD_CONFIGS
     _this_module._LOGGERS = []  # type: ignore  # pylint: disable=protected-access
     _this_module._ADD_CONFIGS = dict()  # type: ignore  # pylint: disable=protected-access

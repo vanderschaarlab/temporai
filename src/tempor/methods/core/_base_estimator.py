@@ -1,6 +1,6 @@
 import abc
 import dataclasses
-from typing import TYPE_CHECKING, Any, ClassVar, Dict, List, Optional, Type
+from typing import TYPE_CHECKING, Any, ClassVar, Dict, Generator, List, Optional, Type
 
 import omegaconf
 import optuna
@@ -33,7 +33,7 @@ class BaseEstimator(Plugin, abc.ABC):
         params_processed: Optional[omegaconf.DictConfig] = None
 
         @pydantic.model_validator(mode="before")
-        def root_checks(cls, values: Dict):  # pylint: disable=no-self-argument
+        def root_checks(cls, values: Dict) -> Dict:  # pylint: disable=no-self-argument
             params = values.get("params", dict())
             ParamsDefinitionClass = values.get("ParamsDefinitionClass")
 
@@ -56,7 +56,7 @@ class BaseEstimator(Plugin, abc.ABC):
 
         model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
 
-    def __init__(self, **params) -> None:
+    def __init__(self, **params: Any) -> None:
         Plugin.__init__(self)
         self._fitted = False
         args_validator = self._InitArgsValidator(params=params, ParamsDefinitionClass=self.ParamsDefinition)
@@ -70,7 +70,7 @@ class BaseEstimator(Plugin, abc.ABC):
         """Check if the model was trained"""
         return self._fitted
 
-    def __rich_repr__(self):
+    def __rich_repr__(self) -> Generator:
         yield "name", self.name
         yield "category", self.category
         yield "plugin_type", self.plugin_type
@@ -83,8 +83,8 @@ class BaseEstimator(Plugin, abc.ABC):
     def fit(
         self,
         data: dataset.BaseDataset,
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> Self:
         if not data.fit_ready:
             raise ValueError(
@@ -98,7 +98,7 @@ class BaseEstimator(Plugin, abc.ABC):
         return fitted_model
 
     @abc.abstractmethod
-    def _fit(self, data: dataset.BaseDataset, *args, **kwargs) -> Self:  # pragma: no cover
+    def _fit(self, data: dataset.BaseDataset, *args: Any, **kwargs: Any) -> Self:  # pragma: no cover
         ...
 
     @staticmethod

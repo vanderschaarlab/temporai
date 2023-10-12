@@ -10,8 +10,8 @@ from typing_extensions import Protocol, runtime_checkable
 
 from tempor.data.dataset import PredictiveDataset
 from tempor.log import logger
+from tempor.methods.core import Params
 from tempor.methods.core._base_predictor import BasePredictor
-from tempor.methods.core._params import Params
 
 from ._types import AutoMLCompatibleEstimator, OptimDirection
 from .pipeline_selector import PipelineSelector
@@ -41,11 +41,11 @@ class EvaluationCallback(Protocol):
 
 class BaseTuner(abc.ABC):
     @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
-    def __init__(
+    def __init__(  # pylint: disable=unused-argument
         self,
         study_name: str,
         direction: OptimDirection,
-        **kwargs,  # pylint: disable=unused-argument
+        **kwargs: Any,
     ):
         """Base hyperparameter tuner from which tuner implementations should derive. Defines the initializer and the
         `tune` method.
@@ -67,7 +67,7 @@ class BaseTuner(abc.ABC):
         evaluation_callback: EvaluationCallback,
         override_hp_space: Optional[List[Params]] = None,
         compute_baseline_score: bool = True,
-        **kwargs,
+        **kwargs: Any,
     ) -> Tuple[List[float], List[Dict]]:  # pragma: no cover
         """Run the hyperparameter tuner and return scores and chosen hyperparameters.
 
@@ -105,7 +105,7 @@ class OptunaTuner(BaseTuner):
         study_storage: Optional[Union[str, optuna.storages.BaseStorage]] = None,
         study_pruner: Optional[optuna.pruners.BasePruner] = None,
         study_load_if_exists: bool = False,
-        **kwargs,
+        **kwargs: Any,
     ):
         """Hyper parameter tuning (optimization) helper for an `optuna.study.Study` using any
         `optuna.sampler.BaseSampler`.
@@ -127,6 +127,7 @@ class OptunaTuner(BaseTuner):
         super().__init__(
             study_name=study_name,
             direction=direction,
+            **kwargs,
         )
 
         self.sampler = study_sampler
@@ -161,7 +162,7 @@ class OptunaTuner(BaseTuner):
         override_hp_space: Optional[List[Params]] = None,
         compute_baseline_score: bool = True,
         optimize_kwargs: Optional[Dict[str, Any]] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> Tuple[List[float], List[Dict]]:
         """Run the hyperparameter tuner and return scores and chosen hyperparameters.
 

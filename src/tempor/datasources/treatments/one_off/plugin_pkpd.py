@@ -1,4 +1,4 @@
-from typing import cast
+from typing import Any, cast
 
 from clairvoyance2.datasets.simulated.simple_pkpd import simple_pkpd_dataset
 
@@ -18,7 +18,7 @@ class PKPDDataSource(datasource.OneOffTreatmentEffectsDataSource):
         n_control_samples: int = 20,
         n_treated_samples: int = 20,
         random_state: int = 100,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
 
@@ -36,7 +36,7 @@ class PKPDDataSource(datasource.OneOffTreatmentEffectsDataSource):
     def dataset_dir() -> None:
         return None
 
-    def load(self, **kwargs) -> dataset.OneOffTreatmentEffectsDataset:
+    def load(self, **kwargs: Any) -> dataset.OneOffTreatmentEffectsDataset:
         clv_dataset = simple_pkpd_dataset(
             n_timesteps=self.n_timesteps,
             time_index_treatment_event=self.time_index_treatment_event,

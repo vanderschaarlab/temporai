@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Ty
 from tempor.data import dataset
 
 if TYPE_CHECKING:  # pragma: no cover
-    from tempor.methods.core._params import Params
+    from tempor.methods.core import Params
 
 
 def _generate_pipeline_seq_impl(plugins: Tuple[Type, ...]) -> Callable:

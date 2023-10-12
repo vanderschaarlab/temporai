@@ -66,7 +66,7 @@ class CDEFunc(torch.nn.Module):
             nonlin_out=[("tanh", n_units_out)],
         )
 
-    def forward(self, t, z):  # pylint: disable=unused-argument
+    def forward(self, t: torch.Tensor, z: torch.Tensor) -> torch.Tensor:  # pylint: disable=unused-argument
         z = self.model(z)
 
         z = z.view(*z.shape[:-1], self.n_units_hidden, self.n_units_in)
@@ -112,7 +112,7 @@ class ODEFunc(torch.nn.Module):
             nonlin_out=[("tanh", n_units_hidden)],
         )
 
-    def forward(self, t, z):  # pylint: disable=unused-argument
+    def forward(self, t: torch.Tensor, z: torch.Tensor) -> torch.Tensor:  # pylint: disable=unused-argument
         return self.model(z)
 
 
@@ -131,7 +131,7 @@ class ReverseGRUEncoder(nn.Module):
         self.linear_out = nn.Linear(n_units_hidden, n_units_latent).to(device)
         nn.init.xavier_uniform_(self.linear_out.weight)
 
-    def forward(self, observed_data: torch.Tensor):
+    def forward(self, observed_data: torch.Tensor) -> torch.Tensor:
         trajs_to_encode = observed_data  # (batch_size, t_observed_dim, observed_dim)
         reversed_trajs_to_encode = torch.flip(trajs_to_encode, (1,))
         out, _ = self.gru(reversed_trajs_to_encode)
@@ -145,12 +145,12 @@ class LaplaceFunc(nn.Module):
 
     def __init__(
         self,
-        s_dim,
-        n_units_out,
-        n_units_latent,
-        n_units_hidden=64,
+        s_dim: int,
+        n_units_out: int,
+        n_units_latent: int,
+        n_units_hidden: int = 64,
         device: Any = DEVICE,
-    ):
+    ) -> None:
         super(LaplaceFunc, self).__init__()
         self.s_dim = s_dim
         self.n_units_out = n_units_out
@@ -172,7 +172,7 @@ class LaplaceFunc(nn.Module):
 
         self.to(device)
 
-    def forward(self, i):
+    def forward(self, i: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         out = self.linear_tanh_stack(i.view(-1, self.s_dim * 2 + self.n_units_latent)).view(
             -1, 2 * self.n_units_out, self.s_dim
         )

@@ -1,6 +1,6 @@
 import dataclasses
 import itertools
-from typing import Any, ClassVar, List, Optional, Sequence, Tuple, Union
+from typing import Any, ClassVar, Iterable, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -169,7 +169,7 @@ def get_array1d_length_until_padding(array: np.ndarray, padding_indicator: Any =
         return len(array)
 
 
-def validate_timeseries_array3d(array: np.ndarray, padding_indicator: Any = None):
+def validate_timeseries_array3d(array: np.ndarray, padding_indicator: Any = None) -> None:
     """Check if 3D ``array`` representing timeseries satisfies the blow criteria, otherwise raise `ValueError`:
     - 3 dimensions,
     - Dimension 2 not of size 0,
@@ -449,7 +449,7 @@ def datetime_time_index_to_float(time_index: Union[data_typing.TimeIndex, pd.Ind
 # --- Miscellaneous. ---
 
 
-def ensure_pd_iloc_key_returns_df(key):
+def ensure_pd_iloc_key_returns_df(key: Any) -> Union[Iterable, slice]:
     if isinstance(key, slice):
         key_: Any = key
     elif tempor.core.utils.is_iterable(key):

@@ -6,7 +6,7 @@ from tempor.methods.treatments.temporal import BaseTemporalTreatmentEffects
 
 if TYPE_CHECKING:
     from typing_extensions import Self
-    from tempor.methods.core._params import Params
+    from tempor.methods.core import Params
     from tempor.data.dataset import BaseDataset, PredictiveDataset
     from tempor.data.samples import TimeSeriesSamples
 

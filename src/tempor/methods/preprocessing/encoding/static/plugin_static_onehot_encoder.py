@@ -11,6 +11,7 @@ from tempor.core import plugins
 from tempor.data import dataset
 from tempor.data.data_typing import FeatureIndex
 from tempor.data.samples import StaticSamples
+from tempor.methods.core import Params
 from tempor.methods.core._params import CategoricalParams, FloatParams
 from tempor.methods.preprocessing.encoding._base import BaseEncoder
 
@@ -52,7 +53,7 @@ class StaticOneHotEncoder(BaseEncoder):
     ParamsDefinition = StaticOneHotEncoderParams
     params: StaticOneHotEncoderParams  # type: ignore
 
-    def __init__(self, **params) -> None:
+    def __init__(self, **params: Any) -> None:
         """One-hot encoding for the static data.
 
         See `sklearn.preprocessing.OneHotEncoder` for details.
@@ -112,8 +113,8 @@ class StaticOneHotEncoder(BaseEncoder):
     def _fit(
         self,
         data: dataset.BaseDataset,
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> Self:
         if data.static is None:
             return self
@@ -126,7 +127,7 @@ class StaticOneHotEncoder(BaseEncoder):
         self.model.fit(df_to_use)
         return self
 
-    def _transform(self, data: dataset.BaseDataset, *args, **kwargs) -> dataset.BaseDataset:
+    def _transform(self, data: dataset.BaseDataset, *args: Any, **kwargs: Any) -> dataset.BaseDataset:
         if data.static is None:
             return data
 
@@ -146,7 +147,7 @@ class StaticOneHotEncoder(BaseEncoder):
         return data
 
     @staticmethod
-    def hyperparameter_space(*args, **kwargs):
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
         return [
             CategoricalParams("drop", ["first", "if_binary"]),
             CategoricalParams("handle_unknown", ["error", "ignore", "infrequent_if_exist"]),

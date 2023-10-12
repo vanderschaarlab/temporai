@@ -1,5 +1,5 @@
 import abc
-from typing import TYPE_CHECKING, List, Optional, Tuple, cast
+from typing import TYPE_CHECKING, Any, List, Optional, Tuple, cast
 
 import numpy as np
 import pandas as pd
@@ -7,6 +7,7 @@ from typing_extensions import Self
 
 import tempor.exc
 from tempor.data import data_typing, dataset, samples
+from tempor.methods.core import Params
 from tempor.methods.core._params import CategoricalParams, FloatParams, IntegerParams
 from tempor.models import utils
 from tempor.models.ddh import DynamicDeepHitModel, output_modes, rnn_modes
@@ -70,7 +71,9 @@ class DDHEmbedding:
         #         f"but found timesteps of varying lengths {np.unique(data.time_series.num_timesteps()).tolist()}"
         #     )
 
-    def _convert_data(self, data: dataset.TimeToEventAnalysisDataset):
+    def _convert_data(
+        self, data: dataset.TimeToEventAnalysisDataset
+    ) -> Tuple[Optional[np.ndarray], List[np.ndarray], List[np.ndarray], Optional[np.ndarray], Optional[np.ndarray]]:
         if data.has_static:
             static = data.static.numpy() if data.static is not None else None
         else:
@@ -103,8 +106,8 @@ class DDHEmbedding:
         self,
         data: dataset.PredictiveDataset,
         horizons: data_typing.TimeIndex,
-        *args,  # pylint: disable=unused-argument
-        **kwargs,
+        *args: Any,  # pylint: disable=unused-argument
+        **kwargs: Any,
     ) -> np.ndarray:
         data = cast(dataset.TimeToEventAnalysisDataset, data)
         self._validate_data(data)
@@ -113,7 +116,7 @@ class DDHEmbedding:
         return processed_data
 
     @staticmethod
-    def hyperparameter_space(*args, **kwargs):  # pylint: disable=unused-argument
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:  # pylint: disable=unused-argument
         return [
             IntegerParams(name="n_units_hidden", low=10, high=100, step=10),
             IntegerParams(name="n_layers_hidden", low=1, high=4),
@@ -149,8 +152,8 @@ class DDHEmbeddingTimeToEventAnalysis(DDHEmbedding):
     def fit(
         self,
         data: dataset.BaseDataset,
-        *args,  # pylint: disable=unused-argument
-        **kwargs,
+        *args: Any,  # pylint: disable=unused-argument
+        **kwargs: Any,
     ) -> Self:
         processed_data, event_times, event_values = self.prepare_fit(data)
 
@@ -168,8 +171,8 @@ class DDHEmbeddingTimeToEventAnalysis(DDHEmbedding):
         self,
         data: dataset.PredictiveDataset,
         horizons: data_typing.TimeIndex,
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> samples.TimeSeriesSamples:
         # NOTE: kwargs will be passed to DynamicDeepHitModel.predict_emb().
         # E.g. `batch_size` batch size parameter can be provided this way.
@@ -190,5 +193,5 @@ class DDHEmbeddingTimeToEventAnalysis(DDHEmbedding):
         )
 
     @staticmethod
-    def hyperparameter_space(*args, **kwargs):
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
         return DDHEmbedding.hyperparameter_space(*args, **kwargs)

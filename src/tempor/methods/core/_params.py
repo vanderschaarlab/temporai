@@ -1,6 +1,6 @@
 import abc
 import random
-from typing import Any, List, Optional, Tuple
+from typing import Any, Generator, List, Optional, Tuple
 
 import rich.pretty
 from optuna.trial import Trial
@@ -36,7 +36,7 @@ class Params(abc.ABC):
     def _sample_default(self) -> Any:  # pragma: no cover
         ...
 
-    def __rich_repr__(self):
+    def __rich_repr__(self) -> Generator:
         yield "name", self.name
         yield "bounds", self.bounds
 
@@ -61,7 +61,7 @@ class CategoricalParams(Params):
     def _sample_default(self) -> Any:
         return random.SystemRandom().choice(self.choices)
 
-    def __rich_repr__(self):
+    def __rich_repr__(self) -> Generator:
         yield "name", self.name
         yield "choices", self.choices
 
@@ -87,7 +87,7 @@ class FloatParams(Params):
     def _sample_default(self) -> Any:
         return random.uniform(self.low, self.high)  # nosec
 
-    def __rich_repr__(self):
+    def __rich_repr__(self) -> Generator:
         yield "name", self.name
         yield "low", self.low
         yield "high", self.high
@@ -117,7 +117,7 @@ class IntegerParams(Params):
     def _sample_default(self) -> Any:
         return random.SystemRandom().choice(self.choices)
 
-    def __rich_repr__(self):
+    def __rich_repr__(self) -> Generator:
         yield "name", self.name
         yield "low", self.low
         yield "high", self.high

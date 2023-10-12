@@ -10,14 +10,14 @@ from . import _base_estimator as estimator
 
 
 class BaseTransformer(estimator.BaseEstimator):
-    def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
+    def __init__(self, **params: Any) -> None:  # pylint: disable=useless-super-delegation
         super().__init__(**params)
 
     def transform(
         self,
         data: dataset.BaseDataset,
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> Any:
         logger.debug(f"Calling _transform() implementation on {self.__class__.__name__}")
         transformed_data = self._transform(data, *args, **kwargs)
@@ -28,12 +28,14 @@ class BaseTransformer(estimator.BaseEstimator):
     def fit_transform(
         self,
         data: dataset.BaseDataset,
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> dataset.BaseDataset:
         self.fit(data, *args, **kwargs)
         return self.transform(data, *args, **kwargs)
 
     @abc.abstractmethod
-    def _transform(self, data: dataset.BaseDataset, *args, **kwargs) -> dataset.BaseDataset:  # pragma: no cover
+    def _transform(
+        self, data: dataset.BaseDataset, *args: Any, **kwargs: Any
+    ) -> dataset.BaseDataset:  # pragma: no cover
         ...

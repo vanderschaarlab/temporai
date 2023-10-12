@@ -1,7 +1,7 @@
 import os
 import random
 import warnings
-from typing import Dict, Type, Union
+from typing import Any, Dict, Type, Union
 
 import numpy as np
 import torch
@@ -131,7 +131,7 @@ SAMPLER_MAP: Dict[str, Type[torch.utils.data.sampler.Sampler]] = {
 tempor.core.utils.ensure_literal_matches_dict_keys(Samp, SAMPLER_MAP, "Samp", "SAMPLER_MAP")
 
 
-def get_sampler(name: Union[Samp, None], **kwargs) -> Union[torch.utils.data.sampler.Sampler, None]:
+def get_sampler(name: Union[Samp, None], **kwargs: Any) -> Union[torch.utils.data.sampler.Sampler, None]:
     try:
         return SAMPLER_MAP[name](**kwargs) if name is not None else None
     except KeyError as e:

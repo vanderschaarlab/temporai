@@ -1,5 +1,5 @@
 import abc
-from typing import Any, Dict, List, NoReturn, Optional, Tuple, Type
+from typing import Any, Dict, Generator, List, NoReturn, Optional, Tuple, Type
 
 import omegaconf
 import rich.pretty
@@ -8,7 +8,7 @@ from typing_extensions import Self
 from tempor import plugin_loader
 from tempor.data import dataset
 from tempor.log import logger
-from tempor.methods.core._params import Params
+from tempor.methods.core import Params
 from tempor.methods.prediction.one_off.classification import BaseOneOffClassifier
 from tempor.methods.prediction.one_off.regression import BaseOneOffRegressor
 from tempor.methods.prediction.temporal.classification import BaseTemporalClassifier
@@ -49,7 +49,7 @@ class PipelineBase:
     plugin_types: List[Type]
     """A list of types denoting the class of each step in the pipeline."""
 
-    def __init__(self, plugin_params: Optional[Dict[str, Dict]] = None, **kwargs) -> None:  # pragma: no cover
+    def __init__(self, plugin_params: Optional[Dict[str, Dict]] = None, **kwargs: Any) -> None:  # pragma: no cover
         """Instantiate the pipeline, (optionally) providing initialization parameters for constituent step plugins.
 
         Note:
@@ -171,7 +171,7 @@ class PipelineBase:
             out[p.name] = p.params
         return out
 
-    def __rich_repr__(self):
+    def __rich_repr__(self) -> Generator:
         yield "pipeline_seq", self.pipeline_seq()
         yield "predictor_category", self.predictor_category
         yield "params", {k: omegaconf.OmegaConf.to_container(v) for k, v in self.params.items()}
@@ -188,7 +188,7 @@ def prepend_base(base: Type, bases: List[Type]) -> List[Type]:
     return bases_final
 
 
-def raise_not_implemented(*args, **kwargs) -> NoReturn:
+def raise_not_implemented(*args: Any, **kwargs: Any) -> NoReturn:
     raise NotImplementedError("The `{_fit/predict/...}` methods are not implemented for the pipelines")
 
 
@@ -236,7 +236,7 @@ class PipelineMeta(abc.ABCMeta):
         return super().__new__(cls, __name, bases, __namespace, **kwds)
 
     @staticmethod
-    def parse_bases(bases: Tuple[type, ...], plugins: Tuple[Type, ...]):
+    def parse_bases(bases: Tuple[type, ...], plugins: Tuple[Type, ...]) -> Tuple[type, ...]:
         bases_final: List[Type] = list(bases)
 
         if len(plugins) > 0:

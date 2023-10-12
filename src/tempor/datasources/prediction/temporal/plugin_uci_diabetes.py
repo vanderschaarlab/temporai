@@ -2,7 +2,7 @@ import time
 import traceback
 import urllib.error
 from pathlib import Path
-from typing import Tuple, cast
+from typing import Any, Tuple, cast
 
 import requests
 from clairvoyance2.datasets.uci import uci_diabetes
@@ -23,7 +23,7 @@ class UCIDiabetesDataSource(datasource.TemporalPredictionDataSource):
         make_regular: bool = False,
         use_int_index: bool = True,
         targets: Tuple[str, ...] = ("hypoglycemic_symptoms",),
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
         self.make_regular = make_regular
@@ -38,7 +38,7 @@ class UCIDiabetesDataSource(datasource.TemporalPredictionDataSource):
     def dataset_dir() -> str:
         return str(Path(UCIDiabetesDataSource.data_root_dir) / "uci_diabetes")
 
-    def load(self, **kwargs) -> dataset.TemporalPredictionDataset:
+    def load(self, **kwargs: Any) -> dataset.TemporalPredictionDataset:
         download_retries = 3
         download_pause_sec = 5
         for retry in range(download_retries):

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Tuple, Union, cast
+from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, NoReturn, Optional, Tuple, Type, Union, cast
 
 import numpy as np
 import pandas as pd
@@ -84,19 +84,19 @@ def _get_pa_init_args(pa_object: Any, param_names: List[str]) -> Dict[str, Any]:
     return items
 
 
-def update_schema(schema: pa.DataFrameSchema, **kwargs) -> pa.DataFrameSchema:
+def update_schema(schema: pa.DataFrameSchema, **kwargs: Any) -> pa.DataFrameSchema:
     items = _get_pa_init_args(schema, param_names=_PA_DF_SCHEMA_INIT_PARAMETERS)
     items.update(kwargs)
     return pa.DataFrameSchema(**items)
 
 
-def update_index(index: pa.Index, **kwargs) -> pa.Index:
+def update_index(index: pa.Index, **kwargs: Any) -> pa.Index:
     items = _get_pa_init_args(index, param_names=_PA_INDEX_INIT_PARAMETERS)
     items.update(kwargs)
     return pa.Index(**items)
 
 
-def update_multiindex(multi_index: pa.MultiIndex, **kwargs) -> pa.MultiIndex:
+def update_multiindex(multi_index: pa.MultiIndex, **kwargs: Any) -> pa.MultiIndex:
     items = _get_pa_init_args(multi_index, param_names=_PA_MULTI_INDEX_INIT_PARAMETERS)
     items.update(kwargs)
     return pa.MultiIndex(**items)
@@ -162,14 +162,14 @@ class UnionDtype(pd_engine.DataType):
     """The string representation of the data type used for `repr`."""
 
     @classmethod
-    def __class_getitem__(cls, item):
+    def __class_getitem__(cls: Type, item: Iterable[Union[data_typing.Dtype, pa.DataType]]) -> Callable:
         """Allows for setting union types like ``UnionDtype[dtype, ...]``.
 
         Acceptable ``dtype`` s are: `pandera.DataType` (as a class or instance) or the keys of
         `~tempor.data.pandera_utils.PA_DTYPE_MAP`.
         """
         if not tempor.core.utils.is_iterable(item):
-            item = [item]
+            item = [item]  # type: ignore [list-item]
         union_dtypes = get_pa_dtypes(item)
         union_dtypes = sorted(union_dtypes, key=str)  # For consistency: `item` can get captured in random order.
         repr_union_dtypes = str([str(t) for t in union_dtypes]).replace("'", "")
@@ -188,7 +188,7 @@ class UnionDtype(pd_engine.DataType):
     def check(
         self,
         pandera_dtype: pa_dtypes.DataType,
-        data_container=None,
+        data_container: Any = None,
     ) -> Union[bool, Iterable[bool]]:
         """Checks whether the ``pandera_dtype`` and optionally ``data_container`` satisfy at least one the union's
         ``union_dtypes``.
@@ -196,12 +196,12 @@ class UnionDtype(pd_engine.DataType):
         Args:
             pandera_dtype (pa_dtypes.DataType):
                 The data type received as part of the check/validation.
-            data_container (PandasObject, optional):
+            data_container (Any):
                 The data container received as part of the check/validation. Defaults to `None`.
 
         Returns:
             Union[bool, Iterable[bool]]:
-                A `bool` stating whether the data type is satisfied, or an iterable thereof\
+                A `bool` stating whether the data type is satisfied, or an iterable thereof \
                 (for each item in the ``data_container``).
         """
         for union_dtype in self.union_dtypes:
@@ -225,12 +225,12 @@ class UnionDtype(pd_engine.DataType):
         else:
             return np.full_like(data_container, False, dtype=bool)
 
-    def coerce(self, data_container):
+    def coerce(self, data_container: Any) -> NoReturn:
         """The ``coerce`` method is not supported and will throw a `NotImplementedError`."""
         raise NotImplementedError(f"`coerce` not supported by {self.__class__.__name__}")
 
 
-def init_schema(data: pd.DataFrame, **kwargs) -> pa.DataFrameSchema:
+def init_schema(data: pd.DataFrame, **kwargs: Any) -> pa.DataFrameSchema:
     schema = cast(pa.DataFrameSchema, pa.infer_schema(data))
     schema = update_schema(schema, **kwargs)
     return schema

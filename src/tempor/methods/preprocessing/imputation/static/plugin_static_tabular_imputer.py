@@ -32,7 +32,7 @@ class StaticTabularImputer(BaseImputer):
     ParamsDefinition = StaticTabularImputerParams
     params: StaticTabularImputerParams  # type: ignore
 
-    def __init__(self, **params) -> None:
+    def __init__(self, **params: Any) -> None:
         """Impute the static covariates using any tabular imputer from the `hyperimpute` library.
 
         Args:
@@ -68,12 +68,12 @@ class StaticTabularImputer(BaseImputer):
         self.params.imputer_params["random_state"] = self.params.random_state
         self.imputer = Imputers().get(self.params.imputer, **self.params.imputer_params)
 
-    def _fit(self, data: dataset.BaseDataset, *args, **kwargs) -> Self:
+    def _fit(self, data: dataset.BaseDataset, *args: Any, **kwargs: Any) -> Self:
         if data.static is not None:
             self.imputer.fit(data.static.dataframe())
         return self
 
-    def _transform(self, data: dataset.BaseDataset, *args, **kwargs) -> dataset.BaseDataset:
+    def _transform(self, data: dataset.BaseDataset, *args: Any, **kwargs: Any) -> dataset.BaseDataset:
         # Impute static data.
         if data.static is not None:
             static_data = data.static.dataframe()

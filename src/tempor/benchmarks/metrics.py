@@ -1,4 +1,4 @@
-from typing import Any, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
 import sklearn
@@ -16,7 +16,7 @@ else:  # pragma: no cover
     _has_input_name = False
 
 
-def check_y_survival(y_or_event: np.ndarray, *args, allow_all_censored=False) -> Tuple[np.ndarray, ...]:
+def check_y_survival(y_or_event: np.ndarray, *args: Any, allow_all_censored: bool = False) -> Tuple[np.ndarray, ...]:
     """Check that array correctly represents an outcome for survival analysis.
 
     Args:
@@ -76,7 +76,7 @@ def check_y_survival(y_or_event: np.ndarray, *args, allow_all_censored=False) ->
     return tuple(return_val)
 
 
-def _check_estimate_1d(estimate, test_time):
+def _check_estimate_1d(estimate: np.ndarray, test_time: np.ndarray) -> np.ndarray:
     estimate = sklearn.utils.check_array(
         estimate,
         ensure_2d=False,
@@ -88,7 +88,7 @@ def _check_estimate_1d(estimate, test_time):
     return estimate
 
 
-def _check_times(test_time, times):
+def _check_times(test_time: np.ndarray, times: np.ndarray) -> np.ndarray:
     times = sklearn.utils.check_array(
         np.atleast_1d(times),
         ensure_2d=False,
@@ -105,7 +105,9 @@ def _check_times(test_time, times):
     return times
 
 
-def _check_estimate_2d(estimate, test_time, time_points, estimator):
+def _check_estimate_2d(
+    estimate: np.ndarray, test_time: np.ndarray, time_points: np.ndarray, estimator: sklearn.base.BaseEstimator
+) -> Tuple[np.ndarray, np.ndarray]:
     estimate = sklearn.utils.check_array(
         estimate,
         ensure_2d=False,
@@ -333,7 +335,7 @@ def kaplan_meier_estimator(
 class SurvivalFunctionEstimator(sklearn.base.BaseEstimator):
     """Kaplan-Meier estimate of the survival function."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     def fit(self, y: np.ndarray) -> Self:
@@ -399,7 +401,7 @@ class SurvivalFunctionEstimator(sklearn.base.BaseEstimator):
 class CensoringDistributionEstimator(SurvivalFunctionEstimator):
     """Kaplan-Meier estimator for the censoring distribution."""
 
-    def fit(self, y: np.ndarray):
+    def fit(self, y: np.ndarray) -> Self:
         """Estimate censoring distribution from training data.
 
         Args:
@@ -446,10 +448,12 @@ class CensoringDistributionEstimator(SurvivalFunctionEstimator):
         return weights
 
 
-def _get_comparable(event_indicator, event_time, order):
+def _get_comparable(
+    event_indicator: np.ndarray, event_time: np.ndarray, order: np.ndarray
+) -> Tuple[Dict[int, np.ndarray], int]:
     n_samples = len(event_time)
-    tied_time = 0
-    comparable = {}
+    tied_time: int = 0
+    comparable: Dict[int, np.ndarray] = dict()
     i = 0
     while i < n_samples - 1:
         time_i = event_time[order[i]]
@@ -475,7 +479,11 @@ def _get_comparable(event_indicator, event_time, order):
 
 
 def _estimate_concordance_index(
-    event_indicator, event_time, estimate, weights, tied_tol=1e-8
+    event_indicator: np.ndarray,
+    event_time: np.ndarray,
+    estimate: np.ndarray,
+    weights: np.ndarray,
+    tied_tol: float = 1e-8,
 ) -> Tuple[float, int, int, int, int]:
     order = np.argsort(event_time)
 
@@ -709,7 +717,7 @@ def concordance_index_ipcw(
         mask = test_time < tau
         survival_test = survival_test[mask]
 
-    estimate = _check_estimate_1d(estimate, test_time)
+    estimate_arr = _check_estimate_1d(estimate, test_time)
 
     cens = CensoringDistributionEstimator()
     cens.fit(survival_train)
@@ -717,10 +725,10 @@ def concordance_index_ipcw(
     if tau is None:
         ipcw = ipcw_test
     else:
-        ipcw = np.empty(estimate.shape[0], dtype=ipcw_test.dtype)
+        ipcw = np.empty(estimate_arr.shape[0], dtype=ipcw_test.dtype)
         ipcw[mask] = ipcw_test  # pyright: ignore
         ipcw[~mask] = 0  # pyright: ignore
 
     w = np.square(ipcw)
 
-    return _estimate_concordance_index(test_event, test_time, estimate, w, tied_tol)
+    return _estimate_concordance_index(test_event, test_time, estimate_arr, w, tied_tol)

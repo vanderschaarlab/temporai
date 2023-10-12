@@ -9,7 +9,7 @@ from tempor.core import plugins
 from tempor.data import data_typing, dataset, samples
 
 
-def check_data_class(data):
+def check_data_class(data: Any) -> None:
     if not isinstance(data, dataset.TimeToEventAnalysisDataset):
         raise TypeError(
             "Expected `data` passed to a survival analysis estimator to be "
@@ -18,16 +18,20 @@ def check_data_class(data):
 
 
 class BaseTimeToEventAnalysis(methods_core.BasePredictor):
-    def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
+    def __init__(self, **params: Any) -> None:  # pylint: disable=useless-super-delegation
         super().__init__(**params)
 
-    def fit(self, data: dataset.BaseDataset, *args, **kwargs) -> Self:
+    def fit(self, data: dataset.BaseDataset, *args: Any, **kwargs: Any) -> Self:
         check_data_class(data)
         super().fit(data, *args, **kwargs)
         return self
 
+    # NOTE:
+    # It appears that `pydantic.validate_arguments` throws an error when `*args: Any` and `**kwargs: Any` are
+    # specified here for unknown reasons. For now, we just ignore the type checking for these arguments with
+    # `# type: ignore [no-untyped-def]`.
     @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
-    def predict(  # pylint: disable=arguments-differ
+    def predict(  # type: ignore [no-untyped-def] # pylint: disable=arguments-differ
         self,
         data: dataset.PredictiveDataset,
         horizons: data_typing.TimeIndex,
@@ -37,14 +41,14 @@ class BaseTimeToEventAnalysis(methods_core.BasePredictor):
         check_data_class(data)
         return super().predict(data, horizons, *args, **kwargs)
 
-    def predict_proba(self, data: dataset.PredictiveDataset, *args, **kwargs) -> Any:
+    def predict_proba(self, data: dataset.PredictiveDataset, *args: Any, **kwargs: Any) -> Any:
         raise tempor.exc.UnsupportedSetupException(
             "`predict_proba` method is not supported in the time-to-event analysis setting"
         )
 
     @abc.abstractmethod
     def _predict(  # type: ignore[override]  # pylint: disable=arguments-differ
-        self, data: dataset.PredictiveDataset, horizons: data_typing.TimeIndex, *args, **kwargs
+        self, data: dataset.PredictiveDataset, horizons: data_typing.TimeIndex, *args: Any, **kwargs: Any
     ) -> samples.TimeSeriesSamples:  # pragma: no cover
         ...
 

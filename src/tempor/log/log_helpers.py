@@ -1,10 +1,11 @@
 from contextlib import contextmanager
+from typing import Generator
 
 from ._custom_logger import logger
 
 
 @contextmanager
-def exc_to_log(message: str = "", reraise: bool = True):
+def exc_to_log(message: str = "", reraise: bool = True) -> Generator:
     """Log `Exception` raised inside this context manager and reraise.
 
     Args:

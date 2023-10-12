@@ -4,6 +4,7 @@ import abc
 import dataclasses
 from typing import Any, ClassVar, Generator, Optional, Tuple, Union
 
+import numpy as np
 import rich.pretty
 import sklearn.model_selection
 from typing_extensions import Self
@@ -66,7 +67,7 @@ class BaseDataset(abc.ABC):
         static: Optional[data_typing.DataContainer] = None,
         targets: Optional[data_typing.DataContainer] = None,
         treatments: Optional[data_typing.DataContainer] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Abstract base class representing a dataset used by TemporAI.
 
@@ -89,6 +90,8 @@ class BaseDataset(abc.ABC):
                 Data representing treatment (intervention) feature(s) of the samples. Will be initialized as
                 ``{TimeSeries,Static,Event}Samples`` depending on problem setting in the derived class.
                 Defaults to `None`.
+            kwargs (Any):
+                Additional keyword arguments to be passed to the derived class's ``_init_predictive`` method.
         """
         self._time_series = samples.TimeSeriesSamples(time_series)
         self._static = samples.StaticSamples(static) if static is not None else None
@@ -97,7 +100,7 @@ class BaseDataset(abc.ABC):
 
         self.validate()
 
-    def __rich_repr__(self):
+    def __rich_repr__(self) -> Generator:
         yield "time_series", RichReprStrPassthrough(self.time_series.short_repr())
         if self.static is not None:
             yield "static", RichReprStrPassthrough(self.static.short_repr())
@@ -112,7 +115,7 @@ class BaseDataset(abc.ABC):
         self,
         targets: Optional[data_typing.DataContainer],
         treatments: Optional[data_typing.DataContainer],
-        **kwargs,
+        **kwargs: Any,
     ) -> None:  # pragma: no cover
         """A method to initialize ``self.predictive`` in derived classes."""
         ...
@@ -192,11 +195,11 @@ class BaseDataset(abc.ABC):
     def train_test_split(
         self,
         *,
-        test_size=None,
-        train_size=None,
-        random_state=None,
-        shuffle=True,
-        stratify=None,
+        test_size: Optional[float] = None,
+        train_size: Optional[float] = None,
+        random_state: Union[int, np.random.RandomState, None] = None,  # pylint: disable=no-member
+        shuffle: bool = True,
+        stratify: Any = None,
     ) -> Tuple[Self, Self]:
         """Split `Dataset` into train and test sets.
 
@@ -220,7 +223,7 @@ class BaseDataset(abc.ABC):
     def split(
         self,
         splitter: Splitter,
-        **kwargs,
+        **kwargs: Any,
     ) -> Generator[Tuple[Self, Self], None, None]:
         """Generate dataset splits according to the scikit-learn ``splitter`` (`~tempor.data.dataset.Splitter`).
         The ``kwargs`` are passed to the underlying splitter's ``split`` method.
@@ -235,6 +238,7 @@ class BaseDataset(abc.ABC):
 
         Args:
             splitter (Splitter): A `sklearn` splitter.
+            kwargs (Any): Additional keyword arguments to be passed to the ``splitter``'s ``split`` method.
 
         Yields:
             Generator[Tuple[Self, Self], None, None]: ``(dataset_train, dataset_test)`` for each split.
@@ -255,7 +259,7 @@ class CovariatesDataset(BaseDataset):
         static: Optional[data_typing.DataContainer] = None,
         targets: Optional[data_typing.DataContainer] = None,
         treatments: Optional[data_typing.DataContainer] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """A :class:`BaseDataset` subclass for a dataset that does not contain any predictive data
         (``targets`` or ``treatments``).
@@ -266,7 +270,7 @@ class CovariatesDataset(BaseDataset):
         self,
         targets: Optional[data_typing.DataContainer],
         treatments: Optional[data_typing.DataContainer],
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         if targets is not None:
             raise ValueError(f"`targets` must not be set for a {self.__class__.__name__}.")
@@ -293,7 +297,7 @@ class PredictiveDataset(BaseDataset):
         targets: Optional[data_typing.DataContainer],
         static: Optional[data_typing.DataContainer] = None,
         treatments: Optional[data_typing.DataContainer] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """A :class:`BaseDataset` subclass for a dataset that can contain predictive data
         (``targets`` or ``treatments``).
@@ -319,7 +323,7 @@ class OneOffPredictionDataset(PredictiveDataset):
         targets: Optional[data_typing.DataContainer],
         static: Optional[data_typing.DataContainer] = None,
         treatments: Optional[data_typing.DataContainer] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """A :class:`PredictiveDataset` subclass for the one-off prediction problem setting,
         see :class:`BaseDataset` docs.
@@ -332,7 +336,7 @@ class OneOffPredictionDataset(PredictiveDataset):
         self,
         targets: Optional[data_typing.DataContainer],
         treatments: Optional[data_typing.DataContainer],
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         if targets is None:
             logger.debug(
@@ -365,7 +369,7 @@ class TemporalPredictionDataset(PredictiveDataset):
         targets: Optional[data_typing.DataContainer],
         static: Optional[data_typing.DataContainer] = None,
         treatments: Optional[data_typing.DataContainer] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """A :class:`PredictiveDataset` subclass for the temporal prediction problem setting,
         see :class:`BaseDataset` docs.
@@ -378,7 +382,7 @@ class TemporalPredictionDataset(PredictiveDataset):
         self,
         targets: Optional[data_typing.DataContainer],
         treatments: Optional[data_typing.DataContainer],
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         if targets is None:
             logger.debug(
@@ -413,7 +417,7 @@ class TimeToEventAnalysisDataset(PredictiveDataset):
         targets: Optional[data_typing.DataContainer],
         static: Optional[data_typing.DataContainer] = None,
         treatments: Optional[data_typing.DataContainer] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """A :class:`PredictiveDataset` subclass for the time-to-event analysis problem setting,
         see :class:`BaseDataset` docs.
@@ -426,7 +430,7 @@ class TimeToEventAnalysisDataset(PredictiveDataset):
         self,
         targets: Optional[data_typing.DataContainer],
         treatments: Optional[data_typing.DataContainer],
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         if targets is None:
             logger.debug(
@@ -461,7 +465,7 @@ class OneOffTreatmentEffectsDataset(PredictiveDataset):
         targets: Optional[data_typing.DataContainer],
         treatments: data_typing.DataContainer,
         static: Optional[data_typing.DataContainer] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """A :class:`PredictiveDataset` subclass for the one-off treatment effects problem setting,
         see :class:`BaseDataset` docs.
@@ -475,7 +479,7 @@ class OneOffTreatmentEffectsDataset(PredictiveDataset):
         self,
         targets: Optional[data_typing.DataContainer],
         treatments: Optional[data_typing.DataContainer],
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         if targets is None:
             logger.debug(
@@ -518,7 +522,7 @@ class TemporalTreatmentEffectsDataset(PredictiveDataset):
         targets: Optional[data_typing.DataContainer],
         treatments: data_typing.DataContainer,
         static: Optional[data_typing.DataContainer] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """A :class:`PredictiveDataset` subclass for the temporal treatment effects problem setting,
         see :class:`BaseDataset` docs.
@@ -532,7 +536,7 @@ class TemporalTreatmentEffectsDataset(PredictiveDataset):
         self,
         targets: Optional[data_typing.DataContainer],
         treatments: Optional[data_typing.DataContainer],
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         if targets is None:
             logger.debug(

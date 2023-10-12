@@ -1,5 +1,5 @@
 import abc
-from typing import Tuple
+from typing import Any, Tuple
 
 import numpy as np
 import pydantic
@@ -10,7 +10,7 @@ from tempor.core import plugins
 from tempor.data import dataset, samples
 
 
-def check_data_class(data):
+def check_data_class(data: Any) -> None:
     if not isinstance(data, dataset.OneOffPredictionDataset):
         raise TypeError(
             "Expected `data` passed to a one-off classification estimator to be "
@@ -19,10 +19,10 @@ def check_data_class(data):
 
 
 class BaseOneOffClassifier(methods_core.BasePredictor):
-    def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
+    def __init__(self, **params: Any) -> None:  # pylint: disable=useless-super-delegation
         super().__init__(**params)
 
-    def fit(self, data: dataset.BaseDataset, *args, **kwargs) -> Self:
+    def fit(self, data: dataset.BaseDataset, *args: Any, **kwargs: Any) -> Self:
         check_data_class(data)
         super().fit(data, *args, **kwargs)
         return self
@@ -31,8 +31,8 @@ class BaseOneOffClassifier(methods_core.BasePredictor):
     def predict(
         self,
         data: dataset.PredictiveDataset,
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> samples.StaticSamples:
         check_data_class(data)
         return super().predict(data, *args, **kwargs)
@@ -41,19 +41,24 @@ class BaseOneOffClassifier(methods_core.BasePredictor):
     def predict_proba(
         self,
         data: dataset.PredictiveDataset,
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> samples.StaticSamples:
         check_data_class(data)
         return super().predict_proba(data, *args, **kwargs)
 
     @abc.abstractmethod
-    def _predict(self, data: dataset.PredictiveDataset, *args, **kwargs) -> samples.StaticSamples:  # pragma: no cover
+    def _predict(
+        self,
+        data: dataset.PredictiveDataset,
+        *args: Any,
+        **kwargs: Any,
+    ) -> samples.StaticSamples:  # pragma: no cover
         ...
 
     @abc.abstractmethod
     def _predict_proba(
-        self, data: dataset.PredictiveDataset, *args, **kwargs
+        self, data: dataset.PredictiveDataset, *args: Any, **kwargs: Any
     ) -> samples.StaticSamples:  # pragma: no cover
         ...
 

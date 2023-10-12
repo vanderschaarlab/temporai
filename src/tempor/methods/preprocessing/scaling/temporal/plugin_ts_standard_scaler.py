@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
@@ -8,6 +8,7 @@ from typing_extensions import Self
 from tempor.core import plugins
 from tempor.data import dataset
 from tempor.data.samples import TimeSeriesSamples
+from tempor.methods.core import Params
 from tempor.methods.preprocessing.scaling._base import BaseScaler
 
 
@@ -26,7 +27,7 @@ class TimeSeriesStandardScaler(BaseScaler):
     ParamsDefinition = TimeSeriesStandardScalerParams
     params: TimeSeriesStandardScalerParams  # type: ignore
 
-    def __init__(self, **params) -> None:
+    def __init__(self, **params: Any) -> None:
         """Standard scaling for the time-series data.
 
         Standardize the temporal features by removing the mean and scaling to unit variance. The time series data
@@ -59,13 +60,13 @@ class TimeSeriesStandardScaler(BaseScaler):
     def _fit(
         self,
         data: dataset.BaseDataset,
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> Self:
         self.model.fit(data.time_series.dataframe())
         return self
 
-    def _transform(self, data: dataset.BaseDataset, *args, **kwargs) -> dataset.BaseDataset:
+    def _transform(self, data: dataset.BaseDataset, *args: Any, **kwargs: Any) -> dataset.BaseDataset:
         temporal_data = data.time_series.dataframe()
         scaled = pd.DataFrame(self.model.transform(temporal_data))
         scaled.columns = temporal_data.columns
@@ -76,5 +77,5 @@ class TimeSeriesStandardScaler(BaseScaler):
         return data
 
     @staticmethod
-    def hyperparameter_space(*args, **kwargs):
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
         return []
