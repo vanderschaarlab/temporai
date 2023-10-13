@@ -158,7 +158,7 @@ def visualize_benchmark(results: Dict[str, pd.DataFrame], palette: str = "viridi
                 hue="method",
                 yerr=err.loc[metric, :],
             )
-        except ValueError as ex:
+        except ValueError as ex:  # pragma: no cover
             if "'yerr'" in str(ex) and Version(sns.__version__) >= Version("0.13.0"):  # pragma: no cover
                 # Known issue with seaborn 0.13.0+. If the y values are non-unique, it seems to expect the yerr values
                 # only as many as there are unique y values. We hence remap using numpy.unique with index return.
