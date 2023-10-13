@@ -1,7 +1,8 @@
-from typing import Any, Type
+from typing import Any, Callable, Type, TypeVar, cast
 
 import pydantic
 from packaging.version import Version
+from typing_extensions import ParamSpec
 
 # Currently unused.
 # def exclusive_args(
@@ -64,3 +65,24 @@ def make_pydantic_dataclass(builtin_dataclass: Type) -> Type:
     else:
         pydantic_dataclass = PYDANTIC_DATACLASS_WORKAROUND_DICT[name]
     return pydantic_dataclass
+
+
+P = ParamSpec("P")
+T = TypeVar("T")
+
+
+def validate_arguments(*args: Any, **kwargs: Any) -> Callable[[Callable[P, T]], Callable[P, T]]:
+    """Uses the ``Callable[P, T]`` approach to type the pydantic ``validate_arguments`` decorator. Helps `mypy` to
+    correctly understand typing of functions that are decorated by this.
+
+    See:
+    - https://stackoverflow.com/a/74080156
+    - https://docs.python.org/3/library/typing.html#typing.ParamSpec
+
+    Returns:
+        Callable[[Callable[P, T]], Callable[P, T]]: The updated ``pydantic.validate_arguments`` decorator.
+    """
+    return cast(
+        Callable[P, T],  # type: ignore [valid-type, misc]
+        pydantic.validate_arguments(*args, **kwargs),  # type: ignore [operator]
+    )

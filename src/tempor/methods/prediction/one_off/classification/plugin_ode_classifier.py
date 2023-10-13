@@ -1,11 +1,12 @@
 import dataclasses
-from typing import Optional
+from typing import Any, List, Optional
 
 import numpy as np
 from typing_extensions import Self
 
 from tempor.core import plugins
 from tempor.data import dataset, samples
+from tempor.methods.core import Params
 from tempor.methods.core._params import CategoricalParams, FloatParams, IntegerParams
 from tempor.methods.prediction.one_off.classification import BaseOneOffClassifier
 from tempor.models import utils as model_utils
@@ -64,7 +65,7 @@ class ODEClassifier(BaseOneOffClassifier):
     ParamsDefinition = ODEClassifierParams
     params: ODEClassifierParams  # type: ignore
 
-    def __init__(self, **params) -> None:
+    def __init__(self, **params: Any) -> None:
         """Classifier based on ordinary differential equation (ODE) solvers.
 
         Args:
@@ -100,8 +101,8 @@ class ODEClassifier(BaseOneOffClassifier):
     def _fit(
         self,
         data: dataset.BaseDataset,
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> Self:
         static, temporal, observation_times, outcome = self._unpack_dataset(data)
         outcome = outcome.squeeze()
@@ -142,8 +143,8 @@ class ODEClassifier(BaseOneOffClassifier):
     def _predict(
         self,
         data: dataset.PredictiveDataset,
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> samples.StaticSamples:
         if self.model is None:
             raise RuntimeError("Fit the model first")
@@ -158,8 +159,8 @@ class ODEClassifier(BaseOneOffClassifier):
     def _predict_proba(
         self,
         data: dataset.PredictiveDataset,
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> samples.StaticSamples:
         if self.model is None:
             raise RuntimeError("Fit the model first")
@@ -171,7 +172,7 @@ class ODEClassifier(BaseOneOffClassifier):
         return samples.StaticSamples.from_numpy(preds)
 
     @staticmethod
-    def hyperparameter_space(*args, **kwargs):
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
         return [
             IntegerParams(name="n_units_hidden", low=100, high=1000),
             IntegerParams(name="n_layers_hidden", low=1, high=5),

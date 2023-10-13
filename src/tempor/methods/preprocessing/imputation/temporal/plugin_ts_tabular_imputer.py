@@ -32,7 +32,7 @@ class TemporalTabularImputer(BaseImputer):
     ParamsDefinition = TemporalTabularImputerParams
     params: TemporalTabularImputerParams  # type: ignore
 
-    def __init__(self, **params) -> None:
+    def __init__(self, **params: Any) -> None:
         """Impute the temporal covariates using any tabular imputer from the `hyperimpute` library.
 
         Note:
@@ -72,11 +72,11 @@ class TemporalTabularImputer(BaseImputer):
         self.params.imputer_params["random_state"] = self.params.random_state
         self.imputer = Imputers().get(self.params.imputer, **self.params.imputer_params)
 
-    def _fit(self, data: dataset.BaseDataset, *args, **kwargs) -> Self:
+    def _fit(self, data: dataset.BaseDataset, *args: Any, **kwargs: Any) -> Self:
         self.imputer.fit(data.time_series.dataframe())
         return self
 
-    def _transform(self, data: dataset.BaseDataset, *args, **kwargs) -> dataset.BaseDataset:
+    def _transform(self, data: dataset.BaseDataset, *args: Any, **kwargs: Any) -> dataset.BaseDataset:
         # Impute temporal data.
         ts_data = data.time_series.dataframe()
         imputed_ts_data = self.imputer.transform(ts_data)

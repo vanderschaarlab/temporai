@@ -5,13 +5,13 @@ from typing_extensions import Self
 from tempor.core import plugins
 from tempor.data import dataset
 from tempor.data.samples import TimeSeriesSamples
-from tempor.methods.core._params import Params
+from tempor.methods.core import Params
 from tempor.methods.preprocessing.imputation._base import BaseImputer
 
 
 @plugins.register_plugin(name="ffill", category="preprocessing.imputation.temporal")
 class FFillImputer(BaseImputer):
-    def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
+    def __init__(self, **params: Any) -> None:  # pylint: disable=useless-super-delegation
         """Forward-first Time-Series Imputation.
 
         Note:
@@ -41,10 +41,10 @@ class FFillImputer(BaseImputer):
         """
         super().__init__(**params)
 
-    def _fit(self, data: dataset.BaseDataset, *args, **kwargs) -> Self:
+    def _fit(self, data: dataset.BaseDataset, *args: Any, **kwargs: Any) -> Self:
         return self
 
-    def _transform(self, data: dataset.BaseDataset, *args, **kwargs) -> dataset.BaseDataset:
+    def _transform(self, data: dataset.BaseDataset, *args: Any, **kwargs: Any) -> dataset.BaseDataset:
         # Impute temporal data.
         sample_ts_index = data.time_series.sample_index()
         imputed_ts = data.time_series.dataframe()

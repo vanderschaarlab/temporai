@@ -38,7 +38,7 @@ class TemporConfig:
     logging: LoggingConfig
     working_directory: str = omegaconf.MISSING
 
-    def get_working_dir(self):
+    def get_working_dir(self) -> str:
         if self.working_directory.startswith("$PWD"):
             return self.working_directory.replace("$PWD", os.getcwd(), 1)
         elif self.working_directory.startswith("~"):

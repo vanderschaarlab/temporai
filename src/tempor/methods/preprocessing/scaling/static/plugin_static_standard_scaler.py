@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
@@ -8,6 +8,7 @@ from typing_extensions import Self
 from tempor.core import plugins
 from tempor.data import dataset
 from tempor.data.samples import StaticSamples
+from tempor.methods.core import Params
 from tempor.methods.preprocessing.scaling._base import BaseScaler
 
 
@@ -26,7 +27,7 @@ class StaticStandardScaler(BaseScaler):
     ParamsDefinition = StaticStandardScalerParams
     params: StaticStandardScalerParams  # type: ignore
 
-    def __init__(self, **params) -> None:
+    def __init__(self, **params: Any) -> None:
         """Standard scaling for the static data.
 
         Standardize the static features by removing the mean and scaling to unit variance.
@@ -57,8 +58,8 @@ class StaticStandardScaler(BaseScaler):
     def _fit(
         self,
         data: dataset.BaseDataset,
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> Self:
         if data.static is None:
             return self
@@ -66,7 +67,7 @@ class StaticStandardScaler(BaseScaler):
         self.model.fit(data.static.dataframe())
         return self
 
-    def _transform(self, data: dataset.BaseDataset, *args, **kwargs) -> dataset.BaseDataset:
+    def _transform(self, data: dataset.BaseDataset, *args: Any, **kwargs: Any) -> dataset.BaseDataset:
         if data.static is None:
             return data
 
@@ -80,5 +81,5 @@ class StaticStandardScaler(BaseScaler):
         return data
 
     @staticmethod
-    def hyperparameter_space(*args, **kwargs):
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
         return []

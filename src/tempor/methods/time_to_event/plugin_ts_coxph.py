@@ -1,6 +1,6 @@
 import contextlib
 import dataclasses
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Generator, List, Optional
 
 import lifelines
 import numpy as np
@@ -11,6 +11,7 @@ from typing_extensions import Self
 
 from tempor.core import plugins
 from tempor.data import data_typing, dataset, samples
+from tempor.methods.core import Params
 from tempor.methods.core._params import FloatParams
 from tempor.methods.time_to_event import BaseTimeToEventAnalysis
 from tempor.models.ddh import DynamicDeepHitModel, OutputMode, RnnMode
@@ -19,7 +20,7 @@ from .helper_embedding import DDHEmbeddingTimeToEventAnalysis, OutputTimeToEvent
 
 
 @contextlib.contextmanager
-def monkeypatch_lifelines_pd2_compatibility():
+def monkeypatch_lifelines_pd2_compatibility() -> Generator:
     """lifelines (before 0.27.6) is not compatible with pandas 2.0.0+, due to
     ``TypeError: describe() got an unexpected keyword argument 'datetime_is_numeric'`` thrown by pandas in e.g.
     ``CoxPHFitter.fit``. This monkeypatch fixes this compatibility issue, until the problem is addressed by
@@ -36,7 +37,7 @@ def monkeypatch_lifelines_pd2_compatibility():
 
         original_pd_df_describe = pd.DataFrame.describe
 
-        def monkeypatched_describe(*args, **kwargs):
+        def monkeypatched_describe(*args: Any, **kwargs: Any) -> pd.DataFrame:
             # Remove the offending keyword argument (it is no longer needed to pass in).
             kwargs.pop("datetime_is_numeric", None)
             return original_pd_df_describe(*args, **kwargs)
@@ -171,7 +172,7 @@ class CoxPHTimeToEventAnalysis(BaseTimeToEventAnalysis):
     ParamsDefinition = CoxPHTimeToEventAnalysisParams
     params: CoxPHTimeToEventAnalysisParams  # type: ignore
 
-    def __init__(self, **params) -> None:
+    def __init__(self, **params: Any) -> None:
         """CoxPH survival analysis model.
 
         Args:
@@ -208,8 +209,8 @@ class CoxPHTimeToEventAnalysis(BaseTimeToEventAnalysis):
     def _fit(
         self,
         data: dataset.BaseDataset,
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> Self:
         self.model.fit(data, *args, **kwargs)
         return self
@@ -218,13 +219,13 @@ class CoxPHTimeToEventAnalysis(BaseTimeToEventAnalysis):
         self,
         data: dataset.PredictiveDataset,
         horizons: data_typing.TimeIndex,
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> samples.TimeSeriesSamples:
         return self.model.predict(data, horizons, *args, **kwargs)
 
     @staticmethod
-    def hyperparameter_space(*args, **kwargs):
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
         return [
             FloatParams(name="coxph_alpha", low=0.05, high=0.1),
             FloatParams(name="coxph_penalizer", low=0, high=0.2),

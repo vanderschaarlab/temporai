@@ -12,6 +12,7 @@ from torch import nn
 from torch.utils.data import DataLoader, TensorDataset, sampler
 from typing_extensions import Literal
 
+from tempor.core import pydantic_utils
 from tempor.log import logger as log
 from tempor.models.constants import DEVICE, ModelTaskType, Nonlin, ODEBackend
 from tempor.models.mlp import MLP
@@ -66,7 +67,7 @@ class CDEFunc(torch.nn.Module):
             nonlin_out=[("tanh", n_units_out)],
         )
 
-    def forward(self, t, z):  # pylint: disable=unused-argument
+    def forward(self, t: torch.Tensor, z: torch.Tensor) -> torch.Tensor:  # pylint: disable=unused-argument
         z = self.model(z)
 
         z = z.view(*z.shape[:-1], self.n_units_hidden, self.n_units_in)
@@ -112,7 +113,7 @@ class ODEFunc(torch.nn.Module):
             nonlin_out=[("tanh", n_units_hidden)],
         )
 
-    def forward(self, t, z):  # pylint: disable=unused-argument
+    def forward(self, t: torch.Tensor, z: torch.Tensor) -> torch.Tensor:  # pylint: disable=unused-argument
         return self.model(z)
 
 
@@ -127,11 +128,11 @@ class ReverseGRUEncoder(nn.Module):
         device: Any = DEVICE,
     ):
         super(ReverseGRUEncoder, self).__init__()
-        self.gru = nn.GRU(n_units_in, n_units_hidden, 2, batch_first=True)
+        self.gru = nn.GRU(n_units_in, n_units_hidden, 2, batch_first=True)  # type: ignore [no-untyped-call]
         self.linear_out = nn.Linear(n_units_hidden, n_units_latent).to(device)
         nn.init.xavier_uniform_(self.linear_out.weight)
 
-    def forward(self, observed_data: torch.Tensor):
+    def forward(self, observed_data: torch.Tensor) -> torch.Tensor:
         trajs_to_encode = observed_data  # (batch_size, t_observed_dim, observed_dim)
         reversed_trajs_to_encode = torch.flip(trajs_to_encode, (1,))
         out, _ = self.gru(reversed_trajs_to_encode)
@@ -145,12 +146,12 @@ class LaplaceFunc(nn.Module):
 
     def __init__(
         self,
-        s_dim,
-        n_units_out,
-        n_units_latent,
-        n_units_hidden=64,
+        s_dim: int,
+        n_units_out: int,
+        n_units_latent: int,
+        n_units_hidden: int = 64,
         device: Any = DEVICE,
-    ):
+    ) -> None:
         super(LaplaceFunc, self).__init__()
         self.s_dim = s_dim
         self.n_units_out = n_units_out
@@ -172,7 +173,7 @@ class LaplaceFunc(nn.Module):
 
         self.to(device)
 
-    def forward(self, i):
+    def forward(self, i: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         out = self.linear_tanh_stack(i.view(-1, self.s_dim * 2 + self.n_units_latent)).view(
             -1, 2 * self.n_units_out, self.s_dim
         )
@@ -458,7 +459,7 @@ class NeuralODE(torch.nn.Module):
                 atol=self.atol,
                 rtol=self.rtol,
             )
-            z_T = z_T[1]
+            z_T = z_T[1]  # pyright: ignore
             z_T = z_T[:, -1, :]  # pyright: ignore  # Last time point.
         elif self.backend == "laplace":
             X_emb = self.initial_temporal(temporal_data_ext)
@@ -481,7 +482,7 @@ class NeuralODE(torch.nn.Module):
         out = self.output(z_T)
         return out.reshape(-1, *self.output_shape)
 
-    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+    @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def predict(
         self,
         static_data: Union[List, np.ndarray, torch.Tensor],
@@ -513,7 +514,7 @@ class NeuralODE(torch.nn.Module):
             else:
                 return yt.cpu().numpy()
 
-    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+    @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def predict_proba(
         self,
         static_data: Union[List, np.ndarray, torch.Tensor],
@@ -558,7 +559,7 @@ class NeuralODE(torch.nn.Module):
         else:
             return np.mean(np.inner(outcome - y_pred, outcome - y_pred) / 2.0)
 
-    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+    @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def fit(
         self,
         static_data: Union[List, np.ndarray, torch.Tensor],
@@ -576,7 +577,7 @@ class NeuralODE(torch.nn.Module):
 
         return self._train(static_data_t, temporal_data_t, observation_times_t, outcome_t)
 
-    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+    @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def _train(
         self,
         static_data: List[torch.Tensor],
@@ -634,7 +635,10 @@ class NeuralODE(torch.nn.Module):
 
                 loss.backward()  # backpropagation, compute gradients
                 if self.clipping_value > 0:
-                    torch.nn.utils.clip_grad_norm_(self.parameters(), self.clipping_value)  # pyright: ignore
+                    torch.nn.utils.clip_grad_norm_(  # type: ignore [attr-defined] # pyright: ignore
+                        self.parameters(),
+                        self.clipping_value,
+                    )
                 self.optimizer.step()  # apply gradients
 
                 if torch.isnan(loss):  # pragma: no cover
@@ -673,7 +677,7 @@ class NeuralODE(torch.nn.Module):
         if out_counts.min() > 1:
             stratify = outcome.cpu()
 
-        split: Tuple[torch.Tensor, ...] = train_test_split(  # type: ignore
+        split: Tuple[torch.Tensor, ...] = train_test_split(  # pyright: ignore
             static_data.cpu(),
             temporal_data.cpu(),
             observation_times.cpu(),

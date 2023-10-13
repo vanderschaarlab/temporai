@@ -1,5 +1,6 @@
 import io
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -14,7 +15,7 @@ from tempor.datasources import datasource
 # TODO: Docstring to explain the dataset.
 @plugins.register_plugin(name="google_stocks", category="prediction.one_off", plugin_type="datasource")
 class GoogleStocksDataSource(datasource.OneOffPredictionDataSource):
-    def __init__(self, seq_len: int = 10, **kwargs) -> None:
+    def __init__(self, seq_len: int = 10, **kwargs: Any) -> None:
         super().__init__(**kwargs)
 
         self.seq_len = seq_len
@@ -28,7 +29,7 @@ class GoogleStocksDataSource(datasource.OneOffPredictionDataSource):
     def dataset_dir() -> str:
         return str(Path(GoogleStocksDataSource.data_root_dir) / "google_stocks")
 
-    def load(self, **kwargs) -> dataset.OneOffPredictionDataset:
+    def load(self, **kwargs: Any) -> dataset.OneOffPredictionDataset:
         # Load Google Data
         if not self.df_path.exists():
             s = requests.get(self.url(), timeout=5).content

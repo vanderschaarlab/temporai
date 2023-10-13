@@ -2,7 +2,7 @@
 
 import abc
 import os
-from typing import ClassVar, Optional, Type
+from typing import Any, ClassVar, Optional, Type
 
 import tempor
 from tempor.core import plugins
@@ -26,7 +26,7 @@ class DataSource(plugins.Plugin, abc.ABC):
     It will be ``< tempor -> config -> working_directory > / data``.
     """
 
-    def __init__(self, **kwargs) -> None:  # pylint: disable=unused-argument
+    def __init__(self, **kwargs: Any) -> None:  # pylint: disable=unused-argument
         """Initializer for `DataSource`.
 
         Args:
@@ -86,7 +86,7 @@ class DataSource(plugins.Plugin, abc.ABC):
         ...
 
     @abc.abstractmethod
-    def load(self, **kwargs) -> dataset.PredictiveDataset:  # pragma: no cover
+    def load(self, **kwargs: Any) -> dataset.PredictiveDataset:  # pragma: no cover
         """The method that should return the loaded `~tempor.data.dataset.DataSet` for the appropriate
         ``predictive_task``.
 
@@ -102,7 +102,7 @@ class OneOffPredictionDataSource(DataSource):
         return data_typing.PredictiveTask.ONE_OFF_PREDICTION
 
     @abc.abstractmethod
-    def load(self, **kwargs) -> dataset.OneOffPredictionDataset:  # pragma: no cover
+    def load(self, **kwargs: Any) -> dataset.OneOffPredictionDataset:  # pragma: no cover
         ...
 
 
@@ -112,7 +112,7 @@ class TemporalPredictionDataSource(DataSource):
         return data_typing.PredictiveTask.TEMPORAL_PREDICTION
 
     @abc.abstractmethod
-    def load(self, **kwargs) -> dataset.TemporalPredictionDataset:  # pragma: no cover
+    def load(self, **kwargs: Any) -> dataset.TemporalPredictionDataset:  # pragma: no cover
         ...
 
 
@@ -122,7 +122,7 @@ class TimeToEventAnalysisDataSource(DataSource):
         return data_typing.PredictiveTask.TIME_TO_EVENT_ANALYSIS
 
     @abc.abstractmethod
-    def load(self, **kwargs) -> dataset.TimeToEventAnalysisDataset:  # pragma: no cover
+    def load(self, **kwargs: Any) -> dataset.TimeToEventAnalysisDataset:  # pragma: no cover
         ...
 
 
@@ -132,7 +132,7 @@ class OneOffTreatmentEffectsDataSource(DataSource):
         return data_typing.PredictiveTask.ONE_OFF_TREATMENT_EFFECTS
 
     @abc.abstractmethod
-    def load(self, **kwargs) -> dataset.OneOffTreatmentEffectsDataset:  # pragma: no cover
+    def load(self, **kwargs: Any) -> dataset.OneOffTreatmentEffectsDataset:  # pragma: no cover
         ...
 
 
@@ -142,5 +142,5 @@ class TemporalTreatmentEffectsDataSource(DataSource):
         return data_typing.PredictiveTask.TEMPORAL_TREATMENT_EFFECTS
 
     @abc.abstractmethod
-    def load(self, **kwargs) -> dataset.TemporalTreatmentEffectsDataset:  # pragma: no cover
+    def load(self, **kwargs: Any) -> dataset.TemporalTreatmentEffectsDataset:  # pragma: no cover
         ...

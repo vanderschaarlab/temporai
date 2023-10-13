@@ -1,5 +1,5 @@
 import abc
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any, Generator, Optional
 
 import rich.pretty
 
@@ -20,12 +20,12 @@ class PredictiveTaskData(abc.ABC):
     def predictive_task(self) -> data_typing.PredictiveTask:  # pragma: no cover
         ...
 
-    def __init__(
+    def __init__(  # pylint: disable=unused-argument
         self,
         parent_dataset: "PredictiveDataset",
         targets: Any,
         treatments: Optional[Any],
-        **kwargs,  # pylint: disable=unused-argument
+        **kwargs: Any,
     ) -> None:  # pragma: no cover
         self.parent_dataset = parent_dataset
         # ^ In order to be able to call parent dataset's `validate` method in the targets/treatments property setters.
@@ -33,7 +33,7 @@ class PredictiveTaskData(abc.ABC):
         self._targets = targets
         self._treatments = treatments
 
-    def __rich_repr__(self):
+    def __rich_repr__(self) -> Generator:
         if self.targets is not None:
             yield "targets", RichReprStrPassthrough(self.targets.short_repr())
         else:
@@ -79,7 +79,7 @@ class OneOffPredictionTaskData(PredictiveTaskData):
         return data_typing.PredictiveTask.ONE_OFF_PREDICTION
 
     def __init__(
-        self, parent_dataset: "PredictiveDataset", targets: Optional[data_typing.DataContainer], **kwargs
+        self, parent_dataset: "PredictiveDataset", targets: Optional[data_typing.DataContainer], **kwargs: Any
     ) -> None:
         super().__init__(parent_dataset=parent_dataset, targets=targets, treatments=None)
         self._targets = samples.StaticSamples(targets) if targets is not None else None
@@ -97,7 +97,7 @@ class TemporalPredictionTaskData(PredictiveTaskData):
         return data_typing.PredictiveTask.TEMPORAL_PREDICTION
 
     def __init__(
-        self, parent_dataset: "PredictiveDataset", targets: Optional[data_typing.DataContainer], **kwargs
+        self, parent_dataset: "PredictiveDataset", targets: Optional[data_typing.DataContainer], **kwargs: Any
     ) -> None:
         super().__init__(parent_dataset=parent_dataset, targets=targets, treatments=None)
         self._targets = samples.TimeSeriesSamples(targets) if targets is not None else None
@@ -118,7 +118,7 @@ class TimeToEventAnalysisTaskData(PredictiveTaskData):
         return data_typing.PredictiveTask.TIME_TO_EVENT_ANALYSIS
 
     def __init__(
-        self, parent_dataset: "PredictiveDataset", targets: Optional[data_typing.DataContainer], **kwargs
+        self, parent_dataset: "PredictiveDataset", targets: Optional[data_typing.DataContainer], **kwargs: Any
     ) -> None:
         super().__init__(parent_dataset=parent_dataset, targets=targets, treatments=None)
         self._targets = samples.EventSamples(targets) if targets is not None else None
@@ -143,7 +143,7 @@ class OneOffTreatmentEffectsTaskData(PredictiveTaskData):
         parent_dataset: "PredictiveDataset",
         targets: Optional[data_typing.DataContainer],
         treatments: data_typing.DataContainer,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         super().__init__(parent_dataset=parent_dataset, targets=targets, treatments=treatments)
         self._targets = samples.TimeSeriesSamples(targets) if targets is not None else None
@@ -165,7 +165,7 @@ class TemporalTreatmentEffectsTaskData(PredictiveTaskData):
         parent_dataset: "PredictiveDataset",
         targets: Optional[data_typing.DataContainer],
         treatments: data_typing.DataContainer,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         super().__init__(parent_dataset=parent_dataset, targets=targets, treatments=treatments)
         self._targets = samples.TimeSeriesSamples(targets) if targets is not None else None

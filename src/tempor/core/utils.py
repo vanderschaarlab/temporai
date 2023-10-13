@@ -3,7 +3,7 @@ from typing import Any, Dict, Iterable, List, Tuple, Type
 from typing_extensions import Literal, get_args
 
 
-def get_class_full_name(o: object):
+def get_class_full_name(o: object) -> str:
     # See: https://stackoverflow.com/a/2020083
     class_ = o.__class__
     module = class_.__module__
@@ -36,7 +36,7 @@ def is_iterable(o: object) -> bool:
 
 def ensure_literal_matches_dict_keys(
     literal: Any, d: Dict[str, Any], literal_name: str = "literal", dict_name: str = "dictionary"
-):
+) -> None:
     lits = set(get_args(literal))
     keys = set(d.keys())
     if lits != keys:

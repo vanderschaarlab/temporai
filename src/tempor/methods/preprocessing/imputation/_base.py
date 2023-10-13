@@ -1,3 +1,5 @@
+from typing import Any
+
 from typing_extensions import Literal
 
 import tempor.methods.core as methods_core
@@ -22,5 +24,5 @@ TabularImputerType = Literal[
 
 
 class BaseImputer(methods_core.BaseTransformer):
-    def __init__(self, **params) -> None:  # pylint: disable=useless-super-delegation
+    def __init__(self, **params: Any) -> None:  # pylint: disable=useless-super-delegation
         super().__init__(**params)

@@ -7,6 +7,8 @@ import torch
 import torch.utils.data.sampler
 from sklearn.model_selection import train_test_split
 
+from tempor.core import pydantic_utils
+
 
 class BaseSampler(torch.utils.data.sampler.Sampler):
     """DataSampler samples the conditional vector and corresponding data."""
@@ -14,13 +16,13 @@ class BaseSampler(torch.utils.data.sampler.Sampler):
     def get_dataset_conditionals(self) -> Optional[np.ndarray]:  # pragma: no cover
         return None
 
-    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+    @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def sample_conditional(
         self, batch: int, **kwargs: Any  # pylint: disable=unused-argument
     ) -> Optional[Tuple]:  # pragma: no cover
         return None
 
-    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+    @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def sample_conditional_for_class(
         self, batch: int, c: int  # pylint: disable=unused-argument
     ) -> Optional[np.ndarray]:  # pragma: no cover
@@ -41,7 +43,7 @@ class BaseSampler(torch.utils.data.sampler.Sampler):
 class ImbalancedDatasetSampler(BaseSampler):
     """Samples elements randomly from a given list of indices for imbalanced dataset."""
 
-    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+    @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def __init__(self, labels: List, train_size: float = 0.8) -> None:
         super().__init__(None)
 

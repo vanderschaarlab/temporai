@@ -1,9 +1,11 @@
 import dataclasses
+from typing import Any, List
 
 from typing_extensions import Self
 
 from tempor.core import plugins
 from tempor.data import data_typing, dataset, samples
+from tempor.methods.core import Params
 from tempor.methods.time_to_event import BaseTimeToEventAnalysis
 from tempor.models.ddh import DynamicDeepHitModel, OutputMode, RnnMode
 
@@ -51,7 +53,7 @@ class DynamicDeepHitTimeToEventAnalysis(BaseTimeToEventAnalysis, DDHEmbedding):
     ParamsDefinition = DynamicDeepHitTimeToEventAnalysisParams
     params: DynamicDeepHitTimeToEventAnalysisParams  # type: ignore
 
-    def __init__(self, **params) -> None:
+    def __init__(self, **params: Any) -> None:
         """Dynamic DeepHit survival analysis model.
 
         Note:
@@ -91,8 +93,8 @@ class DynamicDeepHitTimeToEventAnalysis(BaseTimeToEventAnalysis, DDHEmbedding):
     def _fit(
         self,
         data: dataset.BaseDataset,
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> Self:
         processed_data, event_times, event_values = self.prepare_fit(data)
         self.model.fit(processed_data, event_times, event_values)
@@ -102,8 +104,8 @@ class DynamicDeepHitTimeToEventAnalysis(BaseTimeToEventAnalysis, DDHEmbedding):
         self,
         data: dataset.PredictiveDataset,
         horizons: data_typing.TimeIndex,
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> samples.TimeSeriesSamples:
         # NOTE: kwargs will be passed to DynamicDeepHitModel.predict_risk().
         # E.g. `batch_size` batch size parameter can be provided this way.
@@ -117,5 +119,5 @@ class DynamicDeepHitTimeToEventAnalysis(BaseTimeToEventAnalysis, DDHEmbedding):
         )
 
     @staticmethod
-    def hyperparameter_space(*args, **kwargs):
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
         return DDHEmbedding.hyperparameter_space(*args, **kwargs)

@@ -161,10 +161,10 @@ class DynamicDeepHitModel:
 
                 optimizer.zero_grad()
                 loss = self.total_loss(xb, tb, eb)
-                loss.backward()
+                loss.backward()  # type: ignore [no-untyped-call]
 
                 if self.clipping_value > 0:
-                    torch.nn.utils.clip_grad_norm_(  # pyright: ignore [reportPrivateImportUsage]
+                    torch.nn.utils.clip_grad_norm_(  # type: ignore [attr-defined] # pyright: ignore
                         self.model.parameters(),
                         self.clipping_value,
                     )
@@ -454,9 +454,15 @@ class DynamicDeepHitLayers(nn.Module):
         # RNN model for longitudinal data
         self.embedding: nn.Module
         if self.rnn_type == "LSTM":
-            self.embedding = nn.LSTM(input_dim, hidden_rnn, layers_rnn, bias=False, batch_first=True)
+            self.embedding = nn.LSTM(  # type: ignore [no-untyped-call]
+                input_dim,
+                hidden_rnn,
+                layers_rnn,
+                bias=False,
+                batch_first=True,
+            )
         elif self.rnn_type == "RNN":
-            self.embedding = nn.RNN(
+            self.embedding = nn.RNN(  # type: ignore [no-untyped-call]
                 input_dim,
                 hidden_rnn,
                 layers_rnn,
@@ -465,9 +471,20 @@ class DynamicDeepHitLayers(nn.Module):
                 nonlinearity="relu",
             )
         elif self.rnn_type == "GRU":
-            self.embedding = nn.GRU(input_dim, hidden_rnn, layers_rnn, bias=False, batch_first=True)
+            self.embedding = nn.GRU(  # type: ignore [no-untyped-call]
+                input_dim,
+                hidden_rnn,
+                layers_rnn,
+                bias=False,
+                batch_first=True,
+            )
         elif self.rnn_type == "Transformer":
-            self.embedding = TransformerModel(input_dim, hidden_rnn, n_layers_hidden=layers_rnn, dropout=dropout)
+            self.embedding = TransformerModel(
+                input_dim,
+                hidden_rnn,
+                n_layers_hidden=layers_rnn,
+                dropout=dropout,
+            )
         else:
             raise RuntimeError(f"Unknown rnn_type {rnn_type}")
 

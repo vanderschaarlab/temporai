@@ -4,7 +4,7 @@
 
 import abc
 import contextlib
-from typing import TYPE_CHECKING, Any, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Generator, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -14,6 +14,7 @@ from packaging.version import Version
 from typing_extensions import Self
 
 import tempor.exc
+from tempor.core import pydantic_utils
 from tempor.log import log_helpers, logger
 
 from . import data_typing, pandera_utils, utils
@@ -31,7 +32,7 @@ class DataSamples(abc.ABC):
     def __init__(
         self,
         data: data_typing.DataContainer,  # pylint: disable=unused-argument
-        **kwargs,
+        **kwargs: Any,
     ) -> None:  # pragma: no cover
         if "_skip_validate" not in kwargs:
             # For efficiency, pass `_skip_validate` internally (e.g. in `__getitem__`)
@@ -78,7 +79,7 @@ class DataSamples(abc.ABC):
         *,
         sample_index: Optional[data_typing.SampleIndex] = None,
         feature_index: Optional[data_typing.FeatureIndex] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> "DataSamples":  # pragma: no cover
         """Create :class:`DataSamples` from `numpy.ndarray`.
 
@@ -99,17 +100,17 @@ class DataSamples(abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
-    def from_dataframe(dataframe: pd.DataFrame, **kwargs) -> "DataSamples":  # pragma: no cover
+    def from_dataframe(dataframe: pd.DataFrame, **kwargs: Any) -> "DataSamples":  # pragma: no cover
         """Create :class:`DataSamples` from `pandas.DataFrame`."""
         ...
 
     @abc.abstractmethod
-    def numpy(self, **kwargs) -> np.ndarray:  # pragma: no cover
+    def numpy(self, **kwargs: Any) -> np.ndarray:  # pragma: no cover
         """Return `numpy.ndarray` representation of the data."""
         ...
 
     @abc.abstractmethod
-    def dataframe(self, **kwargs) -> pd.DataFrame:  # pragma: no cover
+    def dataframe(self, **kwargs: Any) -> pd.DataFrame:  # pragma: no cover
         """Return `pandas.DataFrame` representation of the data."""
         ...
 
@@ -161,14 +162,14 @@ class StaticSamples(DataSamples):
     _data: pd.DataFrame
     _schema: pa.DataFrameSchema
 
-    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+    @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def __init__(
         self,
         data: data_typing.DataContainer,
         *,
         sample_index: Optional[data_typing.SampleIndex] = None,
         feature_index: Optional[data_typing.FeatureIndex] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Create a :class:`StaticSamples` object from the ``data``.
 
@@ -239,7 +240,7 @@ class StaticSamples(DataSamples):
         self._schema = schema
 
     @staticmethod
-    def from_dataframe(dataframe: pd.DataFrame, **kwargs) -> "StaticSamples":
+    def from_dataframe(dataframe: pd.DataFrame, **kwargs: Any) -> "StaticSamples":
         return StaticSamples(dataframe, **kwargs)
 
     @staticmethod
@@ -248,7 +249,7 @@ class StaticSamples(DataSamples):
         *,
         sample_index: Optional[data_typing.SampleIndex] = None,
         feature_index: Optional[data_typing.FeatureIndex] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> "StaticSamples":
         return StaticSamples(array, sample_index=sample_index, feature_index=feature_index, **kwargs)
 
@@ -258,7 +259,7 @@ class StaticSamples(DataSamples):
         *,
         sample_index: Optional[data_typing.SampleIndex] = None,
         feature_index: Optional[data_typing.FeatureIndex] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> pd.DataFrame:
         if sample_index is None:
             sample_index = _array_default_sample_index(array)  # pyright: ignore
@@ -266,10 +267,10 @@ class StaticSamples(DataSamples):
             feature_index = _array_default_feature_index(array)
         return pd.DataFrame(data=array, index=sample_index, columns=feature_index, **kwargs)
 
-    def numpy(self, **kwargs) -> np.ndarray:
+    def numpy(self, **kwargs: Any) -> np.ndarray:
         return self._data.to_numpy()
 
-    def dataframe(self, **kwargs) -> pd.DataFrame:
+    def dataframe(self, **kwargs: Any) -> pd.DataFrame:
         return self._data
 
     def sample_index(self) -> data_typing.SampleIndex:
@@ -288,14 +289,14 @@ class StaticSamples(DataSamples):
 
     def __getitem__(self, key: data_typing.GetItemKey) -> Self:
         key_ = utils.ensure_pd_iloc_key_returns_df(key)
-        return StaticSamples(  # type: ignore[return-value]
+        return StaticSamples(  # type: ignore [return-value]
             self._data.iloc[key_, :],  # pyright: ignore
             _skip_validate=True,
         )
 
 
 @contextlib.contextmanager
-def workaround_pandera_pd2_1_0_multiindex_compatibility(schema: pa.DataFrameSchema, data: pd.DataFrame):
+def workaround_pandera_pd2_1_0_multiindex_compatibility(schema: pa.DataFrameSchema, data: pd.DataFrame) -> Generator:
     """A version compatibility issue exists between pandera and pandas 2.1.0, as reported here:
     https://github.com/unionai-oss/pandera/issues/1328
 
@@ -317,7 +318,11 @@ def workaround_pandera_pd2_1_0_multiindex_compatibility(schema: pa.DataFrameSche
             "Columns with duplicate values are not supported in stack" in str(ex)
         ):  # pragma: no cover
             cols = data.index.names
-            raise pa.errors.SchemaError(schema=schema, data=data, message=f"columns {cols} not unique")
+            raise pa.errors.SchemaError(  # type: ignore [no-untyped-call]
+                schema=schema,
+                data=data,
+                message=f"columns {cols} not unique",
+            )
         else:  # pragma: no cover
             raise
 
@@ -333,7 +338,7 @@ class TimeSeriesSamples(DataSamples):
     def modality(self) -> data_typing.DataModality:
         return data_typing.DataModality.TIME_SERIES
 
-    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+    @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def __init__(
         self,
         data: data_typing.DataContainer,
@@ -342,7 +347,7 @@ class TimeSeriesSamples(DataSamples):
         sample_index: Optional[data_typing.SampleIndex] = None,
         time_indexes: Optional[data_typing.TimeIndexList] = None,
         feature_index: Optional[data_typing.FeatureIndex] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Create a :class:`TimeSeriesSamples` object from the ``data``.
 
@@ -442,7 +447,7 @@ class TimeSeriesSamples(DataSamples):
         # - Time index float / int expected non-negative values.
 
     @staticmethod
-    def from_dataframe(dataframe: pd.DataFrame, **kwargs) -> "TimeSeriesSamples":
+    def from_dataframe(dataframe: pd.DataFrame, **kwargs: Any) -> "TimeSeriesSamples":
         return TimeSeriesSamples(dataframe, **kwargs)
 
     @staticmethod
@@ -453,7 +458,7 @@ class TimeSeriesSamples(DataSamples):
         sample_index: Optional[data_typing.SampleIndex] = None,
         time_indexes: Optional[data_typing.TimeIndexList] = None,
         feature_index: Optional[data_typing.FeatureIndex] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> "TimeSeriesSamples":
         return TimeSeriesSamples(
             array,
@@ -465,21 +470,21 @@ class TimeSeriesSamples(DataSamples):
         )
 
     @staticmethod
-    def _array_to_df(
+    def _array_to_df(  # pylint: disable=unused-argument
         array: np.ndarray,
         *,
         padding_indicator: Any,
         sample_index: Optional[data_typing.SampleIndex] = None,
         time_indexes: Optional[data_typing.TimeIndexList] = None,
         feature_index: Optional[data_typing.FeatureIndex] = None,
-        **kwargs,  # pylint: disable=unused-argument
+        **kwargs: Any,
     ) -> pd.DataFrame:
         if sample_index is None:
             sample_index = _array_default_sample_index(array)  # pyright: ignore
         if feature_index is None:
             feature_index = _array_default_feature_index(array)
         if time_indexes is None:
-            time_indexes = _array_default_time_indexes(array, padding_indicator)  # type: ignore
+            time_indexes = _array_default_time_indexes(array, padding_indicator)
         if TYPE_CHECKING:  # pragma: no cover
             assert sample_index is not None and feature_index is not None and time_indexes is not None  # nosec B101
         return utils.array3d_to_multiindex_timeseries_dataframe(
@@ -490,12 +495,12 @@ class TimeSeriesSamples(DataSamples):
             padding_indicator=padding_indicator,
         )
 
-    def numpy(self, *, padding_indicator: Any = DATA_SETTINGS.default_padding_indicator, **kwargs) -> np.ndarray:
+    def numpy(self, *, padding_indicator: Any = DATA_SETTINGS.default_padding_indicator, **kwargs: Any) -> np.ndarray:
         return utils.multiindex_timeseries_dataframe_to_array3d(
             df=self._data, padding_indicator=padding_indicator, max_timesteps=None
         )
 
-    def dataframe(self, **kwargs) -> pd.DataFrame:
+    def dataframe(self, **kwargs: Any) -> pd.DataFrame:
         return self._data
 
     def sample_index(self) -> data_typing.SampleIndex:
@@ -586,7 +591,7 @@ class TimeSeriesSamples(DataSamples):
         key_ = utils.ensure_pd_iloc_key_returns_df(key)
         sample_index = utils.get_df_index_level0_unique(self._data)
         selected = list(sample_index[key_])  # pyright: ignore
-        return TimeSeriesSamples(  # type: ignore[return-value]
+        return TimeSeriesSamples(  # type: ignore [return-value]
             self._data.loc[(selected, slice(None)), :],  # pyright: ignore
             _skip_validate=True,
         )
@@ -604,14 +609,14 @@ class EventSamples(DataSamples):
     def modality(self) -> data_typing.DataModality:
         return data_typing.DataModality.EVENT
 
-    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+    @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def __init__(
         self,
         data: data_typing.DataContainer,
         *,
         sample_index: Optional[data_typing.SampleIndex] = None,
         feature_index: Optional[data_typing.FeatureIndex] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Create an :class:`EventSamples` object from the ``data``.
 
@@ -698,7 +703,7 @@ class EventSamples(DataSamples):
         self._schema = schema
 
     @staticmethod
-    def from_dataframe(dataframe: pd.DataFrame, **kwargs) -> "EventSamples":
+    def from_dataframe(dataframe: pd.DataFrame, **kwargs: Any) -> "EventSamples":
         return EventSamples(dataframe, **kwargs)
 
     @staticmethod
@@ -707,7 +712,7 @@ class EventSamples(DataSamples):
         *,
         sample_index: Optional[data_typing.SampleIndex] = None,
         feature_index: Optional[data_typing.FeatureIndex] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> "EventSamples":
         return EventSamples(array, sample_index=sample_index, feature_index=feature_index, **kwargs)
 
@@ -717,7 +722,7 @@ class EventSamples(DataSamples):
         *,
         sample_index: Optional[data_typing.SampleIndex] = None,
         feature_index: Optional[data_typing.FeatureIndex] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> pd.DataFrame:
         if sample_index is None:
             sample_index = _array_default_sample_index(array)  # pyright: ignore
@@ -725,11 +730,11 @@ class EventSamples(DataSamples):
             feature_index = _array_default_feature_index(array)
         return pd.DataFrame(data=array, index=sample_index, columns=feature_index, **kwargs)
 
-    def numpy(self, **kwargs) -> np.ndarray:
+    def numpy(self, **kwargs: Any) -> np.ndarray:
         # TODO: May want at option to return a scikit-survive -style array.
         return self._data.to_numpy()
 
-    def dataframe(self, **kwargs) -> pd.DataFrame:
+    def dataframe(self, **kwargs: Any) -> pd.DataFrame:
         return self._data
 
     def sample_index(self) -> data_typing.SampleIndex:
@@ -743,7 +748,7 @@ class EventSamples(DataSamples):
     def num_features(self) -> int:
         return self._data.shape[1]
 
-    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+    @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def split(self, time_feature_suffix: str = _DEFAULT_EVENTS_TIME_FEATURE_SUFFIX) -> pd.DataFrame:
         """Return a `pandas.DataFrame` where the time component of each event feature has been split off to its own
         column. The new columns that contain the times will be named ``"<original column name><time_feature_suffix>"``
@@ -793,7 +798,7 @@ class EventSamples(DataSamples):
 
     def __getitem__(self, key: data_typing.GetItemKey) -> Self:
         key_ = utils.ensure_pd_iloc_key_returns_df(key)
-        return EventSamples(  # type: ignore[return-value]
+        return EventSamples(  # type: ignore [return-value]
             self._data.iloc[key_, :],  # pyright: ignore
             _skip_validate=True,
         )

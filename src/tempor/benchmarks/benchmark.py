@@ -7,6 +7,7 @@ import pydantic
 import seaborn as sns
 from packaging.version import Version
 
+from tempor.core import pydantic_utils
 from tempor.core.types import PredictiveTaskType
 from tempor.data import data_typing, dataset
 from tempor.log import logger as log
@@ -25,7 +26,7 @@ def print_score(mean: pd.Series, std: pd.Series) -> pd.Series:
     return mean + " +/- " + std
 
 
-@pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+@pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
 def benchmark_models(
     task_type: PredictiveTaskType,
     tests: List[Tuple[str, Any]],  # [ ( Test name, Model to evaluate (unfitted) ), ... ]
@@ -101,10 +102,10 @@ def benchmark_models(
 
         scores = evaluator(
             plugin,
-            data=data,  # type: ignore
+            data=data,
             n_splits=n_splits,
             random_state=random_state,
-            horizons=horizons,  # type: ignore
+            horizons=horizons,
             raise_exceptions=raise_exceptions,
             silence_warnings=silence_warnings,
         )
@@ -132,7 +133,7 @@ def benchmark_models(
     return aggr, results
 
 
-@pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+@pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
 def visualize_benchmark(results: Dict[str, pd.DataFrame], palette: str = "viridis", plot_block: bool = True) -> Any:
     # Pre-format DF for plotting.
     for k, v in results.items():
@@ -157,7 +158,7 @@ def visualize_benchmark(results: Dict[str, pd.DataFrame], palette: str = "viridi
                 hue="method",
                 yerr=err.loc[metric, :],
             )
-        except ValueError as ex:
+        except ValueError as ex:  # pragma: no cover
             if "'yerr'" in str(ex) and Version(sns.__version__) >= Version("0.13.0"):  # pragma: no cover
                 # Known issue with seaborn 0.13.0+. If the y values are non-unique, it seems to expect the yerr values
                 # only as many as there are unique y values. We hence remap using numpy.unique with index return.

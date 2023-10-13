@@ -1,11 +1,12 @@
 import dataclasses
-from typing import List
+from typing import Any, List
 
 from clairvoyance2.treatment_effects.synctwin import SyncTwinRegressor
 
 from tempor.core import plugins
 from tempor.data import dataset, samples
 from tempor.data.clv2conv import tempor_dataset_to_clairvoyance2_dataset
+from tempor.methods.core import Params
 from tempor.methods.core._params import FloatParams, IntegerParams
 from tempor.methods.treatments.one_off._base import BaseOneOffTreatmentEffects
 
@@ -33,7 +34,7 @@ class SyncTwinTreatmentsRegressor(BaseOneOffTreatmentEffects):
 
     def __init__(
         self,
-        **params,
+        **params: Any,
     ) -> None:
         """SyncTwin treatment effects estimation.
 
@@ -61,8 +62,8 @@ class SyncTwinTreatmentsRegressor(BaseOneOffTreatmentEffects):
     def _fit(
         self,
         data: dataset.BaseDataset,
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> "SyncTwinTreatmentsRegressor":  # pyright: ignore
         cl_dataset = tempor_dataset_to_clairvoyance2_dataset(data)
         self.model.fit(cl_dataset)
@@ -72,20 +73,20 @@ class SyncTwinTreatmentsRegressor(BaseOneOffTreatmentEffects):
         self,
         data: dataset.PredictiveDataset,
         horizons: List[List[float]],
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> samples.TimeSeriesSamples:
         raise NotImplementedError(
             "SyncTwin implementation does not currently support `predict`, only `predict_counterfactuals`"
         )
 
-    def _predict_counterfactuals(  # type: ignore[override]
+    def _predict_counterfactuals(
         self,
         data: dataset.PredictiveDataset,
         # horizons: SyncTwin can only handle the same time horizon as targets in the data.
         # treatment_scenarios: SyncTwin can only handle the one alternative treatment case.
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> List:
         if self.model is None:
             raise RuntimeError("Fit the model first")
@@ -128,7 +129,7 @@ class SyncTwinTreatmentsRegressor(BaseOneOffTreatmentEffects):
         return counterfactuals
 
     @staticmethod
-    def hyperparameter_space(*args, **kwargs):
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
         return [
             IntegerParams(name="hidden_size", low=10, high=500),
             FloatParams(name="tau", low=0.0, high=2.0),

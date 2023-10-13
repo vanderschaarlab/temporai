@@ -5,7 +5,7 @@ import importlib.util
 import os
 import os.path
 import sys
-from typing import TYPE_CHECKING, Any, Callable, ClassVar, Dict, List, Optional, Tuple, Type, TypeVar, Union, overload
+from typing import Any, Callable, ClassVar, Dict, List, Optional, Tuple, Type, TypeVar, Union, cast, overload
 
 from typing_extensions import ParamSpec
 
@@ -265,7 +265,7 @@ def register_plugin_category(
     PLUGIN_CATEGORY_REGISTRY[category_fqn] = expected_class
 
 
-def _check_same_class(class_1, class_2) -> bool:
+def _check_same_class(class_1: Type, class_2: Type) -> bool:
     # To avoid raising "already registered" error when a certain plugin class is being reimported.
     # Not a bullet proof check but should suffice for practical purposes.
     return (
@@ -273,7 +273,11 @@ def _check_same_class(class_1, class_2) -> bool:
     )
 
 
-def register_plugin(name: str, category: plugin_typing.PluginCategory, plugin_type: plugin_typing.PluginTypeArg = None):
+def register_plugin(
+    name: str,
+    category: plugin_typing.PluginCategory,
+    plugin_type: plugin_typing.PluginTypeArg = None,
+) -> Callable[[Callable[P, T]], Callable[P, T]]:
     """A decorator to register a plugin class. If ``plugin_type`` is provided, this will also be assigned,
     otherwise the default plugin type will be used. The ``category`` must have already been registered with
     ``@register_plugin_category`` before this can be used to register a plugin.
@@ -296,40 +300,38 @@ def register_plugin(name: str, category: plugin_typing.PluginCategory, plugin_ty
         #     * https://stackoverflow.com/a/74080156
         #     * https://docs.python.org/3/library/typing.html#typing.ParamSpec
 
-        if TYPE_CHECKING:  # pragma: no cover
-            # Note that cls is in fact `Type[Plugin]`, but this allows to
-            # silence static type-checker warnings inside this function.
-            assert isinstance(cls, Plugin)  # nosec B101
+        # Cast to Type[Plugin], which is the actual expected type, such that static type checking works here.
+        cls_ = cast(Type[Plugin], cls)
 
-        logger.debug(f"Registering plugin of class {cls}")
-        cls.name = name
-        cls.category = category
+        logger.debug(f"Registering plugin of class {cls_}")
+        cls_.name = name
+        cls_.category = category
 
         _plugin_type = parse_plugin_type(plugin_type)
-        cls.plugin_type = _plugin_type
+        cls_.plugin_type = _plugin_type
 
         category_fqn = create_fqn(suffix=category, plugin_type=_plugin_type)
 
         if category_fqn not in PLUGIN_CATEGORY_REGISTRY:
             raise TypeError(
-                f"Found plugin category '{cls.category}' under plugin type '{cls.plugin_type}' which "
+                f"Found plugin category '{cls_.category}' under plugin type '{cls_.plugin_type}' which "
                 f"has not been registered with `@{register_plugin_category.__name__}`"
             )
-        if not issubclass(cls, Plugin):
-            raise TypeError(f"Expected plugin class `{cls.__name__}` to be a subclass of `{Plugin}` but was `{cls}`")
-        if not issubclass(cls, PLUGIN_CATEGORY_REGISTRY[category_fqn]):
+        if not issubclass(cls_, Plugin):
+            raise TypeError(f"Expected plugin class `{cls_.__name__}` to be a subclass of `{Plugin}` but was `{cls_}`")
+        if not issubclass(cls_, PLUGIN_CATEGORY_REGISTRY[category_fqn]):
             raise TypeError(
-                f"Expected plugin class `{cls.__name__}` to be a subclass of "
-                f"`{PLUGIN_CATEGORY_REGISTRY[category_fqn]}` but was `{cls}`"
+                f"Expected plugin class `{cls_.__name__}` to be a subclass of "
+                f"`{PLUGIN_CATEGORY_REGISTRY[category_fqn]}` but was `{cls_}`"
             )
         # pylint: disable-next=protected-access
-        if cls._fqn() in PLUGIN_REGISTRY:
+        if cls_._fqn() in PLUGIN_REGISTRY:
             # pylint: disable-next=protected-access
-            if not _check_same_class(cls, PLUGIN_REGISTRY[cls._fqn()]):
+            if not _check_same_class(cls_, PLUGIN_REGISTRY[cls_._fqn()]):
                 raise TypeError(
                     # pylint: disable-next=protected-access
-                    f"Plugin (plugin type '{cls.plugin_type}') with full name '{cls.full_name()}' has already been "
-                    f"registered (as class `{PLUGIN_REGISTRY[cls._fqn()]}`)"
+                    f"Plugin (plugin type '{cls_.plugin_type}') with full name '{cls_.full_name()}' has already been "
+                    f"registered (as class `{PLUGIN_REGISTRY[cls_._fqn()]}`)"
                 )
             else:
                 # The same class is being reimported, do not raise error.
@@ -337,10 +339,10 @@ def register_plugin(name: str, category: plugin_typing.PluginCategory, plugin_ty
         for existing_cls in PLUGIN_REGISTRY.values():
             # Cannot have the same plugin name (not just fqn), as this is not supported by Pipeline.
             # TODO: Fix this - make non-unique name work with pipeline.
-            if cls.name == existing_cls.name:
-                if not _check_same_class(cls, existing_cls):
+            if cls_.name == existing_cls.name:
+                if not _check_same_class(cls_, existing_cls):
                     raise TypeError(
-                        f"Plugin (plugin type '{cls.plugin_type}') with name '{cls.name}' has already been "
+                        f"Plugin (plugin type '{cls_.plugin_type}') with name '{cls_.name}' has already been "
                         f"registered (as class `{existing_cls}`). Must use a unique plugin name."
                     )
                 else:  # pragma: no cover
@@ -350,9 +352,10 @@ def register_plugin(name: str, category: plugin_typing.PluginCategory, plugin_ty
                     pass
 
         # pylint: disable-next=protected-access
-        PLUGIN_REGISTRY[cls._fqn()] = cls
+        PLUGIN_REGISTRY[cls_._fqn()] = cls_
 
-        return cls
+        # Cast back to Callable[P, T] (see note at the top of function).
+        return cast(Callable[P, T], cls_)
 
     return _class_decorator
 
@@ -364,7 +367,7 @@ class PluginLoader:
     def __init__(self) -> None:
         self._refresh()
 
-    def _refresh(self):
+    def _refresh(self) -> None:
         # Internal method to refresh plugin registries.
 
         self._plugin_registry: Dict[str, Type[Plugin]] = PLUGIN_REGISTRY
@@ -387,7 +390,13 @@ class PluginLoader:
             )
         self._plugin_class_by_category_nested = class_by_category_nested
 
-    def _handle_all_plugin_types_case(self, pt: plugin_typing.PluginTypeArg, method: Callable, *args, **kwargs) -> Dict:
+    def _handle_all_plugin_types_case(
+        self,
+        pt: plugin_typing.PluginTypeArg,
+        method: Callable,
+        *args: Any,
+        **kwargs: Any,
+    ) -> Dict:
         # If ``pt`` (plugin type) is "all", will call ``method`` for all plugin types and return a nested dictionary.
         # Otherwise, just calls ``method`` and return what it returns.
         # In either case, plugin type value(s) will be passed to ``method`` by ``plugin_type`` kwarg.
@@ -514,13 +523,13 @@ class PluginLoader:
             [get_plugin_type_from_fqn(fqn) for fqn in self._plugin_registry.keys()]
         )
 
-    def _raise_plugin_does_not_exist_error(self, fqn: str):
+    def _raise_plugin_does_not_exist_error(self, fqn: str) -> None:
         plugin_type = get_plugin_type_from_fqn(fqn)
         plugin_full_name = remove_plugin_type_from_fqn(fqn)
         if fqn not in self._plugin_registry:
             raise ValueError(f"Plugin '{plugin_full_name}' (plugin type: {plugin_type}) does not exist.")
 
-    def _handle_get_args_kwargs(self, args, kwargs) -> Tuple[Any, Tuple, Dict]:
+    def _handle_get_args_kwargs(self, args: Tuple, kwargs: Dict[str, Any]) -> Tuple[Any, Tuple, Dict]:
         # "Pop" the `plugin_type` argument if such is found in args (position 0) or kwargs.
         # If appears to be provided in both ways, prefer the value from kwargs and leave the string in args as is.
         # If not, `plugin_type` will fall back to its default value.
@@ -533,7 +542,7 @@ class PluginLoader:
 
     # Explicitly listing all the overloads for clarity of documentation.
     @overload
-    def get(self, name: plugin_typing.PluginFullName, *args, **kwargs) -> Type:
+    def get(self, name: plugin_typing.PluginFullName, *args: Any, **kwargs: Any) -> Type:
         ...  # pragma: co cover
 
     @overload
@@ -541,8 +550,8 @@ class PluginLoader:
         self,
         name: plugin_typing.PluginFullName,
         plugin_type: plugin_typing.PluginTypeArg,
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> Type:
         ...  # pragma: co cover
 
@@ -550,13 +559,13 @@ class PluginLoader:
     def get(  # type: ignore [misc]
         self,
         name: plugin_typing.PluginFullName,
-        *args,
+        *args: Any,
         plugin_type: plugin_typing.PluginTypeArg = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> Type:
         ...  # pragma: co cover
 
-    def get(self, name: plugin_typing.PluginFullName, *args, **kwargs) -> Any:
+    def get(self, name: plugin_typing.PluginFullName, *args: Any, **kwargs: Any) -> Any:
         """Get a plugin by its full name (including category, i.e. of form
         ``'my_category.my_subcategory.my_plugin'``). Use ``*args`` and ``**kwargs`` to pass arguments to
         the plugin initializer. The returned object is an instance of the plugin class. If the plugin is not of the
@@ -591,6 +600,13 @@ class PluginLoader:
         Args:
             name (~tempor.core.plugin.plugin_typing.PluginFullName):
                 Plugin full name including all (sub)categories, of form ``'my_category.my_subcategory.my_plugin'``
+            args (Any):
+                Arguments to pass to the plugin initializer.
+            plugin_type (~tempor.core.plugin.plugin_typing.PluginTypeArg, optional):
+                Plugin type. If left as `None`, default plugin type is assumed. ``plugin_type`` must correctly \
+                correspond to the category implied by plugin full name. Defaults to `None`.
+            kwargs (Any):
+                Keyword arguments to pass to the plugin initializer.
 
         Returns:
             Any: The plugin instance initialised with ``*args`` and ``**kwargs`` as provided.

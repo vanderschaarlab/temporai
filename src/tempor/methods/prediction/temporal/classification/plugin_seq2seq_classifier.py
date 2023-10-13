@@ -9,6 +9,7 @@ from typing_extensions import Self
 from tempor.core import plugins
 from tempor.data import dataset, samples
 from tempor.data.clv2conv import _from_clv2_time_series, tempor_dataset_to_clairvoyance2_dataset
+from tempor.methods.core import Params
 from tempor.methods.core._params import CategoricalParams, FloatParams, IntegerParams
 from tempor.methods.prediction.temporal.classification import BaseTemporalClassifier
 
@@ -56,7 +57,7 @@ class Seq2seqClassifier(BaseTemporalClassifier):
 
     def __init__(
         self,
-        **params,
+        **params: Any,
     ) -> None:
         """Seq2seq classifier.
 
@@ -97,8 +98,8 @@ class Seq2seqClassifier(BaseTemporalClassifier):
     def _fit(
         self,
         data: dataset.BaseDataset,
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> Self:
         cl_dataset = tempor_dataset_to_clairvoyance2_dataset(data)
         self.model.fit(cl_dataset)
@@ -108,9 +109,9 @@ class Seq2seqClassifier(BaseTemporalClassifier):
         self,
         data: dataset.PredictiveDataset,
         n_future_steps: int,
-        *args,
+        *args: Any,
         time_delta: int = 1,
-        **kwargs,
+        **kwargs: Any,
     ) -> samples.TimeSeriesSamples:
         if self.model is None:
             raise RuntimeError("Fit the model first")
@@ -129,13 +130,13 @@ class Seq2seqClassifier(BaseTemporalClassifier):
     def _predict_proba(
         self,
         data: dataset.PredictiveDataset,
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> samples.TimeSeriesSamples:
         raise NotImplementedError("Not currently supported")
 
     @staticmethod
-    def hyperparameter_space(*args, **kwargs):
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
         return [
             IntegerParams(name="encoder_hidden_size", low=10, high=500),
             IntegerParams(name="encoder_num_layers", low=1, high=10),

@@ -1,14 +1,22 @@
-# exclude: '^docs/conf.py' # If need global exclude.
+# If need global exclude:
+# exclude: "^docs/conf.py"
+
+# NOTE:
+# Where excluding "docs/user_guide", that is because these are auto-generated files.
 
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
   rev: v4.4.0
   hooks:
   - id: trailing-whitespace
-    args: ['--markdown-linebreak-ext=md']
-    exclude: 'docs/user_guide'  # Auto-generated, leave as is.
+    args: [
+      "--markdown-linebreak-ext=md",
+    ]
+    exclude: "docs/user_guide"
   - id: check-added-large-files
-    args: ['--maxkb=1000']
+    args: [
+      "--maxkb=1000",
+    ]
   - id: check-ast
   - id: check-case-conflict
   - id: check-json
@@ -19,14 +27,20 @@ repos:
   - id: check-executables-have-shebangs
   - id: debug-statements
   - id: end-of-file-fixer
-    exclude: 'docs/user_guide'  # Auto-generated, leave as is.
+    exclude: "docs/user_guide"
   - id: pretty-format-json
-    args: ['--autofix', '--indent=4', '--no-sort-keys']
-    exclude: '.*.ipynb'  # ipynb may get treated as JSON, don't want that.
+    args: [
+      "--autofix",
+      "--indent=4",
+      "--no-sort-keys",
+    ]
+    exclude: ".*.ipynb"  # Do not want .ipynb to be treated as JSON.
   - id: requirements-txt-fixer
     exclude: docs/requirements.txt
   - id: mixed-line-ending
-    args: ['--fix=auto']
+    args: [
+      "--fix=auto",
+    ]
 
 - repo: https://github.com/pycqa/isort
   rev: 5.12.0
@@ -38,32 +52,55 @@ repos:
   hooks:
   - id: black-jupyter
     language_version: python3
-    exclude: 'docs/user_guide'  # Auto-generated, leave as is.
+    exclude: "docs/user_guide"
 
 # If like to embrace black styles even in the docs:
 - repo: https://github.com/asottile/blacken-docs
   rev: 1.16.0
   hooks:
   - id: blacken-docs
-    additional_dependencies: [black]
-    exclude: 'docs/user_guide'  # Auto-generated, leave as is.
+    additional_dependencies: [
+      "black",
+    ]
+    exclude: "docs/user_guide"
 
 - repo: https://github.com/PyCQA/flake8
   rev: 6.1.0
   hooks:
   - id: flake8
 
--   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.5.1
-    hooks:
-    -   id: mypy
-        files: "^src/"
-        args: [--config-file=mypy.ini]
-        additional_dependencies: [pydantic>=2]
+- repo: https://github.com/pre-commit/mirrors-mypy
+  rev: v1.5.1
+  hooks:
+  - id: mypy
+    files: "^src/"
+    args: [
+      "--config-file=mypy.ini",
+    ]
+    # NOTE:
+    # Re. additional **typed dependencies** and pre-commit mypy: https://stackoverflow.com/a/74291151.
+    # The list of typed dependencies below needs to be kept up-to-date with `setup.cfg`  for mypy errors to match
+    # the development environment. The typical "mismatched" mypy error that happens if these are not kept in sync is:
+    # `error: Unused "type: ignore" comment  [unused-ignore]`.
+    additional_dependencies: [
+      "hydra-core >=1.3",
+      "hyperimpute >= 0.1.17",
+      "loguru",
+      "pandera >= 0.17.0",
+      "pydantic >= 2",
+      "torch",
+      "tsai",
+    ]
 
 - repo: https://github.com/PyCQA/bandit
   rev: 1.7.5
   hooks:
   - id: bandit
-    args: ["-c", "pyproject.toml", "-q"]
-    additional_dependencies: ["bandit[toml]"]
+    args: [
+      "-c",
+      "pyproject.toml",
+      "-q"
+    ]
+    additional_dependencies: [
+      "bandit[toml]",
+    ]

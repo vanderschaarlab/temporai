@@ -130,9 +130,9 @@ class PipelineSelector:
 
     def hyperparameter_space(
         self,
-        *args,
+        *args: Any,
         override: Optional[List[Params]] = None,  # NOTE: Hyperparameter override applies to predictor only.
-        **kwargs,
+        **kwargs: Any,
     ) -> List[Params]:
         """The customized ``hyperparameter_space`` implementation. The hyperparameter space is built up of the
         hyperparameters of each pipeline steps (the preprocessors, and the final predictive step). ``CategoricalParams``
@@ -140,8 +140,12 @@ class PipelineSelector:
         Parameter names are customized to be able to differentiate pipeline stages (see ``format_hps_names``).
 
         Args:
+            args (Any):
+                Arguments to be passed on to the ``hyperparameter_space`` methods of the pipeline steps.
             override (Optional[List[Params]], optional):
                 Hyperparameter space override for the final predictive step of the pipeline. Defaults to `None`.
+            kwargs (Any):
+                Keyword arguments to be passed on to the ``hyperparameter_space`` methods of the pipeline steps.
 
         Returns:
             List[Params]: Returned hyperparameter space.

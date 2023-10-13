@@ -1,6 +1,6 @@
 import contextlib
 import dataclasses
-from typing import Any, List
+from typing import Any, Generator, List
 
 import numpy as np
 import pandas as pd
@@ -12,6 +12,7 @@ from xgbse.converters import convert_to_structured
 
 from tempor.core import plugins
 from tempor.data import data_typing, dataset, samples
+from tempor.methods.core import Params
 from tempor.methods.core._params import CategoricalParams, FloatParams, IntegerParams
 from tempor.methods.time_to_event import BaseTimeToEventAnalysis
 from tempor.models.constants import DEVICE
@@ -27,7 +28,7 @@ XGBStrategy = Literal["weibull", "debiased_bce", "km"]
 
 
 @contextlib.contextmanager
-def monkeypatch_xgbse_xgboost2_compatibility():
+def monkeypatch_xgbse_xgboost2_compatibility() -> Generator:
     """There is a bug that occurs in `xgbse` with `xgboost` 2.0+.
 
     ``AttributeError: `best_iteration` is only defined when early stopping is used.`` will be thrown when
@@ -51,13 +52,15 @@ def monkeypatch_xgbse_xgboost2_compatibility():
         original_xgb_booster_best_iteration_fset = xgb.Booster.best_iteration.fset  # type: ignore [attr-defined]
         original_xgb_booster_best_iteration_fdel = xgb.Booster.best_iteration.fdel  # type: ignore [attr-defined]
 
-        def monkeypatched_best_iteration_getter(*args, **kwargs):
+        def monkeypatched_best_iteration_getter(*args: Any, **kwargs: Any) -> int:
             # Use try-catch to fall back to the default returning of 999 as in previous versions of xgboost.
             try:
                 return original_xgb_booster_best_iteration_fget(*args, **kwargs)
             except AttributeError as ex:
                 if "best_iteration" in str(ex):
                     return 999
+                else:
+                    raise
 
         setattr(
             xgb.Booster,
@@ -75,7 +78,11 @@ def monkeypatch_xgbse_xgboost2_compatibility():
     finally:
         if problem_versions():  # pragma: no cover
             # Restore `xgb.Booster.best_iteration`.
-            setattr(xgb.Booster, "best_iteration", original_xgb_booster_best_iteration)
+            setattr(
+                xgb.Booster,
+                "best_iteration",
+                original_xgb_booster_best_iteration,  # pyright: ignore  [reportUnboundVariable]
+            )
 
 
 @dataclasses.dataclass
@@ -227,7 +234,7 @@ class XGBSurvivalAnalysis(OutputTimeToEventAnalysis):
 
         self.time_points = time_points
 
-    def fit(self, X: pd.DataFrame, T: pd.Series, Y: pd.Series):
+    def fit(self, X: pd.DataFrame, T: pd.Series, Y: pd.Series) -> Self:
         y = convert_to_structured(T, Y)
 
         censored_times = T[Y == 0]
@@ -272,7 +279,7 @@ class XGBTimeToEventAnalysis(BaseTimeToEventAnalysis):
     ParamsDefinition = XGBTimeToEventAnalysisParams
     params: XGBTimeToEventAnalysisParams  # type: ignore
 
-    def __init__(self, **params) -> None:
+    def __init__(self, **params: Any) -> None:
         """XGB survival analysis model.
 
         Args:
@@ -325,8 +332,8 @@ class XGBTimeToEventAnalysis(BaseTimeToEventAnalysis):
     def _fit(
         self,
         data: dataset.BaseDataset,
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> Self:
         self.model.fit(data, *args, **kwargs)
         return self
@@ -335,13 +342,13 @@ class XGBTimeToEventAnalysis(BaseTimeToEventAnalysis):
         self,
         data: dataset.PredictiveDataset,
         horizons: data_typing.TimeIndex,
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> samples.TimeSeriesSamples:
         return self.model.predict(data, horizons, *args, **kwargs)
 
     @staticmethod
-    def hyperparameter_space(*args, **kwargs):
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
         return [
             IntegerParams(name="xgb_max_depth", low=2, high=6),
             IntegerParams(name="xgb_min_child_weight", low=0, high=50),

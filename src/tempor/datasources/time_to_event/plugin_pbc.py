@@ -1,5 +1,6 @@
 import io
 import os
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -15,7 +16,7 @@ from tempor.datasources import datasource
 # TODO: Docstring to explain the dataset.
 @plugins.register_plugin(name="pbc", category="time_to_event", plugin_type="datasource")
 class PBCDataSource(datasource.TimeToEventAnalysisDataSource):
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         self.datafile_path = os.path.join(self.dataset_dir(), "pbc2.csv")
         super().__init__(**kwargs)
 
@@ -30,7 +31,7 @@ class PBCDataSource(datasource.TimeToEventAnalysisDataSource):
             "cf583e598ec9ab92fa5d510a0ca72d46dfe0706f/dsm/datasets/pbc2.csv"
         )
 
-    def load(self, **kwargs) -> dataset.TimeToEventAnalysisDataset:
+    def load(self, **kwargs: Any) -> dataset.TimeToEventAnalysisDataset:
         if os.path.exists(self.datafile_path):
             data = pd.read_csv(self.datafile_path)
         else:

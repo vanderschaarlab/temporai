@@ -1,3 +1,5 @@
+from typing import Any
+
 import numpy as np
 import pandas as pd
 
@@ -20,7 +22,7 @@ class SineDataSource(datasource.OneOffPredictionDataSource):
         static_scale: float = 1.0,
         ts_scale: float = 1.0,
         random_state: int = 42,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Sine data generation.
 
@@ -68,7 +70,7 @@ class SineDataSource(datasource.OneOffPredictionDataSource):
     def dataset_dir() -> None:
         return None
 
-    def load(self, **kwargs) -> dataset.OneOffPredictionDataset:
+    def load(self, **kwargs: Any) -> dataset.OneOffPredictionDataset:
         # Initialize the output.
         np.random.seed(self.random_state)
 

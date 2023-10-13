@@ -11,6 +11,7 @@ from tempor.core import plugins
 from tempor.data import dataset
 from tempor.data.data_typing import FeatureIndex
 from tempor.data.samples import TimeSeriesSamples
+from tempor.methods.core import Params
 from tempor.methods.core._params import CategoricalParams, FloatParams
 from tempor.methods.preprocessing.encoding._base import BaseEncoder
 
@@ -50,7 +51,7 @@ class TimeSeriesOneHotEncoder(BaseEncoder):
     ParamsDefinition = TimeSeriesOneHotEncoderParams
     params: TimeSeriesOneHotEncoderParams  # type: ignore
 
-    def __init__(self, **params) -> None:
+    def __init__(self, **params: Any) -> None:
         """One-hot encoding for the time series data.
 
         See `sklearn.preprocessing.OneHotEncoder` for details.
@@ -110,8 +111,8 @@ class TimeSeriesOneHotEncoder(BaseEncoder):
     def _fit(
         self,
         data: dataset.BaseDataset,
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> Self:
         df_to_use = data.time_series.dataframe()
         if self.features is None:
@@ -121,9 +122,9 @@ class TimeSeriesOneHotEncoder(BaseEncoder):
         self.model.fit(df_to_use)
         return self
 
-    def _transform(self, data: dataset.BaseDataset, *args, **kwargs) -> dataset.BaseDataset:
+    def _transform(self, data: dataset.BaseDataset, *args: Any, **kwargs: Any) -> dataset.BaseDataset:
         df_to_encode = data.time_series.dataframe()[self.features]
-        encoded_arr = self.model.transform(df_to_encode)
+        encoded_arr = self.model.transform(df_to_encode)  # pyright: ignore
         encoded_col_names = self.model.get_feature_names_out()
 
         # Drop old columns.
@@ -138,7 +139,7 @@ class TimeSeriesOneHotEncoder(BaseEncoder):
         return data
 
     @staticmethod
-    def hyperparameter_space(*args, **kwargs):
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
         return [
             CategoricalParams("drop", ["first", "if_binary"]),
             CategoricalParams("handle_unknown", ["error", "ignore", "infrequent_if_exist"]),

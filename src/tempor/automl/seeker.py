@@ -13,12 +13,12 @@ from typing_extensions import Literal, Type, get_args
 
 from tempor import plugin_loader
 from tempor.benchmarks import evaluation
+from tempor.core import pydantic_utils
 from tempor.core.types import PredictiveTaskType
 from tempor.data import data_typing
 from tempor.data.dataset import PredictiveDataset, TimeToEventAnalysisDataset
 from tempor.log import logger
-from tempor.methods.core import BasePredictor
-from tempor.methods.core._params import Params
+from tempor.methods.core import BasePredictor, Params
 
 from ._types import AutoMLCompatibleEstimator, OptimDirection
 from .pipeline_selector import (
@@ -103,8 +103,8 @@ def evaluation_callback_dispatch(
     horizon: Optional[data_typing.TimeIndex],
     raise_exceptions: bool,
     silence_warnings: bool,
-    *args,
-    **kwargs,
+    *args: Any,
+    **kwargs: Any,
 ) -> float:
     """Perform evaluation of ``estimator`` (of task type ``task_type``) on ``dataset``, using the appropriate
     evaluation function from the `tempor.benchmarks.evaluation` module.
@@ -129,6 +129,10 @@ def evaluation_callback_dispatch(
             terminated. Otherwise the exception will be ignored and a dummy value returned.
         silence_warnings (bool, optional):
             Whether to silence warnings raised. Defaults to `False`.
+        args (Any):
+            Positional arguments to pass to the estimator constructor.
+        kwargs (Any):
+            Keyword arguments to pass to the estimator constructor.
 
     Returns:
         float: The mean evaluation metric across the cross-validation folds.
@@ -187,8 +191,8 @@ def evaluation_callback_dispatch(
 
 
 class BaseSeeker(abc.ABC):
-    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
-    def __init__(
+    @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
+    def __init__(  # pylint: disable=unused-argument
         self,
         study_name: str,
         task_type: PredictiveTaskType,
@@ -211,7 +215,7 @@ class BaseSeeker(abc.ABC):
         custom_tuner: Optional[BaseTuner] = None,
         raise_exceptions: bool = True,
         silence_warnings: bool = False,
-        **kwargs,  # pylint: disable=unused-argument
+        **kwargs: Any,
     ) -> None:
         """The base class for an AutoML Seeker, to be derived from by concrete implementations. Provides an AutoML
         interface, in particular, the ``search`` method.
@@ -361,7 +365,7 @@ class BaseSeeker(abc.ABC):
         """
         ...  # pylint: disable=unnecessary-ellipsis
 
-    def _set_up_tuners(self):
+    def _set_up_tuners(self) -> None:
         logger.info(f"Setting up estimators and tuners for study {self.study_name}.")
         for estimator_name, estimator_def in zip(self.estimator_names, self.estimator_defs):
             # Set up estimator.
@@ -480,7 +484,7 @@ class BaseSeeker(abc.ABC):
 
 
 class MethodSeeker(BaseSeeker):
-    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+    @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def __init__(
         self,
         study_name: str,
@@ -503,7 +507,7 @@ class MethodSeeker(BaseSeeker):
         custom_tuner: Optional[BaseTuner] = None,
         raise_exceptions: bool = True,
         silence_warnings: bool = False,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """An AutoML seeker which will search the hyperparameter space of each of the predictor estimators defined in
         ``estimator_names`` for the ``task_type`` task setting.
@@ -548,6 +552,8 @@ class MethodSeeker(BaseSeeker):
                 See `~tempor.automl.seeker.BaseSeeker`.
             silence_warnings (bool, optional):
                 See `~tempor.automl.seeker.BaseSeeker`.
+            kwargs (Any):
+                See `~tempor.automl.seeker.BaseSeeker`.
         """
         estimator_defs = estimator_names
 
@@ -589,7 +595,7 @@ class MethodSeeker(BaseSeeker):
 
 
 class PipelineSeeker(BaseSeeker):
-    @pydantic.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))  # type: ignore [operator]
+    @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def __init__(
         self,
         study_name: str,
@@ -616,7 +622,7 @@ class PipelineSeeker(BaseSeeker):
         custom_tuner: Optional[BaseTuner] = None,
         raise_exceptions: bool = True,
         silence_warnings: bool = False,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """An AutoML seeker which will sample pipelines comprised of:
             - A static imputer (if at lease one candidate in ``static_imputers`` provided)
@@ -682,6 +688,8 @@ class PipelineSeeker(BaseSeeker):
             raise_exceptions (bool, optional):
                 See `~tempor.automl.seeker.BaseSeeker`.
             silence_warnings (bool, optional):
+                See `~tempor.automl.seeker.BaseSeeker`.
+            kwargs (Any):
                 See `~tempor.automl.seeker.BaseSeeker`.
         """
         # Define estimator definitions:
@@ -768,8 +776,9 @@ class PipelineSeeker(BaseSeeker):
         logger.info(f"Selected score {score} for {name} with hyperparameters:\n{hps}")
 
         pipe = estimator_cls.pipeline_from_hps(hps)
+        pipe_as_predictor = cast(BasePredictor, pipe)
 
-        if not isinstance(pipe, BasePredictor):  # pragma: no cover
+        if not isinstance(pipe_as_predictor, BasePredictor):  # pragma: no cover
             # Should not end up here.
             raise RuntimeError(f"Pipeline was not a subclass of {BasePredictor.__name__}")
-        return pipe
+        return pipe_as_predictor
