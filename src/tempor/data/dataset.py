@@ -90,7 +90,7 @@ class BaseDataset(abc.ABC):
                 Data representing treatment (intervention) feature(s) of the samples. Will be initialized as
                 ``{TimeSeries,Static,Event}Samples`` depending on problem setting in the derived class.
                 Defaults to `None`.
-            kwargs (Any):
+            **kwargs (Any):
                 Additional keyword arguments to be passed to the derived class's ``_init_predictive`` method.
         """
         self._time_series = samples.TimeSeriesSamples(time_series)
@@ -238,7 +238,7 @@ class BaseDataset(abc.ABC):
 
         Args:
             splitter (Splitter): A `sklearn` splitter.
-            kwargs (Any): Additional keyword arguments to be passed to the ``splitter``'s ``split`` method.
+            **kwargs (Any): Additional keyword arguments to be passed to the ``splitter``'s ``split`` method.
 
         Yields:
             Generator[Tuple[Self, Self], None, None]: ``(dataset_train, dataset_test)`` for each split.

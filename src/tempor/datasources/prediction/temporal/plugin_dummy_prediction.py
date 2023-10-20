@@ -45,7 +45,7 @@ class DummyTemporalPredictionDataSource(datasource.TemporalPredictionDataSource)
                 rather than categorical. Defaults to `None`.
             random_state (int, optional):
                 Random state to use. Defaults to ``12345``.
-            kwargs (Any):
+            **kwargs (Any):
                 Any additional keyword arguments will be passed to `~tempor.datasources.DataSource`.
         """
         super().__init__(**kwargs)

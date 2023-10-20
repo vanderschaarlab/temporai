@@ -600,12 +600,12 @@ class PluginLoader:
         Args:
             name (~tempor.core.plugin.plugin_typing.PluginFullName):
                 Plugin full name including all (sub)categories, of form ``'my_category.my_subcategory.my_plugin'``
-            args (Any):
+            *args (Any):
                 Arguments to pass to the plugin initializer.
             plugin_type (~tempor.core.plugin.plugin_typing.PluginTypeArg, optional):
                 Plugin type. If left as `None`, default plugin type is assumed. ``plugin_type`` must correctly \
                 correspond to the category implied by plugin full name. Defaults to `None`.
-            kwargs (Any):
+            **kwargs (Any):
                 Keyword arguments to pass to the plugin initializer.
 
         Returns:

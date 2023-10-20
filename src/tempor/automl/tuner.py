@@ -37,7 +37,18 @@ class EvaluationCallback(Protocol):
     def __call__(
         self, estimator: Type[BasePredictor], dataset: PredictiveDataset, *args: Any, **kwargs: Any
     ) -> float:  # pragma: no cover
-        ...
+        """Evaluation callback call.
+
+        Args:
+            estimator (Type[BasePredictor]): Any predictor.
+            dataset (PredictiveDataset): Any predictive dataset.
+            *args (Any): Any additional arguments.
+            **kwargs (Any): Any additional keyword arguments.
+
+        Returns:
+            float: Evaluation value/score.
+        """
+        ...  # pylint: disable=unnecessary-ellipsis
 
 
 class BaseTuner(abc.ABC):
