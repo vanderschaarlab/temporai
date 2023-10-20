@@ -21,6 +21,9 @@ __location__ = os.path.dirname(__file__)
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.join(__location__, "../src"))
 
+# Any custom sphinx extensions for TemporAI live in docs/custom-sphinx-ext/:
+sys.path.insert(0, os.path.join(__location__, "custom-sphinx-ext"))
+
 # -- Run sphinx-apidoc -------------------------------------------------------
 # This hack is necessary since RTD does not issue `sphinx-apidoc` before running
 # `sphinx-build -b html . _build/html`. See Issue:
@@ -77,6 +80,8 @@ extensions = [
     # "sphinx_immaterial.apidoc.python.apigen"
     # ^ Enable this if wishing to use https://jbms.github.io/sphinx-immaterial/apidoc/python/apigen.html
     "nbsphinx",
+    # --- Custom extensions from here ---
+    "sphinx-zeta-suppress",  # More specific warnings suppression.
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -404,6 +409,37 @@ latex_documents = [("index", "user_guide.tex", "TemporAI Documentation", "Evgeny
 
 # If false, no module index is generated.
 # latex_domain_indices = True
+
+
+# `sphinx-zeta-suppress` (more specific warnings suppression) configuration.
+#
+# See:
+# - https://sphinx-zeta-suppress.readthedocs.io/
+#
+# See also:
+# - https://github.com/picnixz/sphinx-zeta-suppress
+# - https://github.com/sphinx-doc/sphinx/issues/11325
+# Note that since there is no PyPI package for sphinx-zeta-suppress, we add its python module as a custom extension,
+# see: docs/custom-sphinx-ext/sphinx-zeta-suppress.py.
+
+zeta_suppress_protect = [
+    "sphinx_immaterial"
+    # `sphinx-zeta-suppress` is not compatible with `sphinx_immaterial`. It will throw an error when registering the
+    # filters (`_setup_filters` function). However, the problem can be overcome by adding `sphinx_immaterial` to the
+    # `zeta_suppress_protect` list.
+    # Note we can still suppress warnings specific to `sphinx_immaterial` by adding it to
+    # the `zeta_suppress_records` list below.
+]
+
+zeta_suppress_records = [
+    # The following warnings caused ultimately by sphinx_immaterial are caused by having *args/**kwargs in the
+    # docstrings. We want to have those in docstrings, so we suppress these warnings.
+    ["sphinx_immaterial", r".*Parameter name '\*args'.*"],
+    ["sphinx_immaterial", r".*Parameter name '\*\*kwargs'.*"],
+]
+
+# `sphinx-zeta-suppress` (more specific warnings suppression) configuration [end].
+
 
 # -- External mapping --------------------------------------------------------
 python_version = ".".join(map(str, sys.version_info[0:2]))
