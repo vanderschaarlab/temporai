@@ -56,6 +56,8 @@ class BaseTuner(abc.ABC):
                 Study name.
             direction (OptimDirection):
                 Optimization direction (`"minimize"` or `"maximize"`).
+            **kwargs (Any):
+                Currently unused.
         """
         self.study_name = study_name
         self.direction = direction
@@ -86,6 +88,8 @@ class BaseTuner(abc.ABC):
                 If `True`, a trial will be run with default parameters (hyperparameters passed to ``__init__`` as an
                 empty dictionary). This will be returned as the zeroth item in ``scores`` and ``params``. If `False`,
                 this will be skipped. Defaults to `True`.
+            **kwargs (Any):
+                Currently unused.
 
         Returns:
             Tuple[List[float], List[Dict]]:
@@ -124,6 +128,8 @@ class OptunaTuner(BaseTuner):
                 An `optuna` pruner (passed to `optuna.create_study`). Defaults to `None`.
             study_load_if_exists (bool, optional):
                 The `load_if_exists` parameter (passed to `optuna.create_study`). Defaults to `False`.
+            **kwargs (Any):
+                Currently unused.
         """
         super().__init__(
             study_name=study_name,
@@ -183,8 +189,11 @@ class OptunaTuner(BaseTuner):
                 this will be skipped. Defaults to `True`.
             optimize_kwargs (Optional[Dict[str, Any]], optional):
                 Keyword arguments to pass to ``study.optimize``. Defaults to `None`.
+            **kwargs (Any):
+                Currently unused.
 
-        Tuple[List[float], List[Dict]]:
+        Returns:
+            Tuple[List[float], List[Dict]]:
                 ``(scores, params)`` tuple, containing a list of scores for the tuning runs and a list of dictionaries\
                 containing the parameters for each corresponding tuning run.
         """

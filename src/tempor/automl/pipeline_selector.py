@@ -1,3 +1,5 @@
+"""Module with pipeline selector helper class for AutoML."""
+
 from typing import Any, Dict, List, Optional, Tuple, Type
 
 import optuna
@@ -140,11 +142,11 @@ class PipelineSelector:
         Parameter names are customized to be able to differentiate pipeline stages (see ``format_hps_names``).
 
         Args:
-            args (Any):
+            *args (Any):
                 Arguments to be passed on to the ``hyperparameter_space`` methods of the pipeline steps.
             override (Optional[List[Params]], optional):
                 Hyperparameter space override for the final predictive step of the pipeline. Defaults to `None`.
-            kwargs (Any):
+            **kwargs (Any):
                 Keyword arguments to be passed on to the ``hyperparameter_space`` methods of the pipeline steps.
 
         Returns:
@@ -174,8 +176,12 @@ class PipelineSelector:
         """The customized ``sample_hyperparameters`` implementation. Uses the customized ``hyperparameter_space``.
 
         Args:
+            *args (Any):
+                Arguments to be passed on to the ``hyperparameter_space`` methods of the pipeline steps.
             override (Optional[List[Params]], optional):
                 Hyperparameter space override for the final predictive step of the pipeline. Defaults to `None`.
+            **kwargs (Any):
+                Keyword arguments to be passed on to the ``hyperparameter_space`` methods of the pipeline steps.
 
         Returns:
             Dict[str, Any]: Sampled hyperparameters dictionary.

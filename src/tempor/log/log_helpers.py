@@ -13,6 +13,9 @@ def exc_to_log(message: str = "", reraise: bool = True) -> Generator:
     Args:
         message (str, optional): Log message. Defaults to "".
         reraise (bool, optional): Whether to reraise the exception. Defaults to True.
+
+    Yields:
+        Generator: Context manager.
     """
     try:
         yield
