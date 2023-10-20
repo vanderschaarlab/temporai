@@ -1,3 +1,5 @@
+"""Module for `pydantic`-related utilities."""
+
 from typing import Any, Callable, Type, TypeVar, cast
 
 import pydantic
@@ -21,6 +23,14 @@ from typing_extensions import ParamSpec
 
 
 def is_pydantic_dataclass(cls: Type) -> bool:
+    """A helper function to check if a class is a `pydantic` dataclass.
+
+    Args:
+        cls (Type): Class.
+
+    Returns:
+        bool: Whether the class is a `pydantic` dataclass.
+    """
     if Version(pydantic.__version__) < Version("2.0.0"):  # pragma: no cover
         return hasattr(cls, "__dataclass__")
     else:
@@ -78,6 +88,10 @@ def validate_arguments(*args: Any, **kwargs: Any) -> Callable[[Callable[P, T]], 
     See:
     - https://stackoverflow.com/a/74080156
     - https://docs.python.org/3/library/typing.html#typing.ParamSpec
+
+    Args:
+        *args (Any): Positional arguments to pass to ``pydantic.validate_arguments``.
+        **kwargs (Any): Keyword arguments to pass to ``pydantic.validate_arguments``.
 
     Returns:
         Callable[[Callable[P, T]], Callable[P, T]]: The updated ``pydantic.validate_arguments`` decorator.

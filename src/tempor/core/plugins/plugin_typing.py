@@ -1,3 +1,5 @@
+"""Typing definitions for plugin core functionality."""
+
 from typing import Union
 
 from typing_extensions import Literal, get_args

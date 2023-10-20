@@ -1,10 +1,21 @@
+"""Utility functions for TemporAI core."""
+
 from typing import Any, Dict, Iterable, List, Tuple, Type
 
 from typing_extensions import Literal, get_args
 
 
 def get_class_full_name(o: object) -> str:
-    # See: https://stackoverflow.com/a/2020083
+    """Get the full name of a class.
+
+    See: https://stackoverflow.com/a/2020083.
+
+    Args:
+        o (object): The object to get the class full name of.
+
+    Returns:
+        str: The full name of the class.
+    """
     class_ = o.__class__
     module = class_.__module__
     if module == "builtins":
@@ -19,13 +30,31 @@ def get_class_full_name(o: object) -> str:
 
 class RichReprStrPassthrough:
     def __init__(self, string: str) -> None:
+        """A pass-through class for `rich` ``__repr__`` strings. Yields the ``string`` in its ``__repr__``.
+
+        Args:
+            string (str): The string to pass through.
+        """
         self.string = string
 
     def __repr__(self) -> str:
+        """The ``__repr__`` method, will simply return the ``string`` provided at initialization.
+
+        Returns:
+            str: String to return.
+        """
         return self.string
 
 
 def is_iterable(o: object) -> bool:
+    """Check if an object is an iterable.
+
+    Args:
+        o (object): The object to check.
+
+    Returns:
+        bool: Whether the object is an iterable.
+    """
     is_iterable_ = True
     try:
         iter(o)  # type: ignore[call-overload]
@@ -37,6 +66,17 @@ def is_iterable(o: object) -> bool:
 def ensure_literal_matches_dict_keys(
     literal: Any, d: Dict[str, Any], literal_name: str = "literal", dict_name: str = "dictionary"
 ) -> None:
+    """Check that the args of a literal match the keys of a dictionary.
+
+    Args:
+        literal (Any): A literal.
+        d (Dict[str, Any]): A dictionary.
+        literal_name (str, optional): The name of the literal, for exception description. Defaults to ``"literal"``.
+        dict_name (str, optional): The name of the dictionary, for exception description. Defaults to ``"dictionary"``.
+
+    Raises:
+        TypeError: Raised if the args of the literal do not match the keys of the dictionary.
+    """
     lits = set(get_args(literal))
     keys = set(d.keys())
     if lits != keys:
@@ -47,6 +87,9 @@ def ensure_literal_matches_dict_keys(
 
 
 PreferArgOrKwarg = Literal["arg", "kwarg", "exception"]
+"""Literal type for ``prefer`` argument in ``get_from_args_or_kwargs``.
+One of ``"arg"``, ``"kwarg"``, or ``"exception"``.
+"""
 
 
 def get_from_args_or_kwargs(

@@ -1,3 +1,5 @@
+"""This module contains the core plugin functionality of TemporAI."""
+
 import glob
 import importlib
 import importlib.abc
@@ -35,13 +37,13 @@ def parse_plugin_type(
     as that is a reserved value.
 
     Args:
-        plugin_type (~tempor.core.plugin.plugin_typing.PluginTypeArg):
+        plugin_type (plugin_typing.PluginTypeArg):
             Plugin type.
-        must_be_one_of (List[str]):
+        must_be_one_of (Optional[List[str]]):
             List of plugin types that ``plugin_type`` must be one of.
 
     Returns:
-        ~tempor.core.plugin.plugin_typing.PluginTypeArg:
+        plugin_typing.PluginTypeArg:
             Default plugin type if ``plugin_type`` is ``None``, otherwise ``plugin_type``.
     """
     if plugin_type == plugin_typing.ALL_PLUGIN_TYPES_INDICATOR:
@@ -60,10 +62,9 @@ def create_fqn(
     `[plugin_type].category` respectively.
 
     Args:
-        suffix (Union[~tempor.core.plugin.plugin_typing.PluginCategory, \
-            ~tempor.core.plugin.plugin_typing.PluginFullName]):
+        suffix (Union[plugin_typing.PluginCategory, plugin_typing.PluginFullName]):
             Plugin category or plugin full name.
-        plugin_type (~tempor.core.plugin.plugin_typing.PluginTypeArg):
+        plugin_type (plugin_typing.PluginTypeArg):
             Plugin type.
 
     Returns:
@@ -80,13 +81,13 @@ def filter_list_by_plugin_type(
     """Filter a list of plugin FQNs by plugin type.
 
     Args:
-        lst (List[~tempor.core.plugin.plugin_typing._PluginFqn]):
+        lst (List[plugin_typing._PluginFqn]):
             List of plugin FQNs.
-        plugin_type (~tempor.core.plugin.plugin_typing.PluginTypeArg):
+        plugin_type (plugin_typing.PluginTypeArg):
             Plugin type.
 
     Returns:
-        List[~tempor.core.plugin.plugin_typing.PluginFullName]:
+        List[plugin_typing.PluginFullName]:
             Filtered list which will only include FQNs with the specified ``plugin_type``.
     """
     return [x for x in lst if x.split(".")[0] == f"[{plugin_type}]"]
@@ -98,13 +99,13 @@ def filter_dict_by_plugin_type(
     """Filter a dictionary with plugin FQN keys by plugin type.
 
     Args:
-        d (Dict[~tempor.core.plugin.plugin_typing._PluginFqn, Any]):
+        d (Dict[plugin_typing._PluginFqn, Any]):
             Dictionary to filter.
-        plugin_type (~tempor.core.plugin.plugin_typing.PluginTypeArg):
+        plugin_type (plugin_typing.PluginTypeArg):
             Plugin type.
 
     Returns:
-        Dict[~tempor.core.plugin.plugin_typing.PluginFullName, Any]:
+        Dict[plugin_typing.PluginFullName, Any]:
             Filtered dictionary which will only include items where FQN keys match the specified ``plugin_type``.
     """
     return {k: v for k, v in d.items() if k.split(".")[0] == f"[{plugin_type}]"}
@@ -122,7 +123,7 @@ def _parse_fqn_format(fqn: str) -> Tuple[plugin_typing.PluginTypeArg, str]:
             Raised if the FQN is of incorrect format, that is, doesn't begin with ``[<plugin_type>].<...>``.
 
     Returns:
-        Tuple[~tempor.core.plugin.plugin_typing.PluginTypeArg, str]:
+        Tuple[plugin_typing.PluginTypeArg, str]:
             Plugin type, remainder (``category`` or ``category.name``).
     """
     first_element = fqn.split(".")[0]
@@ -139,11 +140,11 @@ def remove_plugin_type_from_fqn(
     """Remove the plugin type part of a plugin FQN or category FQN.
 
     Args:
-        fqn (Union[~tempor.core.plugin.plugin_typing._PluginCategoryFqn, ~tempor.core.plugin.plugin_typing._PluginFqn]):
+        fqn (Union[plugin_typing._PluginCategoryFqn, plugin_typing._PluginFqn]):
             Plugin FQN of plugin category FQN.
 
     Returns:
-        Union[~tempor.core.plugin.plugin_typing.PluginCategory, ~tempor.core.plugin.plugin_typing.PluginFullName]:
+        Union[plugin_typing.PluginCategory, plugin_typing.PluginFullName]:
             The FQN with the plugin type part removed.
     """
     _, remainder = _parse_fqn_format(fqn)
@@ -156,11 +157,11 @@ def get_plugin_type_from_fqn(
     """Get the plugin type part of a plugin FQN or category FQN.
 
     Args:
-        fqn (Union[~tempor.core.plugin.plugin_typing._PluginCategoryFqn, ~tempor.core.plugin.plugin_typing._PluginFqn]):
+        fqn (Union[plugin_typing._PluginCategoryFqn, plugin_typing._PluginFqn]):
             Plugin FQN of plugin category FQN.
 
     Returns:
-        ~tempor.core.plugin.plugin_typing.PluginTypeArg: The plugin type.
+        plugin_typing.PluginTypeArg: The plugin type.
     """
     plugin_type, _ = _parse_fqn_format(fqn)
     return plugin_type
@@ -170,8 +171,6 @@ def get_plugin_type_from_fqn(
 
 
 class Plugin:
-    """The base class that all plugins must inherit from."""
-
     name: ClassVar[plugin_typing.PluginName] = PLUGIN_NAME_NOT_SET
     """Plugin name, such as ``'my_nn_classifier'``. Must be set by the plugin class using ``@register_plugin``."""
     category: ClassVar[plugin_typing.PluginCategory] = PLUGIN_CATEGORY_NOT_SET
@@ -183,35 +182,8 @@ class Plugin:
     else will set the default plugin type.
     """
 
-    @classmethod
-    def full_name(cls) -> plugin_typing.PluginFullName:
-        """The full name of the plugin with its category: ``category.subcategory.name``.
-        There may be 0 or more subcategories.
-
-        Returns:
-            ~tempor.core.plugin.plugin_typing.PluginFullName: Plugin full name.
-        """
-        return f"{cls.category}.{cls.name}"
-
-    @classmethod
-    def _fqn(cls) -> plugin_typing._PluginFqn:
-        """The fully-qualified name of the plugin with its plugin type: ``[plugin_type].category.subcategory.name``
-
-        Returns:
-            ~tempor.core.plugin.plugin_typing._PluginFqn: Plugin fully-qualified name.
-        """
-        return f"{create_fqn(cls.category, cls.plugin_type)}.{cls.name}"
-
-    @classmethod
-    def _category_fqn(cls) -> plugin_typing._PluginCategoryFqn:
-        """The fully-qualified name of the plugin's category: ``[plugin_type].category.subcategory``
-
-        Returns:
-            ~tempor.core.plugin.plugin_typing._PluginCategoryFqn: Plugin category fully-qualified name.
-        """
-        return f"{create_fqn(cls.category, cls.plugin_type)}"
-
     def __init__(self) -> None:
+        """The base class that all plugins must inherit from."""
         if self.name == PLUGIN_NAME_NOT_SET:
             raise ValueError(f"Plugin {self.__class__.__name__} `name` was not set, use @{register_plugin.__name__}")
         if self.category == PLUGIN_CATEGORY_NOT_SET:
@@ -222,6 +194,34 @@ class Plugin:
             raise ValueError(
                 f"Plugin {self.__class__.__name__} `plugin_type` was not set, use @{register_plugin.__name__}"
             )
+
+    @classmethod
+    def full_name(cls) -> plugin_typing.PluginFullName:
+        """The full name of the plugin with its category: ``category.subcategory.name``.
+        There may be 0 or more subcategories.
+
+        Returns:
+            plugin_typing.PluginFullName: Plugin full name.
+        """
+        return f"{cls.category}.{cls.name}"
+
+    @classmethod
+    def _fqn(cls) -> plugin_typing._PluginFqn:
+        """The fully-qualified name of the plugin with its plugin type: ``[plugin_type].category.subcategory.name``
+
+        Returns:
+            plugin_typing._PluginFqn: Plugin fully-qualified name.
+        """
+        return f"{create_fqn(cls.category, cls.plugin_type)}.{cls.name}"
+
+    @classmethod
+    def _category_fqn(cls) -> plugin_typing._PluginCategoryFqn:
+        """The fully-qualified name of the plugin's category: ``[plugin_type].category.subcategory``
+
+        Returns:
+            plugin_typing._PluginCategoryFqn: Plugin category fully-qualified name.
+        """
+        return f"{create_fqn(cls.category, cls.plugin_type)}"
 
 
 # Important dicts that store plugin information:
@@ -241,13 +241,13 @@ def register_plugin_category(
     will be used.
 
     Args:
-        category (~tempor.core.plugin.plugin_typing.PluginCategory):
+        category (plugin_typing.PluginCategory):
             Plugin category, dot-separated, with optional subcategories, \
             such as ``'prediction.one_off.classification'``.
         expected_class (Type):
             The expected plugin class for this category. The plugin class must be a subclass of \
             this class. Note that this class must itself be a subclass of ``Plugin``.
-        plugin_type (~tempor.core.plugin.plugin_typing.PluginTypeArg, optional):
+        plugin_type (plugin_typing.PluginTypeArg, optional):
             Plugin type to register the category under. Different plugin types should be used to indicate different \
             domains of your code (e.g. methods vs metrics vs datasets). Defaults to `None`.
 
@@ -285,12 +285,15 @@ def register_plugin(
     Args:
         name (str):
             Plugin name, such as ``'my_nn_classifier'``.
-        category (~tempor.core.plugin.plugin_typing.PluginCategory):
+        category (plugin_typing.PluginCategory):
             Plugin category, dot-separated, with optional subcategories, such as \
             ``'prediction.one_off.classification'``.
-        plugin_type (~tempor.core.plugin.plugin_typing.PluginTypeArg, optional):
+        plugin_type (plugin_typing.PluginTypeArg, optional):
             Plugin type of the category. If left as `None`, default plugin type is assumed. ``plugin_type`` must \
             correctly correspond to the ``category`` being specified. Defaults to `None`.
+
+    Returns:
+        Callable[[Callable[P, T]], Callable[P, T]]: Decorated class.
     """
 
     def _class_decorator(cls: Callable[P, T]) -> Callable[P, T]:
@@ -360,11 +363,17 @@ def register_plugin(
     return _class_decorator
 
 
+ListCategoriesReturn = Union[
+    Dict[plugin_typing.PluginFullName, Type[Plugin]],
+    Dict[plugin_typing.PluginType, Dict[plugin_typing.PluginFullName, Type[Plugin]]],
+]
+"""Type alias for the return type of ``list_categories``."""
+
+
 # TODO: Consider whether to enforce common base class across plugin_type/category.
 class PluginLoader:
-    """A class to load plugins. Provides functionality to list and get plugins."""
-
     def __init__(self) -> None:
+        """A class to load plugins. Provides functionality to list and get plugins."""
         self._refresh()
 
     def _refresh(self) -> None:
@@ -421,7 +430,7 @@ class PluginLoader:
         with plugin type keys.
 
         Args:
-            plugin_type (~tempor.core.plugin.plugin_typing.PluginTypeArg, optional):
+            plugin_type (plugin_typing.PluginTypeArg, optional):
                 Plugin type for which to list. Use default category if `None`. Defaults to `None`.
 
         Returns:
@@ -445,12 +454,11 @@ class PluginLoader:
         with plugin type keys.
 
         Args:
-            plugin_type (~tempor.core.plugin.plugin_typing.PluginTypeArg, optional):
+            plugin_type (plugin_typing.PluginTypeArg, optional):
                 Plugin type for which to list. Use default category if `None`. Defaults to `None`.
 
         Returns:
-            Union[List[~tempor.core.plugin.plugin_typing.PluginFullName], \
-            Dict[str, List[~tempor.core.plugin.plugin_typing.PluginFullName]]]:
+            Union[List[plugin_typing.PluginFullName], Dict[str, List[plugin_typing.PluginFullName]]]:
                 A list as described above (``List[PluginFullName]``) if ``plugin_type`` is not ``"all"``. \
                 Otherwise a nested dictionary with plugin type keys and such lists as values \
                 (``Dict[str, List[PluginFullName]]]``).
@@ -470,7 +478,7 @@ class PluginLoader:
         with plugin type keys.
 
         Args:
-            plugin_type (PluginType, optional):
+            plugin_type (plugin_typing.PluginTypeArg, optional):
                 Plugin type for which to list. Use default category if `None`. Defaults to `None`.
 
         Returns:
@@ -486,12 +494,7 @@ class PluginLoader:
         categories_filtered_by_type = filter_dict_by_plugin_type(d=PLUGIN_CATEGORY_REGISTRY, plugin_type=plugin_type)
         return {remove_plugin_type_from_fqn(k): v for k, v in categories_filtered_by_type.items()}
 
-    def list_categories(
-        self, plugin_type: plugin_typing.PluginTypeArg = None
-    ) -> Union[
-        Dict[plugin_typing.PluginFullName, Type[Plugin]],
-        Dict[plugin_typing.PluginType, Dict[plugin_typing.PluginFullName, Type[Plugin]]],
-    ]:
+    def list_categories(self, plugin_type: plugin_typing.PluginTypeArg = None) -> ListCategoriesReturn:
         """List all plugin categories of ``plugin_type`` as a dictionary, where the keys are the plugin category names
         (including optional subcategories) and the values are the **expected plugin classes** for that category.
 
@@ -499,13 +502,11 @@ class PluginLoader:
         with plugin type keys.
 
         Args:
-            plugin_type (~tempor.core.plugin.plugin_typing.PluginTypeArg, optional):
+            plugin_type (plugin_typing.PluginTypeArg, optional):
                 Plugin type for which to list. Use default category if `None`. Defaults to `None`.
 
         Returns:
-            Union[Dict[~tempor.core.plugin.plugin_typing.PluginFullName, Type[Plugin]], \
-            Dict[~tempor.core.plugin.plugin_typing.PluginType, \
-            Dict[~tempor.core.plugin.plugin_typing.PluginFullName, Type[Plugin]]]]:
+            ListCategoriesReturn:
                 A dictionary as described above (``Dict[PluginFullName, Type[Plugin]]``) if ``plugin_type`` is \
                 not ``"all"``. Otherwise a nested dictionary with plugin type keys and such dictionaries as values \
                 (``Dict[PluginType, Dict[PluginFullName, Type[Plugin]]]``).
@@ -516,7 +517,7 @@ class PluginLoader:
         """List all plugin types.
 
         Returns:
-            List[str]: A list of plugin types.
+            List[plugin_typing.PluginType]: A list of plugin types.
         """
         self._refresh()
         return core_utils.unique_in_order_of_appearance(
@@ -565,7 +566,7 @@ class PluginLoader:
     ) -> Type:
         ...  # pragma: co cover
 
-    def get(self, name: plugin_typing.PluginFullName, *args: Any, **kwargs: Any) -> Any:
+    def get(self, name: plugin_typing.PluginFullName, *args: Any, **kwargs: Any) -> Any:  # noqa: DOC102, DOC103
         """Get a plugin by its full name (including category, i.e. of form
         ``'my_category.my_subcategory.my_plugin'``). Use ``*args`` and ``**kwargs`` to pass arguments to
         the plugin initializer. The returned object is an instance of the plugin class. If the plugin is not of the
@@ -598,11 +599,11 @@ class PluginLoader:
             )
 
         Args:
-            name (~tempor.core.plugin.plugin_typing.PluginFullName):
+            name (plugin_typing.PluginFullName):
                 Plugin full name including all (sub)categories, of form ``'my_category.my_subcategory.my_plugin'``
             *args (Any):
                 Arguments to pass to the plugin initializer.
-            plugin_type (~tempor.core.plugin.plugin_typing.PluginTypeArg, optional):
+            plugin_type (plugin_typing.PluginTypeArg, optional):
                 Plugin type. If left as `None`, default plugin type is assumed. ``plugin_type`` must correctly \
                 correspond to the category implied by plugin full name. Defaults to `None`.
             **kwargs (Any):
@@ -624,9 +625,9 @@ class PluginLoader:
         ``plugin_type``.
 
         Args:
-            name (~tempor.core.plugin.plugin_typing.PluginFullName):
+            name (plugin_typing.PluginFullName):
                 Plugin full name including all (sub)categories, of form ``'my_category.my_subcategory.my_plugin'``
-            plugin_type (~tempor.core.plugin.plugin_typing.PluginTypeArg, optional):
+            plugin_type (plugin_typing.PluginTypeArg, optional):
                 Plugin type. If left as `None`, default plugin type is assumed. ``plugin_type`` must correctly \
                 correspond to the category implied by plugin full name. Defaults to `None`.
 
