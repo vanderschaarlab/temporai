@@ -11,8 +11,8 @@ from typing_extensions import Protocol, runtime_checkable
 from tempor.core import pydantic_utils
 from tempor.data.dataset import PredictiveDataset
 from tempor.log import logger
-from tempor.methods.core import Params
 from tempor.methods.core._base_predictor import BasePredictor
+from tempor.methods.core.params import Params
 
 from ._types import AutoMLCompatibleEstimator, OptimDirection
 from .pipeline_selector import PipelineSelector

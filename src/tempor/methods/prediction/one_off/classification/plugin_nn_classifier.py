@@ -6,8 +6,7 @@ from typing_extensions import Self, get_args
 
 from tempor.core import plugins
 from tempor.data import dataset, samples
-from tempor.methods.core import Params
-from tempor.methods.core._params import CategoricalParams, FloatParams, IntegerParams
+from tempor.methods.core.params import CategoricalParams, FloatParams, IntegerParams, Params
 from tempor.methods.prediction.one_off.classification import BaseOneOffClassifier
 from tempor.models import utils as model_utils
 from tempor.models.constants import Nonlin, Samp

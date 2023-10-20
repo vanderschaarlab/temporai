@@ -12,8 +12,7 @@ from xgbse.converters import convert_to_structured
 
 from tempor.core import plugins
 from tempor.data import data_typing, dataset, samples
-from tempor.methods.core import Params
-from tempor.methods.core._params import CategoricalParams, FloatParams, IntegerParams
+from tempor.methods.core.params import CategoricalParams, FloatParams, IntegerParams, Params
 from tempor.methods.time_to_event import BaseTimeToEventAnalysis
 from tempor.models.constants import DEVICE
 from tempor.models.ddh import DynamicDeepHitModel, OutputMode, RnnMode

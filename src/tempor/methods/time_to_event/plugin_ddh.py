@@ -5,7 +5,7 @@ from typing_extensions import Self
 
 from tempor.core import plugins
 from tempor.data import data_typing, dataset, samples
-from tempor.methods.core import Params
+from tempor.methods.core.params import Params
 from tempor.methods.time_to_event import BaseTimeToEventAnalysis
 from tempor.models.ddh import DynamicDeepHitModel, OutputMode, RnnMode
 

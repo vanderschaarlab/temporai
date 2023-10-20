@@ -14,7 +14,7 @@ from tempor.automl import OptimDirection, tuner
 from tempor.benchmarks import evaluation
 from tempor.data.dataset import PredictiveDataset, TimeToEventAnalysisDataset
 from tempor.methods.core._base_predictor import BasePredictor
-from tempor.methods.core._params import IntegerParams
+from tempor.methods.core.params import IntegerParams
 
 # To ignore warnings in parametrization:
 warnings.filterwarnings("ignore", category=optuna.exceptions.ExperimentalWarning)

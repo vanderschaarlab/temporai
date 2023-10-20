@@ -6,8 +6,7 @@ from clairvoyance2.treatment_effects.synctwin import SyncTwinRegressor
 from tempor.core import plugins
 from tempor.data import dataset, samples
 from tempor.data.clv2conv import tempor_dataset_to_clairvoyance2_dataset
-from tempor.methods.core import Params
-from tempor.methods.core._params import FloatParams, IntegerParams
+from tempor.methods.core.params import FloatParams, IntegerParams, Params
 from tempor.methods.treatments.one_off._base import BaseOneOffTreatmentEffects
 
 

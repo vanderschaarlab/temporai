@@ -5,7 +5,7 @@ from typing_extensions import Self
 from tempor.core import plugins
 from tempor.data import dataset
 from tempor.data.samples import TimeSeriesSamples
-from tempor.methods.core import Params
+from tempor.methods.core.params import Params
 from tempor.methods.preprocessing.imputation._base import BaseImputer
 
 

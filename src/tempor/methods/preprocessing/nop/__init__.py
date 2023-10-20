@@ -5,7 +5,7 @@ from typing_extensions import Self
 import tempor.methods.core as methods_core
 from tempor.core import plugins
 from tempor.data import dataset
-from tempor.methods.core import Params
+from tempor.methods.core.params import Params
 
 plugins.register_plugin_category("preprocessing.nop", methods_core.BaseTransformer)
 

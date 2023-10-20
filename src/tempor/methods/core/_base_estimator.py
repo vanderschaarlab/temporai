@@ -13,7 +13,7 @@ from tempor.core.plugins import Plugin
 from tempor.data import dataset
 from tempor.log import logger
 
-from ._params import Params
+from .params import Params
 
 
 @dataclasses.dataclass

@@ -7,8 +7,7 @@ from typing_extensions import Self
 
 import tempor.exc
 from tempor.data import data_typing, dataset, samples
-from tempor.methods.core import Params
-from tempor.methods.core._params import CategoricalParams, FloatParams, IntegerParams
+from tempor.methods.core.params import CategoricalParams, FloatParams, IntegerParams, Params
 from tempor.models import utils
 from tempor.models.ddh import DynamicDeepHitModel, output_modes, rnn_modes
 

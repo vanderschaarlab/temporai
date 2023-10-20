@@ -6,7 +6,7 @@ from typing_extensions import Self, get_args
 from tempor.core import plugins
 from tempor.data import dataset
 from tempor.data.samples import StaticSamples
-from tempor.methods.core._params import CategoricalParams, Params
+from tempor.methods.core.params import CategoricalParams, Params
 from tempor.methods.preprocessing.imputation._base import BaseImputer, TabularImputerType
 
 from ..hyperimpute_utils import monkeypatch_hyperimpute_logger

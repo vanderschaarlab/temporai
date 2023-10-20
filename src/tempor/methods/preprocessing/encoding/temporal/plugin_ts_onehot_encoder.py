@@ -11,8 +11,7 @@ from tempor.core import plugins
 from tempor.data import dataset
 from tempor.data.data_typing import FeatureIndex
 from tempor.data.samples import TimeSeriesSamples
-from tempor.methods.core import Params
-from tempor.methods.core._params import CategoricalParams, FloatParams
+from tempor.methods.core.params import CategoricalParams, FloatParams, Params
 from tempor.methods.preprocessing.encoding._base import BaseEncoder
 
 # TODO: Factor out code for applying sklearn transformer to arbitrary subset of columns.

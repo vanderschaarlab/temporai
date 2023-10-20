@@ -8,7 +8,7 @@ from typing_extensions import Self
 from tempor import plugin_loader
 from tempor.data import dataset
 from tempor.log import logger
-from tempor.methods.core import Params
+from tempor.methods.core.params import Params
 from tempor.methods.prediction.one_off.classification import BaseOneOffClassifier
 from tempor.methods.prediction.one_off.regression import BaseOneOffRegressor
 from tempor.methods.prediction.temporal.classification import BaseTemporalClassifier

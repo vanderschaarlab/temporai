@@ -18,7 +18,8 @@ from tempor.core.types import PredictiveTaskType
 from tempor.data import data_typing
 from tempor.data.dataset import PredictiveDataset, TimeToEventAnalysisDataset
 from tempor.log import logger
-from tempor.methods.core import BasePredictor, Params
+from tempor.methods.core import BasePredictor
+from tempor.methods.core.params import Params
 
 from ._types import AutoMLCompatibleEstimator, OptimDirection
 from .pipeline_selector import (
