@@ -340,7 +340,7 @@ def kaplan_meier_estimator(
 class SurvivalFunctionEstimator(sklearn.base.BaseEstimator):  # type: ignore [misc]
     def __init__(self) -> None:
         """Kaplan-Meier estimate of the survival function."""
-        pass
+        pass  # pylint: disable=unnecessary-pass
 
     def fit(self, y: np.ndarray) -> Self:
         """Estimate survival distribution from training data.
