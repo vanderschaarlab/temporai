@@ -1,3 +1,5 @@
+"""Module with helpers for logging."""
+
 from contextlib import contextmanager
 from typing import Generator
 
