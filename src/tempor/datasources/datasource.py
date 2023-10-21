@@ -1,3 +1,5 @@
+"""Module defining the data source classes."""
+
 # pylint: disable=unnecessary-ellipsis
 
 import abc
@@ -30,7 +32,7 @@ class DataSource(plugins.Plugin, abc.ABC):
         """Initializer for `DataSource`.
 
         Args:
-            kwargs: Any additional keyword arguments for the :class:`DataSource`.
+            **kwargs (Any): Any additional keyword arguments for the :class:`DataSource`.
         """
         plugins.Plugin.__init__(self)
 
@@ -78,20 +80,22 @@ class DataSource(plugins.Plugin, abc.ABC):
     @property
     @abc.abstractmethod
     def predictive_task(self) -> data_typing.PredictiveTask:  # pragma: no cover
-        """The expected predictive task of the loaded `~tempor.data.dataset.DataSet`.
+        """The expected predictive task of the loaded dataset.
 
         Returns:
-            data_typing.PredictiveTask: Predictive task of loaded `~tempor.data.dataset.DataSet`.
+            data_typing.PredictiveTask: Predictive task of loaded dataset.
         """
         ...
 
     @abc.abstractmethod
     def load(self, **kwargs: Any) -> dataset.PredictiveDataset:  # pragma: no cover
-        """The method that should return the loaded `~tempor.data.dataset.DataSet` for the appropriate
-        ``predictive_task``.
+        """The method that should return the loaded dataset for the appropriate ``predictive_task``.
+
+        Args:
+            **kwargs (Any): Any additional keyword arguments.
 
         Returns:
-            dataset.Dataset: The loaded `~tempor.data.dataset.DataSet`.
+            dataset.PredictiveDataset: The loaded dataset.
         """
         ...
 
@@ -99,48 +103,113 @@ class DataSource(plugins.Plugin, abc.ABC):
 class OneOffPredictionDataSource(DataSource):
     @property
     def predictive_task(self) -> data_typing.PredictiveTask:
+        """The expected predictive task of the loaded dataset. Here, it is ``ONE_OFF_PREDICTION``.
+
+        Returns:
+            data_typing.PredictiveTask: Predictive task of loaded dataset. Here, it is ``ONE_OFF_PREDICTION``.
+        """
         return data_typing.PredictiveTask.ONE_OFF_PREDICTION
 
     @abc.abstractmethod
     def load(self, **kwargs: Any) -> dataset.OneOffPredictionDataset:  # pragma: no cover
+        """The method that should return a one-off prediction dataset.
+
+        Args:
+            **kwargs (Any): Any additional keyword arguments.
+
+        Returns:
+            dataset.OneOffPredictionDataset: The loaded dataset.
+        """
         ...
 
 
 class TemporalPredictionDataSource(DataSource):
     @property
     def predictive_task(self) -> data_typing.PredictiveTask:
+        """The expected predictive task of the loaded dataset. Here, it is ``TEMPORAL_PREDICTION``.
+
+        Returns:
+            data_typing.PredictiveTask: Predictive task of loaded dataset. Here, it is ``TEMPORAL_PREDICTION``.
+        """
         return data_typing.PredictiveTask.TEMPORAL_PREDICTION
 
     @abc.abstractmethod
     def load(self, **kwargs: Any) -> dataset.TemporalPredictionDataset:  # pragma: no cover
+        """The method that should return a temporal prediction dataset.
+
+        Args:
+            **kwargs (Any): Any additional keyword arguments.
+
+        Returns:
+            dataset.TemporalPredictionDataset: The loaded dataset.
+        """
         ...
 
 
 class TimeToEventAnalysisDataSource(DataSource):
     @property
     def predictive_task(self) -> data_typing.PredictiveTask:
+        """The expected predictive task of the loaded dataset. Here, it is ``TIME_TO_EVENT_ANALYSIS``.
+
+        Returns:
+            data_typing.PredictiveTask: Predictive task of loaded dataset. Here, it is ``TIME_TO_EVENT_ANALYSIS``.
+        """
         return data_typing.PredictiveTask.TIME_TO_EVENT_ANALYSIS
 
     @abc.abstractmethod
     def load(self, **kwargs: Any) -> dataset.TimeToEventAnalysisDataset:  # pragma: no cover
+        """The method that should return a time-to-event analysis dataset.
+
+        Args:
+            **kwargs (Any): Any additional keyword arguments.
+
+        Returns:
+            dataset.TimeToEventAnalysisDataset: The loaded dataset.
+        """
         ...
 
 
 class OneOffTreatmentEffectsDataSource(DataSource):
     @property
     def predictive_task(self) -> data_typing.PredictiveTask:
+        """The expected predictive task of the loaded dataset. Here, it is ``ONE_OFF_TREATMENT_EFFECTS``.
+
+        Returns:
+            data_typing.PredictiveTask: Predictive task of loaded dataset. Here, it is ``ONE_OFF_TREATMENT_EFFECTS``.
+        """
         return data_typing.PredictiveTask.ONE_OFF_TREATMENT_EFFECTS
 
     @abc.abstractmethod
     def load(self, **kwargs: Any) -> dataset.OneOffTreatmentEffectsDataset:  # pragma: no cover
+        """The method that should return a one-off treatment effects dataset.
+
+        Args:
+            **kwargs (Any): Any additional keyword arguments.
+
+        Returns:
+            dataset.OneOffTreatmentEffectsDataset: The loaded dataset.
+        """
         ...
 
 
 class TemporalTreatmentEffectsDataSource(DataSource):
     @property
     def predictive_task(self) -> data_typing.PredictiveTask:
+        """The expected predictive task of the loaded dataset. Here, it is ``TEMPORAL_TREATMENT_EFFECTS``.
+
+        Returns:
+            data_typing.PredictiveTask: Predictive task of loaded dataset. Here, it is ``TEMPORAL_TREATMENT_EFFECTS``.
+        """
         return data_typing.PredictiveTask.TEMPORAL_TREATMENT_EFFECTS
 
     @abc.abstractmethod
     def load(self, **kwargs: Any) -> dataset.TemporalTreatmentEffectsDataset:  # pragma: no cover
+        """The method that should return a temporal treatment effects dataset.
+
+        Args:
+            **kwargs (Any): Any additional keyword arguments.
+
+        Returns:
+            dataset.TemporalTreatmentEffectsDataset: The loaded dataset.
+        """
         ...

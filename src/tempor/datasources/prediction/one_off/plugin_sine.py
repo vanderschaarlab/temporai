@@ -1,3 +1,5 @@
+"""Module with the sine data source."""
+
 from typing import Any
 
 import numpy as np
@@ -24,7 +26,7 @@ class SineDataSource(datasource.OneOffPredictionDataSource):
         random_state: int = 42,
         **kwargs: Any,
     ) -> None:
-        """Sine data generation.
+        """Sinusoidal data generation. See source code for the specifics.
 
         Args:
             no (int, optional):
@@ -48,6 +50,8 @@ class SineDataSource(datasource.OneOffPredictionDataSource):
                 The scaling factor to apply to the time series data. Defaults to ``1.0``.
             random_state (int, optional):
                 The random seed to set for `numpy.random.seed`. Defaults to ``42``.
+            **kwargs (Any):
+                Any additional keyword arguments will be passed to parent class constructor.
         """
         super().__init__(**kwargs)
 
@@ -63,14 +67,14 @@ class SineDataSource(datasource.OneOffPredictionDataSource):
         self.random_state = random_state
 
     @staticmethod
-    def url() -> None:
+    def url() -> None:  # noqa: D102
         return None
 
     @staticmethod
-    def dataset_dir() -> None:
+    def dataset_dir() -> None:  # noqa: D102
         return None
 
-    def load(self, **kwargs: Any) -> dataset.OneOffPredictionDataset:
+    def load(self, **kwargs: Any) -> dataset.OneOffPredictionDataset:  # noqa: D102
         # Initialize the output.
         np.random.seed(self.random_state)
 

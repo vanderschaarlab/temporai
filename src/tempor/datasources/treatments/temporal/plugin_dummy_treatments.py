@@ -1,3 +1,5 @@
+"""Module with the dummy data source for temporal treatment effects."""
+
 from typing import Any, Optional, cast
 
 from clairvoyance2.datasets.dummy import dummy_dataset
@@ -70,14 +72,14 @@ class DummyTemporalTreatmentEffectsDataSource(datasource.TemporalTreatmentEffect
         self.random_state = random_state
 
     @staticmethod
-    def url() -> None:
+    def url() -> None:  # noqa: D102
         return None
 
     @staticmethod
-    def dataset_dir() -> None:
+    def dataset_dir() -> None:  # noqa: D102
         return None
 
-    def load(self, **kwargs: Any) -> dataset.TemporalTreatmentEffectsDataset:
+    def load(self, **kwargs: Any) -> dataset.TemporalTreatmentEffectsDataset:  # noqa: D102
         clv_dataset = dummy_dataset(
             n_samples=self.n_samples,
             temporal_covariates_n_features=self.temporal_covariates_n_features,

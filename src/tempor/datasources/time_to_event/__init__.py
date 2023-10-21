@@ -1,3 +1,5 @@
+"""Package for time to event analysis data sources."""
+
 from tempor.core import plugins
 from tempor.datasources import datasource
 
