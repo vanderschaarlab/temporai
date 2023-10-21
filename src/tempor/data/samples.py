@@ -27,6 +27,11 @@ class DataSamples(abc.ABC):
     @property
     @abc.abstractmethod
     def modality(self) -> data_typing.DataModality:  # pragma: no cover
+        """Return the data modality enum corresponding to the class
+
+        Returns:
+            data_typing.DataModality: The data modality enum.
+        """
         ...
 
     def __init__(
@@ -34,15 +39,31 @@ class DataSamples(abc.ABC):
         data: data_typing.DataContainer,  # pylint: disable=unused-argument
         **kwargs: Any,
     ) -> None:  # pragma: no cover
+        """The abstract base class for all data samples classes.
+
+        Args:
+            data (data_typing.DataContainer): The data container.
+            **kwargs (Any): Any additional keyword arguments.
+        """
         if "_skip_validate" not in kwargs:
             # For efficiency, pass `_skip_validate` internally (e.g. in `__getitem__`)
             # when there is no need to validate.
             self.validate()
 
     def __repr__(self) -> str:
+        """Return a string representation of the object for `repr()`.
+
+        Returns:
+            str: The string representation of the object.
+        """
         return f"{self.__class__.__name__} with data:\n{self.dataframe()}"
 
     def _repr_html_(self) -> str:
+        """Return a HTML representation of the object, used in Jupyter notebooks.
+
+        Returns:
+            str: The HTML representation of the object.
+        """
         repr_ = (
             # pylint: disable-next=protected-access
             f'<p><span style="font-family: monospace;">{self.__class__.__name__}</span> with data:</p>'
@@ -51,6 +72,11 @@ class DataSamples(abc.ABC):
         return repr_
 
     def validate(self) -> None:
+        """Validate the data contained.
+
+        Raises:
+            tempor.exc.DataValidationException: Raised if data validation fails.
+        """
         with log_helpers.exc_to_log():
             try:
                 self._validate()
@@ -86,12 +112,14 @@ class DataSamples(abc.ABC):
         Args:
             array (np.ndarray):
                 The array that represents the data.
-            sample_index (List[<sample element>], optional):
+            sample_index (Optional[data_typing.SampleIndex], optional):
                 List with sample (row) index for each sample. Optional, if `None`, will be of form ``[0, 1, ...]``.
                 Defaults to `None`.
-            feature_index (List[<feature element>], optional):
+            feature_index (Optional[data_typing.FeatureIndex], optional):
                 List with feature (column) index for each feature. Optional, if `None`, will be of form
                 ``["feat_0", "feat_1", ...]``. Defaults to `None`.
+            **kwargs (Any):
+                Any additional keyword arguments.
 
         Returns:
             DataSamples: :class:`DataSamples` object from ``array``.
@@ -126,6 +154,11 @@ class DataSamples(abc.ABC):
         ...
 
     def __len__(self) -> int:
+        """The length, which is the number of samples.
+
+        Returns:
+            int: The number of samples.
+        """
         return self.num_samples
 
     @property
@@ -136,10 +169,23 @@ class DataSamples(abc.ABC):
 
     @abc.abstractmethod
     def short_repr(self) -> str:  # pragma: no cover
+        """A short string representation of the object.
+
+        Returns:
+            str: The short string representation of the object.
+        """
         ...
 
     @abc.abstractmethod
     def __getitem__(self, key: data_typing.GetItemKey) -> Self:  # pragma: no cover
+        """Return a new subset :class:`DataSamples` object with the data indexed by the ``key``.
+
+        Args:
+            key (data_typing.GetItemKey): The key to index the data by.
+
+        Returns:
+            Self: A new subset :class:`DataSamples` object.
+        """
         ...
 
 
@@ -174,14 +220,16 @@ class StaticSamples(DataSamples):
         """Create a :class:`StaticSamples` object from the ``data``.
 
         Args:
-            data (numpy.ndarray | pandas.DataFrame):
+            data (data_typing.DataContainer):
                 A container with the data.
-            sample_index (List[<sample element>], optional):
+            sample_index (Optional[data_typing.SampleIndex], optional):
                 Used only if ``data`` is a `numpy.ndarray`. List with sample (row) index for each sample. Optional,
                 if `None`, will be of form ``[0, 1, ...]``. Defaults to `None`.
-            feature_index (List[<feature element>], optional):
+            feature_index (Optional[data_typing.FeatureIndex], optional):
                 Used only if ``data`` is a `numpy.ndarray`.  List with feature (column) index for each feature.
                 Optional, if `None`, will be of form ``["feat_0", "feat_1", ...]``. Defaults to `None`.
+            **kwargs (Any):
+                Any additional keyword arguments to pass to the constructor.
         """
         if isinstance(data, pd.DataFrame):
             self._data = data
@@ -193,6 +241,11 @@ class StaticSamples(DataSamples):
 
     @property
     def modality(self) -> data_typing.DataModality:
+        """Return the data modality enum corresponding to the class. Here, ``STATIC``.
+
+        Returns:
+            data_typing.DataModality: The data modality enum. Here, ``STATIC``.
+        """
         return data_typing.DataModality.STATIC
 
     def _validate(self) -> None:
@@ -241,6 +294,16 @@ class StaticSamples(DataSamples):
 
     @staticmethod
     def from_dataframe(dataframe: pd.DataFrame, **kwargs: Any) -> "StaticSamples":
+        """Create :class:`StaticSamples` from `pandas.DataFrame`. The rows represent samples, the columns represent
+        features.
+
+        Args:
+            dataframe (pd.DataFrame): The dataframe that represents the data.
+            **kwargs (Any): Any additional keyword arguments to pass to the constructor.
+
+        Returns:
+            StaticSamples: :class:`StaticSamples` object from ``dataframe``.
+        """
         return StaticSamples(dataframe, **kwargs)
 
     @staticmethod
@@ -251,6 +314,18 @@ class StaticSamples(DataSamples):
         feature_index: Optional[data_typing.FeatureIndex] = None,
         **kwargs: Any,
     ) -> "StaticSamples":
+        """Create :class:`StaticSamples` from `numpy.ndarray`. The 0th dimension represents samples, the 1st dimension
+        represents features.
+
+        Args:
+            array (np.ndarray): The array with the data.
+            sample_index (Optional[data_typing.SampleIndex], optional): Sample indices to assign. Defaults to None.
+            feature_index (Optional[data_typing.FeatureIndex], optional): Feature indices to assign. Defaults to None.
+            **kwargs (Any): Any additional keyword arguments to pass to the constructor.
+
+        Returns:
+            StaticSamples: :class:`StaticSamples` object created from the ``array``.
+        """
         return StaticSamples(array, sample_index=sample_index, feature_index=feature_index, **kwargs)
 
     @staticmethod
@@ -268,26 +343,70 @@ class StaticSamples(DataSamples):
         return pd.DataFrame(data=array, index=sample_index, columns=feature_index, **kwargs)
 
     def numpy(self, **kwargs: Any) -> np.ndarray:
+        """Return the data as a `numpy.ndarray`.
+
+        Args:
+            **kwargs (Any): Any additional keyword arguments. Currently unused.
+
+        Returns:
+            np.ndarray: The `numpy.ndarray`.
+        """
         return self._data.to_numpy()
 
     def dataframe(self, **kwargs: Any) -> pd.DataFrame:
+        """Return the data as a `pandas.DataFrame`.
+
+        Args:
+            **kwargs (Any): Any additional keyword arguments. Currently unused.
+
+        Returns:
+            pd.DataFrame: _description_
+        """
         return self._data
 
     def sample_index(self) -> data_typing.SampleIndex:
+        """Return a list representing sample indexes.
+
+        Returns:
+            data_typing.SampleIndex: Sample indexes.
+        """
         return list(self._data.index)  # pyright: ignore
 
     @property
     def num_samples(self) -> int:
+        """Return number of samples.
+
+        Returns:
+            int: Number of samples.
+        """
         return self._data.shape[0]
 
     @property
     def num_features(self) -> int:
+        """Return number of features.
+
+        Returns:
+            int: Number of features.
+        """
         return self._data.shape[1]
 
     def short_repr(self) -> str:
+        """A short string representation of the object.
+
+        Returns:
+            str: The short representation.
+        """
         return f"{self.__class__.__name__}([{self.num_samples}, {self.num_features}])"
 
     def __getitem__(self, key: data_typing.GetItemKey) -> Self:
+        """Return a new subset :class:`StaticSamples` object with the data indexed by the ``key``.
+
+        Args:
+            key (data_typing.GetItemKey): The key to index the data by.
+
+        Returns:
+            Self: A new subset :class:`StaticSamples` object.
+        """
         key_ = utils.ensure_pd_iloc_key_returns_df(key)
         return StaticSamples(  # type: ignore [return-value]
             self._data.iloc[key_, :],  # pyright: ignore
@@ -336,6 +455,11 @@ class TimeSeriesSamples(DataSamples):
 
     @property
     def modality(self) -> data_typing.DataModality:
+        """Return the data modality enum corresponding to the class. Here, ``TIME_SERIES``.
+
+        Returns:
+            data_typing.DataModality: The data modality enum. Here, ``TIME_SERIES``.
+        """
         return data_typing.DataModality.TIME_SERIES
 
     @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
@@ -359,21 +483,24 @@ class TimeSeriesSamples(DataSamples):
         be the same across the feature dimension (dim 2) for each sample.
 
         Args:
-            data (numpy.ndarray | pandas.DataFrame):
+            data (data_typing.DataContainer):
                 A container with the data.
             padding_indicator (Any, optional):
                 Padding indicator used in ``data`` to indicate padding. Defaults to `None`.
-            sample_index (List[<sample element>], optional):
+            sample_index (Optional[data_typing.SampleIndex], optional):
                 Used only if ``data`` is a `numpy.ndarray`. List with sample (row) index for each sample.
                 Optional, if `None`, will be of form ``[0, 1, ...]``. Defaults to `None`.
-            time_indexes (List[List[<timestep element>]], optional):
+            time_indexes (Optional[data_typing.TimeIndexList], optional):
                 Used only if ``data`` is a `numpy.ndarray`. List of lists containing timesteps for each sample (outer
                 list should be the same length as dim 0 of `data`, inner list should contain as many elements as each
                 sample has timesteps). Optional, if `None`, will be of form ``[[0, 1, ...], [0, 1, ...], ...]``
                 Defaults to `None`.
-            feature_index (List[<feature element>], optional):
+            feature_index (Optional[data_typing.FeatureIndex], optional):
                 Used only if ``data`` is a `numpy.ndarray`.  List with feature (column) index for each feature.
                 Optional, if `None`, will be of form ``["feat_0", "feat_1", ...]``.
+                Defaults to `None`.
+            **kwargs (Any):
+                Any additional keyword arguments to pass to the constructor.
         """
         if isinstance(data, pd.DataFrame):
             self._data = data
@@ -448,6 +575,16 @@ class TimeSeriesSamples(DataSamples):
 
     @staticmethod
     def from_dataframe(dataframe: pd.DataFrame, **kwargs: Any) -> "TimeSeriesSamples":
+        """Create :class:`TimeSeriesSamples` from `pandas.DataFrame`. This row index of the dataframe should be a
+        2-level multiindex (sample, timestep). The columns should be the features.
+
+        Args:
+            dataframe (pd.DataFrame): The dataframe that contains the data.
+            **kwargs (Any): Any additional keyword arguments to pass to the constructor.
+
+        Returns:
+            TimeSeriesSamples: The :class:`TimeSeriesSamples` object created from the ``dataframe``.
+        """
         return TimeSeriesSamples(dataframe, **kwargs)
 
     @staticmethod
@@ -460,6 +597,31 @@ class TimeSeriesSamples(DataSamples):
         feature_index: Optional[data_typing.FeatureIndex] = None,
         **kwargs: Any,
     ) -> "TimeSeriesSamples":
+        """Create :class:`TimeSeriesSamples` from `numpy.ndarray`.
+
+        This should be a 3D array, with dimensions ``(sample, timestep, feature)``.
+
+        Optionally, padding values of ``padding_indicator`` can be set inside the array to pad out the length of arrays
+        of different samples in case they differ. Padding needs to go at the end of the timesteps (dim 1). Padding must
+        be the same across the feature dimension (dim 2) for each sample.
+
+        Args:
+            array (np.ndarray):
+                The array that contains the data.
+            padding_indicator (Any, optional):
+                The padding indicator value. Defaults to `None`.
+            sample_index (Optional[data_typing.SampleIndex], optional):
+                Sample indexes as a list. Defaults to `None`.
+            time_indexes (Optional[data_typing.TimeIndexList], optional):
+                Time indexes as a list of list (that is, time indexes per sample). Defaults to `None`.
+            feature_index (Optional[data_typing.FeatureIndex], optional):
+                Feature indexes as a list. Defaults to `None`.
+            **kwargs (Any):
+                Any additional keyword arguments.
+
+        Returns:
+            TimeSeriesSamples: The :class:`TimeSeriesSamples` object created from the ``array``.
+        """
         return TimeSeriesSamples(
             array,
             padding_indicator=padding_indicator,
@@ -496,14 +658,38 @@ class TimeSeriesSamples(DataSamples):
         )
 
     def numpy(self, *, padding_indicator: Any = DATA_SETTINGS.default_padding_indicator, **kwargs: Any) -> np.ndarray:
+        """Return the data as a `numpy.ndarray`.
+
+        Args:
+            padding_indicator (Any, optional):
+                Padding indicator value. Defaults to `DATA_SETTINGS.default_padding_indicator`.
+            **kwargs (Any):
+                Any additional keyword arguments. Currently unused.
+
+        Returns:
+            np.ndarray: The `numpy.ndarray`.
+        """
         return utils.multiindex_timeseries_dataframe_to_array3d(
             df=self._data, padding_indicator=padding_indicator, max_timesteps=None
         )
 
     def dataframe(self, **kwargs: Any) -> pd.DataFrame:
+        """Return the data as a `pandas.DataFrame`.
+
+        Args:
+            **kwargs (Any): Any additional keyword arguments. Currently unused.
+
+        Returns:
+            pd.DataFrame: The `pandas.DataFrame`.
+        """
         return self._data
 
     def sample_index(self) -> data_typing.SampleIndex:
+        """Get a list containing sample indexes.
+
+        Returns:
+            data_typing.SampleIndex: A list containing sample indexes.
+        """
         return list(utils.get_df_index_level0_unique(self._data))  # pyright: ignore
 
     def time_indexes(self) -> data_typing.TimeIndexList:
@@ -511,7 +697,7 @@ class TimeSeriesSamples(DataSamples):
         elements.
 
         Returns:
-            List[List[<timestep element>]]: A list containing time indexes for each sample.
+            data_typing.TimeIndexList: A list containing time indexes for each sample.
         """
         return list(self.time_indexes_as_dict().values())  # pyright: ignore
 
@@ -520,7 +706,7 @@ class TimeSeriesSamples(DataSamples):
         step elements.
 
         Returns:
-            Dict[<sample element>, List[<timestep element>]]: A list containing time indexes for each sample.
+            data_typing.SampleToTimeIndexDict: The dictionary mapping each sample index to its time index.
         """
         multiindex = self._data.index
         if TYPE_CHECKING:  # pragma: no cover
@@ -554,7 +740,7 @@ class TimeSeriesSamples(DataSamples):
         """Get a dictionary mapping each sample index to its the number of timesteps.
 
         Returns:
-            List[int]: List containing the number of timesteps for each sample.
+            data_typing.SampleToNumTimestepsDict: List containing the number of timesteps for each sample.
         """
         return {key: len(x) for key, x in self.time_indexes_as_dict().items()}  # type: ignore
 
@@ -577,17 +763,40 @@ class TimeSeriesSamples(DataSamples):
 
     @property
     def num_samples(self) -> int:
+        """Return number of samples.
+
+        Returns:
+            int: Number of samples.
+        """
         sample_ids = utils.get_df_index_level0_unique(self._data)
         return len(sample_ids)
 
     @property
     def num_features(self) -> int:
+        """Return number of features.
+
+        Returns:
+            int: Number of features.
+        """
         return self._data.shape[1]
 
     def short_repr(self) -> str:
+        """A short string representation of the object.
+
+        Returns:
+            str: The short representation.
+        """
         return f"{self.__class__.__name__}([{self.num_samples}, *, {self.num_features}])"
 
     def __getitem__(self, key: data_typing.GetItemKey) -> Self:
+        """Return a subset :class:`TimeSeriesSamples` object with the data indexed by the ``key``.
+
+        Args:
+            key (data_typing.GetItemKey): The key to index the data by.
+
+        Returns:
+            Self: A new subset :class:`TimeSeriesSamples` object.
+        """
         key_ = utils.ensure_pd_iloc_key_returns_df(key)
         sample_index = utils.get_df_index_level0_unique(self._data)
         selected = list(sample_index[key_])  # pyright: ignore
@@ -607,6 +816,11 @@ class EventSamples(DataSamples):
 
     @property
     def modality(self) -> data_typing.DataModality:
+        """Return the data modality enum corresponding to the class. Here, ``EVENT``.
+
+        Returns:
+            data_typing.DataModality: The data modality enum. Here, ``EVENT``.
+        """
         return data_typing.DataModality.EVENT
 
     @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
@@ -621,14 +835,16 @@ class EventSamples(DataSamples):
         """Create an :class:`EventSamples` object from the ``data``.
 
         Args:
-            data (numpy.ndarray | pandas.DataFrame):
+            data (data_typing.DataContainer):
                 A container with the data.
-            sample_index (List[<sample element>], optional):
+            sample_index (Optional[data_typing.SampleIndex], optional):
                 Used only if ``data`` is a `numpy.ndarray`. List with sample (row) index for each sample. Optional,
                 if `None`, will be of form ``[0, 1, ...]``. Defaults to `None`.
-            feature_index (List[<feature element>], optional):
+            feature_index (Optional[data_typing.FeatureIndex], optional):
                 Used only if ``data`` is a `numpy.ndarray`.  List with feature (column) index for each feature.
                 Optional, if `None`, will be of form ``["feat_0", "feat_1", ...]``. Defaults to `None`.
+            **kwargs (Any):
+                Any additional keyword arguments to pass to the constructor.
         """
         if isinstance(data, pd.DataFrame):
             self._data = data
@@ -704,6 +920,17 @@ class EventSamples(DataSamples):
 
     @staticmethod
     def from_dataframe(dataframe: pd.DataFrame, **kwargs: Any) -> "EventSamples":
+        """Create :class:`EventSamples` from `pandas.DataFrame`. The row index of the dataframe should be the sample
+        indexes. The columns should be the features. Each feature should contain a tuple of ``(time, value)``
+        representing the event.
+
+        Args:
+            dataframe (pd.DataFrame): The dataframe that contains the data.
+            **kwargs (Any): Any additional keyword arguments to pass to the constructor.
+
+        Returns:
+            EventSamples: The :class:`EventSamples` object created from the ``dataframe``.
+        """
         return EventSamples(dataframe, **kwargs)
 
     @staticmethod
@@ -714,6 +941,18 @@ class EventSamples(DataSamples):
         feature_index: Optional[data_typing.FeatureIndex] = None,
         **kwargs: Any,
     ) -> "EventSamples":
+        """Create :class:`EventSamples` from `numpy.ndarray`. The array should be a 2D array, with dimensions
+        ``(sample, feature)``. Each element should contain a tuple of ``(time, value)`` representing the event.
+
+        Args:
+            array (np.ndarray): The array that contains the data.
+            sample_index (Optional[data_typing.SampleIndex], optional): Sample indexes. Defaults to `None`.
+            feature_index (Optional[data_typing.FeatureIndex], optional): Feature index. Defaults to `None`.
+            **kwargs (Any): Any additional keyword arguments to pass to the constructor.
+
+        Returns:
+            EventSamples: The :class:`EventSamples` object created from the ``array``.
+        """
         return EventSamples(array, sample_index=sample_index, feature_index=feature_index, **kwargs)
 
     @staticmethod
@@ -731,21 +970,52 @@ class EventSamples(DataSamples):
         return pd.DataFrame(data=array, index=sample_index, columns=feature_index, **kwargs)
 
     def numpy(self, **kwargs: Any) -> np.ndarray:
+        """Return the data as a `numpy.ndarray`.
+
+        Args:
+            **kwargs (Any): Any additional keyword arguments. Currently unused.
+
+        Returns:
+            np.ndarray: The `numpy.ndarray`.
+        """
         # TODO: May want at option to return a scikit-survive -style array.
         return self._data.to_numpy()
 
     def dataframe(self, **kwargs: Any) -> pd.DataFrame:
+        """Return the data as a `pandas.DataFrame`.
+
+        Args:
+            **kwargs (Any): Any additional keyword arguments. Currently unused.
+
+        Returns:
+            pd.DataFrame: The `pandas.DataFrame`.
+        """
         return self._data
 
     def sample_index(self) -> data_typing.SampleIndex:
+        """Return a list representing sample indexes.
+
+        Returns:
+            data_typing.SampleIndex: Sample indexes.
+        """
         return list(self._data.index)  # pyright: ignore
 
     @property
     def num_samples(self) -> int:
+        """Return number of samples.
+
+        Returns:
+            int: Number of samples.
+        """
         return self._data.shape[0]
 
     @property
     def num_features(self) -> int:
+        """Return number of features.
+
+        Returns:
+            int: Number of features.
+        """
         return self._data.shape[1]
 
     @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
@@ -794,9 +1064,22 @@ class EventSamples(DataSamples):
         return df_event_times, df_event_values
 
     def short_repr(self) -> str:
+        """A short string representation of the object.
+
+        Returns:
+            str: The short representation.
+        """
         return f"{self.__class__.__name__}([{self.num_samples}, {self.num_features}])"
 
     def __getitem__(self, key: data_typing.GetItemKey) -> Self:
+        """Return a new subset :class:`EventSamples` object with the data indexed by the ``key``.
+
+        Args:
+            key (data_typing.GetItemKey): The key to index the data by.
+
+        Returns:
+            Self: A new subset :class:`EventSamples` object.
+        """
         key_ = utils.ensure_pd_iloc_key_returns_df(key)
         return EventSamples(  # type: ignore [return-value]
             self._data.iloc[key_, :],  # pyright: ignore

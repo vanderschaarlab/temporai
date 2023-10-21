@@ -1,4 +1,5 @@
 """Utilities for converting to and from ``clairvoyance2`` datasets."""
+
 from typing import List, Type
 
 import pandas as pd
@@ -32,6 +33,14 @@ def _from_clv2_event(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def clairvoyance2_dataset_to_tempor_dataset(data: Clairvoyance2Dataset) -> dataset.BaseDataset:
+    """A utility function to convert a ``clairvoyance2`` dataset to a TemporAI dataset.
+
+    Args:
+        data (Clairvoyance2Dataset): The ``clairvoyance2`` dataset to convert.
+
+    Returns:
+        dataset.BaseDataset: The converted dataset.
+    """
     if (
         data.temporal_targets is None
         and data.temporal_treatments is None
@@ -142,6 +151,14 @@ def _to_clv2_event(s: samples.EventSamples) -> pd.DataFrame:
 
 
 def tempor_dataset_to_clairvoyance2_dataset(data: dataset.BaseDataset) -> Clairvoyance2Dataset:
+    """A utility function to convert a TemporAI dataset to a ``clairvoyance2`` dataset.
+
+    Args:
+        data (dataset.BaseDataset): The TemporAI dataset to convert.
+
+    Returns:
+        Clairvoyance2Dataset: The converted dataset.
+    """
     if isinstance(data, dataset.OneOffPredictionDataset):
         raise ValueError(
             "Cannot convert a `OneOffPredictionDataset` to a clairvoyance2 dataset, as this setting is not supported"
