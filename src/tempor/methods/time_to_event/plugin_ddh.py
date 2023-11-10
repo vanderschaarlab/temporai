@@ -1,3 +1,5 @@
+"""Dynamic DeepHit survival analysis model."""
+
 import dataclasses
 from typing import Any, List
 
