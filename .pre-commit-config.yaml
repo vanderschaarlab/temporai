@@ -64,6 +64,7 @@ repos:
     ]
     exclude: "docs/user_guide"
 
+# Standard `flake8` run for all Python files:
 - repo: https://github.com/PyCQA/flake8
   rev: 6.1.0
   hooks:
@@ -104,3 +105,31 @@ repos:
     additional_dependencies: [
       "bandit[toml]",
     ]
+
+- repo: https://github.com/pycqa/pydocstyle
+  rev: 6.3.0
+  hooks:
+  - id: pydocstyle
+    additional_dependencies: [
+      "tomli",  # To read configuration from pyproject.toml.
+    ]
+    exclude: |
+      (?x)^(
+          docs/.*|
+          tests/.*
+      )$
+
+# `pydoclint` run via `flake8`, with some additional locations ignored.
+- repo: https://github.com/PyCQA/flake8
+  rev: 6.1.0
+  hooks:
+  - id: flake8
+    name: "pydoclint_via_flake8"
+    additional_dependencies: [
+      "pydoclint",
+    ]
+    exclude: |
+      (?x)^(
+          docs/.*|
+          tests/.*
+      )$
