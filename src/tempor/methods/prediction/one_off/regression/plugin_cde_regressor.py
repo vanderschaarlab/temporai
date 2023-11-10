@@ -1,3 +1,5 @@
+"""One-off regression plugin based on Neural Controlled Differential Equations for Irregular Time Series."""
+
 import dataclasses
 from typing import Any, List, Optional
 
@@ -67,7 +69,7 @@ class CDERegressor(BaseOneOffRegressor):
         """Neural Controlled Differential Equations for Irregular Time Series.
 
         Args:
-            params:
+            **params (Any):
                 Parameters and defaults as defined in :class:`CDERegressorParams`.
 
         Example:
@@ -153,7 +155,7 @@ class CDERegressor(BaseOneOffRegressor):
         return samples.StaticSamples.from_numpy(preds)
 
     @staticmethod
-    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:  # noqa: D102
         return [
             IntegerParams(name="n_units_hidden", low=100, high=1000),
             IntegerParams(name="n_layers_hidden", low=1, high=5),

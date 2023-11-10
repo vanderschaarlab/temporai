@@ -21,7 +21,7 @@ class BaseTemporalRegressor(methods_core.BasePredictor):
     def __init__(self, **params: Any) -> None:  # pylint: disable=useless-super-delegation
         super().__init__(**params)
 
-    def fit(self, data: dataset.BaseDataset, *args: Any, **kwargs: Any) -> Self:
+    def fit(self, data: dataset.BaseDataset, *args: Any, **kwargs: Any) -> Self:  # noqa: D102
         check_data_class(data)
         super().fit(data, *args, **kwargs)
         return self
@@ -34,7 +34,7 @@ class BaseTemporalRegressor(methods_core.BasePredictor):
         *args: Any,
         time_delta: int = 1,
         **kwargs: Any,
-    ) -> samples.TimeSeriesSamples:
+    ) -> samples.TimeSeriesSamples:  # noqa: D102
         check_data_class(data)
         return super().predict(data, n_future_steps, *args, time_delta=time_delta, **kwargs)
 

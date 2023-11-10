@@ -35,7 +35,7 @@ class TimeSeriesStandardScaler(BaseScaler):
         applied to this dataframe.
 
         Args:
-            params:
+            **params (Any):
                 Parameters and defaults as defined in :class:`TimeSeriesStandardScalerParams`.
 
         Example:

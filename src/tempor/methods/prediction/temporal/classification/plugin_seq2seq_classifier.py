@@ -61,7 +61,7 @@ class Seq2seqClassifier(BaseTemporalClassifier):
         """Seq2seq classifier.
 
         Args:
-            params:
+            **params (Any):
                 Parameters and defaults as defined in :class:`Seq2seqClassifierParams`.
 
         Example:

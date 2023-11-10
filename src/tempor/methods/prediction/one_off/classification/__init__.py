@@ -1,3 +1,5 @@
+"""One-off classification estimators."""
+
 import abc
 from typing import Any, Tuple
 
@@ -11,6 +13,14 @@ from tempor.data import dataset, samples
 
 
 def check_data_class(data: Any) -> None:
+    """Check if data is a one-off prediction dataset.
+
+    Args:
+        data (Any): The data.
+
+    Raises:
+        TypeError: If data is not a one-off prediction dataset.
+    """
     if not isinstance(data, dataset.OneOffPredictionDataset):
         raise TypeError(
             "Expected `data` passed to a one-off classification estimator to be "
@@ -20,9 +30,15 @@ def check_data_class(data: Any) -> None:
 
 class BaseOneOffClassifier(methods_core.BasePredictor):
     def __init__(self, **params: Any) -> None:  # pylint: disable=useless-super-delegation
+        """Base class for one-off classification estimators.
+
+        Args:
+            **params (Any):
+                Parameters as defined in :class:`BasePredictorParams`.
+        """
         super().__init__(**params)
 
-    def fit(self, data: dataset.BaseDataset, *args: Any, **kwargs: Any) -> Self:
+    def fit(self, data: dataset.BaseDataset, *args: Any, **kwargs: Any) -> Self:  # noqa: D102
         check_data_class(data)
         super().fit(data, *args, **kwargs)
         return self
@@ -33,7 +49,7 @@ class BaseOneOffClassifier(methods_core.BasePredictor):
         data: dataset.PredictiveDataset,
         *args: Any,
         **kwargs: Any,
-    ) -> samples.StaticSamples:
+    ) -> samples.StaticSamples:  # noqa: D102
         check_data_class(data)
         return super().predict(data, *args, **kwargs)
 
@@ -43,7 +59,7 @@ class BaseOneOffClassifier(methods_core.BasePredictor):
         data: dataset.PredictiveDataset,
         *args: Any,
         **kwargs: Any,
-    ) -> samples.StaticSamples:
+    ) -> samples.StaticSamples:  # noqa: D102
         check_data_class(data)
         return super().predict_proba(data, *args, **kwargs)
 

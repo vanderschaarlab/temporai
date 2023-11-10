@@ -282,7 +282,7 @@ class XGBTimeToEventAnalysis(BaseTimeToEventAnalysis):
         """XGB survival analysis model.
 
         Args:
-            params:
+            **params (Any):
                 Parameters and defaults as defined in :class:`XGBTimeToEventAnalysisParams`.
         """
         super().__init__(**params)

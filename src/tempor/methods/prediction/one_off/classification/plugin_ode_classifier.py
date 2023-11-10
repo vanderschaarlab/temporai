@@ -1,3 +1,5 @@
+"""One-off classification plugin based on "Neural Ordinary Differential Equations"."""
+
 import dataclasses
 from typing import Any, List, Optional
 
@@ -68,7 +70,7 @@ class ODEClassifier(BaseOneOffClassifier):
         """Classifier based on ordinary differential equation (ODE) solvers.
 
         Args:
-            params:
+            **params (Any):
                 Parameters and defaults as defined in :class:`ODEClassifierParams`.
 
         Example:
@@ -87,8 +89,8 @@ class ODEClassifier(BaseOneOffClassifier):
             >>> assert model.predict(dataset).numpy().shape == (len(dataset), 1)
 
         References:
-            "Neural Controlled Differential Equations for Irregular Time Series", Patrick Kidger, James Morrill,
-            James Foster, Terry Lyons.
+            "Neural Ordinary Differential Equations", Ricky T. Q. Chen, Yulia Rubanova, Jesse Bettencourt,
+            David Duvenaud.
         """
         super().__init__(**params)
 
@@ -171,7 +173,7 @@ class ODEClassifier(BaseOneOffClassifier):
         return samples.StaticSamples.from_numpy(preds)
 
     @staticmethod
-    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:  # noqa: D102
         return [
             IntegerParams(name="n_units_hidden", low=100, high=1000),
             IntegerParams(name="n_layers_hidden", low=1, high=5),

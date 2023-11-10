@@ -1,3 +1,5 @@
+"""One-off regression plugin based on Neural Networks."""
+
 import dataclasses
 from typing import TYPE_CHECKING, Any, List, Optional
 
@@ -65,7 +67,7 @@ class NeuralNetRegressor(BaseOneOffRegressor):
         """Neural-net regressor.
 
         Args:
-            params:
+            **params (Any):
                 Parameters and defaults as defined in :class:`NeuralNetRegressorParams`.
 
         Example:
@@ -148,7 +150,7 @@ class NeuralNetRegressor(BaseOneOffRegressor):
         return samples.StaticSamples.from_numpy(preds)
 
     @staticmethod
-    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:  # noqa: D102
         return [
             IntegerParams(name="n_static_units_hidden", low=100, high=1000),
             IntegerParams(name="n_static_layers_hidden", low=1, high=5),

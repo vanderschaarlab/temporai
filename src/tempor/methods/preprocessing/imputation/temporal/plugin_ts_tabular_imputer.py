@@ -40,7 +40,7 @@ class TemporalTabularImputer(BaseImputer):
             tabular imputer will be applied to this dataframe directly.
 
         Args:
-            params:
+            **params (Any):
                 Parameters and defaults as defined in :class:`TemporalTabularImputerParams`.
 
         Example:
