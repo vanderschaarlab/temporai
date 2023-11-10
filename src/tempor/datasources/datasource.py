@@ -123,6 +123,9 @@ class OneOffPredictionDataSource(DataSource):
         ...
 
 
+plugins.register_plugin_category("prediction.one_off", OneOffPredictionDataSource, plugin_type="datasource")
+
+
 class TemporalPredictionDataSource(DataSource):
     @property
     def predictive_task(self) -> data_typing.PredictiveTask:
@@ -144,6 +147,9 @@ class TemporalPredictionDataSource(DataSource):
             dataset.TemporalPredictionDataset: The loaded dataset.
         """
         ...
+
+
+plugins.register_plugin_category("prediction.temporal", TemporalPredictionDataSource, plugin_type="datasource")
 
 
 class TimeToEventAnalysisDataSource(DataSource):
@@ -169,6 +175,9 @@ class TimeToEventAnalysisDataSource(DataSource):
         ...
 
 
+plugins.register_plugin_category("time_to_event", TimeToEventAnalysisDataSource, plugin_type="datasource")
+
+
 class OneOffTreatmentEffectsDataSource(DataSource):
     @property
     def predictive_task(self) -> data_typing.PredictiveTask:
@@ -192,6 +201,9 @@ class OneOffTreatmentEffectsDataSource(DataSource):
         ...
 
 
+plugins.register_plugin_category("treatments.one_off", OneOffTreatmentEffectsDataSource, plugin_type="datasource")
+
+
 class TemporalTreatmentEffectsDataSource(DataSource):
     @property
     def predictive_task(self) -> data_typing.PredictiveTask:
@@ -213,3 +225,6 @@ class TemporalTreatmentEffectsDataSource(DataSource):
             dataset.TemporalTreatmentEffectsDataset: The loaded dataset.
         """
         ...
+
+
+plugins.register_plugin_category("treatments.temporal", TemporalTreatmentEffectsDataSource, plugin_type="datasource")

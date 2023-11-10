@@ -1,9 +1,6 @@
 """Package for time to event analysis data sources."""
 
 from tempor.core import plugins
-from tempor.datasources import datasource
-
-plugins.register_plugin_category("time_to_event", datasource.TimeToEventAnalysisDataSource, plugin_type="datasource")
 
 plugins.importing.import_plugins(__file__)
 
