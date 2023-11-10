@@ -1,3 +1,5 @@
+"""Module with any additional metrics."""
+
 from typing import Any, Dict, Optional, Tuple, Union
 
 import numpy as np
@@ -24,7 +26,7 @@ def check_y_survival(y_or_event: np.ndarray, *args: Any, allow_all_censored: boo
             Structured array with two fields, or boolean array. If a structured array, it must contain the binary
             event indicator as first field, and time of event or time of censoring as second field. Otherwise, it is
             assumed that a boolean array representing the event indicator is passed.
-        args:
+        *args (Any):
             List of array-likes. Any number of array-like objects representing time information. Elements that are
             `None` are passed along in the return value.
         allow_all_censored (bool, optional):
@@ -204,7 +206,7 @@ def _compute_counts_truncated(
     Args:
         event (np.ndarray):
             Boolean event indicator.
-        time_start (np.ndarray):
+        time_enter (np.ndarray):
             Time when a subject entered the study.
         time_exit (np.ndarray):
             Time when a subject left the study due to an
@@ -269,21 +271,21 @@ def kaplan_meier_estimator(
     time_exit: Any,
     time_enter: Any = None,
     time_min: Optional[float] = None,
-    reverse: Optional[bool] = False,
+    reverse: bool = False,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Kaplan-Meier estimator of survival function. See [1] for further description.
 
     Args:
-        event:
+        event (Any):
             Array-like, ``shape = (n_samples,)``. Contains binary event indicators.
-        time_exit:
+        time_exit (Any):
             Array-like, ``shape = (n_samples,)``. Contains event/censoring times.
-        time_enter:
+        time_enter (Any):
             Array-like, ``shape = (n_samples,)``, optional. Contains time when each individual entered the study for
             left truncated survival data. Defaults to `None`.
-        time_min (float, optional):
+        time_min (Optional[float], optional):
             Compute estimator conditional on survival at least up to the specified time. Defaults to `None`.
-        reverse (bool, optional).
+        reverse (bool, optional):
             Whether to estimate the censoring distribution. When there are ties between times at which events are
             observed, then events come first and are subtracted from the denominator. Only available for
             right-censored data, i.e. ``time_enter`` must be None. Defaults to `False`.
@@ -336,10 +338,9 @@ def kaplan_meier_estimator(
 
 
 class SurvivalFunctionEstimator(sklearn.base.BaseEstimator):  # type: ignore [misc]
-    """Kaplan-Meier estimate of the survival function."""
-
     def __init__(self) -> None:
-        pass
+        """Kaplan-Meier estimate of the survival function."""
+        pass  # pylint: disable=unnecessary-pass
 
     def fit(self, y: np.ndarray) -> Self:
         """Estimate survival distribution from training data.
@@ -350,7 +351,7 @@ class SurvivalFunctionEstimator(sklearn.base.BaseEstimator):  # type: ignore [mi
                 as first field, and time of event or time of censoring as second field.
 
         Returns:
-            Self.
+            Self: Fitted estimator.
         """
         event, time = check_y_survival(y, allow_all_censored=True)  # pylint: disable=unbalanced-tuple-unpacking
 
@@ -413,7 +414,7 @@ class CensoringDistributionEstimator(SurvivalFunctionEstimator):
                 as first field, and time of event or time of censoring as second field.
 
         Returns:
-            Self.
+            Self: Fitted estimator.
         """
         event, time = check_y_survival(y)  # pylint: disable=unbalanced-tuple-unpacking
         if event.all():
@@ -690,13 +691,13 @@ def concordance_index_ipcw(
             Structured array, ``shape = (n_samples,)``.
             Survival times of test data. A structured array containing the binary event indicator as first field,
             and time of event or time of censoring as second field.
-        estimate:
+        estimate (Any):
             Array-like, ``shape = (n_samples,)``. Estimated risk of experiencing an event of test data.
-        tau (float, optional):
+        tau (Optional[float], optional):
             Truncation time. The survival function for the underlying censoring time distribution :math:`D` needs to be
             positive at ``tau``, i.e., ``tau`` should be chosen such that the probability of being censored after time
             ``tau`` is non-zero: :math:`P(D > \tau) > 0`. If `None`, no truncation is performed.
-        tied_tol (float, optional).
+        tied_tol (float, optional):
             The tolerance value for considering ties. If the absolute difference between risk scores is smaller or
             equal than ``tied_tol``, risk scores are considered tied. Defaults to ``1e-8``.
 

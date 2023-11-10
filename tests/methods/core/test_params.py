@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, Mock
 import pytest
 from optuna.trial import Trial
 
-from tempor.methods.core import _params as params
+from tempor.methods.core import params
 
 
 class TestParams:

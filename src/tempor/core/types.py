@@ -1,3 +1,5 @@
+"""Type definitions for TemporAI core."""
+
 from typing_extensions import Literal
 
 PredictiveTaskType = Literal[

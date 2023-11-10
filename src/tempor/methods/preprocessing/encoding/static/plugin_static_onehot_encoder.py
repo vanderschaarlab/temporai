@@ -1,3 +1,5 @@
+"""One-hot encoding for static data."""
+
 import dataclasses
 from typing import Any, Callable, Dict, List, Optional, Type, Union
 
@@ -11,8 +13,7 @@ from tempor.core import plugins
 from tempor.data import dataset
 from tempor.data.data_typing import FeatureIndex
 from tempor.data.samples import StaticSamples
-from tempor.methods.core import Params
-from tempor.methods.core._params import CategoricalParams, FloatParams
+from tempor.methods.core.params import CategoricalParams, FloatParams, Params
 from tempor.methods.preprocessing.encoding._base import BaseEncoder
 
 # TODO: Handle SklearnArrayLike rather than just list, requires dropping OmegaConf stuff.
@@ -61,7 +62,7 @@ class StaticOneHotEncoder(BaseEncoder):
         Specify ``features`` list to encode only a subset of the features.
 
         Args:
-            params:
+            **params (Any):
                 Parameters and defaults as defined in :class:`StaticOneHotEncoderParams`.
 
         Example:
@@ -147,7 +148,7 @@ class StaticOneHotEncoder(BaseEncoder):
         return data
 
     @staticmethod
-    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:  # noqa: D102
         return [
             CategoricalParams("drop", ["first", "if_binary"]),
             CategoricalParams("handle_unknown", ["error", "ignore", "infrequent_if_exist"]),

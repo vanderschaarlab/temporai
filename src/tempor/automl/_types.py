@@ -1,3 +1,5 @@
+"""Type definitions for AutoML."""
+
 from typing import Type, Union
 
 from typing_extensions import Literal

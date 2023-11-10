@@ -1,3 +1,5 @@
+"""The main benchmarking module."""
+
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import matplotlib.pyplot as plt
@@ -16,6 +18,7 @@ from . import evaluation
 
 
 def print_score(mean: pd.Series, std: pd.Series) -> pd.Series:
+    """Print the mean and standard deviation of a metric in a human-readable format."""
     with pd.option_context("mode.chained_assignment", None):  # pyright: ignore
         mean.loc[(mean < 1e-3) & (mean != 0)] = 1e-3
         std.loc[(std < 1e-3) & (std != 0)] = 1e-3
@@ -45,13 +48,13 @@ def benchmark_models(
             The options are any of `PredictiveTaskType`.
         tests (List[Tuple[str, Any]]):
             Tuples of form ``(test_name: str, plugin: BasePredictor/Pipeline)``
-        data (dataset.Dataset):
+        data (dataset.PredictiveDataset):
             The evaluation dataset to use for cross-validation.
         n_splits (int, optional):
             Number of splits used for cross-validation. Defaults to ``3``.
         random_state (int, optional):
             Random seed. Defaults to ``0``.
-        horizons (data_typing.TimeIndex, optional):
+        horizons (Optional[data_typing.TimeIndex], optional):
             Time horizons for making predictions, if applicable to the task.
         raise_exceptions (bool, optional):
             Whether to raise exceptions during evaluation. If `False`, the exceptions will be swallowed and the
@@ -135,6 +138,19 @@ def benchmark_models(
 
 @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
 def visualize_benchmark(results: Dict[str, pd.DataFrame], palette: str = "viridis", plot_block: bool = True) -> Any:
+    """Visualize the benchmarking results.
+
+    Args:
+        results (Dict[str, pd.DataFrame]):
+            The ``results`` dictionary returned by `benchmark_models`.
+        palette (str, optional):
+            `seaborn` color palette for the visualization. Defaults to ``"viridis"``.
+        plot_block (bool, optional):
+            Whether to block the execution flow by the generated `matplotlib` chart. Defaults to `True`.
+
+    Returns:
+        Any: The list of `matplotlib` axes objects with the generated plots.
+    """
     # Pre-format DF for plotting.
     for k, v in results.items():
         v["method"] = k

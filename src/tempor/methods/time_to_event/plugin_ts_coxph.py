@@ -1,3 +1,5 @@
+"""CoxPH survival analysis model with Dynamic DeepHit embeddings."""
+
 import contextlib
 import dataclasses
 from typing import Any, Dict, Generator, List, Optional
@@ -11,8 +13,7 @@ from typing_extensions import Self
 
 from tempor.core import plugins
 from tempor.data import data_typing, dataset, samples
-from tempor.methods.core import Params
-from tempor.methods.core._params import FloatParams
+from tempor.methods.core.params import FloatParams, Params
 from tempor.methods.time_to_event import BaseTimeToEventAnalysis
 from tempor.models.ddh import DynamicDeepHitModel, OutputMode, RnnMode
 
@@ -121,13 +122,15 @@ class CoxPHSurvivalAnalysis(OutputTimeToEventAnalysis):
                 Attach a penalty to the size of the coefficients during regression. Defaults to ``0``.
             fit_options (Optional[Dict], optional):
                 Pass kwargs for the fitting algorithm. Defaults to ``{"step_size": 0.1}``.
+            **kwargs (Any):
+                Additional keyword arguments for `lifelines.CoxPHFitter`.
         """
         if fit_options is None:
             fit_options = {"step_size": 0.1}
         self.fit_options = fit_options
         self.model = CoxPHFitter(alpha=alpha, penalizer=penalizer, **kwargs)
 
-    def fit(self, X: pd.DataFrame, T: pd.Series, Y: pd.Series) -> Self:
+    def fit(self, X: pd.DataFrame, T: pd.Series, Y: pd.Series) -> Self:  # noqa: D102
         self.constant_cols = drop_constant_columns(X)  # pylint: disable=attribute-defined-outside-init
         X = X.drop(columns=self.constant_cols)
 
@@ -140,7 +143,7 @@ class CoxPHSurvivalAnalysis(OutputTimeToEventAnalysis):
 
         return self
 
-    def predict_risk(self, X: pd.DataFrame, time_horizons: List) -> pd.DataFrame:
+    def predict_risk(self, X: pd.DataFrame, time_horizons: List) -> pd.DataFrame:  # noqa: D102
         """Predict risk estimation."""
 
         X = X.drop(columns=self.constant_cols)
@@ -166,7 +169,6 @@ class CoxPHSurvivalAnalysis(OutputTimeToEventAnalysis):
         return pd.DataFrame(np.concatenate(preds_, axis=0), columns=time_horizons, index=X.index)
 
 
-# TODO: Docstring.
 @plugins.register_plugin(name="ts_coxph", category="time_to_event")
 class CoxPHTimeToEventAnalysis(BaseTimeToEventAnalysis):
     ParamsDefinition = CoxPHTimeToEventAnalysisParams
@@ -176,7 +178,7 @@ class CoxPHTimeToEventAnalysis(BaseTimeToEventAnalysis):
         """CoxPH survival analysis model.
 
         Args:
-            params:
+            **params (Any):
                 Parameters and defaults as defined in :class:`CoxPHTimeToEventAnalysisParams`.
         """
         super().__init__(**params)
@@ -225,7 +227,7 @@ class CoxPHTimeToEventAnalysis(BaseTimeToEventAnalysis):
         return self.model.predict(data, horizons, *args, **kwargs)
 
     @staticmethod
-    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:  # noqa: D102
         return [
             FloatParams(name="coxph_alpha", low=0.05, high=0.1),
             FloatParams(name="coxph_penalizer", low=0, high=0.2),

@@ -1,3 +1,5 @@
+"""Utilities for `pandera` validation."""
+
 from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, NoReturn, Optional, Tuple, Type, Union, cast
 
 import numpy as np
@@ -85,18 +87,45 @@ def _get_pa_init_args(pa_object: Any, param_names: List[str]) -> Dict[str, Any]:
 
 
 def update_schema(schema: pa.DataFrameSchema, **kwargs: Any) -> pa.DataFrameSchema:
+    """Update a pandera dataframe schema with ``kwargs``.
+
+    Args:
+        schema (pa.DataFrameSchema): `pandera` dataframe schema.
+        **kwargs (Any): keyword arguments to update ``schema`` with.
+
+    Returns:
+        pa.DataFrameSchema: `pandera` dataframe schema.
+    """
     items = _get_pa_init_args(schema, param_names=_PA_DF_SCHEMA_INIT_PARAMETERS)
     items.update(kwargs)
     return pa.DataFrameSchema(**items)
 
 
 def update_index(index: pa.Index, **kwargs: Any) -> pa.Index:
+    """Update a pandera index with ``kwargs``.
+
+    Args:
+        index (pa.Index): `pandera` index.
+        **kwargs (Any): keyword arguments to update ``index`` with.
+
+    Returns:
+        pa.Index: `pandera` index.
+    """
     items = _get_pa_init_args(index, param_names=_PA_INDEX_INIT_PARAMETERS)
     items.update(kwargs)
     return pa.Index(**items)
 
 
 def update_multiindex(multi_index: pa.MultiIndex, **kwargs: Any) -> pa.MultiIndex:
+    """Update a pandera multiindex with ``kwargs``.
+
+    Args:
+        multi_index (pa.MultiIndex): `pandera` multiindex.
+        **kwargs (Any): keyword arguments to update ``multi_index`` with.
+
+    Returns:
+        pa.MultiIndex: `pandera` multiindex.
+    """
     items = _get_pa_init_args(multi_index, param_names=_PA_MULTI_INDEX_INIT_PARAMETERS)
     items.update(kwargs)
     return pa.MultiIndex(**items)
@@ -183,6 +212,11 @@ class UnionDtype(pd_engine.DataType):
         return pd_engine.Engine.register_dtype(pa_dtypes.immutable(cls_))  # type: ignore
 
     def __repr__(self) -> str:
+        """The `repr()` representation of the class.
+
+        Returns:
+            str: The representation.
+        """
         return self.name
 
     def check(
@@ -231,12 +265,30 @@ class UnionDtype(pd_engine.DataType):
 
 
 def init_schema(data: pd.DataFrame, **kwargs: Any) -> pa.DataFrameSchema:
+    """Initialize a `pandera.DataFrameSchema` from ``data`` using `pandera.infer_schema`.
+
+    Args:
+        data (pd.DataFrame): Input dataframe.
+        **kwargs (Any): Keyword arguments to update the schema with after initialization.
+
+    Returns:
+        pa.DataFrameSchema: `pandera.DataFrameSchema` initialized from ``data``.
+    """
     schema = cast(pa.DataFrameSchema, pa.infer_schema(data))
     schema = update_schema(schema, **kwargs)
     return schema
 
 
 def add_df_checks(schema: pa.DataFrameSchema, *, checks_list: List[pa.Check]) -> pa.DataFrameSchema:
+    """Update ``schema`` with `pandera` checks specified in ``checks_list``.
+
+    Args:
+        schema (pa.DataFrameSchema): DataFrameSchema to add checks to.
+        checks_list (List[pa.Check]): The list of checks.
+
+    Returns:
+        pa.DataFrameSchema: DataFrameSchema with checks added.
+    """
     schema = update_schema(schema, checks=checks_list)
     return schema
 
@@ -379,6 +431,16 @@ class checks:
 
         @staticmethod
         def column_index_satisfies_dtype(dtype: Any, *, nullable: bool) -> pa.Check:
+            """Return a `pandera.Check` that checks that the column index satisfies ``dtype``. Optionally, also set
+            the ``nullable`` attribute.
+
+            Args:
+                dtype (Any): The dtype to check against.
+                nullable (bool): The nullable attribute to set.
+
+            Returns:
+                pa.Check: The `pandera.Check` defined.
+            """
             series_name = "Column Index"
             error = str(f"DataFrame {series_name} dtype validation failed, must be of type: {dtype}")
 

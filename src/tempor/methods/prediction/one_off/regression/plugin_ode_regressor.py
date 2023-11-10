@@ -1,3 +1,5 @@
+"""One-off regression plugin based on "Neural Ordinary Differential Equations"."""
+
 import dataclasses
 from typing import Any, List, Optional
 
@@ -5,8 +7,7 @@ from typing_extensions import Self
 
 from tempor.core import plugins
 from tempor.data import dataset, samples
-from tempor.methods.core import Params
-from tempor.methods.core._params import CategoricalParams, FloatParams, IntegerParams
+from tempor.methods.core.params import CategoricalParams, FloatParams, IntegerParams, Params
 from tempor.methods.prediction.one_off.regression import BaseOneOffRegressor
 from tempor.models import utils as model_utils
 from tempor.models.constants import Nonlin, Samp
@@ -68,7 +69,7 @@ class ODERegressor(BaseOneOffRegressor):
         """Regressor based on ordinary differential equation (ODE) solvers.
 
         Args:
-            params:
+            **params (Any):
                 Parameters and defaults as defined in :class:`ODERegressorParams`.
 
         Example:
@@ -87,8 +88,8 @@ class ODERegressor(BaseOneOffRegressor):
             >>> assert model.predict(dataset).numpy().shape == (len(dataset), 1)
 
         References:
-            "Neural Controlled Differential Equations for Irregular Time Series", Patrick Kidger, James Morrill,
-            James Foster, Terry Lyons.
+            "Neural Ordinary Differential Equations", Ricky T. Q. Chen, Yulia Rubanova, Jesse Bettencourt,
+            David Duvenaud.
         """
         super().__init__(**params)
 
@@ -154,7 +155,7 @@ class ODERegressor(BaseOneOffRegressor):
         return samples.StaticSamples.from_numpy(preds)
 
     @staticmethod
-    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:  # noqa: D102
         return [
             IntegerParams(name="n_units_hidden", low=100, high=1000),
             IntegerParams(name="n_layers_hidden", low=1, high=5),

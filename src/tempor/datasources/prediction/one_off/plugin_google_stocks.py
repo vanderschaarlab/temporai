@@ -1,3 +1,5 @@
+"""Module with the Google stocks data source."""
+
 import io
 from pathlib import Path
 from typing import Any
@@ -12,24 +14,34 @@ from tempor.data import dataset
 from tempor.datasources import datasource
 
 
-# TODO: Docstring to explain the dataset.
 @plugins.register_plugin(name="google_stocks", category="prediction.one_off", plugin_type="datasource")
 class GoogleStocksDataSource(datasource.OneOffPredictionDataSource):
     def __init__(self, seq_len: int = 10, **kwargs: Any) -> None:
+        """Google stocks data source, as found here:
+        https://raw.githubusercontent.com/PacktPublishing/Learning-Pandas-Second-Edition/master/data/goog.csv
+
+        The next day's opening price is the target.
+
+        The samples are the sequence chunks of length ``seq_len``.
+
+        Args:
+            seq_len (int, optional): The number of time steps to use. Defaults to ``10``.
+            **kwargs (Any): Keyword arguments to be passed to the parent class.
+        """
         super().__init__(**kwargs)
 
         self.seq_len = seq_len
         self.df_path = Path(self.dataset_dir()) / "goog.csv"
 
     @staticmethod
-    def url() -> str:
+    def url() -> str:  # noqa: D102
         return "https://raw.githubusercontent.com/PacktPublishing/Learning-Pandas-Second-Edition/master/data/goog.csv"
 
     @staticmethod
-    def dataset_dir() -> str:
+    def dataset_dir() -> str:  # noqa: D102
         return str(Path(GoogleStocksDataSource.data_root_dir) / "google_stocks")
 
-    def load(self, **kwargs: Any) -> dataset.OneOffPredictionDataset:
+    def load(self, **kwargs: Any) -> dataset.OneOffPredictionDataset:  # noqa: D102
         # Load Google Data
         if not self.df_path.exists():
             s = requests.get(self.url(), timeout=5).content
@@ -41,7 +53,7 @@ class GoogleStocksDataSource(datasource.OneOffPredictionDataSource):
 
         # Flip the data to make chronological data
         df = pd.DataFrame(df.values[::-1], columns=df.columns)
-        T = pd.to_datetime(df["Date"]).astype(np.int64).astype(np.float64) / 10**9
+        T = pd.to_datetime(df["Date"]).astype(np.int64).astype(np.float64) / 10**9  # pyright: ignore
         T = pd.Series(MinMaxScaler().fit_transform(T.values.reshape(-1, 1)).squeeze())  # pyright: ignore
 
         df = df.drop(columns=["Date"])

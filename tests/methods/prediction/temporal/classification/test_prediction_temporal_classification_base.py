@@ -7,7 +7,7 @@ from tempor.methods.prediction.temporal.classification import BaseTemporalClassi
 
 if TYPE_CHECKING:
     from typing_extensions import Self
-    from tempor.methods.core import Params
+    from tempor.methods.core.params import Params
     from tempor.data.dataset import BaseDataset, PredictiveDataset
     from tempor.data.samples import TimeSeriesSamples
 

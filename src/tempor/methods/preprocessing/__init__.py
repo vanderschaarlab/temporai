@@ -1,3 +1,5 @@
+"""Preprocessing methods."""
+
 from . import encoding, imputation, nop, scaling
 
 __all__ = [

@@ -16,7 +16,7 @@ from tempor.automl.seeker import (
     TunerType,
 )
 from tempor.data.dataset import PredictiveDataset, TimeToEventAnalysisDataset
-from tempor.methods.core._params import CategoricalParams, IntegerParams
+from tempor.methods.core.params import CategoricalParams, IntegerParams
 
 
 def test_init_fails_estimator_name_def_length_mismatch():

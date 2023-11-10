@@ -1,3 +1,5 @@
+"""Imputation methods."""
+
 from . import static, temporal
 from ._base import BaseImputer, TabularImputerType
 

@@ -1,3 +1,5 @@
+"""Implementation using ``ffill``."""
+
 from typing import Any, List
 
 from typing_extensions import Self
@@ -5,7 +7,7 @@ from typing_extensions import Self
 from tempor.core import plugins
 from tempor.data import dataset
 from tempor.data.samples import TimeSeriesSamples
-from tempor.methods.core import Params
+from tempor.methods.core.params import Params
 from tempor.methods.preprocessing.imputation._base import BaseImputer
 
 
@@ -13,6 +15,9 @@ from tempor.methods.preprocessing.imputation._base import BaseImputer
 class FFillImputer(BaseImputer):
     def __init__(self, **params: Any) -> None:  # pylint: disable=useless-super-delegation
         """Forward-first Time-Series Imputation.
+
+        Args:
+            **params (Any): Additional parameters.
 
         Note:
             The data will be represented as a multi-index `(sample_idx, time_idx)` dataframe of features.
@@ -56,5 +61,5 @@ class FFillImputer(BaseImputer):
         return data
 
     @staticmethod
-    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:  # noqa: D102
         return []

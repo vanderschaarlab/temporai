@@ -8,7 +8,7 @@ from tempor.methods.prediction.one_off.classification import BaseOneOffClassifie
 
 if TYPE_CHECKING:
     from typing_extensions import Self
-    from tempor.methods.core import Params
+    from tempor.methods.core.params import Params
     from tempor.data.dataset import BaseDataset
     from tempor.data.samples import StaticSamples
 

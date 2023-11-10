@@ -1,3 +1,5 @@
+"""Time-to-event (survival) analysis methods."""
+
 import abc
 
 import pydantic
@@ -10,6 +12,14 @@ from tempor.data import data_typing, dataset, samples
 
 
 def check_data_class(data: Any) -> None:
+    """Check that the passed data is of the correct class (`dataset.TimeToEventAnalysisDataset`).
+
+    Args:
+        data (Any): Data to check.
+
+    Raises:
+        TypeError: If the data is not of the correct class.
+    """
     if not isinstance(data, dataset.TimeToEventAnalysisDataset):
         raise TypeError(
             "Expected `data` passed to a survival analysis estimator to be "
@@ -18,10 +28,10 @@ def check_data_class(data: Any) -> None:
 
 
 class BaseTimeToEventAnalysis(methods_core.BasePredictor):
-    def __init__(self, **params: Any) -> None:  # pylint: disable=useless-super-delegation
+    def __init__(self, **params: Any) -> None:  # pylint: disable=useless-super-delegation  # noqa: D107
         super().__init__(**params)
 
-    def fit(self, data: dataset.BaseDataset, *args: Any, **kwargs: Any) -> Self:
+    def fit(self, data: dataset.BaseDataset, *args: Any, **kwargs: Any) -> Self:  # noqa: D102
         check_data_class(data)
         super().fit(data, *args, **kwargs)
         return self
@@ -37,11 +47,24 @@ class BaseTimeToEventAnalysis(methods_core.BasePredictor):
         horizons: data_typing.TimeIndex,
         *args,
         **kwargs,
-    ) -> samples.TimeSeriesSamples:  # Output is risk scores at time points, hence `samples.TimeSeriesSamples`.
+    ) -> samples.TimeSeriesSamples:
+        """Predict risk scores for the given data. Output is risk scores at time points, hence
+        `samples.TimeSeriesSamples`.
+
+        Args:
+            data (dataset.PredictiveDataset): Dataset to predict on. Should be `dataset.TimeToEventAnalysisDataset`.
+            horizons (data_typing.TimeIndex): Time points to predict at.
+            *args: Additional arguments.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            samples.TimeSeriesSamples: Predicted risk scores at the given time points.
+        """
         check_data_class(data)
         return super().predict(data, horizons, *args, **kwargs)
 
     def predict_proba(self, data: dataset.PredictiveDataset, *args: Any, **kwargs: Any) -> Any:
+        """Not used for this case. Raises an error."""
         raise tempor.exc.UnsupportedSetupException(
             "`predict_proba` method is not supported in the time-to-event analysis setting"
         )

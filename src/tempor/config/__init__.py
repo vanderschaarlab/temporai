@@ -1,3 +1,5 @@
+"""Package directory for TemporAI configuration."""
+
 import dataclasses
 import os
 import pathlib
@@ -27,18 +29,33 @@ DEFAULT_CONFIG_FILE_PATH = os.path.join(
 
 @dataclasses.dataclass
 class LoggingConfig:
+    """The configuration class for logging."""
+
     level: str = omegaconf.MISSING
+    """Logging level. One of: ``"DEBUG"``, ``"INFO"``, ``"WARNING"``, ``"ERROR"``, ``"CRITICAL"``."""
     diagnose: bool = omegaconf.MISSING
+    """Whether to use `loguru`'s ``diagnose`` setting for exceptions."""
     backtrace: bool = omegaconf.MISSING
+    """Whether to use `loguru`'s ``backtrace`` setting for exceptions."""
     file_log: bool = omegaconf.MISSING
+    """Whether to log to a file."""
 
 
 @dataclasses.dataclass
 class TemporConfig:
+    """The main configuration class for the TemporAI library."""
+
     logging: LoggingConfig
+    """Logging configuration."""
     working_directory: str = omegaconf.MISSING
+    """Working directory for the library. Can be set to a path string, ``"$PWD"``. or ``"~"``."""
 
     def get_working_dir(self) -> str:
+        """Get the working directory, with ``"$PWD"`` and ``"~"`` expanded.
+
+        Returns:
+            str: The working directory string.
+        """
         if self.working_directory.startswith("$PWD"):
             return self.working_directory.replace("$PWD", os.getcwd(), 1)
         elif self.working_directory.startswith("~"):
@@ -68,6 +85,11 @@ _this_module = sys.modules[__name__]  # Needed to directly set `config` on this 
 
 # pylint: disable=protected-access
 def get_config() -> TemporConfig:
+    """Get the current TemporAI configuration.
+
+    Returns:
+        TemporConfig: TemporAI configuration.
+    """
     return _this_module._config
 
 
@@ -87,6 +109,14 @@ def _load(loaded_config: omegaconf.DictConfig) -> TemporConfig:
 
 
 def load_yaml_file(path: Union[str, pathlib.Path]) -> TemporConfig:
+    """Load a YAML file as a `TemporConfig` object.
+
+    Args:
+        path (Union[str, pathlib.Path]): The path to the YAML file.
+
+    Returns:
+        TemporConfig: TemporAI configuration.
+    """
     loaded = OmegaConf.load(path)
     if TYPE_CHECKING:  # pragma: no cover
         assert isinstance(loaded, omegaconf.DictConfig)  # nosec B101
@@ -94,6 +124,14 @@ def load_yaml_file(path: Union[str, pathlib.Path]) -> TemporConfig:
 
 
 def load_dictconfig(config_node: omegaconf.DictConfig) -> TemporConfig:
+    """Load an `omegaconf.DictConfig` as a `TemporConfig` object.
+
+    Args:
+        config_node (omegaconf.DictConfig): The configuration ``DictConfig``.
+
+    Returns:
+        TemporConfig: TemporAI configuration.
+    """
     return _load(config_node)
 
 
@@ -102,6 +140,15 @@ _config: TemporConfig = load_yaml_file(path=DEFAULT_CONFIG_FILE_PATH)
 
 
 def configure(new_config: Union[TemporConfig, omegaconf.DictConfig, str, pathlib.Path]) -> TemporConfig:
+    """Configure TemporAI with a new config.
+
+    Args:
+        new_config (Union[TemporConfig, omegaconf.DictConfig, str, pathlib.Path]):
+            The new configuration. Can be a ``TemporConfig`` object, a ``DictConfig`` object, or a path to a YAML file.
+
+    Returns:
+        TemporConfig: TemporAI configuration.
+    """
     if isinstance(new_config, (str, pathlib.Path)):
         _this_module._config = load_yaml_file(path=new_config)  # type: ignore
     elif isinstance(new_config, omegaconf.DictConfig):

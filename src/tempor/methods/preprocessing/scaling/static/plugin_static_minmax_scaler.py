@@ -1,3 +1,5 @@
+"""MinMax scaling for the static data."""
+
 import dataclasses
 from typing import Any, Dict, List, Tuple
 
@@ -8,8 +10,7 @@ from typing_extensions import Self
 from tempor.core import plugins
 from tempor.data import dataset
 from tempor.data.samples import StaticSamples
-from tempor.methods.core import Params
-from tempor.methods.core._params import CategoricalParams
+from tempor.methods.core.params import CategoricalParams, Params
 from tempor.methods.preprocessing.scaling._base import BaseScaler
 
 
@@ -37,7 +38,7 @@ class StaticMinMaxScaler(BaseScaler):
         each feature individually such that it is in the given range on the training set, e.g. between zero and one.
 
         Args:
-            params:
+            **params (Any):
                 Parameters and defaults as defined in :class:`StaticMinMaxScalerParams`.
 
         Example:
@@ -86,7 +87,7 @@ class StaticMinMaxScaler(BaseScaler):
         return data
 
     @staticmethod
-    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:  # noqa: D102
         return [
             CategoricalParams("clip", [True, False]),
         ]

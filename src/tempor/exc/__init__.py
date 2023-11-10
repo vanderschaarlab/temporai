@@ -1,4 +1,11 @@
+"""Package directory with custom exceptions for TemporAI."""
+
+# pylint: disable=unnecessary-pass
+
+
 class DataValidationException(ValueError):
+    """Exception raised when TemporAI-specific data format validation fails."""
+
     pass
 
 
@@ -7,4 +14,4 @@ class UnsupportedSetupException(RuntimeError):
     e.g. incompatible data format.
     """
 
-    pass  # pylint: disable=unnecessary-pass
+    pass

@@ -1,3 +1,5 @@
+"""Temporal prediction methods."""
+
 from . import classification, regression
 
 __all__ = [

@@ -1,3 +1,5 @@
+"""MinMax scaling for the temporal data."""
+
 import dataclasses
 from typing import Any, Dict, List, Tuple
 
@@ -8,8 +10,7 @@ from typing_extensions import Self
 from tempor.core import plugins
 from tempor.data import dataset
 from tempor.data.samples import TimeSeriesSamples
-from tempor.methods.core import Params
-from tempor.methods.core._params import CategoricalParams
+from tempor.methods.core.params import CategoricalParams, Params
 from tempor.methods.preprocessing.scaling._base import BaseScaler
 
 
@@ -40,7 +41,7 @@ class TimeSeriesMinMaxScaler(BaseScaler):
         and the scaling will be applied to this dataframe.
 
         Args:
-            params:
+            **params (Any):
                 Parameters and defaults as defined in :class:`TimeSeriesMinMaxScalerParams`.
 
         Example:
@@ -83,7 +84,7 @@ class TimeSeriesMinMaxScaler(BaseScaler):
         return data
 
     @staticmethod
-    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:  # noqa: D102
         return [
             CategoricalParams("clip", [True, False]),
         ]

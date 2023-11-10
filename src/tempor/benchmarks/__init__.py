@@ -1,3 +1,5 @@
+"""Package directory for benchmarking methods on datasets."""
+
 from .benchmark import benchmark_models, visualize_benchmark  # noqa: F401
 from .evaluation import (  # noqa: F401
     ClassifierSupportedMetric,

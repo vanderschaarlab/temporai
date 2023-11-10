@@ -1,3 +1,7 @@
+"""One-off classification plugin based on
+"Neural Laplace: Learning diverse classes of differential equations in the Laplace domain".
+"""
+
 import dataclasses
 from typing import Any, List, Optional
 
@@ -6,8 +10,7 @@ from typing_extensions import Self
 
 from tempor.core import plugins
 from tempor.data import dataset, samples
-from tempor.methods.core import Params
-from tempor.methods.core._params import CategoricalParams, FloatParams, IntegerParams
+from tempor.methods.core.params import CategoricalParams, FloatParams, IntegerParams, Params
 from tempor.methods.prediction.one_off.classification import BaseOneOffClassifier
 from tempor.models import utils as model_utils
 from tempor.models.constants import Nonlin, Samp
@@ -71,7 +74,7 @@ class LaplaceODEClassifier(BaseOneOffClassifier):
         Riemann stereographic projection for better global representation of the complex Laplace domain.
 
         Args:
-            params:
+            **params (Any):
                 Parameters and defaults as defined in :class:`LaplaceODEClassifierParams`.
 
         Example:
@@ -175,7 +178,7 @@ class LaplaceODEClassifier(BaseOneOffClassifier):
         return samples.StaticSamples.from_numpy(preds)
 
     @staticmethod
-    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:  # noqa: D102
         return [
             IntegerParams(name="n_units_hidden", low=100, high=1000),
             IntegerParams(name="n_layers_hidden", low=1, high=5),

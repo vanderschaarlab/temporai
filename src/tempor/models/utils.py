@@ -1,3 +1,5 @@
+"""Utilities for the ``models`` package directory."""
+
 import os
 import random
 import warnings
@@ -88,6 +90,7 @@ def enable_reproducibility(
 
 class GumbelSoftmax(nn.Module):
     def __init__(self, tau: float = 0.2, hard: bool = False, dim: int = -1) -> None:
+        """Gumbel-Softmax activation function implementation."""
         super(GumbelSoftmax, self).__init__()
 
         self.tau = tau
@@ -95,7 +98,7 @@ class GumbelSoftmax(nn.Module):
         self.dim = dim
 
     def forward(self, logits: torch.Tensor) -> torch.Tensor:
-        # NOTE: nn.functional.gumbel_softmax eps parameter is deprecated.
+        """Forward pass."""
         return nn.functional.gumbel_softmax(logits, tau=self.tau, hard=self.hard, dim=self.dim)
 
 
@@ -110,10 +113,22 @@ NONLIN_MAP: Dict[str, nn.Module] = {
     "softmax": nn.Softmax(dim=-1),
     "gumbel_softmax": GumbelSoftmax(dim=-1),
 }
+"""A map of names (str, keys) to nonlinearity modules (`nn.Module`, values)."""
 tempor.core.utils.ensure_literal_matches_dict_keys(Nonlin, NONLIN_MAP, "Nonlin", "NONLIN_MAP")
 
 
 def get_nonlin(name: Nonlin) -> nn.Module:
+    """Get a nonlinearity `nn.Module` (nonlinearity / activation function) by name.
+
+    Args:
+        name (Nonlin): Nonlinearity name.
+
+    Raises:
+        ValueError: If unknown nonlinearity name.
+
+    Returns:
+        nn.Module: Nonlinearity module.
+    """
     try:
         return NONLIN_MAP[name]
     except KeyError as e:
@@ -128,10 +143,23 @@ SAMPLER_MAP: Dict[str, Type[torch.utils.data.sampler.Sampler]] = {
     "SubsetRandomSampler": torch.utils.data.sampler.SubsetRandomSampler,
     "WeightedRandomSampler": torch.utils.data.sampler.WeightedRandomSampler,
 }
+"""A map of names (str, keys) to sampler classes (`Type[torch.utils.data.sampler.Sampler]`, values)."""
 tempor.core.utils.ensure_literal_matches_dict_keys(Samp, SAMPLER_MAP, "Samp", "SAMPLER_MAP")
 
 
 def get_sampler(name: Union[Samp, None], **kwargs: Any) -> Union[torch.utils.data.sampler.Sampler, None]:
+    """Get a sampler by name.
+
+    Args:
+        name (Union[Samp, None]): Sampler name.
+        **kwargs (Any): Sampler initializer kwargs.
+
+    Raises:
+        ValueError: If unknown sampler name.
+
+    Returns:
+        Union[torch.utils.data.sampler.Sampler, None]: Sampler instance.
+    """
     try:
         return SAMPLER_MAP[name](**kwargs) if name is not None else None
     except KeyError as e:
@@ -139,6 +167,15 @@ def get_sampler(name: Union[Samp, None], **kwargs: Any) -> Union[torch.utils.dat
 
 
 def get_device(device: Union[None, int, str, torch.device]) -> torch.device:
+    """Get a `torch` device by name.
+
+    Args:
+        device (Union[None, int, str, torch.device]):
+            Arguments to pass to `torch.device`, or `None` to use the default device.
+
+    Returns:
+        torch.device: Device instance.
+    """
     if device is None:
         return DEVICE
     else:

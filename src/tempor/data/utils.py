@@ -1,3 +1,5 @@
+"""Module containing utility functions for data format management."""
+
 import dataclasses
 import itertools
 from typing import Any, ClassVar, Iterable, List, Optional, Sequence, Tuple, Union
@@ -32,6 +34,16 @@ def value_in_df(df: pd.DataFrame, *, value: Any) -> bool:
 
 
 def set_df_column_names_inplace(df: pd.DataFrame, names: Sequence) -> pd.DataFrame:
+    """Set column names of ``df`` to ``names`` inplace. Used to handle different behaviour of ``set_axis`` in different
+    pandas versions.
+
+    Args:
+        df (pd.DataFrame): Dataframe.
+        names (Sequence): Columns names.
+
+    Returns:
+        pd.DataFrame: Dataframe with column names set.
+    """
     if Version(pd.__version__) < Version("1.5"):  # pragma: no cover
         df.set_axis(names, axis="columns", inplace=True)  # pyright: ignore
         return df
@@ -40,6 +52,14 @@ def set_df_column_names_inplace(df: pd.DataFrame, names: Sequence) -> pd.DataFra
 
 
 def get_df_index_level0_unique(df: pd.DataFrame) -> pd.Index:
+    """Return the unique values of the level 0 index of ``df``.
+
+    Args:
+        df (pd.DataFrame): The dataframe.
+
+    Returns:
+        pd.Index: The unique values of the level 0 index of ``df``.
+    """
     return df.index.get_level_values(level=0).unique()
 
 
@@ -59,7 +79,7 @@ def multiindex_timeseries_dataframe_to_array3d(
         padding_indicator (Any):
             padding indicator value to use to pad the output array in case of unequal number of timesteps for
             different samples.
-        max_timesteps (int, optional):
+        max_timesteps (Optional[int], optional):
             Maximum number of timesteps to use. This will become the size of the dim 1 of the output array. If set to
             `None`, this dimension will be set as the highest number of timesteps among the samples. Defaults to `None`.
 
@@ -104,6 +124,14 @@ def check_bool_array1d_trues_consecutive(array: np.ndarray, at_beginning: bool =
         False
         >>> check_bool_array1d_trues_consecutive(np.asarray([False, True, True, True]), at_end=True)
         True
+
+    Args:
+        array (np.ndarray): Input array.
+        at_beginning (bool, optional): Check if first element is `True`. Defaults to `False`.
+        at_end (bool, optional): Check if last element is `True`. Defaults to `False`.
+
+    Returns:
+        bool: The result of the check.
     """
     if array.ndim != 1:
         raise ValueError(EXCEPTION_MESSAGES.expected_array1d)
@@ -136,6 +164,12 @@ def check_bool_array2d_identical_along_dim1(array: np.ndarray) -> bool:
         True
         >>> check_bool_array2d_identical_along_dim1(np.asarray([[True, True, False], [False, True, False]]).T)
         False
+
+    Args:
+        array (np.ndarray): Input array.
+
+    Returns:
+        bool: The result of the check.
     """
     if array.ndim != 2:
         raise ValueError(EXCEPTION_MESSAGES.expected_array2d)
@@ -157,6 +191,13 @@ def get_array1d_length_until_padding(array: np.ndarray, padding_indicator: Any =
         4
         >>> get_array1d_length_until_padding(np.asarray([1, 8, -3, 9, 5]), padding_indicator=pad)
         5
+
+    Args:
+        array (np.ndarray): Input array.
+        padding_indicator (Any, optional): Padding indicator. Defaults to None.
+
+    Returns:
+        int: Length of ``array`` up to first padding.
     """
     if array.ndim != 1:
         raise ValueError(EXCEPTION_MESSAGES.expected_array1d)
@@ -210,6 +251,15 @@ def get_seq_lengths_timeseries_array3d(array: np.ndarray, padding_indicator: Any
         >>> array = np.transpose(array, (0, 2, 1))
         >>> get_seq_lengths_timeseries_array3d(array, padding_indicator=pad)
         [4, 2]
+
+    Args:
+        array (np.ndarray):
+            3D numpy `array` that represents timeseries like ``(sample, timestep, feature)``.
+        padding_indicator (Any, optional):
+            Padding indicator used in `array` to indicate padding. Defaults to `None`.
+
+    Returns:
+        List[int]: List of lengths (number of [non-padding] timesteps) for each sample.
     """
     validate_timeseries_array3d(array, padding_indicator)
     is_padded = padding_indicator is not None
@@ -262,6 +312,13 @@ def make_sample_time_index_tuples(
         >>> time_indexes = [[1, 2, 3], [1, 5, 9, 10]]
         >>> make_sample_time_index_tuples(sample_index, time_indexes)
         [('s1', 1), ('s1', 2), ('s1', 3), ('s2', 1), ('s2', 5), ('s2', 9), ('s2', 10)]
+
+    Args:
+        sample_index (data_typing.SampleIndex): List of sample IDs.
+        time_indexes (data_typing.TimeIndexList): List of lists of timesteps for each sample.
+
+    Returns:
+        data_typing.SampleTimeIndexTuples: List of tuples like ``[(<sample ID>, <timestep>), ...]``.
     """
     if len(sample_index) != len(time_indexes):
         raise ValueError("Expected the same number of elements in `sample_index` and `time_indexes`")
@@ -294,15 +351,15 @@ def array3d_to_multiindex_timeseries_dataframe(
     Args:
         array (np.ndarray):
             3D numpy `array` that represents timeseries like ``(sample, timestep, feature)``.
-        sample_index (List[<sample element>):
+        sample_index (data_typing.SampleIndex):
             List of sample IDs (should be the same length as dim 0 of `array`).
-        time_indexes (List[List[<timestep element>]]):
+        time_indexes (data_typing.TimeIndexList):
             List of lists containing timesteps for each sample (outer list should be the same length as dim 0 of
             `array`, inner list should contain as many elements as each sample has timesteps).
-        feature_index (List[<feature element>]):
+        feature_index (data_typing.FeatureIndex):
             List of feature names.
         padding_indicator (Any, optional):
-            Padding indicator used in `array` to indicate padding. Defaults to None.
+            Padding indicator used in `array` to indicate padding. Defaults to `None`.
 
     Returns:
         pd.DataFrame: Resultant dataframe.
@@ -328,6 +385,18 @@ def list_of_dataframes_to_multiindex_timeseries_dataframe(
     time_indexes: Optional[data_typing.TimeIndexList] = None,
     feature_index: Optional[data_typing.FeatureIndex] = None,
 ) -> pd.DataFrame:
+    """Given a list of dataframes ``list_of_dataframes``, ``sample_index``, [``time_indexes``, ``feature_index``,]
+    build a 2-level multiindex (sample, timestep) `pandas.DataFrame`.
+
+    Args:
+        list_of_dataframes (List[pd.DataFrame]): List of dataframes.
+        sample_index (data_typing.SampleIndex): List of sample IDs.
+        time_indexes (Optional[data_typing.TimeIndexList], optional): List of lists of time indexes. Defaults to `None`.
+        feature_index (Optional[data_typing.FeatureIndex], optional): Feature index. Defaults to `None`.
+
+    Returns:
+        pd.DataFrame: Resultant dataframe.
+    """
     dfs: List[pd.DataFrame] = list_of_dataframes
 
     if time_indexes is not None and len(list_of_dataframes) != len(time_indexes):
@@ -451,6 +520,14 @@ def datetime_time_index_to_float(time_index: Union[data_typing.TimeIndex, pd.Ind
 
 
 def ensure_pd_iloc_key_returns_df(key: Any) -> Union[Iterable, slice]:
+    """Modify ``key`` such that when this is passed to ``pd.DataFrame.iloc``, the result is always a dataframe.
+
+    Args:
+        key (Any): Input key.
+
+    Returns:
+        Union[Iterable, slice]: Modified key.
+    """
     if isinstance(key, slice):
         key_: Any = key
     elif tempor.core.utils.is_iterable(key):

@@ -1,3 +1,5 @@
+"""Package directory for one-off prediction data sources."""
+
 from tempor.core import plugins
 from tempor.datasources import datasource
 

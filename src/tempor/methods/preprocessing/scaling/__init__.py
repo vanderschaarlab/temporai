@@ -1,3 +1,5 @@
+"""Scaling methods."""
+
 from . import static, temporal
 from ._base import BaseScaler
 

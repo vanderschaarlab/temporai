@@ -1,12 +1,23 @@
+"""Generator functions for the pipeline class creation used by `~tempor.methods.pipeline.PipelineMeta`."""
+
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Type
 
 from tempor.data import dataset
 
 if TYPE_CHECKING:  # pragma: no cover
-    from tempor.methods.core import Params
+    from tempor.methods.core.params import Params
 
 
 def _generate_pipeline_seq_impl(plugins: Tuple[Type, ...]) -> Callable:
+    """A "meta-function" to generate a pipeline sequence string.
+
+    Args:
+        plugins (Tuple[Type, ...]): Sequence of plugins that form the pipeline.
+
+    Returns:
+        Callable: The function that does this job.
+    """
+
     def pipeline_seq_impl(*args: Any) -> str:  # pylint: disable=unused-argument
         return "->".join(p.full_name() for p in plugins)
 
@@ -14,6 +25,15 @@ def _generate_pipeline_seq_impl(plugins: Tuple[Type, ...]) -> Callable:
 
 
 def _generate_hyperparameter_space_impl(plugins: Tuple[Type, ...]) -> Callable:
+    """A "meta-function" to generate a hyperparameter space dictionary.
+
+    Args:
+        plugins (Tuple[Type, ...]): Sequence of plugins that form the pipeline.
+
+    Returns:
+        Callable: The function that does this job.
+    """
+
     def hyperparameter_space_impl(*args: Any, **kwargs: Any) -> Dict:
         out = {}
         for p in plugins:
@@ -24,6 +44,15 @@ def _generate_hyperparameter_space_impl(plugins: Tuple[Type, ...]) -> Callable:
 
 
 def _generate_hyperparameter_space_for_step_impl(plugins: Tuple[Type, ...]) -> Callable:
+    """A "meta-function" to generate a hyperparameter space dictionary for a specific step.
+
+    Args:
+        plugins (Tuple[Type, ...]): Sequence of plugins that form the pipeline.
+
+    Returns:
+        Callable: The function that does this job.
+    """
+
     def hyperparameter_space_for_step_impl(step: str, *args: Any, **kwargs: Any) -> Dict:
         for p in plugins:
             if p.name == step:
@@ -34,6 +63,15 @@ def _generate_hyperparameter_space_for_step_impl(plugins: Tuple[Type, ...]) -> C
 
 
 def _generate_sample_hyperparameters_impl(plugins: Tuple[Type, ...]) -> Callable:
+    """A "meta-function" to sample hyperparameters for a specific step.
+
+    Args:
+        plugins (Tuple[Type, ...]): Sequence of plugins that form the pipeline.
+
+    Returns:
+        Callable: The function that does this job.
+    """
+
     def sample_hyperparameters_impl(*args: Any, override: Optional[List["Params"]] = None, **kwargs: Any) -> Dict:
         sample: dict = {}
         for p in plugins:
@@ -45,6 +83,12 @@ def _generate_sample_hyperparameters_impl(plugins: Tuple[Type, ...]) -> Callable
 
 
 def _generate_constructor() -> Callable:
+    """A "meta-function" to generate the constructor for the pipeline class.
+
+    Returns:
+        Callable: The function that does this job.
+    """
+
     def _sanity_checks(plugins: Tuple[Type, ...]) -> None:
         if len(plugins) == 0:
             raise RuntimeError("Invalid empty pipeline.")
@@ -78,6 +122,12 @@ def _generate_constructor() -> Callable:
 
 
 def _generate_fit() -> Callable:
+    """A "meta-function" to generate the fit method for the pipeline class.
+
+    Returns:
+        Callable: The function that does this job.
+    """
+
     def fit_impl(self: Any, data: dataset.BaseDataset, *args: Any, **kwargs: Any) -> Any:
         local_X = data
         for stage in self.stages[:-1]:
@@ -91,6 +141,12 @@ def _generate_fit() -> Callable:
 
 
 def _generate_predict() -> Callable:
+    """A "meta-function" to generate the predict method for the pipeline class.
+
+    Returns:
+        Callable: The function that does this job.
+    """
+
     def predict_impl(self: Any, data: dataset.PredictiveDataset, *args: Any, **kwargs: Any) -> Any:
         local_X = data
         for stage in self.stages[:-1]:
@@ -102,6 +158,12 @@ def _generate_predict() -> Callable:
 
 
 def _generate_predict_proba() -> Callable:
+    """A "meta-function" to generate the predict_proba method for the pipeline class.
+
+    Returns:
+        Callable: The function that does this job.
+    """
+
     def predict_proba_impl(self: Any, data: dataset.PredictiveDataset, *args: Any, **kwargs: Any) -> Any:
         local_X = data
         for stage in self.stages[:-1]:
@@ -113,6 +175,12 @@ def _generate_predict_proba() -> Callable:
 
 
 def _generate_predict_counterfactuals() -> Callable:
+    """A "meta-function" to generate the predict_counterfactuals method for the pipeline class.
+
+    Returns:
+        Callable: The function that does this job.
+    """
+
     def predict_counterfactuals_impl(self: Any, data: dataset.PredictiveDataset, *args: Any, **kwargs: Any) -> Any:
         local_X = data
         for stage in self.stages[:-1]:

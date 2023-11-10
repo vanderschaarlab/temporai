@@ -1,3 +1,5 @@
+"""A package directory for the pipeline functionality."""
+
 import abc
 from typing import Any, Dict, Generator, List, NoReturn, Optional, Tuple, Type
 
@@ -8,7 +10,7 @@ from typing_extensions import Self
 from tempor import plugin_loader
 from tempor.data import dataset
 from tempor.log import logger
-from tempor.methods.core import Params
+from tempor.methods.core.params import Params
 from tempor.methods.prediction.one_off.classification import BaseOneOffClassifier
 from tempor.methods.prediction.one_off.regression import BaseOneOffRegressor
 from tempor.methods.prediction.temporal.classification import BaseTemporalClassifier
@@ -58,7 +60,9 @@ class PipelineBase:
 
         Args:
             plugin_params (Optional[Dict[str, Dict]], optional):
-                A dictionary like ``{"plugin_1_name": {"init_param_1": value, ...}, ...}``. Defaults to None.
+                A dictionary like ``{"plugin_1_name": {"init_param_1": value, ...}, ...}``. Defaults to `None`.
+            **kwargs (Any):
+                Any keyword arguments.
         """
         raise NotImplementedError("Not implemented")
 
@@ -66,6 +70,9 @@ class PipelineBase:
     def pipeline_seq(*args: Any) -> str:  # pragma: no cover
         """Get a string representation of the pipeline, stating each stage plugin, e.g. like:
         ``'preprocessing.imputation.temporal.bfill->...->prediction.one_off.classification.nn_classifier'``
+
+        Args:
+            *args (Any): Any positional arguments.
 
         Returns:
             str: String representation of the pipeline.
@@ -76,6 +83,10 @@ class PipelineBase:
     def hyperparameter_space(*args: Any, **kwargs: Any) -> Dict[str, List[Params]]:  # pragma: no cover
         """The pipeline version of the estimator static method of the same name. All the hyperparameters of the
         different stages will be returned.
+
+        Args:
+            *args (Any): Any positional arguments.
+            **kwargs (Any): Any keyword arguments.
 
         Returns:
             Dict[str, List[Params]]: A dictionary with each stage plugin names as keys and corresponding hyperparameter\
@@ -89,6 +100,8 @@ class PipelineBase:
 
         Args:
             name (str): Name of the pipeline step (i.e. the name of the underlying plugin).
+            *args (Any): Any positional arguments.
+            **kwargs (Any): Any keyword arguments.
 
         Returns:
             List[Params]: the hyperparameter space for the step of the pipeline.
@@ -100,6 +113,12 @@ class PipelineBase:
         cls, *args: Any, override: Optional[List[Params]] = None, **kwargs: Any
     ) -> Dict[str, Any]:  # pragma: no cover
         """The pipeline version of the estimator method of the same name. Returns a hyperparameter sample.
+
+        Args:
+            *args (Any): Any positional arguments.
+            override (Optional[List[Params]], optional): A list of hyperparameter samples to override the default\
+                sampling. Defaults to `None`.
+            **kwargs (Any): Any keyword arguments.
 
         Returns:
             Dict[str, Any]: a dictionary with hyperparameter names as keys and corresponding hyperparameter samples\
@@ -116,6 +135,8 @@ class PipelineBase:
 
         Args:
             data (dataset.BaseDataset): Input dataset.
+            *args (Any): Any positional arguments.
+            **kwargs (Any): Any keyword arguments.
 
         Returns:
             Self: Returns the fitted pipeline itself.
@@ -128,6 +149,8 @@ class PipelineBase:
 
         Args:
             data (dataset.PredictiveDataset): Input dataset.
+            *args (Any): Any positional arguments.
+            **kwargs (Any): Any keyword arguments.
 
         Returns:
             Any: the same return type as the final step of the pipeline.
@@ -140,6 +163,8 @@ class PipelineBase:
 
         Args:
             data (dataset.PredictiveDataset): Input dataset.
+            *args (Any): Any positional arguments.
+            **kwargs (Any): Any keyword arguments.
 
         Returns:
             Any: the same return type as the final step of the pipeline.
@@ -154,6 +179,8 @@ class PipelineBase:
 
         Args:
             data (dataset.PredictiveDataset): Input dataset.
+            *args (Any): Any positional arguments.
+            **kwargs (Any): Any keyword arguments.
 
         Returns:
             Any: the same return type as the final step of the pipeline.
@@ -162,25 +189,54 @@ class PipelineBase:
 
     @property
     def predictor_category(self) -> str:
+        """Return the ``category`` of the final step of the pipeline.
+
+        Returns:
+            str: The ``category`` of the final step of the pipeline.
+        """
         return self.plugin_types[-1].category
 
     @property
     def params(self) -> Dict[str, omegaconf.DictConfig]:
+        """Return a dictionary with the parameters (``.params``) of each step of the pipeline (keyed by the stage name).
+
+        Returns:
+            Dict[str, omegaconf.DictConfig]: The requisite dictionary.
+        """
         out = dict()
         for p in self.stages:
             out[p.name] = p.params
         return out
 
     def __rich_repr__(self) -> Generator:
+        """A `rich` representation of the class.
+
+        Yields:
+            Generator: The fields and their values fed to `rich`.
+        """
         yield "pipeline_seq", self.pipeline_seq()
         yield "predictor_category", self.predictor_category
         yield "params", {k: omegaconf.OmegaConf.to_container(v) for k, v in self.params.items()}
 
     def __repr__(self) -> str:
+        """The `repr()` representation of the class.
+
+        Returns:
+            str: The representation.
+        """
         return rich.pretty.pretty_repr(self)
 
 
 def prepend_base(base: Type, bases: List[Type]) -> List[Type]:
+    """Prepend a base class to a list of base classes, if it is not already present.
+
+    Args:
+        base (Type): Base class to prepend.
+        bases (List[Type]): List of base classes.
+
+    Returns:
+        List[Type]: The list of base classes, with the base class prepended.
+    """
     if base in bases:
         bases_final = bases
     else:
@@ -189,11 +245,23 @@ def prepend_base(base: Type, bases: List[Type]) -> List[Type]:
 
 
 def raise_not_implemented(*args: Any, **kwargs: Any) -> NoReturn:
+    """Raise a ``NotImplementedError`` if a method like ``_fit/predict/...`` is not implemented.
+
+    Args:
+        *args (Any): Any positional arguments.
+        **kwargs (Any): Any keyword arguments.
+
+    Raises:
+        NotImplementedError: The requisite error.
+
+    Returns:
+        NoReturn: Does not return, raises error.
+    """
     raise NotImplementedError("The `{_fit/predict/...}` methods are not implemented for the pipelines")
 
 
 class PipelineMeta(abc.ABCMeta):
-    def __new__(
+    def __new__(  # noqa: DOC102, DOC103
         cls: Any,
         __name: str,
         __bases: Tuple[type, ...],
@@ -201,6 +269,25 @@ class PipelineMeta(abc.ABCMeta):
         plugins: Tuple[Type, ...] = tuple(),
         **kwds: Any,
     ) -> Any:
+        """The metaclass ``__new__`` method for defining the pipeline classes.
+
+        Args:
+            cls (Any):
+                The class.
+            __name (str):
+                The name of the class.
+            __bases (Tuple[type, ...]):
+                The list of base classes.
+            __namespace (Dict[str, Any]):
+                The namespace of the class.
+            plugins (Tuple[Type, ...], optional):
+                The list of pipeline plugins. Defaults to ``tuple()``.
+            **kwds (Any):
+                Any keyword arguments to be passed to ``super().__new__``.
+
+        Returns:
+            Any: The class.
+        """
         logger.debug(f"Creating pipeline defined by steps:\n{plugins}")
 
         # Constructor:
@@ -237,6 +324,15 @@ class PipelineMeta(abc.ABCMeta):
 
     @staticmethod
     def parse_bases(bases: Tuple[type, ...], plugins: Tuple[Type, ...]) -> Tuple[type, ...]:
+        """Append the applicable base classes (those that are the last pipeline step is a subclass of) to ``bases``.
+
+        Args:
+            bases (Tuple[type, ...]): List of base classes.
+            plugins (Tuple[Type, ...]): The list of the pipeline's plugins.
+
+        Returns:
+            Tuple[type, ...]: The appended list of base classes.
+        """
         bases_final: List[Type] = list(bases)
 
         if len(plugins) > 0:

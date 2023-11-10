@@ -18,7 +18,8 @@ from tempor.core.types import PredictiveTaskType
 from tempor.data import data_typing
 from tempor.data.dataset import PredictiveDataset, TimeToEventAnalysisDataset
 from tempor.log import logger
-from tempor.methods.core import BasePredictor, Params
+from tempor.methods.core import BasePredictor
+from tempor.methods.core.params import Params
 
 from ._types import AutoMLCompatibleEstimator, OptimDirection
 from .pipeline_selector import (
@@ -129,9 +130,9 @@ def evaluation_callback_dispatch(
             terminated. Otherwise the exception will be ignored and a dummy value returned.
         silence_warnings (bool, optional):
             Whether to silence warnings raised. Defaults to `False`.
-        args (Any):
+        *args (Any):
             Positional arguments to pass to the estimator constructor.
-        kwargs (Any):
+        **kwargs (Any):
             Keyword arguments to pass to the estimator constructor.
 
     Returns:
@@ -268,6 +269,8 @@ class BaseSeeker(abc.ABC):
             silence_warnings (bool, optional):
                 Whether to silence warnings raised. Some dependencies (e.g. `xgbse`) may circumvent this and raise
                 warnings regardless. Defaults to `False`.
+            **kwargs (Any):
+                Currently unused.
 
         Raises:
             ValueError: If incompatible / invalid input arguments have been passed.
@@ -552,7 +555,7 @@ class MethodSeeker(BaseSeeker):
                 See `~tempor.automl.seeker.BaseSeeker`.
             silence_warnings (bool, optional):
                 See `~tempor.automl.seeker.BaseSeeker`.
-            kwargs (Any):
+            **kwargs (Any):
                 See `~tempor.automl.seeker.BaseSeeker`.
         """
         estimator_defs = estimator_names
@@ -689,7 +692,7 @@ class PipelineSeeker(BaseSeeker):
                 See `~tempor.automl.seeker.BaseSeeker`.
             silence_warnings (bool, optional):
                 See `~tempor.automl.seeker.BaseSeeker`.
-            kwargs (Any):
+            **kwargs (Any):
                 See `~tempor.automl.seeker.BaseSeeker`.
         """
         # Define estimator definitions:

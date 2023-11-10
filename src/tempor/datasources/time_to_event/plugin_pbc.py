@@ -1,3 +1,5 @@
+"""Module containing the PBC data source."""
+
 import io
 import os
 from typing import Any
@@ -13,25 +15,57 @@ from tempor.data import dataset, utils
 from tempor.datasources import datasource
 
 
-# TODO: Docstring to explain the dataset.
 @plugins.register_plugin(name="pbc", category="time_to_event", plugin_type="datasource")
 class PBCDataSource(datasource.TimeToEventAnalysisDataSource):
     def __init__(self, **kwargs: Any) -> None:
+        """PBC data source.
+
+        The data is from the PBC2 dataset, as found here:
+        https://search.r-project.org/CRAN/refmans/DynForest/html/pbc2.html
+
+        Actual data obtained from:
+        https://raw.githubusercontent.com/autonlab/auton-survival/cf583e598ec9ab92fa5d510a0ca72d46dfe0706f/dsm/datasets/pbc2.csv
+
+        Temporal features are:
+        - ``"drug"``
+        - ``"ascites"``
+        - ``"hepatomegaly"``
+        - ``"spiders"``
+        - ``"edema"``
+        - ``"histologic"``
+        - ``"serBilir"``
+        - ``"serChol"``
+        - ``"albumin"``
+        - ``"alkaline"``
+        - ``"SGOT"``
+        - ``"platelets"``
+        - ``"prothrombin"``
+        - ``"age"``
+
+        Static features are:
+        - ``"sex"``
+
+        The target is:
+        - ``"status2"`` as found in the ``autonlab/auton-survival`` version.
+
+        Args:
+            **kwargs (Any): Keyword arguments to be passed to the parent class.
+        """
         self.datafile_path = os.path.join(self.dataset_dir(), "pbc2.csv")
         super().__init__(**kwargs)
 
     @staticmethod
-    def dataset_dir() -> str:
+    def dataset_dir() -> str:  # noqa: D102
         return os.path.join(PBCDataSource.data_root_dir, "pbc/")
 
     @staticmethod
-    def url() -> str:
+    def url() -> str:  # noqa: D102
         return (
             "https://raw.githubusercontent.com/autonlab/auton-survival/"
             "cf583e598ec9ab92fa5d510a0ca72d46dfe0706f/dsm/datasets/pbc2.csv"
         )
 
-    def load(self, **kwargs: Any) -> dataset.TimeToEventAnalysisDataset:
+    def load(self, **kwargs: Any) -> dataset.TimeToEventAnalysisDataset:  # noqa: D102
         if os.path.exists(self.datafile_path):
             data = pd.read_csv(self.datafile_path)
         else:

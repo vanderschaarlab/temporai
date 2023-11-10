@@ -1,3 +1,5 @@
+"""Helper class for embedding time-series data for time-to-event analysis using Dynamic DeepHit embeddings."""
+
 import abc
 from typing import TYPE_CHECKING, Any, List, Optional, Tuple, cast
 
@@ -7,20 +9,40 @@ from typing_extensions import Self
 
 import tempor.exc
 from tempor.data import data_typing, dataset, samples
-from tempor.methods.core import Params
-from tempor.methods.core._params import CategoricalParams, FloatParams, IntegerParams
+from tempor.methods.core.params import CategoricalParams, FloatParams, IntegerParams, Params
 from tempor.models import utils
 from tempor.models.ddh import DynamicDeepHitModel, output_modes, rnn_modes
 
 
 class OutputTimeToEventAnalysis:
+    """Helper base class for time-to-event analysis models."""
+
     @abc.abstractmethod
     def fit(self, X: pd.DataFrame, T: pd.Series, Y: pd.Series) -> Self:  # pragma: no cover
-        ...
+        """Fit the model.
+
+        Args:
+            X (pd.DataFrame): Input covariates of fixed shape - time-series data should be embedded first.
+            T (pd.Series): Event times.
+            Y (pd.Series): Event values.
+
+        Returns:
+            Self: Fitted model.
+        """
+        ...  # pylint: disable=unnecessary-ellipsis
 
     @abc.abstractmethod
     def predict_risk(self, X: pd.DataFrame, time_horizons: List) -> pd.DataFrame:  # pragma: no cover
-        ...
+        """Predict risk scores.
+
+        Args:
+            X (pd.DataFrame): Input covariates of fixed shape - time-series data should be embedded first.
+            time_horizons (List): Time horizons to predict risk at.
+
+        Returns:
+            pd.DataFrame: Risk scores.
+        """
+        ...  # pylint: disable=unnecessary-ellipsis
 
 
 class DDHEmbedding:
@@ -92,6 +114,14 @@ class DDHEmbedding:
         self,
         data: dataset.BaseDataset,
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Prepare data for fitting.
+
+        Args:
+            data (dataset.BaseDataset): Input dataset.
+
+        Returns:
+            Tuple[np.ndarray, np.ndarray, np.ndarray]: Processed covariate data, event times, event values.
+        """
         utils.enable_reproducibility(self.emb_model.random_state)
 
         data = cast(dataset.TimeToEventAnalysisDataset, data)
@@ -102,13 +132,24 @@ class DDHEmbedding:
             assert event_times is not None and event_values is not None  # nosec B101
         return processed_data, event_times, event_values
 
-    def prepare_predict(
+    def prepare_predict(  # pylint: disable=unused-argument
         self,
         data: dataset.PredictiveDataset,
         horizons: data_typing.TimeIndex,
-        *args: Any,  # pylint: disable=unused-argument
+        *args: Any,
         **kwargs: Any,
     ) -> np.ndarray:
+        """Prepare data for prediction.
+
+        Args:
+            data (dataset.PredictiveDataset): Input dataset.
+            horizons (data_typing.TimeIndex): Time horizons to predict risk at.
+            *args (Any): Additional arguments.
+            **kwargs (Any): Additional keyword arguments.
+
+        Returns:
+            np.ndarray: Processed data.
+        """
         data = cast(dataset.TimeToEventAnalysisDataset, data)
         self._validate_data(data)
         (static, temporal, observation_times, _, _) = self._convert_data(data)
@@ -116,7 +157,10 @@ class DDHEmbedding:
         return processed_data
 
     @staticmethod
-    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:  # pylint: disable=unused-argument
+    def hyperparameter_space(  # pylint: disable=unused-argument
+        *args: Any,
+        **kwargs: Any,
+    ) -> List[Params]:  # noqa: D102
         return [
             IntegerParams(name="n_units_hidden", low=10, high=100, step=10),
             IntegerParams(name="n_layers_hidden", low=1, high=4),
@@ -149,12 +193,22 @@ class DDHEmbeddingTimeToEventAnalysis(DDHEmbedding):
         DDHEmbedding.__init__(self, emb_model=emb_model)
         self.output_model = output_model
 
-    def fit(
+    def fit(  # pylint: disable=unused-argument
         self,
         data: dataset.BaseDataset,
-        *args: Any,  # pylint: disable=unused-argument
+        *args: Any,
         **kwargs: Any,
     ) -> Self:
+        """Fit the model.
+
+        Args:
+            data (dataset.BaseDataset): Input dataset.
+            *args (Any): Additional arguments.
+            **kwargs (Any): Additional keyword arguments.
+
+        Returns:
+            Self: Fitted model.
+        """
         processed_data, event_times, event_values = self.prepare_fit(data)
 
         self.emb_model.fit(processed_data, event_times, event_values)
@@ -174,8 +228,20 @@ class DDHEmbeddingTimeToEventAnalysis(DDHEmbedding):
         *args: Any,
         **kwargs: Any,
     ) -> samples.TimeSeriesSamples:
-        # NOTE: kwargs will be passed to DynamicDeepHitModel.predict_emb().
-        # E.g. `batch_size` batch size parameter can be provided this way.
+        """Predict risk scores.
+
+        ``*args`` and ``**kwargs`` will be passed to ``self.emb_model.predict_emb()``. E.g. ``batch_size`` batch size
+        parameter can be provided this way.
+
+        Args:
+            data (dataset.PredictiveDataset): Input dataset.
+            horizons (data_typing.TimeIndex): Time horizons to predict risk at.
+            *args (Any): Additional arguments. Passed to ``self.emb_model.predict_emb()``
+            **kwargs (Any): Additional keyword arguments. Passed to ``self.emb_model.predict_emb()``
+
+        Returns:
+            samples.TimeSeriesSamples: Predicted risk scores.
+        """
         processed_data = self.prepare_predict(data, horizons, *args, **kwargs)
 
         embeddings = self.emb_model.predict_emb(processed_data)
@@ -193,5 +259,5 @@ class DDHEmbeddingTimeToEventAnalysis(DDHEmbedding):
         )
 
     @staticmethod
-    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:  # noqa: D102
         return DDHEmbedding.hyperparameter_space(*args, **kwargs)

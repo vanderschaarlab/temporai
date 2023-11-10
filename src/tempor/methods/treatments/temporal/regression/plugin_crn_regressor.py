@@ -1,65 +1,33 @@
-import dataclasses
-from typing import Any, Dict, List, Optional, cast
+"""Counterfactual Recurrent Network treatment effects model for regression on the outcomes (targets)."""
+
+from typing import Any, List, Optional, cast
 
 import clairvoyance2.data.dataformat as cl_dataformat
 import pandas as pd
-from clairvoyance2.data import DEFAULT_PADDING_INDICATOR
 from clairvoyance2.treatment_effects.crn import CRNRegressor, TimeIndexHorizon
 from typing_extensions import Self
 
 from tempor.core import plugins
 from tempor.data import dataset, samples
 from tempor.data.clv2conv import _from_clv2_time_series, tempor_dataset_to_clairvoyance2_dataset
-from tempor.methods.core import Params
-from tempor.methods.core._params import CategoricalParams, FloatParams, IntegerParams
+from tempor.methods.constants import Seq2seqParams
+from tempor.methods.core.params import CategoricalParams, FloatParams, IntegerParams, Params
 from tempor.methods.treatments.temporal._base import BaseTemporalTreatmentEffects
-
-
-@dataclasses.dataclass
-class CRNParams:
-    # Encoder:
-    encoder_rnn_type: str = "LSTM"
-    encoder_hidden_size: int = 100
-    encoder_num_layers: int = 1
-    encoder_bias: bool = True
-    encoder_dropout: float = 0.0
-    encoder_bidirectional: bool = False
-    encoder_nonlinearity: Optional[str] = None
-    encoder_proj_size: Optional[int] = None
-    # Decoder:
-    decoder_rnn_type: str = "LSTM"
-    decoder_hidden_size: int = 100
-    decoder_num_layers: int = 1
-    decoder_bias: bool = True
-    decoder_dropout: float = 0.0
-    decoder_bidirectional: bool = False
-    decoder_nonlinearity: Optional[str] = None
-    decoder_proj_size: Optional[int] = None
-    # Adapter FF NN:
-    adapter_hidden_dims: List[int] = dataclasses.field(default_factory=lambda: [50])
-    adapter_out_activation: Optional[str] = "Tanh"
-    # Predictor FF NN:
-    predictor_hidden_dims: List[int] = dataclasses.field(default_factory=lambda: [])
-    predictor_out_activation: Optional[str] = None
-    # Misc:
-    max_len: Optional[int] = None
-    optimizer_str: str = "Adam"
-    optimizer_kwargs: Dict[str, Any] = dataclasses.field(default_factory=lambda: dict(lr=0.01, weight_decay=1e-5))
-    batch_size: int = 32
-    epochs: int = 100
-    padding_indicator: float = DEFAULT_PADDING_INDICATOR
 
 
 @plugins.register_plugin(name="crn_regressor", category="treatments.temporal.regression")
 class CRNTreatmentsRegressor(BaseTemporalTreatmentEffects):
-    ParamsDefinition = CRNParams
-    params: CRNParams  # type: ignore
+    ParamsDefinition = Seq2seqParams
+    params: Seq2seqParams  # type: ignore
 
     def __init__(
         self,
         **params: Any,
     ) -> None:
         """Counterfactual Recurrent Network treatment effects model for regression on the outcomes (targets).
+
+        Args:
+            **params (Any): Parameters for the model.
 
         References:
             Estimating counterfactual treatment outcomes over time through adversarially balanced representations,
@@ -169,7 +137,7 @@ class CRNTreatmentsRegressor(BaseTemporalTreatmentEffects):
         return counterfactuals
 
     @staticmethod
-    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:  # noqa: D102
         return [
             IntegerParams(name="encoder_hidden_size", low=10, high=500),
             IntegerParams(name="encoder_num_layers", low=1, high=10),

@@ -1,3 +1,5 @@
+"""Module with the dummy data source for temporal prediction."""
+
 from typing import Any, Optional, cast
 
 from clairvoyance2.datasets.dummy import dummy_dataset
@@ -45,7 +47,7 @@ class DummyTemporalPredictionDataSource(datasource.TemporalPredictionDataSource)
                 rather than categorical. Defaults to `None`.
             random_state (int, optional):
                 Random state to use. Defaults to ``12345``.
-            kwargs (Any):
+            **kwargs (Any):
                 Any additional keyword arguments will be passed to `~tempor.datasources.DataSource`.
         """
         super().__init__(**kwargs)
@@ -61,14 +63,14 @@ class DummyTemporalPredictionDataSource(datasource.TemporalPredictionDataSource)
         self.random_state = random_state
 
     @staticmethod
-    def url() -> None:
+    def url() -> None:  # noqa: D102
         return None
 
     @staticmethod
-    def dataset_dir() -> None:
+    def dataset_dir() -> None:  # noqa: D102
         return None
 
-    def load(self, **kwargs: Any) -> dataset.TemporalPredictionDataset:
+    def load(self, **kwargs: Any) -> dataset.TemporalPredictionDataset:  # noqa: D102
         clv_dataset = dummy_dataset(
             n_samples=self.n_samples,
             temporal_covariates_n_features=self.temporal_covariates_n_features,

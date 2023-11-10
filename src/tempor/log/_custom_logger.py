@@ -1,3 +1,5 @@
+"""Module with custom loguru logger setup for TemporAI."""
+
 import logging
 import os
 import sys
@@ -124,7 +126,14 @@ if TYPE_CHECKING:  # pragma: no cover
     from loguru import Logger as _Logger
 
     class Logger(_Logger):
+        """A `TYPE_CHECKING`-only subclass of `loguru.Logger` with added `print()` method."""
+
         def print(self, message: str) -> None:
-            pass
+            """A logger method that acts as both logger ``INFO`` message and Python ``print()``.
+
+            Args:
+                message (str): Message to print.
+            """
+            pass  # pylint: disable=unnecessary-pass
 
     logger: Logger  # type: ignore

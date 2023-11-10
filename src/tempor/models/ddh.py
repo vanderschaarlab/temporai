@@ -1,3 +1,5 @@
+"""Model components for the Dynamic DeepHit implementation."""
+
 import warnings
 from copy import deepcopy
 from typing import Any, List, Optional, Tuple, Union
@@ -57,10 +59,6 @@ def get_padded_features(
 
 
 class DynamicDeepHitModel:
-    """This implementation considers that the last event happen at the same time for each patient.
-    The CIF is therefore simplified.
-    """
-
     def __init__(
         self,
         split: int = 100,
@@ -81,6 +79,11 @@ class DynamicDeepHitModel:
         clipping_value: int = 1,
         output_mode: str = "MLP",
     ) -> None:
+        """Dynamic DeepHit model implementation.
+
+        This implementation considers that the last event happen at the same time for each patient.
+        The CIF is therefore simplified.
+        """
         self.split = split
         self.split_time = None
 
@@ -132,6 +135,16 @@ class DynamicDeepHitModel:
         t: np.ndarray,
         e: np.ndarray,
     ) -> Self:
+        """Fit the model to the data.
+
+        Args:
+            x (np.ndarray): Covariates.
+            t (np.ndarray): Event times.
+            e (np.ndarray): Event values.
+
+        Returns:
+            Self: Trained model.
+        """
         discretized_t, self.split_time = self.discretize(t, self.split, self.split_time)
         processed_data = self._preprocess_training_data(x, discretized_t, e)
         x_train, t_train, e_train, x_val, t_val, e_val = processed_data
@@ -203,16 +216,22 @@ class DynamicDeepHitModel:
 
         return self
 
-    def discretize(self, t: Union[np.ndarray, List[np.ndarray]], split: int, split_time: Optional[int] = None) -> Tuple:
+    def discretize(
+        self, t: Union[np.ndarray, List[np.ndarray]], split: int, split_time: Optional[List[float]] = None
+    ) -> Tuple:
         """Discretize the survival horizon.
 
         Args:
-            t (List of Array): Time of events
-            split (int): Number of bins
-            split_time (List, optional): List of bins (must be same length than split). Defaults to None.
+            t (Union[np.ndarray, List[np.ndarray]]):
+                Times of events.
+            split (int):
+                Number of bins.
+            split_time (Optional[List[float]], optional):
+                List of bins (must be same length than split). Provide if ``split`` is not provided.
+                Defaults to `None`.
 
         Returns:
-            List of Array: Discretized events time
+            Tuple: ``(t_discretized, split_time)`` Discretized events time; split time.
         """
         if split_time is None:
             _, split_time = np.histogram(t, split - 1)  # type: ignore
@@ -271,6 +290,14 @@ class DynamicDeepHitModel:
         self,
         x: np.ndarray,
     ) -> torch.Tensor:
+        """Predict the embedding of the data.
+
+        Args:
+            x (np.ndarray): Covariates.
+
+        Returns:
+            torch.Tensor: Embedding of the data.
+        """
         if self.model is None:
             raise RuntimeError(
                 "The model has not been fitted yet. Please fit the "
@@ -291,6 +318,18 @@ class DynamicDeepHitModel:
         all_step: bool = False,
         batch_size: int = 100,
     ) -> np.ndarray:
+        """Predict the survival function.
+
+        Args:
+            x (np.ndarray): Covariates.
+            t (List): Times to predict the survival function.
+            risk (int, optional): Risk value. Defaults to ``1``.
+            all_step (bool, optional): Predict all steps. Defaults to `False`.
+            batch_size (int, optional): Batch size. Defaults to ``100``.
+
+        Returns:
+            np.ndarray: Array of survival function values.
+        """
         if self.model is None:
             raise RuntimeError(
                 "The model has not been fitted yet. Please fit the "
@@ -330,6 +369,16 @@ class DynamicDeepHitModel:
         return 1 - np.asarray(output).T
 
     def predict_risk(self, x: np.ndarray, t: List, **kwargs: Any) -> np.ndarray:
+        """Predict the risk.
+
+        Args:
+            x (np.ndarray): Covariates.
+            t (List): Times to predict the risk.
+            **kwargs (Any): Additional arguments passed to ``predict_survival``.
+
+        Returns:
+            np.ndarray: Array of risk values.
+        """
         return 1 - self.predict_survival(x, t, **kwargs)
 
     def negative_log_likelihood(
@@ -408,6 +457,7 @@ class DynamicDeepHitModel:
         t: torch.Tensor,
         e: torch.Tensor,
     ) -> torch.Tensor:
+        """Compute total loss."""
         if self.model is None:
             raise RuntimeError("Invalid model for loss")
 
@@ -441,6 +491,7 @@ class DynamicDeepHitLayers(nn.Module):
         output_type: str = "MLP",
         device: Any = constants.DEVICE,
     ) -> None:
+        """Dynamic DeepHit layers component."""
         super(DynamicDeepHitLayers, self).__init__()
 
         self.input_dim = input_dim
@@ -548,6 +599,7 @@ class DynamicDeepHitLayers(nn.Module):
         self.to(self.device)
 
     def forward_attention(self, x: torch.Tensor, inputmask: torch.Tensor, hidden: torch.Tensor) -> torch.Tensor:
+        """Forward attention implementation."""
         # Attention using last observation to predict weight of all previously observed
         # Extract last observation (the one used for predictions)
         last_observations = (~inputmask).sum(dim=1) - 1

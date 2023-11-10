@@ -1,3 +1,5 @@
+"""Module defining the TemporAI dataset concept in :class:`BaseDataset` and its derived classes."""
+
 # pylint: disable=unnecessary-ellipsis
 
 import abc
@@ -77,20 +79,20 @@ class BaseDataset(abc.ABC):
         See also tutorial ``tutorials/tutorial01_data_format.ipynb`` for examples of use.
 
         Args:
-            time_series (numpy.ndarray | pandas.DataFrame):
+            time_series (data_typing.DataContainer):
                 Data representing time series covariates of the samples. Will be initialized as `TimeSeriesSamples`.
-            static (numpy.ndarray | pandas.DataFrame, optional):
+            static (Optional[data_typing.DataContainer], optional):
                 Data representing static covariates of the samples. Will be initialized as `StaticSamples`.
                 Defaults to `None`.
-            targets (numpy.ndarray | pandas.DataFrame, optional):
+            targets (Optional[data_typing.DataContainer], optional):
                 Data representing target (outcome) feature(s) of the samples. Will be initialized as
                 ``{TimeSeries,Static,Event}Samples`` depending on problem setting in the derived class.
                 Defaults to `None`.
-            treatments (numpy.ndarray | pandas.DataFrame, optional):
+            treatments (Optional[data_typing.DataContainer], optional):
                 Data representing treatment (intervention) feature(s) of the samples. Will be initialized as
                 ``{TimeSeries,Static,Event}Samples`` depending on problem setting in the derived class.
                 Defaults to `None`.
-            kwargs (Any):
+            **kwargs (Any):
                 Additional keyword arguments to be passed to the derived class's ``_init_predictive`` method.
         """
         self._time_series = samples.TimeSeriesSamples(time_series)
@@ -101,6 +103,11 @@ class BaseDataset(abc.ABC):
         self.validate()
 
     def __rich_repr__(self) -> Generator:
+        """A `rich` representation of the class.
+
+        Yields:
+            Generator: The fields and their values fed to `rich`.
+        """
         yield "time_series", RichReprStrPassthrough(self.time_series.short_repr())
         if self.static is not None:
             yield "static", RichReprStrPassthrough(self.static.short_repr())
@@ -108,6 +115,11 @@ class BaseDataset(abc.ABC):
             yield "predictive", self.predictive
 
     def __repr__(self) -> str:
+        """The `repr()` representation of the class.
+
+        Returns:
+            str: The representation.
+        """
         return rich.pretty.pretty_repr(self)
 
     @abc.abstractmethod
@@ -122,14 +134,29 @@ class BaseDataset(abc.ABC):
 
     @property
     def has_static(self) -> bool:
+        """A property returning whether the dataset has static data.
+
+        Returns:
+            bool: Whether the dataset has static data.
+        """
         return self.static is not None
 
     @property
     def has_predictive_data(self) -> bool:
+        """A property returning whether the dataset has predictive data (``targets`` or ``treatments``).
+
+        Returns:
+            bool: Whether the dataset has predictive data.
+        """
         return self.predictive is not None
 
     @property
     def predictive_task(self) -> Union[data_typing.PredictiveTask, None]:
+        """A property returning the predictive task of the dataset (or `None`).
+
+        Returns:
+            Union[data_typing.PredictiveTask, None]: The predictive task of the dataset.
+        """
         if self.predictive is not None:
             return self.predictive.predictive_task
         else:
@@ -149,6 +176,11 @@ class BaseDataset(abc.ABC):
 
     @property
     def time_series(self) -> samples.TimeSeriesSamples:
+        """The property containing the time series covariates of the dataset.
+
+        Returns:
+            samples.TimeSeriesSamples: The time series covariates of the dataset.
+        """
         return self._time_series
 
     @time_series.setter
@@ -158,6 +190,11 @@ class BaseDataset(abc.ABC):
 
     @property
     def static(self) -> Optional[samples.StaticSamples]:
+        """The property containing the static covariates of the dataset.
+
+        Returns:
+            Optional[samples.StaticSamples]: The static covariates of the dataset.
+        """
         return self._static
 
     @static.setter
@@ -172,9 +209,22 @@ class BaseDataset(abc.ABC):
         ...
 
     def __len__(self) -> int:
+        """The dataset length, which is the number of samples.
+
+        Returns:
+            int: Dataset length.
+        """
         return self.time_series.num_samples
 
     def __getitem__(self, key: data_typing.GetItemKey) -> Self:
+        """Return a subset of the dataset.
+
+        Args:
+            key (data_typing.GetItemKey): The key to index the dataset with.
+
+        Returns:
+            Self: The subset of the dataset.
+        """
         key_ = utils.ensure_pd_iloc_key_returns_df(key)
         new_dataset = self.__class__(
             time_series=self.time_series[key_].dataframe(),  # pyright: ignore
@@ -205,6 +255,18 @@ class BaseDataset(abc.ABC):
 
         The arguments ``test_size`` ... ``stratify`` are passed to `sklearn.model_selection.train_test_split` to
         generate the split.
+
+        Args:
+            test_size (Optional[float], optional):
+                Passed to `sklearn.model_selection.train_test_split`. Defaults to `None`.
+            train_size (Optional[float], optional):
+                Passed to `sklearn.model_selection.train_test_split`. Defaults to `None`.
+            random_state (Union[int, np.random.RandomState, None], optional):
+                Passed to `sklearn.model_selection.train_test_split`. Defaults to `None`.
+            shuffle (bool, optional):
+                Passed to `sklearn.model_selection.train_test_split`. Defaults to `True`.
+            stratify (Any, optional):
+                Passed to `sklearn.model_selection.train_test_split`. Defaults to `None`.
 
         Returns:
             Tuple[Self, Self]: The split tuple ``(dataset_train, dataset_test)``.
@@ -238,10 +300,10 @@ class BaseDataset(abc.ABC):
 
         Args:
             splitter (Splitter): A `sklearn` splitter.
-            kwargs (Any): Additional keyword arguments to be passed to the ``splitter``'s ``split`` method.
+            **kwargs (Any): Additional keyword arguments to be passed to the ``splitter``'s ``split`` method.
 
         Yields:
-            Generator[Tuple[Self, Self], None, None]: ``(dataset_train, dataset_test)`` for each split.
+            Tuple[Self, Self]: ``(dataset_train, dataset_test)`` for each split.
         """
         sample_ilocs: Any = list(range(len(self)))
         for sample_ilocs_train, sample_ilocs_test in splitter.split(X=sample_ilocs, **kwargs):
@@ -284,6 +346,11 @@ class CovariatesDataset(BaseDataset):
 
     @property
     def fit_ready(self) -> bool:
+        """Check if the dataset is ready to be fit on.
+
+        Returns:
+            bool: Whether the dataset is ready to be fit on.
+        """
         return True
 
 
@@ -352,10 +419,20 @@ class OneOffPredictionDataset(PredictiveDataset):
 
     @property
     def fit_ready(self) -> bool:
+        """Check if the dataset is ready to be fit on.
+
+        Returns:
+            bool: Whether the dataset is ready to be fit on.
+        """
         return self.predictive.targets is not None
 
     @property
     def predict_ready(self) -> bool:
+        """Check if the dataset is ready to be predicted on.
+
+        Returns:
+            bool: Whether the dataset is ready to be predicted on.
+        """
         return True
 
 
@@ -400,10 +477,20 @@ class TemporalPredictionDataset(PredictiveDataset):
 
     @property
     def fit_ready(self) -> bool:
+        """Check if the dataset is ready to be fit on.
+
+        Returns:
+            bool: Whether the dataset is ready to be fit on.
+        """
         return self.predictive.targets is not None
 
     @property
     def predict_ready(self) -> bool:
+        """Check if the dataset is ready to be predicted on.
+
+        Returns:
+            bool: Whether the dataset is ready to be predicted on.
+        """
         return True
 
 
@@ -448,10 +535,20 @@ class TimeToEventAnalysisDataset(PredictiveDataset):
 
     @property
     def fit_ready(self) -> bool:
+        """Check if the dataset is ready to be fit on.
+
+        Returns:
+            bool: Whether the dataset is ready to be fit on.
+        """
         return self.predictive.targets is not None
 
     @property
     def predict_ready(self) -> bool:
+        """Check if the dataset is ready to be predicted on.
+
+        Returns:
+            bool: Whether the dataset is ready to be predicted on.
+        """
         return True
 
 
@@ -505,10 +602,20 @@ class OneOffTreatmentEffectsDataset(PredictiveDataset):
 
     @property
     def fit_ready(self) -> bool:
+        """Check if the dataset is ready to be fit on.
+
+        Returns:
+            bool: Whether the dataset is ready to be fit on.
+        """
         return self.predictive.targets is not None and self.predictive.treatments is not None
 
     @property
     def predict_ready(self) -> bool:
+        """Check if the dataset is ready to be predicted on.
+
+        Returns:
+            bool: Whether the dataset is ready to be predicted on.
+        """
         return self.predictive.treatments is not None
 
 
@@ -562,8 +669,18 @@ class TemporalTreatmentEffectsDataset(PredictiveDataset):
 
     @property
     def fit_ready(self) -> bool:
+        """Check if the dataset is ready to be fit on.
+
+        Returns:
+            bool: Whether the dataset is ready to be fit on.
+        """
         return self.predictive.targets is not None and self.predictive.treatments is not None
 
     @property
     def predict_ready(self) -> bool:
+        """Check if the dataset is ready to be predicted on.
+
+        Returns:
+            bool: Whether the dataset is ready to be predicted on.
+        """
         return self.predictive.treatments is not None

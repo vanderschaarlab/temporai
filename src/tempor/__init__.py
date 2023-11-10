@@ -1,3 +1,5 @@
+"""Initialization of the ``tempor`` library."""
+
 import sys
 import warnings
 

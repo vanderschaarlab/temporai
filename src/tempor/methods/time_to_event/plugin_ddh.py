@@ -1,3 +1,5 @@
+"""Dynamic DeepHit survival analysis model."""
+
 import dataclasses
 from typing import Any, List
 
@@ -5,7 +7,7 @@ from typing_extensions import Self
 
 from tempor.core import plugins
 from tempor.data import data_typing, dataset, samples
-from tempor.methods.core import Params
+from tempor.methods.core.params import Params
 from tempor.methods.time_to_event import BaseTimeToEventAnalysis
 from tempor.models.ddh import DynamicDeepHitModel, OutputMode, RnnMode
 
@@ -62,7 +64,7 @@ class DynamicDeepHitTimeToEventAnalysis(BaseTimeToEventAnalysis, DDHEmbedding):
                 - Risk prediction for time points beyond the last event time in the dataset may throw errors.
 
         Args:
-            params:
+            **params (Any):
                 Parameters and defaults as defined in :class:`DynamicDeepHitTimeToEventAnalysisParams`.
 
         References:
@@ -119,5 +121,5 @@ class DynamicDeepHitTimeToEventAnalysis(BaseTimeToEventAnalysis, DDHEmbedding):
         )
 
     @staticmethod
-    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:  # noqa: D102
         return DDHEmbedding.hyperparameter_space(*args, **kwargs)

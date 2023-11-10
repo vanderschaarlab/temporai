@@ -1,3 +1,5 @@
+"""SyncTwin treatment effects estimation."""
+
 import dataclasses
 from typing import Any, List
 
@@ -6,13 +8,14 @@ from clairvoyance2.treatment_effects.synctwin import SyncTwinRegressor
 from tempor.core import plugins
 from tempor.data import dataset, samples
 from tempor.data.clv2conv import tempor_dataset_to_clairvoyance2_dataset
-from tempor.methods.core import Params
-from tempor.methods.core._params import FloatParams, IntegerParams
+from tempor.methods.core.params import FloatParams, IntegerParams, Params
 from tempor.methods.treatments.one_off._base import BaseOneOffTreatmentEffects
 
 
 @dataclasses.dataclass
 class SyncTwinParams:
+    """Parameters for SyncTwin model. See paper "SyncTwin: Treatment Effect Estimation with Longitudinal Outcomes"."""
+
     # Main hyperparameters:
     hidden_size: int = 20
     tau: float = 1.0
@@ -37,6 +40,9 @@ class SyncTwinTreatmentsRegressor(BaseOneOffTreatmentEffects):
         **params: Any,
     ) -> None:
         """SyncTwin treatment effects estimation.
+
+        Args:
+            **params (Any): Parameters for the model.
 
         Example:
             >>> from tempor import plugin_loader
@@ -129,7 +135,7 @@ class SyncTwinTreatmentsRegressor(BaseOneOffTreatmentEffects):
         return counterfactuals
 
     @staticmethod
-    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:  # noqa: D102
         return [
             IntegerParams(name="hidden_size", low=10, high=500),
             FloatParams(name="tau", low=0.0, high=2.0),

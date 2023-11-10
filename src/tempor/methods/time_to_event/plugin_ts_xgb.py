@@ -1,3 +1,5 @@
+"""XGB survival analysis model with Dynamic DeepHit embeddings."""
+
 import contextlib
 import dataclasses
 from typing import Any, Generator, List
@@ -12,19 +14,14 @@ from xgbse.converters import convert_to_structured
 
 from tempor.core import plugins
 from tempor.data import data_typing, dataset, samples
-from tempor.methods.core import Params
-from tempor.methods.core._params import CategoricalParams, FloatParams, IntegerParams
+from tempor.methods.core.params import CategoricalParams, FloatParams, IntegerParams, Params
 from tempor.methods.time_to_event import BaseTimeToEventAnalysis
-from tempor.models.constants import DEVICE
 from tempor.models.ddh import DynamicDeepHitModel, OutputMode, RnnMode
 
 from .helper_embedding import DDHEmbeddingTimeToEventAnalysis, OutputTimeToEventAnalysis
 
 XGBObjective = Literal["aft", "cox"]
 XGBStrategy = Literal["weibull", "debiased_bce", "km"]
-
-
-# TODO: Docstrings.
 
 
 @contextlib.contextmanager
@@ -170,6 +167,8 @@ class XGBSurvivalAnalysis(OutputTimeToEventAnalysis):
         subsample: float = 0.5,
         learning_rate: float = 5e-2,
         min_child_weight: int = 50,
+        reg_lambda: float = 1.0,
+        reg_alpha: float = 0.0,
         tree_method: str = "hist",
         booster: int = 0,
         random_state: int = 0,
@@ -177,11 +176,56 @@ class XGBSurvivalAnalysis(OutputTimeToEventAnalysis):
         strategy: XGBStrategy = "debiased_bce",
         bce_n_iter: int = 1000,
         time_points: int = 100,
-        reg_lambda: float = 1,
-        reg_alpha: float = 0,
-        device: Any = DEVICE,  # pylint: disable=unused-argument
         **kwargs: Any,
     ) -> None:
+        """XGB survival analysis model.
+
+        Args:
+            n_estimators (int, optional):
+                Passed as the corresponding parameter in ``xgb_params`` to the `xgbse` model. Defaults to ``100``.
+            colsample_bynode (float, optional):
+                Passed as the corresponding parameter in ``xgb_params`` to the `xgbse` model. Defaults to ``1``.
+            colsample_bylevel (float, optional):
+                Passed as the corresponding parameter in ``xgb_params`` to the `xgbse` model. Defaults to ``1``.
+            colsample_bytree (float, optional):
+                Passed as the corresponding parameter in ``xgb_params`` to the `xgbse` model. Defaults to ``1``.
+            max_depth (int, optional):
+                Passed as the corresponding parameter in ``xgb_params`` to the `xgbse` model. Defaults to ``5``.
+            subsample (float, optional):
+                Passed as the corresponding parameter in ``xgb_params`` to the `xgbse` model. Defaults to ``0.5``.
+            learning_rate (float, optional):
+                Passed as the corresponding parameter in ``xgb_params`` to the `xgbse` model. Defaults to ``5e-2``.
+            min_child_weight (int, optional):
+                Passed as the corresponding parameter in ``xgb_params`` to the `xgbse` model. Defaults to ``50``.
+            reg_lambda (float, optional):
+                Passed as the corresponding parameter in ``xgb_params`` to the `xgbse` model. Defaults to ``1``.
+            reg_alpha (float, optional):
+                Passed as the corresponding parameter in ``xgb_params`` to the `xgbse` model. Defaults to ``0``.
+            tree_method (str, optional):
+                Passed as the corresponding parameter in ``xgb_params`` to the `xgbse` model. Defaults to ``"hist"``.
+            booster (int, optional):
+                Passed as the corresponding parameter in ``xgb_params`` to the `xgbse` model as
+                ``XGBSurvivalAnalysis.booster[booster]``. Defaults to ``0``.
+            random_state (int, optional):
+                Passed as the corresponding parameter in ``xgb_params`` to the `xgbse` model. Defaults to ``0``.
+            objective (XGBObjective, optional):
+                ``"aft"`` or ``"cox"``. Chooses whether to use ``survival:aft`` or ``survival:cox`` as `xgbse` model's
+                ``"objective"`` parameter. Each case has some corresponding default parameters, see source code.
+                Defaults to ``"aft"``.
+            strategy (XGBStrategy, optional):
+                One of ``"debiased_bce"``, ``"weibull"``, or ``"km"``, chooses the corresponding `xgbse` model.
+                Defaults to ``"debiased_bce"``.
+            bce_n_iter (int, optional):
+                Passed as the ``"max_iter"`` parameter in ``lr_params`` of the `XGBSEDebiasedBCE` model, only relevant
+                to the ``"debiased_bce"`` case. Defaults to ``1000``.
+            time_points (int, optional):
+                Number of timepoints for time binning. Defaults to ``100``.
+            **kwargs (Any):
+                Additional parameters to be passed to the `xgbse` model (in ``xgb_params``).
+
+        Raises:
+            ValueError: _description_
+        """
         super().__init__()
 
         surv_params = {}
@@ -234,7 +278,7 @@ class XGBSurvivalAnalysis(OutputTimeToEventAnalysis):
 
         self.time_points = time_points
 
-    def fit(self, X: pd.DataFrame, T: pd.Series, Y: pd.Series) -> Self:
+    def fit(self, X: pd.DataFrame, T: pd.Series, Y: pd.Series) -> Self:  # noqa: D102
         y = convert_to_structured(T, Y)
 
         censored_times = T[Y == 0]
@@ -256,8 +300,7 @@ class XGBSurvivalAnalysis(OutputTimeToEventAnalysis):
         idx = (np.abs(array - value)).argmin()
         return array[idx]
 
-    def predict_risk(self, X: pd.DataFrame, time_horizons: List) -> pd.DataFrame:
-        """Predict risk."""
+    def predict_risk(self, X: pd.DataFrame, time_horizons: List) -> pd.DataFrame:  # noqa: D102
         chunks = int(len(X) / 1024) + 1
 
         preds_ = []
@@ -283,7 +326,7 @@ class XGBTimeToEventAnalysis(BaseTimeToEventAnalysis):
         """XGB survival analysis model.
 
         Args:
-            params:
+            **params (Any):
                 Parameters and defaults as defined in :class:`XGBTimeToEventAnalysisParams`.
         """
         super().__init__(**params)
@@ -348,7 +391,7 @@ class XGBTimeToEventAnalysis(BaseTimeToEventAnalysis):
         return self.model.predict(data, horizons, *args, **kwargs)
 
     @staticmethod
-    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:  # noqa: D102
         return [
             IntegerParams(name="xgb_max_depth", low=2, high=6),
             IntegerParams(name="xgb_min_child_weight", low=0, high=50),

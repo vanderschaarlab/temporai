@@ -1,3 +1,5 @@
+"""Impute temporal covariates using any tabular imputer from the `hyperimpute` library."""
+
 import dataclasses
 from typing import Any, Dict, List
 
@@ -6,7 +8,7 @@ from typing_extensions import Self, get_args
 from tempor.core import plugins
 from tempor.data import dataset
 from tempor.data.samples import TimeSeriesSamples
-from tempor.methods.core._params import CategoricalParams, Params
+from tempor.methods.core.params import CategoricalParams, Params
 from tempor.methods.preprocessing.imputation._base import BaseImputer, TabularImputerType
 
 from ..hyperimpute_utils import monkeypatch_hyperimpute_logger
@@ -40,7 +42,7 @@ class TemporalTabularImputer(BaseImputer):
             tabular imputer will be applied to this dataframe directly.
 
         Args:
-            params:
+            **params (Any):
                 Parameters and defaults as defined in :class:`TemporalTabularImputerParams`.
 
         Example:
@@ -86,7 +88,7 @@ class TemporalTabularImputer(BaseImputer):
         return data
 
     @staticmethod
-    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:  # noqa: D102
         hs: List[Params] = [
             CategoricalParams(name="imputer", choices=list(get_args(TabularImputerType))),
         ]

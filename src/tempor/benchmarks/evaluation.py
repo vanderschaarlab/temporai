@@ -1,3 +1,5 @@
+"""Module with helpers for evaluating the performance of the methods."""
+
 import copy
 import warnings
 from time import time
@@ -240,6 +242,16 @@ class ClassifierMetrics:
             self.metrics = metric
 
     def score_proba(self, y_test: np.ndarray, y_pred_proba: np.ndarray) -> Dict[str, float]:
+        """Return the evaluation metrics for the given predictions, where the predictions are of
+        predicted probabilities form.
+
+        Args:
+            y_test (np.ndarray): Test labels.
+            y_pred_proba (np.ndarray): Predicted probabilities.
+
+        Returns:
+            Dict[str, float]: Evaluation score.
+        """
         if y_test is None or y_pred_proba is None:
             raise ValueError("Invalid input for score_proba")
 
@@ -328,9 +340,29 @@ class ClassifierMetrics:
         return results
 
     def roc_auc_score(self, y_test: np.ndarray, y_pred_proba: np.ndarray) -> float:
+        """Return the ROC AUC score for the given predictions, where the predictions are of
+        predicted probabilities form.
+
+        Args:
+            y_test (np.ndarray): Test labels.
+            y_pred_proba (np.ndarray): Predicted probabilities.
+
+        Returns:
+            float: ROC AUC score.
+        """
         return utils.evaluate_auc_multiclass(y_test, y_pred_proba)[0]
 
     def average_precision_score(self, y_test: np.ndarray, y_pred_proba: np.ndarray) -> float:
+        """Return the average precision score for the given predictions, where the predictions are of
+        predicted probabilities form.
+
+        Args:
+            y_test (np.ndarray): Test labels.
+            y_pred_proba (np.ndarray): Predicted probabilities.
+
+        Returns:
+            float: Average precision score.
+        """
         return utils.evaluate_auc_multiclass(y_test, y_pred_proba)[1]
 
 
@@ -349,7 +381,7 @@ def evaluate_prediction_oneoff_classifier(  # pylint: disable=unused-argument
     Args:
         estimator (Any):
             Baseline model to evaluate - must be unfitted.
-        data (dataset.Dataset):
+        data (dataset.PredictiveDataset):
             The dataset.
         n_splits (int, optional):
             Cross-validation folds. Defaults to ``3``.
@@ -361,6 +393,8 @@ def evaluate_prediction_oneoff_classifier(  # pylint: disable=unused-argument
             dataframe. Defaults to `False`.
         silence_warnings (bool, optional):
             Whether to silence warnings raised. Defaults to `False`.
+        **kwargs (Any):
+            Currently unused.
 
     Returns:
         pd.DataFrame:
@@ -438,7 +472,7 @@ def evaluate_prediction_oneoff_regressor(  # pylint: disable=unused-argument
     Args:
         estimator (Any):
             Baseline model to evaluate - must be unfitted.
-        data (dataset.Dataset):
+        data (dataset.PredictiveDataset):
             The dataset.
         n_splits (int, optional):
             Cross-validation folds. Defaults to ``3``.
@@ -450,6 +484,8 @@ def evaluate_prediction_oneoff_regressor(  # pylint: disable=unused-argument
             dataframe. Defaults to `False`.
         silence_warnings (bool, optional):
             Whether to silence warnings raised. Defaults to `False`.
+        **kwargs (Any):
+            Currently unused.
 
     Returns:
         pd.DataFrame:
@@ -523,6 +559,17 @@ Output is:
 def compute_c_index(
     training_array_struct: np.ndarray, testing_array_struct: np.ndarray, predictions: np.ndarray, horizons: List[float]
 ) -> List[float]:
+    """Compute the IPCW concordance index.
+
+    Args:
+        training_array_struct (np.ndarray): Training data as a structured array.
+        testing_array_struct (np.ndarray): Testing data as a structured array.
+        predictions (np.ndarray): Predictions.
+        horizons (List[float]): Evaluation horizons.
+
+    Returns:
+        List[float]: List of metric values for each horizon.
+    """
     metrics: List[float] = []
     for horizon_idx, horizon_time in enumerate(horizons):
         predictions_at_horizon_time = predictions[:, horizon_idx, :].reshape((-1,))
@@ -536,6 +583,17 @@ def compute_c_index(
 def compute_brier_score(
     training_array_struct: np.ndarray, testing_array_struct: np.ndarray, predictions: np.ndarray, horizons: List[float]
 ) -> List[float]:
+    """Compute the time-dependent Brier score.
+
+    Args:
+        training_array_struct (np.ndarray): Training data as a structured array.
+        testing_array_struct (np.ndarray): Testing data as a structured array.
+        predictions (np.ndarray): Predictions.
+        horizons (List[float]): Evaluation horizons.
+
+    Returns:
+        List[float]: List of metric values for each horizon.
+    """
     predictions = predictions.reshape((predictions.shape[0], predictions.shape[1]))
     times, scores = tempor_metrics.brier_score(  # pylint: disable=unused-variable
         training_array_struct, testing_array_struct, predictions, horizons
@@ -614,6 +672,8 @@ def evaluate_time_to_event(  # pylint: disable=unused-argument
             dataframe. Defaults to `False`.
         silence_warnings (bool, optional):
             Whether to silence warnings raised. Defaults to `False`.
+        **kwargs (Any):
+            Currently unused.
 
     Returns:
         pd.DataFrame:

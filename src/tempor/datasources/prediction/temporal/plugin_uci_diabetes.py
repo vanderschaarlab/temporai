@@ -1,3 +1,5 @@
+"""Module defining the UCI diabetes data source."""
+
 import time
 import traceback
 import urllib.error
@@ -15,7 +17,6 @@ from tempor.datasources import datasource
 from tempor.log import logger
 
 
-# TODO: Docstring.
 @plugins.register_plugin(name="uci_diabetes", category="prediction.temporal", plugin_type="datasource")
 class UCIDiabetesDataSource(datasource.TemporalPredictionDataSource):
     def __init__(
@@ -25,20 +26,34 @@ class UCIDiabetesDataSource(datasource.TemporalPredictionDataSource):
         targets: Tuple[str, ...] = ("hypoglycemic_symptoms",),
         **kwargs: Any,
     ) -> None:
+        """UCI diabetes data source.
+
+        See: https://archive.ics.uci.edu/ml/machine-learning-databases/diabetes
+
+        Args:
+            make_regular (bool, optional):
+                Whether to reindex the dataset to have regular timesteps. Defaults to `False`.
+            use_int_index (bool, optional):
+                Whether to use integer index. Defaults to `True`.
+            targets (Tuple[str, ...], optional):
+                The target feature(s). Defaults to ``("hypoglycemic_symptoms",)``.
+            **kwargs (Any):
+                Any additional keyword arguments will be passed to parent constructor.
+        """
         super().__init__(**kwargs)
         self.make_regular = make_regular
         self.use_int_index = use_int_index
         self.targets = targets
 
     @staticmethod
-    def url() -> str:
+    def url() -> str:  # noqa: D102
         return "https://archive.ics.uci.edu/ml/machine-learning-databases/diabetes"
 
     @staticmethod
-    def dataset_dir() -> str:
+    def dataset_dir() -> str:  # noqa: D102
         return str(Path(UCIDiabetesDataSource.data_root_dir) / "uci_diabetes")
 
-    def load(self, **kwargs: Any) -> dataset.TemporalPredictionDataset:
+    def load(self, **kwargs: Any) -> dataset.TemporalPredictionDataset:  # noqa: D102
         download_retries = 3
         download_pause_sec = 5
         for retry in range(download_retries):

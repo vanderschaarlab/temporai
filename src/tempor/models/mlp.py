@@ -1,3 +1,5 @@
+"""Model implementations related to MLP / fully connected neural networks."""
+
 from typing import Any, Callable, List, Optional, Tuple, Type, Union
 
 import numpy as np
@@ -20,11 +22,21 @@ class LinearLayer(nn.Module):
         self,
         n_units_in: int,
         n_units_out: int,
-        dropout: float = 0,
+        dropout: float = 0.0,
         batch_norm: bool = False,
         nonlin: Optional[Nonlin] = "relu",
         device: Any = constants.DEVICE,
     ) -> None:
+        """Linear layer with optional dropout, batch norm, and nonlinearity.
+
+        Args:
+            n_units_in (int): Number of input units.
+            n_units_out (int): Number of output units.
+            dropout (float, optional): Dropout. Defaults to ``0.0``.
+            batch_norm (bool, optional): Batch normalization. Defaults to `False`.
+            nonlin (Optional[Nonlin], optional): Nonlinearity (activation function). Defaults to ``"relu"``.
+            device (Any, optional): Device. Defaults to ``constants.DEVICE``.
+        """
         super(LinearLayer, self).__init__()
 
         self.device = device
@@ -44,6 +56,7 @@ class LinearLayer(nn.Module):
 
     @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def forward(self, X: torch.Tensor) -> torch.Tensor:
+        """Forward pass."""
         return self.model(X.float()).to(self.device)  # pylint: disable=not-callable
 
 
@@ -53,11 +66,21 @@ class ResidualLayer(LinearLayer):
         self,
         n_units_in: int,
         n_units_out: int,
-        dropout: float = 0,
+        dropout: float = 0.0,
         batch_norm: bool = False,
         nonlin: Optional[Nonlin] = "relu",
         device: Any = constants.DEVICE,
     ) -> None:
+        """Residual layer.
+
+        Args:
+            n_units_in (int): Number of input units.
+            n_units_out (int): Number of output units.
+            dropout (float, optional): Dropout. Defaults to ``0.0``.
+            batch_norm (bool, optional): Batch normalization. Defaults to `False`.
+            nonlin (Optional[Nonlin], optional): Nonlinearity (activation function). Defaults to ``"relu"``.
+            device (Any, optional): Device. Defaults to `constants.DEVICE`.
+        """
         super(ResidualLayer, self).__init__(
             n_units_in,
             n_units_out,
@@ -71,6 +94,7 @@ class ResidualLayer(LinearLayer):
 
     @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def forward(self, X: torch.Tensor) -> torch.Tensor:
+        """Forward pass."""
         if X.shape[-1] == 0:
             return torch.zeros((*X.shape[:-1], self.n_units_out)).to(self.device)
 
@@ -79,13 +103,21 @@ class ResidualLayer(LinearLayer):
 
 
 class MultiActivationHead(nn.Module):
-    """Final layer with multiple activations. Useful for tabular data."""
-
     def __init__(
         self,
         activations: List[Tuple[nn.Module, int]],
         device: Any = constants.DEVICE,
     ) -> None:
+        """Final layer with multiple activations. Useful for tabular data. The different activations are applied to
+        different sub-lengths of the ``X`` tensor in the forward pass, on its final dimension. Hence the ``X`` tensor
+        must have a shape of ``(..., sum(activation_lengths))``.
+
+        Args:
+            activations (List[Tuple[nn.Module, int]]):
+                List of tuples of activations and their lengths, ``[(activation, activation_length), ...]``.
+            device (Any, optional):
+                Device. Defaults to `constants.DEVICE`.
+        """
         super(MultiActivationHead, self).__init__()
         self.activations = []
         self.activation_lengths = []
@@ -97,6 +129,7 @@ class MultiActivationHead(nn.Module):
 
     @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def forward(self, X: torch.Tensor) -> torch.Tensor:
+        """Forward pass."""
         if X.shape[-1] != np.sum(self.activation_lengths):
             raise RuntimeError(
                 f"Shape mismatch for the activations: expected {np.sum(self.activation_lengths)}. Got shape {X.shape}."
@@ -294,6 +327,7 @@ class MLP(nn.Module):
                 self.loss = nn.MSELoss()
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> "MLP":
+        """Fit (train) the model."""
         Xt = self._check_tensor(X)
         yt = self._check_tensor(y)
 
@@ -303,6 +337,14 @@ class MLP(nn.Module):
 
     @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
+        """Predict probabilities for classification tasks.
+
+        Args:
+            X (np.ndarray): Input data.
+
+        Returns:
+            np.ndarray: Predicted probabilities.
+        """
         if self.task_type != "classification":
             raise ValueError(f"Invalid task type for predict_proba {self.task_type}")
 
@@ -315,6 +357,7 @@ class MLP(nn.Module):
 
     @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def predict(self, X: np.ndarray) -> np.ndarray:
+        """Make predictions."""
         with torch.no_grad():
             Xt = self._check_tensor(X)
 
@@ -326,6 +369,7 @@ class MLP(nn.Module):
                 return yt.cpu().numpy().squeeze()
 
     def score(self, X: np.ndarray, y: np.ndarray) -> float:
+        """Compute the default score of the model. See source code."""
         y_pred = self.predict(X)
         if self.task_type == "classification":
             return np.mean(y_pred == y)
@@ -334,6 +378,7 @@ class MLP(nn.Module):
 
     @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def forward(self, X: torch.Tensor) -> torch.Tensor:
+        """Forward pass."""
         return self.model(X.float())  # pylint: disable=not-callable
 
     def _train_epoch(self, loader: torch.utils.data.DataLoader) -> float:
@@ -416,4 +461,5 @@ class MLP(nn.Module):
             return torch.from_numpy(np.asarray(X)).to(self.device)
 
     def __len__(self) -> int:
+        """Return the number of layers in the model ``len(self.model)``."""
         return len(self.model)
