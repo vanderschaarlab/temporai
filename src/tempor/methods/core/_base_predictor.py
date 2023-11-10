@@ -142,7 +142,7 @@ class BasePredictor(estimator.BaseEstimator):
         Returns:
             Any: The predictions.
         """
-        ...
+        ...  # pylint: disable=unnecessary-ellipsis
 
     def _predict_proba(self, data: dataset.PredictiveDataset, *args: Any, **kwargs: Any) -> Any:
         """The implementation of ``predict_proba``. Must be implemented by the child class.

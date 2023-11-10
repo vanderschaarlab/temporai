@@ -1,3 +1,5 @@
+"""Imputation methods for static data."""
+
 from tempor.core import plugins
 
 from .._base import BaseImputer

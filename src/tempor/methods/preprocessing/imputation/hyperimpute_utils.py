@@ -1,3 +1,5 @@
+"""Utilities for `hyperimpute`."""
+
 import contextlib
 from typing import Generator
 

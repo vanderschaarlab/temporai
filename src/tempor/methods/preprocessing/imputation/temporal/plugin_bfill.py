@@ -1,3 +1,5 @@
+"""Implementation using ``bfill``."""
+
 from typing import Any, List
 
 from typing_extensions import Self
@@ -13,6 +15,9 @@ from tempor.methods.preprocessing.imputation._base import BaseImputer
 class BFillImputer(BaseImputer):
     def __init__(self, **params: Any) -> None:  # pylint: disable=useless-super-delegation
         """Backward-first Time-Series Imputation.
+
+        Args:
+            **params (Any): Additional parameters.
 
         Note:
             The data will be represented as a multi-index `(sample_idx, time_idx)` dataframe of features.

@@ -1,3 +1,5 @@
+"""No operation transformer."""
+
 from typing import Any, List
 
 from typing_extensions import Self
@@ -12,7 +14,7 @@ plugins.register_plugin_category("preprocessing.nop", methods_core.BaseTransform
 
 @plugins.register_plugin(name="nop_transformer", category="preprocessing.nop")
 class NopTransformer(methods_core.BaseTransformer):
-    def __init__(self, **params: Any) -> None:  # pylint: disable=useless-super-delegation
+    def __init__(self, **params: Any) -> None:  # pylint: disable=useless-super-delegation  # noqa: D107
         super().__init__(**params)
 
     def _fit(

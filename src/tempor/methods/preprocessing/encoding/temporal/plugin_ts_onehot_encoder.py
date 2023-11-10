@@ -1,3 +1,5 @@
+"""One-hot encoding for temporal data."""
+
 import dataclasses
 from typing import Any, Callable, Dict, List, Optional, Type, Union
 

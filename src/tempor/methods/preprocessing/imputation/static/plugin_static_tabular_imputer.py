@@ -1,3 +1,5 @@
+"""Impute static covariates using any tabular imputer from the `hyperimpute` library."""
+
 import dataclasses
 from typing import Any, Dict, List
 
@@ -84,7 +86,7 @@ class StaticTabularImputer(BaseImputer):
         return data
 
     @staticmethod
-    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:  # noqa: D102
         hs: List[Params] = [
             CategoricalParams(name="imputer", choices=list(get_args(TabularImputerType))),
         ]

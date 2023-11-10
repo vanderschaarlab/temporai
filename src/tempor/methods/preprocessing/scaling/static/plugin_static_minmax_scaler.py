@@ -1,3 +1,5 @@
+"""MinMax scaling for the static data."""
+
 import dataclasses
 from typing import Any, Dict, List, Tuple
 

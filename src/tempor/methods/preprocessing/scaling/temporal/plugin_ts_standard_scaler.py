@@ -1,3 +1,5 @@
+"""Standard scaling for the temporal data."""
+
 import dataclasses
 from typing import Any, Dict, List
 
