@@ -19,6 +19,13 @@ from tempor.methods.core.params import IntegerParams
 # To ignore warnings in parametrization:
 warnings.filterwarnings("ignore", category=optuna.exceptions.ExperimentalWarning)
 
+try:
+    import cmaes  # noqa: F401  # pylint: disable=unused-import
+
+    cmaes_installed = True
+except ImportError:
+    cmaes_installed = False
+
 
 OPTIMIZE_KWARGS = {"n_trials": 2}
 
@@ -35,19 +42,31 @@ SETTINGS: Dict = dict()
 
 TEST_SAMPLER_SET = [
     optuna.samplers.TPESampler(seed=SEED),
-    pytest.param(optuna.samplers.RandomSampler(seed=SEED), marks=pytest.mark.extra),
-    pytest.param(optuna.samplers.CmaEsSampler(seed=SEED), marks=pytest.mark.extra),
+    pytest.param(
+        optuna.samplers.RandomSampler(seed=SEED),
+        marks=pytest.mark.extra,
+    ),
+    pytest.param(
+        optuna.samplers.CmaEsSampler(seed=SEED),
+        marks=[
+            pytest.mark.extra,
+            pytest.mark.skipif(not cmaes_installed, reason="`cmaes` library not installed"),
+        ],
+    ),
     pytest.param(
         optuna.samplers.QMCSampler(seed=SEED),
         marks=[
+            pytest.mark.extra,
             pytest.mark.skipif(
                 Version(optuna.__version__) < Version("3.0.0"),
                 reason="optuna.samplers.QMCSampler is only available in optuna v3.0.0+",
             ),
-            pytest.mark.extra,
         ],
     ),
-    pytest.param("GridSampler", marks=pytest.mark.extra),
+    pytest.param(
+        "GridSampler",
+        marks=pytest.mark.extra,
+    ),
     # ^ Needs get_grid_by_sampling() call in test to define the grid.
     # NOTE: `optuna.samplers.BruteForceSampler` not currently compatible due to FloatParams
     # infinite search space; MO samplers are not applicable.
