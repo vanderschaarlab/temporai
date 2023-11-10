@@ -97,7 +97,7 @@ def _check_times(test_time: np.ndarray, times: np.ndarray) -> np.ndarray:
         dtype=test_time.dtype,
         **dict(input_name="times") if _has_input_name else dict(),  # pyright: ignore
     )
-    times = np.unique(times)
+    times = np.unique(times)  # pyright: ignore
 
     if times.max() >= test_time.max() or times.min() < test_time.min():
         raise ValueError(
