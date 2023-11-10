@@ -26,9 +26,23 @@ class Params(abc.ABC):
 
     @abc.abstractmethod
     def get(self) -> List[Any]:  # pragma: no cover
-        ...
+        """Returns the hyperparameter name and properties as a list.
+
+        Returns:
+            List[Any]: The hyperparameter name and properties as a list.
+        """
+        ...  # pylint: disable=unnecessary-ellipsis
 
     def sample(self, trial: Optional[Trial] = None) -> Any:
+        """Sample the hyperparameter. If `trial` is not `None`, dispatch to ``_sample_optuna_trial``. Otherwise,
+        dispatch to ``_sample_default``.
+
+        Args:
+            trial (Optional[Trial], optional): Trial object, e.g `optuna.trial`. Defaults to None.
+
+        Returns:
+            Any: The sampled hyperparameter.
+        """
         if trial is not None:
             return self._sample_optuna_trial(trial)
         else:
@@ -62,14 +76,18 @@ class Params(abc.ABC):
 
 
 class CategoricalParams(Params):
-    """Sample from a categorical distribution."""
-
     def __init__(self, name: str, choices: List[Any]) -> None:
+        """Sample from a categorical distribution.
+
+        Args:
+            name (str): Hyperparameter name.
+            choices (List[Any]): The choices to sample from.
+        """
         super().__init__(name, (min(choices), max(choices)))
         self.name = name
         self.choices = choices
 
-    def get(self) -> List[Any]:
+    def get(self) -> List[Any]:  # noqa: D102
         return [self.name, self.choices]
 
     def _sample_optuna_trial(self, trial: Trial) -> Any:
@@ -89,9 +107,14 @@ class CategoricalParams(Params):
 
 
 class FloatParams(Params):
-    """Sample from a float distribution."""
-
     def __init__(self, name: str, low: float, high: float) -> None:
+        """Sample from a float distribution.
+
+        Args:
+            name (str): Hyperparameter name.
+            low (float): Lower bound.
+            high (float): Upper bound.
+        """
         low = float(low)
         high = float(high)
 
@@ -100,7 +123,7 @@ class FloatParams(Params):
         self.low = low
         self.high = high
 
-    def get(self) -> List[Any]:
+    def get(self) -> List[Any]:  # noqa: D102
         return [self.name, self.low, self.high]
 
     def _sample_optuna_trial(self, trial: Trial) -> Any:
@@ -121,9 +144,15 @@ class FloatParams(Params):
 
 
 class IntegerParams(Params):
-    """Sample from an integer distribution."""
-
     def __init__(self, name: str, low: int, high: int, step: int = 1) -> None:
+        """Sample from an integer distribution.
+
+        Args:
+            name (str): Hyperparameter name.
+            low (int): Lower bound.
+            high (int): Upper bound.
+            step (int, optional): Step. Defaults to ``1``.
+        """
         self.low = low
         self.high = high
         self.step = step
@@ -135,7 +164,7 @@ class IntegerParams(Params):
         self.step = step
         self.choices = [val for val in range(low, high + 1, step)]
 
-    def get(self) -> List[Any]:
+    def get(self) -> List[Any]:  # noqa: D102
         return [self.name, self.low, self.high, self.step]
 
     def _sample_optuna_trial(self, trial: Trial) -> Any:
