@@ -138,7 +138,7 @@ class TimeSeriesOneHotEncoder(BaseEncoder):
         return data
 
     @staticmethod
-    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:  # noqa: D102
         return [
             CategoricalParams("drop", ["first", "if_binary"]),
             CategoricalParams("handle_unknown", ["error", "ignore", "infrequent_if_exist"]),

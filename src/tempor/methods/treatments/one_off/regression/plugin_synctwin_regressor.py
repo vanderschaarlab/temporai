@@ -128,7 +128,7 @@ class SyncTwinTreatmentsRegressor(BaseOneOffTreatmentEffects):
         return counterfactuals
 
     @staticmethod
-    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:  # noqa: D102
         return [
             IntegerParams(name="hidden_size", low=10, high=500),
             FloatParams(name="tau", low=0.0, high=2.0),

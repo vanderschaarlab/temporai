@@ -168,7 +168,7 @@ class CRNTreatmentsRegressor(BaseTemporalTreatmentEffects):
         return counterfactuals
 
     @staticmethod
-    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:  # noqa: D102
         return [
             IntegerParams(name="encoder_hidden_size", low=10, high=500),
             IntegerParams(name="encoder_num_layers", low=1, high=10),

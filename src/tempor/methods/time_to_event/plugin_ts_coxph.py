@@ -224,7 +224,7 @@ class CoxPHTimeToEventAnalysis(BaseTimeToEventAnalysis):
         return self.model.predict(data, horizons, *args, **kwargs)
 
     @staticmethod
-    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:  # noqa: D102
         return [
             FloatParams(name="coxph_alpha", low=0.05, high=0.1),
             FloatParams(name="coxph_penalizer", low=0, high=0.2),

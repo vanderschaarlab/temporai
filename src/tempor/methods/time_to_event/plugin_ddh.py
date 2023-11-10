@@ -119,5 +119,5 @@ class DynamicDeepHitTimeToEventAnalysis(BaseTimeToEventAnalysis, DDHEmbedding):
         )
 
     @staticmethod
-    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:  # noqa: D102
         return DDHEmbedding.hyperparameter_space(*args, **kwargs)

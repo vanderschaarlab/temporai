@@ -347,7 +347,7 @@ class XGBTimeToEventAnalysis(BaseTimeToEventAnalysis):
         return self.model.predict(data, horizons, *args, **kwargs)
 
     @staticmethod
-    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:
+    def hyperparameter_space(*args: Any, **kwargs: Any) -> List[Params]:  # noqa: D102
         return [
             IntegerParams(name="xgb_max_depth", low=2, high=6),
             IntegerParams(name="xgb_min_child_weight", low=0, high=50),
