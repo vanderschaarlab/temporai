@@ -97,6 +97,6 @@ def validate_arguments(*args: Any, **kwargs: Any) -> Callable[[Callable[P, T]], 
         Callable[[Callable[P, T]], Callable[P, T]]: The updated ``pydantic.validate_arguments`` decorator.
     """
     return cast(
-        Callable[P, T],  # type: ignore [valid-type, misc]
+        Callable[P, T],  # type: ignore [valid-type]
         pydantic.validate_arguments(*args, **kwargs),  # type: ignore [operator]
     )
