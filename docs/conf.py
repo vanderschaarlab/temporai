@@ -436,6 +436,11 @@ zeta_suppress_records = [
     # docstrings. We want to have those in docstrings, so we suppress these warnings.
     ["sphinx_immaterial", r".*Parameter name '\*args'.*"],
     ["sphinx_immaterial", r".*Parameter name '\*\*kwargs'.*"],
+    # Similar but for other variable names used for the variadics:
+    ["sphinx_immaterial", r".*Parameter name '\*dims'.*"],
+    ["sphinx_immaterial", r".*Parameter name '\*\*params'.*"],
+    # The annotations for `PipelineMeta` seem to have their own set of issues, ignore here:
+    ["sphinx_immaterial", r".*Parameter name.*PipelineMeta.*"],
 ]
 
 # `sphinx-zeta-suppress` (more specific warnings suppression) configuration [end].
