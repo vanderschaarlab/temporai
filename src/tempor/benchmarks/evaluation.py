@@ -18,8 +18,7 @@ from tempor.data import data_typing, dataset, samples
 from tempor.log import logger
 from tempor.models.utils import enable_reproducibility
 
-from . import metrics as tempor_metrics
-from . import utils
+from . import surv_metrics, utils
 
 if TYPE_CHECKING:  # pragma: no cover
     from tempor.methods.prediction.one_off.classification import BaseOneOffClassifier
@@ -573,7 +572,7 @@ def compute_c_index(
     metrics: List[float] = []
     for horizon_idx, horizon_time in enumerate(horizons):
         predictions_at_horizon_time = predictions[:, horizon_idx, :].reshape((-1,))
-        out = tempor_metrics.concordance_index_ipcw(
+        out = surv_metrics.concordance_index_ipcw(
             training_array_struct, testing_array_struct, predictions_at_horizon_time, float(horizon_time)
         )
         metrics.append(out[0])
@@ -595,7 +594,7 @@ def compute_brier_score(
         List[float]: List of metric values for each horizon.
     """
     predictions = predictions.reshape((predictions.shape[0], predictions.shape[1]))
-    times, scores = tempor_metrics.brier_score(  # pylint: disable=unused-variable
+    times, scores = surv_metrics.brier_score(  # pylint: disable=unused-variable
         training_array_struct, testing_array_struct, predictions, horizons
     )
     return scores.tolist()
@@ -632,9 +631,9 @@ def _compute_time_to_event_metric(
 
     predictions_array = predictions.numpy()
     t_train, y_train = (df.to_numpy().reshape((-1,)) for df in train_data.predictive.targets.split_as_two_dataframes())
-    y_train_struct = tempor_metrics.create_structured_array(y_train, t_train)
+    y_train_struct = surv_metrics.create_structured_array(y_train, t_train)
     t_test, y_test = (df.to_numpy().reshape((-1,)) for df in test_data.predictive.targets.split_as_two_dataframes())
-    y_test_struct = tempor_metrics.create_structured_array(y_test, t_test)
+    y_test_struct = surv_metrics.create_structured_array(y_test, t_test)
 
     metrics: List[float] = metric_func(y_train_struct, y_test_struct, predictions_array, horizons)
     avg_metric = float(np.asarray(metrics).mean())
