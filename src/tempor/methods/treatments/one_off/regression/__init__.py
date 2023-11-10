@@ -1,3 +1,5 @@
+"""One-off treatment effect estimation methods, with regression targets."""
+
 from tempor.core import plugins
 from tempor.methods.treatments.one_off._base import BaseOneOffTreatmentEffects
 

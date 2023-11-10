@@ -1,3 +1,5 @@
+"""One-off treatment effect estimation methods, with classification targets."""
+
 # NOTE: Uncomment once have at least one treatments.one_off.classification plugin.
 
 # from tempor.core import plugins

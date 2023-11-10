@@ -1,3 +1,5 @@
+"""SyncTwin treatment effects estimation."""
+
 import dataclasses
 from typing import Any, List
 
@@ -12,6 +14,8 @@ from tempor.methods.treatments.one_off._base import BaseOneOffTreatmentEffects
 
 @dataclasses.dataclass
 class SyncTwinParams:
+    """Parameters for SyncTwin model. See paper "SyncTwin: Treatment Effect Estimation with Longitudinal Outcomes"."""
+
     # Main hyperparameters:
     hidden_size: int = 20
     tau: float = 1.0
@@ -36,6 +40,9 @@ class SyncTwinTreatmentsRegressor(BaseOneOffTreatmentEffects):
         **params: Any,
     ) -> None:
         """SyncTwin treatment effects estimation.
+
+        Args:
+            **params (Any): Parameters for the model.
 
         Example:
             >>> from tempor import plugin_loader

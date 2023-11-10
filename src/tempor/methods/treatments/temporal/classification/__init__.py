@@ -1,3 +1,5 @@
+"""One-off treatment effect estimation methods, with classification targets."""
+
 from tempor.core import plugins
 from tempor.methods.treatments.temporal._base import BaseTemporalTreatmentEffects
 
