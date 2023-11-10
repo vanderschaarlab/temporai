@@ -1,3 +1,5 @@
+"""Custom `torch` samplers."""
+
 from typing import Any, Generator, List, Optional, Tuple
 
 import numpy as np
@@ -13,38 +15,37 @@ from tempor.core import pydantic_utils
 class BaseSampler(torch.utils.data.sampler.Sampler):
     """DataSampler samples the conditional vector and corresponding data."""
 
-    def get_dataset_conditionals(self) -> Optional[np.ndarray]:  # pragma: no cover
+    def get_dataset_conditionals(self) -> Optional[np.ndarray]:  # pragma: no cover  # noqa: D102
         return None
 
     @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def sample_conditional(
         self, batch: int, **kwargs: Any  # pylint: disable=unused-argument
-    ) -> Optional[Tuple]:  # pragma: no cover
+    ) -> Optional[Tuple]:  # pragma: no cover  # noqa: D102
         return None
 
     @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def sample_conditional_for_class(
         self, batch: int, c: int  # pylint: disable=unused-argument
-    ) -> Optional[np.ndarray]:  # pragma: no cover
+    ) -> Optional[np.ndarray]:  # pragma: no cover  # noqa: D102
         return None
 
-    def conditional_dimension(self) -> int:  # pragma: no cover
+    def conditional_dimension(self) -> int:  # pragma: no cover  # noqa: D102
         """Return the total number of categories."""
         return 0
 
-    def conditional_probs(self) -> Optional[np.ndarray]:  # pragma: no cover
+    def conditional_probs(self) -> Optional[np.ndarray]:  # pragma: no cover  # noqa: D102
         """Return the total number of categories."""
         return None
 
-    def train_test(self) -> Tuple:  # pragma: no cover
+    def train_test(self) -> Tuple:  # pragma: no cover  # noqa: D102
         raise NotImplementedError()
 
 
 class ImbalancedDatasetSampler(BaseSampler):
-    """Samples elements randomly from a given list of indices for imbalanced dataset."""
-
     @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def __init__(self, labels: List, train_size: float = 0.8) -> None:
+        """Samples elements randomly from a given list of indices for imbalanced dataset."""
         super().__init__(None)
 
         # if indices is not provided, all elements in the dataset will be considered
@@ -70,14 +71,19 @@ class ImbalancedDatasetSampler(BaseSampler):
 
         self.weights = torch.DoubleTensor(weights.to_list())
 
-    def __iter__(self) -> Generator:
+    def __iter__(self) -> Generator:  # noqa: D105
         return (
             self.train_mapping[self.train_idx[i]]
             for i in torch.multinomial(self.weights, self.num_train_samples, replacement=True)
         )
 
-    def __len__(self) -> int:
+    def __len__(self) -> int:  # noqa: D105
         return len(self.train_idx)
 
     def train_test(self) -> Tuple:
+        """Return the train and test indices.
+
+        Returns:
+            Tuple: ``(self.train_idx, self.test_idx)``
+        """
         return self.train_idx, self.test_idx

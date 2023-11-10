@@ -1,3 +1,5 @@
+"""Model implementations for time-series model(s)."""
+
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -39,6 +41,7 @@ TSModelMode = Literal[
     "OmniScaleCNN",
     "XCM",
 ]
+"""Time series model 'mode', that is, the underlying architecture."""
 
 
 class TimeSeriesModel(nn.Module):
@@ -227,6 +230,7 @@ class TimeSeriesModel(nn.Module):
         temporal_data: torch.Tensor,
         observation_times: torch.Tensor,
     ) -> torch.Tensor:
+        """Forward pass."""
         # x shape (batch, time_step, input_size)
         # r_out shape (batch, time_step, output_size)
 
@@ -262,6 +266,7 @@ class TimeSeriesModel(nn.Module):
         temporal_data: Union[List, np.ndarray],
         observation_times: Union[List, np.ndarray],
     ) -> np.ndarray:
+        """Make predictions."""
         self.eval()
         with torch.no_grad():
             (
@@ -294,6 +299,7 @@ class TimeSeriesModel(nn.Module):
         temporal_data: Union[List, np.ndarray],
         observation_times: Union[List, np.ndarray],
     ) -> np.ndarray:
+        """Predict probabilities."""
         self.eval()
         if self.task_type != "classification":
             raise RuntimeError("Task valid only for classification")
@@ -325,6 +331,7 @@ class TimeSeriesModel(nn.Module):
         observation_times: Union[List, np.ndarray],
         outcome: np.ndarray,
     ) -> float:
+        """Get default model score."""
         y_pred = self.predict(static_data, temporal_data, observation_times)
         if self.task_type == "classification":
             return np.mean(y_pred.astype(int) == outcome.astype(int))
@@ -339,6 +346,7 @@ class TimeSeriesModel(nn.Module):
         observation_times: Union[List, np.ndarray],
         outcome: Union[List, np.ndarray],
     ) -> Any:
+        """Fit (train) the model."""
         (
             static_data_t,
             temporal_data_t,
@@ -436,6 +444,7 @@ class TimeSeriesModel(nn.Module):
         observation_times: torch.Tensor,
         outcome: torch.Tensor,
     ) -> Tuple[DataLoader, DataLoader]:
+        """Return the train and test `torch` dataloaders."""
         stratify = None
         _, out_counts = torch.unique(outcome, return_counts=True)
         if out_counts.min() > 1:
@@ -569,6 +578,7 @@ class TimeSeriesLayer(nn.Module):
         dropout: float = 0,
         nonlin: Nonlin = "relu",
     ) -> None:
+        """Time series layer implementation."""
         super(TimeSeriesLayer, self).__init__()
         temporal_params = {
             "input_size": n_temporal_units_in,
@@ -678,6 +688,7 @@ class TimeSeriesLayer(nn.Module):
         self.out.to(device)
 
     def forward(self, static_data: torch.Tensor, temporal_data: torch.Tensor) -> torch.Tensor:
+        """Forward pass."""
         if self.mode in ["RNN", "LSTM", "GRU"]:
             X_interm, _ = self.temporal_layer(temporal_data)
 
@@ -708,6 +719,7 @@ class WindowLinearLayer(nn.Module):
         nonlin: Nonlin = "relu",
         device: Any = constants.DEVICE,
     ) -> None:
+        """Windowed linear layer implementation."""
         super(WindowLinearLayer, self).__init__()
 
         self.device = device
@@ -726,6 +738,7 @@ class WindowLinearLayer(nn.Module):
 
     @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def forward(self, static_data: torch.Tensor, temporal_data: torch.Tensor) -> torch.Tensor:
+        """Forward pass."""
         if self.n_static_units_in > 0 and len(static_data) != len(temporal_data):
             raise ValueError("Length mismatch between static and temporal data")
 

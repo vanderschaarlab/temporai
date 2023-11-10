@@ -1,3 +1,5 @@
+"""Common constants for methods."""
+
 import dataclasses
 from typing import Any, Dict, List, Optional
 

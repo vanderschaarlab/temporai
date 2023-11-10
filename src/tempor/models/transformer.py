@@ -1,3 +1,5 @@
+"""Model implementations for Transformers."""
+
 from typing import Any
 
 import torch
@@ -9,19 +11,33 @@ from .constants import DEVICE
 
 class Permute(nn.Module):
     def __init__(self, *dims: Any) -> None:
+        """Permute dimensions of a tensor with `torch.Tensor.permute`.
+
+        Args:
+            *dims (Any):
+                Dimensions to permute.
+        """
         super().__init__()
         self.dims = dims
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass."""
         return x.permute(self.dims)
 
 
 class Transpose(nn.Module):
     def __init__(self, *dims: Any, contiguous: bool = False) -> None:
+        """Transpose dimensions of a tensor with `torch.Tensor.transpose`.
+
+        Args:
+            *dims (Any): Dimensions to transpose.
+            contiguous (bool, optional): Whether to call `.contiguous()` on the output. Defaults to `False`.
+        """
         super().__init__()
         self.dims, self.contiguous = dims, contiguous
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass."""
         if self.contiguous:
             return x.transpose(*self.dims).contiguous()
         else:
@@ -53,7 +69,7 @@ class TransformerModel(nn.Module):
                 The dimension of the feedforward network model. Defaults to ``128``.
             dropout (float, optional):
                 Dropout value passed to `~torch.nn.modules.transformer.TransformerEncoderLayer` s. Defaults to ``0.1``.
-            activation (Nonlin, optional):
+            activation (str, optional):
                 The activation function of intermediate layer, ``"relu"`` or ``"gelu"``. Defaults to ``"relu"``.
             n_layers_hidden (int, optional):
                 The number of sub-encoder-layers in the encoder. Defaults to ``1``.
@@ -87,4 +103,5 @@ class TransformerModel(nn.Module):
         ).to(device)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass."""
         return self.model(x)  # pylint: disable=not-callable

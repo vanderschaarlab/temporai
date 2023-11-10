@@ -1,3 +1,5 @@
+"""Time series ODE model implementations."""
+
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -68,6 +70,7 @@ class CDEFunc(torch.nn.Module):
         )
 
     def forward(self, t: torch.Tensor, z: torch.Tensor) -> torch.Tensor:  # pylint: disable=unused-argument
+        """Forward pass."""
         z = self.model(z)
 
         z = z.view(*z.shape[:-1], self.n_units_hidden, self.n_units_in)
@@ -114,12 +117,11 @@ class ODEFunc(torch.nn.Module):
         )
 
     def forward(self, t: torch.Tensor, z: torch.Tensor) -> torch.Tensor:  # pylint: disable=unused-argument
+        """Forward pass."""
         return self.model(z)
 
 
 class ReverseGRUEncoder(nn.Module):
-    """Model (encoder and Laplace representation func). Encodes observed trajectory into latent vector."""
-
     def __init__(
         self,
         n_units_in: int,
@@ -127,12 +129,14 @@ class ReverseGRUEncoder(nn.Module):
         n_units_hidden: int,
         device: Any = DEVICE,
     ):
+        """Model (encoder and Laplace representation func). Encodes observed trajectory into latent vector."""
         super(ReverseGRUEncoder, self).__init__()
         self.gru = nn.GRU(n_units_in, n_units_hidden, 2, batch_first=True)  # type: ignore [no-untyped-call]
         self.linear_out = nn.Linear(n_units_hidden, n_units_latent).to(device)
         nn.init.xavier_uniform_(self.linear_out.weight)
 
     def forward(self, observed_data: torch.Tensor) -> torch.Tensor:
+        """Forward pass."""
         trajs_to_encode = observed_data  # (batch_size, t_observed_dim, observed_dim)
         reversed_trajs_to_encode = torch.flip(trajs_to_encode, (1,))
         out, _ = self.gru(reversed_trajs_to_encode)
@@ -140,10 +144,6 @@ class ReverseGRUEncoder(nn.Module):
 
 
 class LaplaceFunc(nn.Module):
-    """SphereSurfaceModel : ``C^{b+k} -> C^{bxd}`` - in Riemann Sphere Coords : ``b dim s`` reconstruction terms,
-    `k` is latent encoding dimension, `d` is output dimension.
-    """
-
     def __init__(
         self,
         s_dim: int,
@@ -152,6 +152,9 @@ class LaplaceFunc(nn.Module):
         n_units_hidden: int = 64,
         device: Any = DEVICE,
     ) -> None:
+        """SphereSurfaceModel : ``C^{b+k} -> C^{bxd}`` - in Riemann Sphere Coords : ``b dim s`` reconstruction terms,
+        `k` is latent encoding dimension, `d` is output dimension.
+        """
         super(LaplaceFunc, self).__init__()
         self.s_dim = s_dim
         self.n_units_out = n_units_out
@@ -174,6 +177,7 @@ class LaplaceFunc(nn.Module):
         self.to(device)
 
     def forward(self, i: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Forward pass."""
         out = self.linear_tanh_stack(i.view(-1, self.s_dim * 2 + self.n_units_latent)).view(
             -1, 2 * self.n_units_out, self.s_dim
         )
@@ -419,6 +423,7 @@ class NeuralODE(torch.nn.Module):
         temporal_data: torch.Tensor,
         observation_times: torch.Tensor,
     ) -> torch.Tensor:
+        """Forward pass."""
         # sanity
         if torch.isnan(static_data).sum() != 0:
             raise ValueError("NaNs detected in the static data")
@@ -489,6 +494,7 @@ class NeuralODE(torch.nn.Module):
         temporal_data: Union[List, np.ndarray, torch.Tensor],
         observation_times: Union[List, np.ndarray, torch.Tensor],
     ) -> np.ndarray:
+        """Make predictions."""
         self.eval()
         with torch.no_grad():
             (
@@ -521,6 +527,7 @@ class NeuralODE(torch.nn.Module):
         temporal_data: Union[List, np.ndarray, torch.Tensor],
         observation_times: Union[List, np.ndarray, torch.Tensor],
     ) -> np.ndarray:
+        """Predict probabilities."""
         self.eval()
         if self.task_type != "classification":
             raise RuntimeError("Task valid only for classification")
@@ -552,6 +559,7 @@ class NeuralODE(torch.nn.Module):
         observation_times: Union[List, np.ndarray, torch.Tensor],
         outcome: Union[List, np.ndarray],
     ) -> float:
+        """Compute default score."""
         y_pred = self.predict(static_data, temporal_data, observation_times)
         outcome = np.asarray(outcome)
         if self.task_type == "classification":
@@ -567,6 +575,7 @@ class NeuralODE(torch.nn.Module):
         observation_times: Union[List, np.ndarray, torch.Tensor],
         outcome: Union[List, np.ndarray, torch.Tensor],
     ) -> Any:
+        """Fit (train) the model."""
         (
             static_data_t,
             temporal_data_t,
@@ -672,6 +681,7 @@ class NeuralODE(torch.nn.Module):
         observation_times: torch.Tensor,
         outcome: torch.Tensor,
     ) -> Tuple[DataLoader, DataLoader]:
+        """Get the train and test `torch` dataloaders."""
         stratify = None
         _, out_counts = torch.unique(outcome, return_counts=True)
         if out_counts.min() > 1:
