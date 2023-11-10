@@ -51,10 +51,10 @@ class PredictiveTaskData(abc.ABC):
         self._treatments = treatments
 
     def __rich_repr__(self) -> Generator:
-        """Representation for `rich`.
+        """A `rich` representation of the class.
 
         Yields:
-            Generator: Fields and their values for `rich`.
+            Generator: The fields and their values fed to `rich`.
         """
         if self.targets is not None:
             yield "targets", RichReprStrPassthrough(self.targets.short_repr())
@@ -64,10 +64,10 @@ class PredictiveTaskData(abc.ABC):
             yield "treatments", RichReprStrPassthrough(self.treatments.short_repr())
 
     def __repr__(self) -> str:
-        """Representation for `repr()`.
+        """The `repr()` representation of the class.
 
         Returns:
-            str: The representation string.
+            str: The representation.
         """
         return rich.pretty.pretty_repr(self)
 

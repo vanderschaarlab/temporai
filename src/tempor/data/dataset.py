@@ -103,7 +103,7 @@ class BaseDataset(abc.ABC):
         self.validate()
 
     def __rich_repr__(self) -> Generator:
-        """A `rich` representation of the dataset.
+        """A `rich` representation of the class.
 
         Yields:
             Generator: The fields and their values fed to `rich`.
@@ -115,7 +115,7 @@ class BaseDataset(abc.ABC):
             yield "predictive", self.predictive
 
     def __repr__(self) -> str:
-        """The ``repr()`` representation of the dataset.
+        """The `repr()` representation of the class.
 
         Returns:
             str: The representation.

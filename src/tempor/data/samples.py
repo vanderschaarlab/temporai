@@ -51,10 +51,10 @@ class DataSamples(abc.ABC):
             self.validate()
 
     def __repr__(self) -> str:
-        """Return a string representation of the object for `repr()`.
+        """The `repr()` representation of the class.
 
         Returns:
-            str: The string representation of the object.
+            str: The representation.
         """
         return f"{self.__class__.__name__} with data:\n{self.dataframe()}"
 

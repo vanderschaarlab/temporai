@@ -1,3 +1,5 @@
+"""Module defining `Params` classes used for sampling in hyperparameter tuning."""
+
 import abc
 import random
 from typing import Any, Generator, List, Optional, Tuple
@@ -9,9 +11,14 @@ RESERVED_ARG_NAMES = ("trail", "override")
 
 
 class Params(abc.ABC):
-    """Helper for describing the hyperparameters for each estimator."""
-
     def __init__(self, name: str, bounds: Tuple[Any, Any]) -> None:
+        """Abstract base class for all hyperparameter sampling classes. A helper for describing the hyperparameters for
+        each estimator.
+
+        Args:
+            name (str): Hyperparameter name.
+            bounds (Tuple[Any, Any]): The bounds (lower, higher) of the hyperparameter.
+        """
         if name in RESERVED_ARG_NAMES:
             raise ValueError(f"The hyperparameter name '{name}' is not allowed, as it is a special argument")
         self.name = name
@@ -37,10 +44,20 @@ class Params(abc.ABC):
         ...
 
     def __rich_repr__(self) -> Generator:
+        """A `rich` representation of the class.
+
+        Yields:
+            Generator: The fields and their values fed to `rich`.
+        """
         yield "name", self.name
         yield "bounds", self.bounds
 
     def __repr__(self) -> str:
+        """The `repr()` representation of the class.
+
+        Returns:
+            str: The representation.
+        """
         return rich.pretty.pretty_repr(self)
 
 
@@ -62,6 +79,11 @@ class CategoricalParams(Params):
         return random.SystemRandom().choice(self.choices)
 
     def __rich_repr__(self) -> Generator:
+        """A `rich` representation of the class.
+
+        Yields:
+            Generator: The fields and their values fed to `rich`.
+        """
         yield "name", self.name
         yield "choices", self.choices
 
@@ -88,6 +110,11 @@ class FloatParams(Params):
         return random.uniform(self.low, self.high)  # nosec
 
     def __rich_repr__(self) -> Generator:
+        """A `rich` representation of the class.
+
+        Yields:
+            Generator: The fields and their values fed to `rich`.
+        """
         yield "name", self.name
         yield "low", self.low
         yield "high", self.high
@@ -118,6 +145,11 @@ class IntegerParams(Params):
         return random.SystemRandom().choice(self.choices)
 
     def __rich_repr__(self) -> Generator:
+        """A `rich` representation of the class.
+
+        Yields:
+            Generator: The fields and their values fed to `rich`.
+        """
         yield "name", self.name
         yield "low", self.low
         yield "high", self.high

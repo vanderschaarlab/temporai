@@ -212,10 +212,10 @@ class UnionDtype(pd_engine.DataType):
         return pd_engine.Engine.register_dtype(pa_dtypes.immutable(cls_))  # type: ignore
 
     def __repr__(self) -> str:
-        """Representation for `repr()`.
+        """The `repr()` representation of the class.
 
         Returns:
-            str: The string representation.
+            str: The representation.
         """
         return self.name
 
