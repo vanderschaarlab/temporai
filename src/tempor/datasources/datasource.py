@@ -3,8 +3,10 @@
 # pylint: disable=unnecessary-ellipsis
 
 import abc
+import contextlib
 import os
-from typing import Any, ClassVar, Optional, Type
+import ssl
+from typing import Any, ClassVar, Generator, Optional, Type
 
 import tempor
 from tempor.core import plugins
@@ -15,6 +17,23 @@ DATA_DIR = "data"
 
 The full directory will be ``< tempor -> config -> working_directory > / DATA_DIR``.
 """
+
+
+@contextlib.contextmanager
+def monkeypatch_ssl_error_workaround() -> Generator:
+    """Some datasets (e.g. UCI diabetes) are hosted on servers that may have SSL issues. This is a workaround that
+    monkeypatches the `ssl` module to ignore SSL errors temporarily.
+    """
+
+    context_backup = ssl._create_default_https_context  # pylint: disable=protected-access
+    ssl._create_default_https_context = ssl._create_unverified_context  # pylint: disable=protected-access
+
+    try:
+        yield
+
+    finally:
+        # Make sure to restore the original secure context!
+        ssl._create_default_https_context = context_backup  # pylint: disable=protected-access
 
 
 # TODO: Unit test.
