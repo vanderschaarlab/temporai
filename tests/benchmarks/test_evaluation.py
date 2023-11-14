@@ -5,7 +5,7 @@ import pytest
 
 from tempor import plugin_loader
 from tempor.benchmarks import (
-    classifier_supported_metrics,
+    builtin_metrics_prediction_oneoff_classification,
     evaluate_prediction_oneoff_classifier,
     evaluate_prediction_oneoff_regressor,
     evaluate_time_to_event,
@@ -13,7 +13,6 @@ from tempor.benchmarks import (
     regression_supported_metrics,
     time_to_event_supported_metrics,
 )
-from tempor.benchmarks.evaluation import ClassifierMetrics
 from tempor.methods.pipeline import pipeline
 
 N_ITER = 5
@@ -25,12 +24,6 @@ TEST_ON_DATASETS_TIME_TO_EVENT = ["pbc_data_small"]
 PREDICTOR_CLASSIFICATION = "prediction.one_off.classification.nn_classifier"
 PREDICTOR_REGRESSION = "prediction.one_off.regression.nn_regressor"
 PREDICTOR_TIME_TO_EVENT = "time_to_event.dynamic_deephit"
-
-
-def test_classifier_metrics_score_proba_input_validation():
-    clf_metrics = ClassifierMetrics()
-    with pytest.raises(ValueError, match=".*.input*"):
-        clf_metrics.score_proba(None, None)  # type: ignore
 
 
 @pytest.mark.parametrize("data", TEST_ON_DATASETS_CLASSIFIER)
@@ -62,7 +55,7 @@ def test_evaluate_prediction_oneoff_classifier(
     for out_metric in output_metrics:
         assert out_metric in scores
 
-    for metric in classifier_supported_metrics:
+    for metric in builtin_metrics_prediction_oneoff_classification:
         assert metric in scores.index
 
 

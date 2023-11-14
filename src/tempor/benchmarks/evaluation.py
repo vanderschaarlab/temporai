@@ -3,7 +3,7 @@
 import copy
 import warnings
 from time import time
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Sequence, Union, cast
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, cast
 
 import numpy as np
 import pandas as pd
@@ -13,9 +13,10 @@ import sklearn.metrics
 import sklearn.model_selection
 from typing_extensions import Literal, get_args
 
-from tempor.core import pydantic_utils
+from tempor.core import plugins, pydantic_utils
 from tempor.data import data_typing, dataset, samples
 from tempor.log import logger
+from tempor.metrics.metric import OneOffClassificationMetric
 from tempor.models.utils import enable_reproducibility
 
 from . import surv_metrics, utils
@@ -27,71 +28,10 @@ if TYPE_CHECKING:  # pragma: no cover
 
 # TODO: Benchmarking workflow for missing cases.
 
-ClassifierSupportedMetric = Literal[
-    "aucroc",
-    "aucprc",
-    "accuracy",
-    "f1_score_micro",
-    "f1_score_macro",
-    "f1_score_weighted",
-    "kappa",
-    "kappa_quadratic",
-    "precision_micro",
-    "precision_macro",
-    "precision_weighted",
-    "recall_micro",
-    "recall_macro",
-    "recall_weighted",
-    "mcc",
+_plugin_loader = plugins.PluginLoader()
+builtin_metrics_prediction_oneoff_classification = _plugin_loader.list(plugin_type="metric")["prediction"]["one_off"][
+    "classification"
 ]
-"""Evaluation metrics supported in the classification task setting.
-
-Possible values:
-    - ``"aucroc"``:
-        The Area Under the Receiver Operating Characteristic Curve (ROC AUC) from prediction scores.
-    - ``"aucprc"``:
-        The average precision summarizes a precision-recall curve as the weighted mean of precisions achieved at each
-        threshold, with the increase in recall from the previous threshold used as the weight.
-    - ``"accuracy"``:
-        Accuracy classification score.
-    - ``"f1_score_micro"``:
-        F1 score is a harmonic mean of the precision and recall. This version uses the ``"micro"`` average:
-        calculate metrics globally by counting the total true positives, false negatives and false positives.
-    - ``"f1_score_macro"``:
-        F1 score is a harmonic mean of the precision and recall. This version uses the ``"macro"`` average:
-        calculate metrics for each label, and find their unweighted mean. This does not take label imbalance into
-        account.
-    - ``"f1_score_weighted"``:
-        F1 score is a harmonic mean of the precision and recall. This version uses the "weighted" average:
-        Calculate metrics for each label, and find their average weighted by support
-        (the number of true instances for each label).
-    - ``"kappa"``, ``"kappa_quadratic"``:
-        Computes Cohen's kappa, a score that expresses the level of agreement between two annotators on a
-        classification problem.
-    - ``"precision_micro"``:
-        Precision is defined as the number of true positives over the number of true positives plus the number of false
-        positives. This version(micro) calculates metrics globally by counting the total true positives.
-    - ``"precision_macro"``:
-        Precision is defined as the number of true positives over the number of true positives plus the number of
-        false positives. This version (macro) calculates metrics for each label, and finds their unweighted mean.
-    - ``"precision_weighted"``:
-        Precision is defined as the number of true positives over the number of true positives plus the number of
-        false positives. This version (weighted) calculates metrics for each label, and find their average weighted
-        by support.
-    - ``"recall_micro"``:
-        Recall is defined as the number of true positives over the number of true positives plus the number of false
-        negatives. This version (micro) calculates metrics globally by counting the total true positives.
-    - ``"recall_macro"``:
-        Recall is defined as the number of true positives over the number of true positives plus the number of false
-        negatives. This version (macro) calculates metrics for each label, and finds their unweighted mean.
-    - ``"recall_weighted"``:
-        Recall is defined as the number of true positives over the number of true positives plus the number of false
-        negatives. This version(weighted) calculates metrics for each label, and find their average weighted by support.
-    - ``"mcc"``:
-        The Matthews Correlation Coefficient is used in machine learning as a measure of the quality of binary and
-        multiclass classifications. It takes into account true and false positives and negatives and is generally
-        regarded as a balanced measure which can be used even if the classes are of very different sizes.
-"""
 
 RegressionSupportedMetric = Literal[
     "mse",
@@ -156,9 +96,6 @@ Possible values:
         Average duration for the fold evaluation.
 """
 
-classifier_supported_metrics = get_args(ClassifierSupportedMetric)
-"""A tuple of all possible values of :obj:`~tempor.benchmarks.evaluation.ClassifierSupportedMetric`."""
-
 regression_supported_metrics = get_args(RegressionSupportedMetric)
 """A tuple of all possible values of :obj:`~tempor.benchmarks.evaluation.RegressionSupportedMetric`."""
 
@@ -219,152 +156,6 @@ def _postprocess_results(results: _InternalScores) -> pd.DataFrame:
     return output
 
 
-class ClassifierMetrics:
-    @pydantic_utils.validate_arguments
-    def __init__(
-        self,
-        metric: Union[ClassifierSupportedMetric, Sequence[ClassifierSupportedMetric]] = classifier_supported_metrics,
-    ) -> None:
-        """Helper class for evaluating the performance of the classifier.
-
-        Args:
-            metric (Union[ClassifierSupportedMetric, Sequence[ClassifierSupportedMetric]], optional):
-                The type of metric(s) to use for evaluation.
-                A string (one of :obj:`~tempor.benchmarks.evaluation.ClassifierSupportedMetric`) or a sequence of such.
-                Defaults to :obj:`~tempor.benchmarks.evaluation.classifier_supported_metrics`.
-        """
-        self.metrics: Union[ClassifierSupportedMetric, Sequence[ClassifierSupportedMetric]]
-        if isinstance(metric, str):  # pragma: no cover
-            # Should be prevented by pydantic.
-            self.metrics = [cast(ClassifierSupportedMetric, metric)]
-        else:
-            self.metrics = metric
-
-    def score_proba(self, y_test: np.ndarray, y_pred_proba: np.ndarray) -> Dict[str, float]:
-        """Return the evaluation metrics for the given predictions, where the predictions are of
-        predicted probabilities form.
-
-        Args:
-            y_test (np.ndarray): Test labels.
-            y_pred_proba (np.ndarray): Predicted probabilities.
-
-        Returns:
-            Dict[str, float]: Evaluation score.
-        """
-        if y_test is None or y_pred_proba is None:
-            raise ValueError("Invalid input for score_proba")
-
-        results = {}
-        y_pred = np.argmax(np.asarray(y_pred_proba), axis=1)
-        for metric in self.metrics:
-            if metric == "aucprc":
-                results[metric] = self.average_precision_score(y_test, y_pred_proba)
-            elif metric == "aucroc":
-                results[metric] = self.roc_auc_score(y_test, y_pred_proba)
-            elif metric == "accuracy":
-                results[metric] = sklearn.metrics.accuracy_score(y_test, y_pred)
-            elif metric == "f1_score_micro":
-                results[metric] = sklearn.metrics.f1_score(
-                    y_test,
-                    y_pred,
-                    average="micro",
-                    zero_division=0,  # pyright: ignore
-                )
-            elif metric == "f1_score_macro":
-                results[metric] = sklearn.metrics.f1_score(
-                    y_test,
-                    y_pred,
-                    average="macro",
-                    zero_division=0,  # pyright: ignore
-                )
-            elif metric == "f1_score_weighted":
-                results[metric] = sklearn.metrics.f1_score(
-                    y_test,
-                    y_pred,
-                    average="weighted",
-                    zero_division=0,  # pyright: ignore
-                )
-            elif metric == "kappa":
-                results[metric] = sklearn.metrics.cohen_kappa_score(y_test, y_pred)
-            elif metric == "kappa_quadratic":
-                results[metric] = sklearn.metrics.cohen_kappa_score(y_test, y_pred, weights="quadratic")
-            elif metric == "recall_micro":
-                results[metric] = sklearn.metrics.recall_score(
-                    y_test,
-                    y_pred,
-                    average="micro",
-                    zero_division=0,  # pyright: ignore
-                )
-            elif metric == "recall_macro":
-                results[metric] = sklearn.metrics.recall_score(
-                    y_test,
-                    y_pred,
-                    average="macro",
-                    zero_division=0,  # pyright: ignore
-                )
-            elif metric == "recall_weighted":
-                results[metric] = sklearn.metrics.recall_score(
-                    y_test,
-                    y_pred,
-                    average="weighted",
-                    zero_division=0,  # pyright: ignore
-                )
-            elif metric == "precision_micro":
-                results[metric] = sklearn.metrics.precision_score(
-                    y_test,
-                    y_pred,
-                    average="micro",
-                    zero_division=0,  # pyright: ignore
-                )
-            elif metric == "precision_macro":
-                results[metric] = sklearn.metrics.precision_score(
-                    y_test,
-                    y_pred,
-                    average="macro",
-                    zero_division=0,  # pyright: ignore
-                )
-            elif metric == "precision_weighted":
-                results[metric] = sklearn.metrics.precision_score(
-                    y_test,
-                    y_pred,
-                    average="weighted",
-                    zero_division=0,  # pyright: ignore
-                )
-            elif metric == "mcc":
-                results[metric] = sklearn.metrics.matthews_corrcoef(y_test, y_pred)
-            else:  # pragma: no cover
-                raise ValueError(f"invalid metric {metric}")
-
-        logger.debug(f"evaluate_classifier: {results}")
-        return results
-
-    def roc_auc_score(self, y_test: np.ndarray, y_pred_proba: np.ndarray) -> float:
-        """Return the ROC AUC score for the given predictions, where the predictions are of
-        predicted probabilities form.
-
-        Args:
-            y_test (np.ndarray): Test labels.
-            y_pred_proba (np.ndarray): Predicted probabilities.
-
-        Returns:
-            float: ROC AUC score.
-        """
-        return utils.evaluate_auc_multiclass(y_test, y_pred_proba)[0]
-
-    def average_precision_score(self, y_test: np.ndarray, y_pred_proba: np.ndarray) -> float:
-        """Return the average precision score for the given predictions, where the predictions are of
-        predicted probabilities form.
-
-        Args:
-            y_test (np.ndarray): Test labels.
-            y_pred_proba (np.ndarray): Predicted probabilities.
-
-        Returns:
-            float: Average precision score.
-        """
-        return utils.evaluate_auc_multiclass(y_test, y_pred_proba)[1]
-
-
 @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
 def evaluate_prediction_oneoff_classifier(  # pylint: disable=unused-argument
     estimator: Any,
@@ -402,9 +193,18 @@ def evaluate_prediction_oneoff_classifier(  # pylint: disable=unused-argument
             The columns of the dataframe contain details about the cross-validation repeats: one column for each
             :obj:`~tempor.benchmarks.evaluation.OutputMetric`.
 
-            The index of the dataframe contains all the metrics evaluated: all of
-            :obj:`~tempor.benchmarks.evaluation.ClassifierSupportedMetric`.
+            The index of the dataframe contains all the metrics evaluated: all metric plugins registered:
+
+            >>> import doctest; doctest.ELLIPSIS_MARKER = "[...]"  # Doctest config, ignore.
+            >>> from tempor import plugin_loader
+            >>> plugin_loader.list(plugin_type="metric")["prediction"]["one_off"]["classification"]
+            [...]
     """
+
+    # For the sake of import modularity, do not use the global plugin loader here, but create own:
+    _plugin_loader = plugins.PluginLoader()
+    metric_plugin_category = "prediction.one_off.classification"
+    classifier_supported_metrics = _plugin_loader.list(plugin_type="metric")["prediction"]["one_off"]["classification"]
 
     with warnings.catch_warnings():
         if silence_warnings:
@@ -416,9 +216,8 @@ def evaluate_prediction_oneoff_classifier(  # pylint: disable=unused-argument
         enable_reproducibility(random_state)
 
         results = _InternalScores()
-        evaluator = ClassifierMetrics()
-        for metric in classifier_supported_metrics:
-            results.metrics[metric] = np.zeros(n_splits)
+        for metric_name in classifier_supported_metrics:
+            results.metrics[metric_name] = np.zeros(n_splits)
 
         splitter = sklearn.model_selection.StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_state)
 
@@ -432,6 +231,7 @@ def evaluate_prediction_oneoff_classifier(  # pylint: disable=unused-argument
         for train_data, test_data in data.split(splitter=splitter, y=labels):
             model = copy.deepcopy(estimator_)
             start = time()
+
             try:
                 model.fit(train_data)
 
@@ -440,10 +240,15 @@ def evaluate_prediction_oneoff_classifier(  # pylint: disable=unused-argument
                 test_labels = test_data.predictive.targets.numpy()
                 preds = model.predict_proba(test_data).numpy()
 
-                scores = evaluator.score_proba(test_labels, preds)
-                for metric in scores:
-                    results.metrics[metric][indx] = scores[metric]
+                for metric_name in classifier_supported_metrics:
+                    metric = cast(
+                        OneOffClassificationMetric,
+                        _plugin_loader.get(f"{metric_plugin_category}.{metric_name}", plugin_type="metric"),
+                    )
+                    results.metrics[metric_name][indx] = metric.evaluate(test_labels, preds)
+
                 results.errors.append(0)
+
             except BaseException as e:  # pylint: disable=broad-except
                 logger.error(f"Evaluation failed: {e}")
                 results.errors.append(1)

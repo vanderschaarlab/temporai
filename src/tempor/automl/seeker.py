@@ -49,7 +49,7 @@ Available options:
 """
 
 SupportedMetric = Union[
-    evaluation.ClassifierSupportedMetric,
+    str,
     evaluation.RegressionSupportedMetric,
     evaluation.TimeToEventSupportedMetric,
 ]

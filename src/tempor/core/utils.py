@@ -179,3 +179,54 @@ def unique_in_order_of_appearance(iterable: Iterable) -> List:
         List: List of unique elements in order of their appearance.
     """
     return list(dict.fromkeys(iterable))
+
+
+def is_method_defined_in_class(cls_or_obj: Any, method_name: str) -> bool:
+    """Check if method named ``method_name`` method is defined in the given class (or object's class) or inherited.
+
+    Args:
+        cls_or_obj (Any): The class or object to check.
+        method_name (str): The name of the method to check.
+
+    Returns:
+        bool: True if method is defined in ``cls``, `False` if inherited.
+    """
+    init_qualname = getattr(cls_or_obj, method_name).__qualname__
+    class_name = cls_or_obj.__name__ if isinstance(cls_or_obj, type) else cls_or_obj.__class__.__name__
+    return init_qualname.startswith(class_name + ".")
+
+
+def clean_multiline_docstr(docstr: str) -> str:
+    """Clean a multi-line docstring by getting rid of newlines and cleaning up whitespace.
+
+    Args:
+        docstr (str): The docstring to clean.
+
+    Returns:
+        str: The cleaned docstring.
+    """
+    return " ".join([line.strip() for line in docstr.split("\n")]).strip()
+
+
+def make_description_from_doc(obj: Any, max_len_keep: int = 100) -> str:
+    """Make a description from the docstring of an object. Take the class docstring and the ``__init__`` docstring
+    (if there was one defined on the class). If the combined length of these is greater than ``max_len_keep``, then
+    truncate with ``...``.
+
+    Args:
+        obj (Any): The object to get the description of.
+        max_len_keep (int, optional): Maximum description length before truncating. Defaults to ``100``.
+
+    Returns:
+        str: Description of the object.
+    """
+    class_doc: str = obj.__doc__ if obj.__doc__ is not None else ""
+    init_doc: str = ""
+    if is_method_defined_in_class(obj, "__init__"):
+        init_doc = obj.__init__.__doc__ if obj.__init__.__doc__ is not None else ""
+    class_and_init_docs_combo = f"{class_doc} {init_doc}".strip()
+
+    if len(class_and_init_docs_combo) > max_len_keep:
+        return class_and_init_docs_combo[:max_len_keep] + "..."
+    else:
+        return class_and_init_docs_combo

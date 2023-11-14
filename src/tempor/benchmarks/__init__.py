@@ -2,10 +2,9 @@
 
 from .benchmark import benchmark_models, visualize_benchmark  # noqa: F401
 from .evaluation import (  # noqa: F401
-    ClassifierSupportedMetric,
     OutputMetric,
     RegressionSupportedMetric,
-    classifier_supported_metrics,
+    builtin_metrics_prediction_oneoff_classification,
     evaluate_prediction_oneoff_classifier,
     evaluate_prediction_oneoff_regressor,
     evaluate_time_to_event,
