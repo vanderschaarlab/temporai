@@ -6,11 +6,11 @@ import pytest
 from tempor import plugin_loader
 from tempor.benchmarks import (
     builtin_metrics_prediction_oneoff_classification,
+    builtin_metrics_prediction_oneoff_regression,
     evaluate_prediction_oneoff_classifier,
     evaluate_prediction_oneoff_regressor,
     evaluate_time_to_event,
     output_metrics,
-    regression_supported_metrics,
     time_to_event_supported_metrics,
 )
 from tempor.methods.pipeline import pipeline
@@ -154,7 +154,7 @@ def test_evaluate_prediction_oneoff_regressor(
     for out_metric in output_metrics:
         assert out_metric in scores
 
-    for metric in regression_supported_metrics:
+    for metric in builtin_metrics_prediction_oneoff_regression:
         assert metric in scores.index
 
 

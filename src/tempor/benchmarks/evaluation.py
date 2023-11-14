@@ -16,7 +16,7 @@ from typing_extensions import Literal, get_args
 from tempor.core import plugins, pydantic_utils
 from tempor.data import data_typing, dataset, samples
 from tempor.log import logger
-from tempor.metrics.metric import OneOffClassificationMetric
+from tempor.metrics.metric import OneOffClassificationMetric, OneOffRegressionMetric
 from tempor.models.utils import enable_reproducibility
 
 from . import surv_metrics, utils
@@ -32,22 +32,9 @@ _plugin_loader = plugins.PluginLoader()
 builtin_metrics_prediction_oneoff_classification = _plugin_loader.list(plugin_type="metric")["prediction"]["one_off"][
     "classification"
 ]
-
-RegressionSupportedMetric = Literal[
-    "mse",
-    "mae",
-    "r2",
+builtin_metrics_prediction_oneoff_regression = _plugin_loader.list(plugin_type="metric")["prediction"]["one_off"][
+    "regression"
 ]
-"""Evaluation metrics supported in the regression task setting.
-
-Possible values:
-    - ``"r2"``:
-        R^2 (coefficient of determination) regression score function.
-    - ``"mse"``:
-        Mean squared error regression loss.
-    - ``"mae"``:
-        Mean absolute error regression loss.
-"""
 
 TimeToEventSupportedMetric = Literal[
     "c_index",
@@ -95,9 +82,6 @@ Possible values:
     - ``"durations"``:
         Average duration for the fold evaluation.
 """
-
-regression_supported_metrics = get_args(RegressionSupportedMetric)
-"""A tuple of all possible values of :obj:`~tempor.benchmarks.evaluation.RegressionSupportedMetric`."""
 
 time_to_event_supported_metrics = get_args(TimeToEventSupportedMetric)
 """A tuple of all possible values of :obj:`~tempor.benchmarks.evaluation.TimeToEventSupportedMetric`."""
@@ -193,7 +177,7 @@ def evaluate_prediction_oneoff_classifier(  # pylint: disable=unused-argument
             The columns of the dataframe contain details about the cross-validation repeats: one column for each
             :obj:`~tempor.benchmarks.evaluation.OutputMetric`.
 
-            The index of the dataframe contains all the metrics evaluated: all metric plugins registered:
+            The index of the dataframe contains all the metrics registered:
 
             >>> import doctest; doctest.ELLIPSIS_MARKER = "[...]"  # Doctest config, ignore.
             >>> from tempor import plugin_loader
@@ -204,7 +188,7 @@ def evaluate_prediction_oneoff_classifier(  # pylint: disable=unused-argument
     # For the sake of import modularity, do not use the global plugin loader here, but create own:
     _plugin_loader = plugins.PluginLoader()
     metric_plugin_category = "prediction.one_off.classification"
-    classifier_supported_metrics = _plugin_loader.list(plugin_type="metric")["prediction"]["one_off"]["classification"]
+    supported_metrics = _plugin_loader.list(plugin_type="metric")["prediction"]["one_off"]["classification"]
 
     with warnings.catch_warnings():
         if silence_warnings:
@@ -216,7 +200,7 @@ def evaluate_prediction_oneoff_classifier(  # pylint: disable=unused-argument
         enable_reproducibility(random_state)
 
         results = _InternalScores()
-        for metric_name in classifier_supported_metrics:
+        for metric_name in supported_metrics:
             results.metrics[metric_name] = np.zeros(n_splits)
 
         splitter = sklearn.model_selection.StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_state)
@@ -240,7 +224,7 @@ def evaluate_prediction_oneoff_classifier(  # pylint: disable=unused-argument
                 test_labels = test_data.predictive.targets.numpy()
                 preds = model.predict_proba(test_data).numpy()
 
-                for metric_name in classifier_supported_metrics:
+                for metric_name in supported_metrics:
                     metric = cast(
                         OneOffClassificationMetric,
                         _plugin_loader.get(f"{metric_plugin_category}.{metric_name}", plugin_type="metric"),
@@ -298,9 +282,18 @@ def evaluate_prediction_oneoff_regressor(  # pylint: disable=unused-argument
             The columns of the dataframe contain details about the cross-validation repeats: one column for each
             :obj:`~tempor.benchmarks.evaluation.OutputMetric`.
 
-            The index of the dataframe contains all the metrics evaluated: all of
-            :obj:`~tempor.benchmarks.evaluation.RegressionSupportedMetric`.
+            The index of the dataframe contains all the metrics registered:
+
+            >>> import doctest; doctest.ELLIPSIS_MARKER = "[...]"  # Doctest config, ignore.
+            >>> from tempor import plugin_loader
+            >>> plugin_loader.list(plugin_type="metric")["prediction"]["one_off"]["regression"]
+            [...]
     """
+
+    # For the sake of import modularity, do not use the global plugin loader here, but create own:
+    _plugin_loader = plugins.PluginLoader()
+    metric_plugin_category = "prediction.one_off.regression"
+    supported_metrics = _plugin_loader.list(plugin_type="metric")["prediction"]["one_off"]["regression"]
 
     with warnings.catch_warnings():
         if silence_warnings:
@@ -310,10 +303,9 @@ def evaluate_prediction_oneoff_regressor(  # pylint: disable=unused-argument
             raise ValueError("n_splits must be an integer >= 2")
         estimator_ = cast("BaseOneOffRegressor", estimator)
         enable_reproducibility(random_state)
-        metrics = regression_supported_metrics
 
         results = _InternalScores()
-        for metric in metrics:
+        for metric in supported_metrics:
             results.metrics[metric] = np.zeros(n_splits)
 
         splitter = sklearn.model_selection.KFold(n_splits=n_splits, shuffle=True, random_state=random_state)
@@ -322,6 +314,7 @@ def evaluate_prediction_oneoff_regressor(  # pylint: disable=unused-argument
         for train_data, test_data in data.split(splitter=splitter):
             model = copy.deepcopy(estimator_)
             start = time()
+
             try:
                 model.fit(train_data)
 
@@ -330,10 +323,15 @@ def evaluate_prediction_oneoff_regressor(  # pylint: disable=unused-argument
                 targets = test_data.predictive.targets.numpy().squeeze()
                 preds = model.predict(test_data).numpy().squeeze()
 
-                results.metrics["mse"][indx] = sklearn.metrics.mean_squared_error(targets, preds)
-                results.metrics["mae"][indx] = sklearn.metrics.mean_absolute_error(targets, preds)
-                results.metrics["r2"][indx] = sklearn.metrics.r2_score(targets, preds)
+                for metric_name in supported_metrics:
+                    metric = cast(
+                        OneOffRegressionMetric,
+                        _plugin_loader.get(f"{metric_plugin_category}.{metric_name}", plugin_type="metric"),
+                    )
+                    results.metrics[metric_name][indx] = metric.evaluate(targets, preds)
+
                 results.errors.append(0)
+
             except BaseException as e:  # pylint: disable=broad-except
                 logger.error(f"Regression evaluation failed: {e}")
                 results.errors.append(1)

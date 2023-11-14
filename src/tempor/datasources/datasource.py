@@ -20,7 +20,7 @@ The full directory will be ``< tempor -> config -> working_directory > / DATA_DI
 
 
 @contextlib.contextmanager
-def monkeypatch_ssl_error_workaround() -> Generator:
+def monkeypatch_ssl_error_workaround() -> Generator:  # pragma: no cover
     """Some datasets (e.g. UCI diabetes) are hosted on servers that may have SSL issues. This is a workaround that
     monkeypatches the `ssl` module to ignore SSL errors temporarily.
     """

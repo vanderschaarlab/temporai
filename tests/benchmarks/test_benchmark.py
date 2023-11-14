@@ -7,7 +7,7 @@ from tempor import plugin_loader
 from tempor.benchmarks import (
     benchmark_models,
     builtin_metrics_prediction_oneoff_classification,
-    regression_supported_metrics,
+    builtin_metrics_prediction_oneoff_regression,
     time_to_event_supported_metrics,
     visualize_benchmark,
 )
@@ -105,7 +105,7 @@ def test_regressor_benchmark(data: str, request: pytest.FixtureRequest) -> None:
         assert testcase in aggr_score.columns
         assert testcase in per_test_score
 
-    for metric in regression_supported_metrics:
+    for metric in builtin_metrics_prediction_oneoff_regression:
         assert metric in aggr_score.index
 
         for testcase, _ in testcases:

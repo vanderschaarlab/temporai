@@ -50,7 +50,6 @@ Available options:
 
 SupportedMetric = Union[
     str,
-    evaluation.RegressionSupportedMetric,
     evaluation.TimeToEventSupportedMetric,
 ]
 """The type denoting all metrics supported by ``Seeker`` classes"""
