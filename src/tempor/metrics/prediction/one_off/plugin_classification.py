@@ -128,6 +128,10 @@ def _evaluate_aucprc_multiclass(
 class AccuracyMetric(metric.OneOffClassificationMetric):
     """Accuracy classification score."""
 
+    @property
+    def direction(self) -> metric.MetricDirection:  # noqa: D102
+        return "maximize"
+
     def _evaluate(self, actual: Any, predicted: Any, *args: Any, **kwargs: Any) -> float:
         return cast(
             float,
@@ -140,6 +144,10 @@ class F1ScoreMicroMetric(metric.OneOffClassificationMetric):
     """F1 score is a harmonic mean of the precision and recall. This version uses the ``"micro"`` average: calculate
     metrics globally by counting the total true positives, false negatives and false positives.
     """
+
+    @property
+    def direction(self) -> metric.MetricDirection:  # noqa: D102
+        return "maximize"
 
     def _evaluate(self, actual: Any, predicted: Any, *args: Any, **kwargs: Any) -> float:
         return cast(
@@ -159,6 +167,10 @@ class F1ScoreMacroMetric(metric.OneOffClassificationMetric):
     metrics for each label, and find their unweighted mean. This does not take label imbalance into account.
     """
 
+    @property
+    def direction(self) -> metric.MetricDirection:  # noqa: D102
+        return "maximize"
+
     def _evaluate(self, actual: Any, predicted: Any, *args: Any, **kwargs: Any) -> float:
         return cast(
             float,
@@ -176,6 +188,10 @@ class F1ScoreWeightedMetric(metric.OneOffClassificationMetric):
     """F1 score is a harmonic mean of the precision and recall. This version uses the ``"weighted"`` average: calculate
     metrics for each label, and find their average weighted by support (the number of true instances for each label).
     """
+
+    @property
+    def direction(self) -> metric.MetricDirection:  # noqa: D102
+        return "maximize"
 
     def _evaluate(self, actual: Any, predicted: Any, *args: Any, **kwargs: Any) -> float:
         return cast(
@@ -195,6 +211,10 @@ class KappaMetric(metric.OneOffClassificationMetric):
     problem.
     """
 
+    @property
+    def direction(self) -> metric.MetricDirection:  # noqa: D102
+        return "maximize"
+
     def _evaluate(self, actual: Any, predicted: Any, *args: Any, **kwargs: Any) -> float:
         return cast(
             float,
@@ -208,6 +228,10 @@ class KappaQuadraticMetric(metric.OneOffClassificationMetric):
     problem. Weighted using the `"quadratic"` weighting.
     """
 
+    @property
+    def direction(self) -> metric.MetricDirection:  # noqa: D102
+        return "maximize"
+
     def _evaluate(self, actual: Any, predicted: Any, *args: Any, **kwargs: Any) -> float:
         return cast(
             float,
@@ -220,6 +244,10 @@ class RecallMicroMetric(metric.OneOffClassificationMetric):
     """Recall is defined as the number of true positives over the number of true positives plus the number of false
     negatives. This version (micro) calculates metrics globally by counting the total true positives.
     """
+
+    @property
+    def direction(self) -> metric.MetricDirection:  # noqa: D102
+        return "maximize"
 
     def _evaluate(self, actual: Any, predicted: Any, *args: Any, **kwargs: Any) -> float:
         return cast(
@@ -239,6 +267,10 @@ class RecallMacroMetric(metric.OneOffClassificationMetric):
     negatives. This version (macro) calculates metrics for each label, and finds their unweighted mean.
     """
 
+    @property
+    def direction(self) -> metric.MetricDirection:  # noqa: D102
+        return "maximize"
+
     def _evaluate(self, actual: Any, predicted: Any, *args: Any, **kwargs: Any) -> float:
         return cast(
             float,
@@ -256,6 +288,10 @@ class RecallWeightedMetric(metric.OneOffClassificationMetric):
     """Recall is defined as the number of true positives over the number of true positives plus the number of false
     negatives. This version(weighted) calculates metrics for each label, and find their average weighted by support.
     """
+
+    @property
+    def direction(self) -> metric.MetricDirection:  # noqa: D102
+        return "maximize"
 
     def _evaluate(self, actual: Any, predicted: Any, *args: Any, **kwargs: Any) -> float:
         return cast(
@@ -275,6 +311,10 @@ class PrecisionMicroMetric(metric.OneOffClassificationMetric):
     positives. This version (micro) calculates metrics globally by counting the total true positives.
     """
 
+    @property
+    def direction(self) -> metric.MetricDirection:  # noqa: D102
+        return "maximize"
+
     def _evaluate(self, actual: Any, predicted: Any, *args: Any, **kwargs: Any) -> float:
         return cast(
             float,
@@ -292,6 +332,10 @@ class PrecisionMacroMetric(metric.OneOffClassificationMetric):
     """Precision is defined as the number of true positives over the number of true positives plus the number of
     false positives. This version (macro) calculates metrics for each label, and finds their unweighted mean.
     """
+
+    @property
+    def direction(self) -> metric.MetricDirection:  # noqa: D102
+        return "maximize"
 
     def _evaluate(self, actual: Any, predicted: Any, *args: Any, **kwargs: Any) -> float:
         return cast(
@@ -312,6 +356,10 @@ class PrecisionWeightedMetric(metric.OneOffClassificationMetric):
     by support.
     """
 
+    @property
+    def direction(self) -> metric.MetricDirection:  # noqa: D102
+        return "maximize"
+
     def _evaluate(self, actual: Any, predicted: Any, *args: Any, **kwargs: Any) -> float:
         return cast(
             float,
@@ -331,6 +379,10 @@ class MccMetric(metric.OneOffClassificationMetric):
     regarded as a balanced measure which can be used even if the classes are of very different sizes.
     """
 
+    @property
+    def direction(self) -> metric.MetricDirection:  # noqa: D102
+        return "maximize"
+
     def _evaluate(self, actual: Any, predicted: Any, *args: Any, **kwargs: Any) -> float:
         return cast(
             float,
@@ -344,6 +396,10 @@ class AucPrcMetric(metric.OneOffClassificationMetric):
     threshold, with the increase in recall from the previous threshold used as the weight.
     """
 
+    @property
+    def direction(self) -> metric.MetricDirection:  # noqa: D102
+        return "maximize"
+
     def _evaluate(self, actual: Any, predicted: Any, *args: Any, **kwargs: Any) -> float:
         return _evaluate_aucprc_multiclass(actual, predicted)
 
@@ -351,6 +407,10 @@ class AucPrcMetric(metric.OneOffClassificationMetric):
 @plugins.register_plugin(name="aucroc", category="prediction.one_off.classification", plugin_type="metric")
 class AucRocMetric(metric.OneOffClassificationMetric):
     """The Area Under the Receiver Operating Characteristic Curve (ROC AUC) from prediction scores."""
+
+    @property
+    def direction(self) -> metric.MetricDirection:  # noqa: D102
+        return "maximize"
 
     def _evaluate(self, actual: Any, predicted: Any, *args: Any, **kwargs: Any) -> float:
         return _evaluate_aucroc_multiclass(actual, predicted)

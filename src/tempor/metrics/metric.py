@@ -6,13 +6,25 @@ import abc
 from typing import Any, Generator
 
 import rich.pretty
+from typing_extensions import Literal
 
 import tempor.core.utils
 from tempor.core import plugins
 
+MetricDirection = Literal["minimize", "maximize"]
+"""The direction of the metric that represents the optimization goal (the "good" direction):
+``"minimize"`` or "``maximize``".
+"""
+
 
 class Metric(plugins.Plugin, abc.ABC):
     """Metric abstract base class, defines the required methods."""
+
+    @property
+    @abc.abstractmethod
+    def direction(self) -> MetricDirection:  # pragma: no cover
+        """The direction of the metric"""
+        ...
 
     def evaluate(self, actual: Any, predicted: Any, *args: Any, **kwargs: Any) -> Any:  # pragma: no cover
         """The metric evaluation call.

@@ -117,6 +117,8 @@ METRIC_NAMES = list(EXPECTED_VALUES.keys())
 def test_accuracy_metric(metric_name, case_idx, actual, predicted):
     metric = plugin_loader.get(f"prediction.one_off.classification.{metric_name}", plugin_type="metric")
     result = metric.evaluate(actual, predicted)
+
     expected = EXPECTED_VALUES[metric_name][case_idx]
-    print(result, expected)
+
+    assert metric.direction in ("maximize", "minimize")
     np.testing.assert_almost_equal(result, expected, 4)
