@@ -1,6 +1,6 @@
-"""Module with any additional metrics."""
+"""Module with implementations for time-to-event (survival) analysis metric implementations."""
 
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import sklearn
@@ -736,3 +736,51 @@ def concordance_index_ipcw(
     w = np.square(ipcw)
 
     return _estimate_concordance_index(test_event, test_time, estimate_arr, w, tied_tol)
+
+
+# --- Directly usable functions for the metrics. ---
+
+
+def compute_c_index(
+    training_array_struct: np.ndarray, testing_array_struct: np.ndarray, predictions: np.ndarray, horizons: List[float]
+) -> List[float]:
+    """Compute the IPCW concordance index.
+
+    Args:
+        training_array_struct (np.ndarray): Training data as a structured array.
+        testing_array_struct (np.ndarray): Testing data as a structured array.
+        predictions (np.ndarray): Predictions.
+        horizons (List[float]): Evaluation horizons.
+
+    Returns:
+        List[float]: List of metric values for each horizon.
+    """
+    metrics: List[float] = []
+    for horizon_idx, horizon_time in enumerate(horizons):
+        predictions_at_horizon_time = predictions[:, horizon_idx, :].reshape((-1,))
+        out = concordance_index_ipcw(
+            training_array_struct, testing_array_struct, predictions_at_horizon_time, float(horizon_time)
+        )
+        metrics.append(out[0])
+    return metrics
+
+
+def compute_brier_score(
+    training_array_struct: np.ndarray, testing_array_struct: np.ndarray, predictions: np.ndarray, horizons: List[float]
+) -> List[float]:
+    """Compute the time-dependent Brier score.
+
+    Args:
+        training_array_struct (np.ndarray): Training data as a structured array.
+        testing_array_struct (np.ndarray): Testing data as a structured array.
+        predictions (np.ndarray): Predictions.
+        horizons (List[float]): Evaluation horizons.
+
+    Returns:
+        List[float]: List of metric values for each horizon.
+    """
+    predictions = predictions.reshape((predictions.shape[0], predictions.shape[1]))
+    times, scores = brier_score(  # pylint: disable=unused-variable
+        training_array_struct, testing_array_struct, predictions, horizons
+    )
+    return scores.tolist()

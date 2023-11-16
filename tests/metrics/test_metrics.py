@@ -3,7 +3,8 @@ from typing import Any
 
 import pytest
 
-from tempor.metrics.metric import Metric, MetricDirection
+from tempor.metrics.metric import Metric
+from tempor.metrics.metric_typing import MetricDirection
 
 
 class MyMetric(Metric):

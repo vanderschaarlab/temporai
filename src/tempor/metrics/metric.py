@@ -3,18 +3,16 @@
 # pylint: disable=unnecessary-ellipsis
 
 import abc
-from typing import Any, Generator
+from typing import Any, Generator, List
 
+import numpy as np
 import rich.pretty
-from typing_extensions import Literal
 
 import tempor.core.utils
 from tempor.core import plugins
+from tempor.data import data_typing
 
-MetricDirection = Literal["minimize", "maximize"]
-"""The direction of the metric that represents the optimization goal (the "good" direction):
-``"minimize"`` or "``maximize``".
-"""
+from . import metric_typing
 
 
 class Metric(plugins.Plugin, abc.ABC):
@@ -22,7 +20,7 @@ class Metric(plugins.Plugin, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def direction(self) -> MetricDirection:  # pragma: no cover
+    def direction(self) -> metric_typing.MetricDirection:  # pragma: no cover
         """The direction of the metric"""
         ...
 
@@ -56,7 +54,7 @@ class Metric(plugins.Plugin, abc.ABC):
             **kwargs (Any): Additional keyword arguments.
 
         Returns:
-            Any: Evaluated metric value(s)
+            Any: Evaluated metric value(s).
         """
         ...
 
@@ -91,6 +89,7 @@ class Metric(plugins.Plugin, abc.ABC):
 
 
 # TODO: Multi-feature cases.
+# TODO: Typing of arguments may change.
 # TODO: Update the abstract methods for each case properly.
 
 
@@ -100,21 +99,36 @@ class OneOffPredictionMetric(Metric):
     # Overridden for type hinting.
     @abc.abstractmethod
     def _evaluate(
-        self, actual: Any, predicted: Any, *args: Any, **kwargs: Any
+        self, actual: np.ndarray, predicted: np.ndarray, *args: Any, **kwargs: Any
     ) -> float:  # pragma: no cover # noqa: D102
         ...
 
 
+# Overrides for type hinting and docstrings.
 class OneOffClassificationMetric(OneOffPredictionMetric):
-    """Metric abstract base class for the one-off prediction task, classification case.
+    """Metric abstract base class for the one-off prediction task, classification case."""
 
-    ``predicted`` must be the probabilities in this case
-    """
+    def evaluate(self, actual: np.ndarray, predicted: np.ndarray, *args: Any, **kwargs: Any) -> float:
+        """The metric evaluation call.
 
-    # Overridden for type hinting.
+        ``actual`` and ``predicted`` are expected to be numpy arrays (sample in the 0th dimension).
+
+        ``predicted`` must be the probabilities in this case.
+
+        Args:
+            actual (np.ndarray): Actual value(s).
+            predicted (np.ndarray): Predicted value(s).
+            *args (Any): Additional positional arguments.
+            **kwargs (Any): Additional keyword arguments.
+
+        Returns:
+            float: Evaluated metric value.
+        """
+        return super().evaluate(actual, predicted, *args, **kwargs)
+
     @abc.abstractmethod
     def _evaluate(
-        self, actual: Any, predicted: Any, *args: Any, **kwargs: Any
+        self, actual: np.ndarray, predicted: np.ndarray, *args: Any, **kwargs: Any
     ) -> float:  # pragma: no cover # noqa: D102
         ...
 
@@ -122,13 +136,29 @@ class OneOffClassificationMetric(OneOffPredictionMetric):
 plugins.register_plugin_category("prediction.one_off.classification", OneOffClassificationMetric, plugin_type="metric")
 
 
+# Overrides for type hinting and docstrings.
 class OneOffRegressionMetric(OneOffPredictionMetric):
     """Metric abstract base class for the one-off prediction task, regression case."""
 
-    # Overridden for type hinting.
+    def evaluate(self, actual: np.ndarray, predicted: np.ndarray, *args: Any, **kwargs: Any) -> float:
+        """The metric evaluation call.
+
+        ``actual`` and ``predicted`` are expected to be numpy arrays (sample in the 0th dimension).
+
+        Args:
+            actual (np.ndarray): Actual value(s).
+            predicted (np.ndarray): Predicted value(s).
+            *args (Any): Additional positional arguments.
+            **kwargs (Any): Additional keyword arguments.
+
+        Returns:
+            float: Evaluated metric value.
+        """
+        return super().evaluate(actual, predicted, *args, **kwargs)
+
     @abc.abstractmethod
     def _evaluate(
-        self, actual: Any, predicted: Any, *args: Any, **kwargs: Any
+        self, actual: np.ndarray, predicted: np.ndarray, *args: Any, **kwargs: Any
     ) -> float:  # pragma: no cover # noqa: D102
         ...
 
@@ -136,14 +166,48 @@ class OneOffRegressionMetric(OneOffPredictionMetric):
 plugins.register_plugin_category("prediction.one_off.regression", OneOffRegressionMetric, plugin_type="metric")
 
 
+# Overrides for type hinting and docstrings.
 class TimeToEventMetric(Metric):
     """Metric abstract base class for the time-to-event (survival) task."""
 
-    # Overridden for type hinting.
+    def evaluate(  # type: ignore [override] # pylint: disable=arguments-differ
+        self,
+        actual: metric_typing.EventArrayTimeArray,
+        predicted: np.ndarray,
+        horizons: data_typing.TimeIndex,
+        *args: Any,
+        **kwargs: Any,
+    ) -> List[float]:
+        """The metric evaluation call.
+
+        Args:
+            actual (metric_typing.EventArrayTimeArray):
+                A tuple of two numpy arrays: the event values array and the event times array,
+                for the actual event vales.
+            predicted (np.ndarray):
+                A numpy array of shape ``(n_samples, n_horizons_timesteps, n_features)``
+                with the predicted risk estimates.
+            horizons (data_typing.TimeIndex):
+                List of horizons time points.
+            *args (Any):
+                Additional positional arguments.
+            **kwargs (Any):
+                Additional keyword arguments.
+
+        Returns:
+            List[float]: The metric values for each horizon time point.
+        """
+        return super().evaluate(actual, predicted, horizons, *args, **kwargs)
+
     @abc.abstractmethod
-    def _evaluate(
-        self, actual: Any, predicted: Any, *args: Any, **kwargs: Any
-    ) -> float:  # pragma: no cover # noqa: D102
+    def _evaluate(  # type: ignore [override] # pylint: disable=arguments-differ
+        self,
+        actual: metric_typing.EventArrayTimeArray,
+        predicted: np.ndarray,
+        horizons: data_typing.TimeIndex,
+        *args: Any,
+        **kwargs: Any,
+    ) -> List[float]:  # pragma: no cover # noqa: D102
         ...
 
 

@@ -3,7 +3,7 @@
 import copy
 import warnings
 from time import time
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, cast
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Tuple, cast
 
 import numpy as np
 import pandas as pd
@@ -16,10 +16,10 @@ from typing_extensions import Literal, get_args
 from tempor.core import plugins, pydantic_utils
 from tempor.data import data_typing, dataset, samples
 from tempor.log import logger
-from tempor.metrics.metric import OneOffClassificationMetric, OneOffRegressionMetric
+from tempor.metrics import metric as metric_module
 from tempor.models.utils import enable_reproducibility
 
-from . import surv_metrics, utils
+from . import utils
 
 if TYPE_CHECKING:  # pragma: no cover
     from tempor.methods.prediction.one_off.classification import BaseOneOffClassifier
@@ -35,19 +35,8 @@ builtin_metrics_prediction_oneoff_classification = _plugin_loader.list(plugin_ty
 builtin_metrics_prediction_oneoff_regression = _plugin_loader.list(plugin_type="metric")["prediction"]["one_off"][
     "regression"
 ]
+builtin_metrics_time_to_event = _plugin_loader.list(plugin_type="metric")["time_to_event"]
 
-TimeToEventSupportedMetric = Literal[
-    "c_index",
-    "brier_score",
-]
-"""Evaluation metrics supported in the time-to-event (survival) task setting.
-
-Possible values:
-    - ``"c_index"``:
-        Concordance index based on inverse probability of censoring weights.
-    - ``"brier_score"``:
-        The time-dependent Brier score.
-"""
 
 OutputMetric = Literal[
     "min",
@@ -82,9 +71,6 @@ Possible values:
     - ``"durations"``:
         Average duration for the fold evaluation.
 """
-
-time_to_event_supported_metrics = get_args(TimeToEventSupportedMetric)
-"""A tuple of all possible values of :obj:`~tempor.benchmarks.evaluation.TimeToEventSupportedMetric`."""
 
 output_metrics = get_args(OutputMetric)
 """A tuple of all possible values of :obj:`~tempor.benchmarks.evaluation.OutputMetric`."""
@@ -226,7 +212,7 @@ def evaluate_prediction_oneoff_classifier(  # pylint: disable=unused-argument
 
                 for metric_name in supported_metrics:
                     metric = cast(
-                        OneOffClassificationMetric,
+                        metric_module.OneOffClassificationMetric,
                         _plugin_loader.get(f"{metric_plugin_category}.{metric_name}", plugin_type="metric"),
                     )
                     results.metrics[metric_name][indx] = metric.evaluate(test_labels, preds)
@@ -325,7 +311,7 @@ def evaluate_prediction_oneoff_regressor(  # pylint: disable=unused-argument
 
                 for metric_name in supported_metrics:
                     metric = cast(
-                        OneOffRegressionMetric,
+                        metric_module.OneOffRegressionMetric,
                         _plugin_loader.get(f"{metric_plugin_category}.{metric_name}", plugin_type="metric"),
                     )
                     results.metrics[metric_name][indx] = metric.evaluate(targets, preds)
@@ -358,58 +344,17 @@ Output is:
 """
 
 
-def compute_c_index(
-    training_array_struct: np.ndarray, testing_array_struct: np.ndarray, predictions: np.ndarray, horizons: List[float]
-) -> List[float]:
-    """Compute the IPCW concordance index.
-
-    Args:
-        training_array_struct (np.ndarray): Training data as a structured array.
-        testing_array_struct (np.ndarray): Testing data as a structured array.
-        predictions (np.ndarray): Predictions.
-        horizons (List[float]): Evaluation horizons.
-
-    Returns:
-        List[float]: List of metric values for each horizon.
-    """
-    metrics: List[float] = []
-    for horizon_idx, horizon_time in enumerate(horizons):
-        predictions_at_horizon_time = predictions[:, horizon_idx, :].reshape((-1,))
-        out = surv_metrics.concordance_index_ipcw(
-            training_array_struct, testing_array_struct, predictions_at_horizon_time, float(horizon_time)
-        )
-        metrics.append(out[0])
-    return metrics
-
-
-def compute_brier_score(
-    training_array_struct: np.ndarray, testing_array_struct: np.ndarray, predictions: np.ndarray, horizons: List[float]
-) -> List[float]:
-    """Compute the time-dependent Brier score.
-
-    Args:
-        training_array_struct (np.ndarray): Training data as a structured array.
-        testing_array_struct (np.ndarray): Testing data as a structured array.
-        predictions (np.ndarray): Predictions.
-        horizons (List[float]): Evaluation horizons.
-
-    Returns:
-        List[float]: List of metric values for each horizon.
-    """
-    predictions = predictions.reshape((predictions.shape[0], predictions.shape[1]))
-    times, scores = surv_metrics.brier_score(  # pylint: disable=unused-variable
-        training_array_struct, testing_array_struct, predictions, horizons
-    )
-    return scores.tolist()
-
-
-def _compute_time_to_event_metric(
-    metric_func: TimeToEventMetricCallable,
+def _prep_data_for_time_to_event_metric(
     train_data: dataset.TimeToEventAnalysisDataset,
     test_data: dataset.TimeToEventAnalysisDataset,
     horizons: data_typing.TimeIndex,
     predictions: samples.TimeSeriesSamples,
-) -> float:
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, List[float], np.ndarray, np.ndarray]:
+    """Validate the data for time-to-event metric evaluation and
+    prepare the data in the format expected by the metric evaluation call.
+    """
+
+    # Validate the data.
     if not predictions.num_timesteps_equal():
         raise ValueError(
             f"Expected time to event prediction values for horizons {horizons} all to have equal number of time steps "
@@ -430,18 +375,15 @@ def _compute_time_to_event_metric(
         float(horizons[0])  # pyright: ignore
     except (TypeError, ValueError) as e:
         raise ValueError("Currently only int or float time horizons supported.") from e
+
+    # Prepare the data.
     horizons = cast(List[float], horizons)
 
     predictions_array = predictions.numpy()
     t_train, y_train = (df.to_numpy().reshape((-1,)) for df in train_data.predictive.targets.split_as_two_dataframes())
-    y_train_struct = surv_metrics.create_structured_array(y_train, t_train)
     t_test, y_test = (df.to_numpy().reshape((-1,)) for df in test_data.predictive.targets.split_as_two_dataframes())
-    y_test_struct = surv_metrics.create_structured_array(y_test, t_test)
 
-    metrics: List[float] = metric_func(y_train_struct, y_test_struct, predictions_array, horizons)
-    avg_metric = float(np.asarray(metrics).mean())
-
-    return avg_metric
+    return y_test, t_test, predictions_array, horizons, y_train, t_train
 
 
 @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
@@ -487,6 +429,12 @@ def evaluate_time_to_event(  # pylint: disable=unused-argument
             The index of the dataframe contains all the metrics evaluated: all of
             :obj:`~tempor.benchmarks.evaluation.TimeToEventSupportedMetric`.
     """
+
+    # For the sake of import modularity, do not use the global plugin loader here, but create own:
+    _plugin_loader = plugins.PluginLoader()
+    metric_plugin_category = "time_to_event"
+    supported_metrics = _plugin_loader.list(plugin_type="metric")["time_to_event"]
+
     with warnings.catch_warnings():
         if silence_warnings:
             warnings.simplefilter("ignore")
@@ -496,14 +444,9 @@ def evaluate_time_to_event(  # pylint: disable=unused-argument
             raise ValueError("n_splits must be an integer >= 2")
         estimator_ = cast("BaseTimeToEventAnalysis", estimator)
         enable_reproducibility(random_state)
-        metrics = time_to_event_supported_metrics
-        metrics_map = {
-            "c_index": compute_c_index,
-            "brier_score": compute_brier_score,
-        }
 
         results = _InternalScores()
-        for metric in metrics:
+        for metric in supported_metrics:
             results.metrics[metric] = np.zeros(n_splits)
 
         splitter = sklearn.model_selection.KFold(n_splits=n_splits, shuffle=True, random_state=random_state)
@@ -518,15 +461,22 @@ def evaluate_time_to_event(  # pylint: disable=unused-argument
                 # targets = test_data.predictive.targets.numpy().squeeze()
                 preds = model.predict(test_data, horizons=horizons)
 
-                for metric_name in time_to_event_supported_metrics:
-                    metric_func = metrics_map[metric_name]
-                    results.metrics[metric_name][indx] = _compute_time_to_event_metric(
-                        metric_func,
-                        train_data=train_data,
-                        test_data=test_data,
-                        horizons=horizons,
-                        predictions=preds,
+                y_test, t_test, predictions_array, horizons, y_train, t_train = _prep_data_for_time_to_event_metric(
+                    train_data=train_data,
+                    test_data=test_data,
+                    horizons=horizons,
+                    predictions=preds,
+                )
+                for metric_name in supported_metrics:
+                    metric = cast(
+                        metric_module.TimeToEventMetric,
+                        _plugin_loader.get(f"{metric_plugin_category}.{metric_name}", plugin_type="metric"),
                     )
+                    metric_per_horizon = metric.evaluate(
+                        (y_test, t_test), predictions_array, horizons, (y_train, t_train)
+                    )
+                    avg_metric = float(np.asarray(metric_per_horizon).mean())
+                    results.metrics[metric_name][indx] = avg_metric
 
                 results.errors.append(0)
 

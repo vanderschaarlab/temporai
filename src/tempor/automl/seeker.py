@@ -4,7 +4,7 @@ import abc
 import copy
 import functools
 import warnings
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, cast
 
 import numpy as np
 import optuna
@@ -48,11 +48,7 @@ Available options:
   - `"grid"`: Use a tuner based on `optuna.samplers.GridSampler`.
 """
 
-SupportedMetric = Union[
-    str,
-    evaluation.TimeToEventSupportedMetric,
-]
-"""The type denoting all metrics supported by ``Seeker`` classes"""
+SupportedMetric = str
 
 TUNER_OPTUNA_SAMPLER_MAP: Dict[TunerType, Any] = {
     "bayesian": optuna.samplers.TPESampler,

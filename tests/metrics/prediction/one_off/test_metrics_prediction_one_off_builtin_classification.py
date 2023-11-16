@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 from tempor import plugin_loader
-from tempor.metrics.prediction.one_off import plugin_classification
+from tempor.metrics.prediction.one_off import plugin_builtin_classification
 
 # ------------------------------------------------------------------------------
 # Test utilities.
@@ -15,34 +15,34 @@ class TestUtilities:
         def test_with_probabilities(self):
             y_pred_proba = np.array([[0.1, 0.9], [0.8, 0.2], [0.3, 0.7]])
             expected = np.array([1, 0, 1])
-            result = plugin_classification._cast_to_y_pred(y_pred_proba)
+            result = plugin_builtin_classification._cast_to_y_pred(y_pred_proba)
             np.testing.assert_array_equal(result, expected)
 
         def test_with_class_labels(self):
             y_pred_proba = np.array([1, 0, 1])
             expected = np.array([1, 0, 1])
-            result = plugin_classification._cast_to_y_pred(y_pred_proba)
+            result = plugin_builtin_classification._cast_to_y_pred(y_pred_proba)
             np.testing.assert_array_equal(result, expected)
 
         def test_with_invalid_dimensions(self):
             y_pred_proba = np.array([[[0.1, 0.9], [0.8, 0.2]]])
             with pytest.raises(ValueError):
-                plugin_classification._cast_to_y_pred(y_pred_proba)
+                plugin_builtin_classification._cast_to_y_pred(y_pred_proba)
 
     def test_prep_auc_multiclass_fails(self):
         with pytest.raises(ValueError, match=".*NaN.*"):
-            plugin_classification._prep_auc_multiclass(np.array([1, 0]), np.array([[0.1, 0.9], [np.nan, 0.2]]))
+            plugin_builtin_classification._prep_auc_multiclass(np.array([1, 0]), np.array([[0.1, 0.9], [np.nan, 0.2]]))
 
     class TestGetYPredProbaHlpr:
         def test_2class_2prob(self):
             in_ = np.array([[0.1, 0.9], [0.3, 0.7], [0.11, 0.89]])
             exp = np.array([[0.9], [0.7], [0.89]]).ravel()
-            out = plugin_classification._get_y_pred_proba_hlpr(in_, nclasses=2)
+            out = plugin_builtin_classification._get_y_pred_proba_hlpr(in_, nclasses=2)
             assert (out == exp).all()
 
         def test_2class_1prob(self):
             in_ = np.array([[0.1], [0.3], [0.11]])
-            out = plugin_classification._get_y_pred_proba_hlpr(in_, nclasses=2)
+            out = plugin_builtin_classification._get_y_pred_proba_hlpr(in_, nclasses=2)
             assert (out == in_).all()
 
 

@@ -7,7 +7,7 @@ import sklearn.metrics
 from sklearn.preprocessing import label_binarize
 
 from tempor.core import plugins
-from tempor.metrics import metric
+from tempor.metrics import metric, metric_typing
 
 
 def _cast_to_y_pred(y_pred_proba: np.ndarray) -> np.ndarray:
@@ -132,10 +132,10 @@ class AccuracyOneOffClassificationMetric(metric.OneOffClassificationMetric):
     """Accuracy classification score."""
 
     @property
-    def direction(self) -> metric.MetricDirection:  # noqa: D102
+    def direction(self) -> metric_typing.MetricDirection:  # noqa: D102
         return "maximize"
 
-    def _evaluate(self, actual: Any, predicted: Any, *args: Any, **kwargs: Any) -> float:
+    def _evaluate(self, actual: np.ndarray, predicted: np.ndarray, *args: Any, **kwargs: Any) -> float:
         return cast(
             float,
             sklearn.metrics.accuracy_score(actual, _cast_to_y_pred(predicted)),
@@ -149,10 +149,10 @@ class F1ScoreMicroOneOffClassificationMetric(metric.OneOffClassificationMetric):
     """
 
     @property
-    def direction(self) -> metric.MetricDirection:  # noqa: D102
+    def direction(self) -> metric_typing.MetricDirection:  # noqa: D102
         return "maximize"
 
-    def _evaluate(self, actual: Any, predicted: Any, *args: Any, **kwargs: Any) -> float:
+    def _evaluate(self, actual: np.ndarray, predicted: np.ndarray, *args: Any, **kwargs: Any) -> float:
         return cast(
             float,
             sklearn.metrics.f1_score(
@@ -171,10 +171,10 @@ class F1ScoreMacroOneOffClassificationMetric(metric.OneOffClassificationMetric):
     """
 
     @property
-    def direction(self) -> metric.MetricDirection:  # noqa: D102
+    def direction(self) -> metric_typing.MetricDirection:  # noqa: D102
         return "maximize"
 
-    def _evaluate(self, actual: Any, predicted: Any, *args: Any, **kwargs: Any) -> float:
+    def _evaluate(self, actual: np.ndarray, predicted: np.ndarray, *args: Any, **kwargs: Any) -> float:
         return cast(
             float,
             sklearn.metrics.f1_score(
@@ -193,10 +193,10 @@ class F1ScoreWeightedOneOffClassificationMetric(metric.OneOffClassificationMetri
     """
 
     @property
-    def direction(self) -> metric.MetricDirection:  # noqa: D102
+    def direction(self) -> metric_typing.MetricDirection:  # noqa: D102
         return "maximize"
 
-    def _evaluate(self, actual: Any, predicted: Any, *args: Any, **kwargs: Any) -> float:
+    def _evaluate(self, actual: np.ndarray, predicted: np.ndarray, *args: Any, **kwargs: Any) -> float:
         return cast(
             float,
             sklearn.metrics.f1_score(
@@ -215,10 +215,10 @@ class KappaOneOffClassificationMetric(metric.OneOffClassificationMetric):
     """
 
     @property
-    def direction(self) -> metric.MetricDirection:  # noqa: D102
+    def direction(self) -> metric_typing.MetricDirection:  # noqa: D102
         return "maximize"
 
-    def _evaluate(self, actual: Any, predicted: Any, *args: Any, **kwargs: Any) -> float:
+    def _evaluate(self, actual: np.ndarray, predicted: np.ndarray, *args: Any, **kwargs: Any) -> float:
         return cast(
             float,
             sklearn.metrics.cohen_kappa_score(actual, _cast_to_y_pred(predicted)),
@@ -232,10 +232,10 @@ class KappaQuadraticOneOffClassificationMetric(metric.OneOffClassificationMetric
     """
 
     @property
-    def direction(self) -> metric.MetricDirection:  # noqa: D102
+    def direction(self) -> metric_typing.MetricDirection:  # noqa: D102
         return "maximize"
 
-    def _evaluate(self, actual: Any, predicted: Any, *args: Any, **kwargs: Any) -> float:
+    def _evaluate(self, actual: np.ndarray, predicted: np.ndarray, *args: Any, **kwargs: Any) -> float:
         return cast(
             float,
             sklearn.metrics.cohen_kappa_score(actual, _cast_to_y_pred(predicted), weights="quadratic"),
@@ -249,10 +249,10 @@ class RecallMicroOneOffClassificationMetric(metric.OneOffClassificationMetric):
     """
 
     @property
-    def direction(self) -> metric.MetricDirection:  # noqa: D102
+    def direction(self) -> metric_typing.MetricDirection:  # noqa: D102
         return "maximize"
 
-    def _evaluate(self, actual: Any, predicted: Any, *args: Any, **kwargs: Any) -> float:
+    def _evaluate(self, actual: np.ndarray, predicted: np.ndarray, *args: Any, **kwargs: Any) -> float:
         return cast(
             float,
             sklearn.metrics.recall_score(
@@ -271,10 +271,10 @@ class RecallMacroOneOffClassificationMetric(metric.OneOffClassificationMetric):
     """
 
     @property
-    def direction(self) -> metric.MetricDirection:  # noqa: D102
+    def direction(self) -> metric_typing.MetricDirection:  # noqa: D102
         return "maximize"
 
-    def _evaluate(self, actual: Any, predicted: Any, *args: Any, **kwargs: Any) -> float:
+    def _evaluate(self, actual: np.ndarray, predicted: np.ndarray, *args: Any, **kwargs: Any) -> float:
         return cast(
             float,
             sklearn.metrics.recall_score(
@@ -293,10 +293,10 @@ class RecallWeightedOneOffClassificationMetric(metric.OneOffClassificationMetric
     """
 
     @property
-    def direction(self) -> metric.MetricDirection:  # noqa: D102
+    def direction(self) -> metric_typing.MetricDirection:  # noqa: D102
         return "maximize"
 
-    def _evaluate(self, actual: Any, predicted: Any, *args: Any, **kwargs: Any) -> float:
+    def _evaluate(self, actual: np.ndarray, predicted: np.ndarray, *args: Any, **kwargs: Any) -> float:
         return cast(
             float,
             sklearn.metrics.recall_score(
@@ -315,10 +315,10 @@ class PrecisionMicroOneOffClassificationMetric(metric.OneOffClassificationMetric
     """
 
     @property
-    def direction(self) -> metric.MetricDirection:  # noqa: D102
+    def direction(self) -> metric_typing.MetricDirection:  # noqa: D102
         return "maximize"
 
-    def _evaluate(self, actual: Any, predicted: Any, *args: Any, **kwargs: Any) -> float:
+    def _evaluate(self, actual: np.ndarray, predicted: np.ndarray, *args: Any, **kwargs: Any) -> float:
         return cast(
             float,
             sklearn.metrics.precision_score(
@@ -337,10 +337,10 @@ class PrecisionMacroOneOffClassificationMetric(metric.OneOffClassificationMetric
     """
 
     @property
-    def direction(self) -> metric.MetricDirection:  # noqa: D102
+    def direction(self) -> metric_typing.MetricDirection:  # noqa: D102
         return "maximize"
 
-    def _evaluate(self, actual: Any, predicted: Any, *args: Any, **kwargs: Any) -> float:
+    def _evaluate(self, actual: np.ndarray, predicted: np.ndarray, *args: Any, **kwargs: Any) -> float:
         return cast(
             float,
             sklearn.metrics.precision_score(
@@ -360,10 +360,10 @@ class PrecisionWeightedOneOffClassificationMetric(metric.OneOffClassificationMet
     """
 
     @property
-    def direction(self) -> metric.MetricDirection:  # noqa: D102
+    def direction(self) -> metric_typing.MetricDirection:  # noqa: D102
         return "maximize"
 
-    def _evaluate(self, actual: Any, predicted: Any, *args: Any, **kwargs: Any) -> float:
+    def _evaluate(self, actual: np.ndarray, predicted: np.ndarray, *args: Any, **kwargs: Any) -> float:
         return cast(
             float,
             sklearn.metrics.precision_score(
@@ -383,10 +383,10 @@ class MccOneOffClassificationMetric(metric.OneOffClassificationMetric):
     """
 
     @property
-    def direction(self) -> metric.MetricDirection:  # noqa: D102
+    def direction(self) -> metric_typing.MetricDirection:  # noqa: D102
         return "maximize"
 
-    def _evaluate(self, actual: Any, predicted: Any, *args: Any, **kwargs: Any) -> float:
+    def _evaluate(self, actual: np.ndarray, predicted: np.ndarray, *args: Any, **kwargs: Any) -> float:
         return cast(
             float,
             sklearn.metrics.matthews_corrcoef(actual, _cast_to_y_pred(predicted)),
@@ -400,10 +400,10 @@ class AucPrcOneOffClassificationMetric(metric.OneOffClassificationMetric):
     """
 
     @property
-    def direction(self) -> metric.MetricDirection:  # noqa: D102
+    def direction(self) -> metric_typing.MetricDirection:  # noqa: D102
         return "maximize"
 
-    def _evaluate(self, actual: Any, predicted: Any, *args: Any, **kwargs: Any) -> float:
+    def _evaluate(self, actual: np.ndarray, predicted: np.ndarray, *args: Any, **kwargs: Any) -> float:
         return _evaluate_aucprc_multiclass(actual, predicted)
 
 
@@ -412,8 +412,8 @@ class AucRocOneOffClassificationMetric(metric.OneOffClassificationMetric):
     """The Area Under the Receiver Operating Characteristic Curve (ROC AUC) from prediction scores."""
 
     @property
-    def direction(self) -> metric.MetricDirection:  # noqa: D102
+    def direction(self) -> metric_typing.MetricDirection:  # noqa: D102
         return "maximize"
 
-    def _evaluate(self, actual: Any, predicted: Any, *args: Any, **kwargs: Any) -> float:
+    def _evaluate(self, actual: np.ndarray, predicted: np.ndarray, *args: Any, **kwargs: Any) -> float:
         return _evaluate_aucroc_multiclass(actual, predicted)
