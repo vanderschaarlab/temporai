@@ -321,7 +321,7 @@ class PrecisionMicroOneOffClassificationMetric(metric.OneOffClassificationMetric
     def _evaluate(self, actual: Any, predicted: Any, *args: Any, **kwargs: Any) -> float:
         return cast(
             float,
-            sklearn.metrics.recall_score(
+            sklearn.metrics.precision_score(
                 actual,
                 _cast_to_y_pred(predicted),
                 average="micro",
@@ -343,7 +343,7 @@ class PrecisionMacroOneOffClassificationMetric(metric.OneOffClassificationMetric
     def _evaluate(self, actual: Any, predicted: Any, *args: Any, **kwargs: Any) -> float:
         return cast(
             float,
-            sklearn.metrics.recall_score(
+            sklearn.metrics.precision_score(
                 actual,
                 _cast_to_y_pred(predicted),
                 average="macro",
@@ -366,7 +366,7 @@ class PrecisionWeightedOneOffClassificationMetric(metric.OneOffClassificationMet
     def _evaluate(self, actual: Any, predicted: Any, *args: Any, **kwargs: Any) -> float:
         return cast(
             float,
-            sklearn.metrics.recall_score(
+            sklearn.metrics.precision_score(
                 actual,
                 _cast_to_y_pred(predicted),
                 average="weighted",
