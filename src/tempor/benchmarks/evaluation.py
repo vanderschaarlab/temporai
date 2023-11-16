@@ -3,7 +3,7 @@
 import copy
 import warnings
 from time import time
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Tuple, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple, cast
 
 import numpy as np
 import pandas as pd
@@ -164,11 +164,10 @@ def evaluate_prediction_oneoff_classifier(  # pylint: disable=unused-argument
             :obj:`~tempor.benchmarks.evaluation.OutputMetric`.
 
             The index of the dataframe contains all the metrics registered:
-
-            >>> import doctest; doctest.ELLIPSIS_MARKER = "[...]"  # Doctest config, ignore.
             >>> from tempor import plugin_loader
             >>> plugin_loader.list(plugin_type="metric")["prediction"]["one_off"]["classification"]
             [...]
+
     """
 
     # For the sake of import modularity, do not use the global plugin loader here, but create own:
@@ -269,11 +268,10 @@ def evaluate_prediction_oneoff_regressor(  # pylint: disable=unused-argument
             :obj:`~tempor.benchmarks.evaluation.OutputMetric`.
 
             The index of the dataframe contains all the metrics registered:
-
-            >>> import doctest; doctest.ELLIPSIS_MARKER = "[...]"  # Doctest config, ignore.
             >>> from tempor import plugin_loader
             >>> plugin_loader.list(plugin_type="metric")["prediction"]["one_off"]["regression"]
             [...]
+
     """
 
     # For the sake of import modularity, do not use the global plugin loader here, but create own:
@@ -328,20 +326,6 @@ def evaluate_prediction_oneoff_regressor(  # pylint: disable=unused-argument
             indx += 1
 
     return _postprocess_results(results)
-
-
-TimeToEventMetricCallable = Callable[[np.ndarray, np.ndarray, np.ndarray, List[float]], List[float]]
-"""Standardized function for time-to-event metric.
-
-Inputs are:
-    * ``training_array_struct`` (np.ndarray)
-    * ``testing_array_struct`` (np.ndarray)
-    * ``predictions`` (np.ndarray)
-    * ``horizons`` (List[float])
-
-Output is:
-    A list with the metric values for each horizon.
-"""
 
 
 def _prep_data_for_time_to_event_metric(
@@ -426,8 +410,11 @@ def evaluate_time_to_event(  # pylint: disable=unused-argument
             The columns of the dataframe contain details about the cross-validation repeats: one column for each
             :obj:`~tempor.benchmarks.evaluation.OutputMetric`.
 
-            The index of the dataframe contains all the metrics evaluated: all of
-            :obj:`~tempor.benchmarks.evaluation.TimeToEventSupportedMetric`.
+            The index of the dataframe contains all the metrics registered:
+            >>> from tempor import plugin_loader
+            >>> plugin_loader.list(plugin_type="metric")["time_to_event"]
+            [...]
+
     """
 
     # For the sake of import modularity, do not use the global plugin loader here, but create own:

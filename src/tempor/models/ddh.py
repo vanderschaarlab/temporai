@@ -505,7 +505,7 @@ class DynamicDeepHitLayers(nn.Module):
         # RNN model for longitudinal data
         self.embedding: nn.Module
         if self.rnn_type == "LSTM":
-            self.embedding = nn.LSTM(  # type: ignore [no-untyped-call]
+            self.embedding = nn.LSTM(
                 input_dim,
                 hidden_rnn,
                 layers_rnn,
@@ -513,7 +513,7 @@ class DynamicDeepHitLayers(nn.Module):
                 batch_first=True,
             )
         elif self.rnn_type == "RNN":
-            self.embedding = nn.RNN(  # type: ignore [no-untyped-call]
+            self.embedding = nn.RNN(
                 input_dim,
                 hidden_rnn,
                 layers_rnn,
@@ -522,7 +522,7 @@ class DynamicDeepHitLayers(nn.Module):
                 nonlinearity="relu",
             )
         elif self.rnn_type == "GRU":
-            self.embedding = nn.GRU(  # type: ignore [no-untyped-call]
+            self.embedding = nn.GRU(
                 input_dim,
                 hidden_rnn,
                 layers_rnn,

@@ -131,7 +131,7 @@ class ReverseGRUEncoder(nn.Module):
     ):
         """Model (encoder and Laplace representation func). Encodes observed trajectory into latent vector."""
         super(ReverseGRUEncoder, self).__init__()
-        self.gru = nn.GRU(n_units_in, n_units_hidden, 2, batch_first=True)  # type: ignore [no-untyped-call]
+        self.gru = nn.GRU(n_units_in, n_units_hidden, 2, batch_first=True)
         self.linear_out = nn.Linear(n_units_hidden, n_units_latent).to(device)
         nn.init.xavier_uniform_(self.linear_out.weight)
 
