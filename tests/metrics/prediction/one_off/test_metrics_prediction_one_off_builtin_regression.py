@@ -4,7 +4,6 @@ import pytest
 from tempor import plugin_loader
 
 TEST_CASE_PAIRS = [
-    # Cases: class labels.
     (  # 1. Perfect prediction:
         np.array([2.0, 7.5, 2.1, 9.3]),
         np.array([2.0, 7.5, 2.1, 9.3]),
