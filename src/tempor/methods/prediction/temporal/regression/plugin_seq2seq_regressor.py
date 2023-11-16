@@ -69,7 +69,7 @@ class Seq2seqRegressor(BaseTemporalRegressor):
         self.model.fit(cl_dataset)
         return self
 
-    def _predict(  # type: ignore[override]
+    def _predict(
         self,
         data: dataset.PredictiveDataset,
         n_future_steps: int,

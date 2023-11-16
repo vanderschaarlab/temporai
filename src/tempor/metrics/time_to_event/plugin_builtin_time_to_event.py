@@ -53,7 +53,7 @@ class CIndexTimeToEventMetric(metric.TimeToEventMetric):
         return "maximize"
 
     # Override to update the extra argument `actual_train`.
-    def evaluate(  # type: ignore [override] # pylint: disable=arguments-differ
+    def evaluate(  # pylint: disable=arguments-differ
         self,
         actual: metric_typing.EventArrayTimeArray,
         predicted: np.ndarray,
@@ -86,7 +86,7 @@ class CIndexTimeToEventMetric(metric.TimeToEventMetric):
         """
         return super().evaluate(actual, predicted, horizons, actual_train, *args, **kwargs)
 
-    def _evaluate(  # type: ignore [override] # pylint: disable=arguments-differ
+    def _evaluate(  # pylint: disable=arguments-differ
         self,
         actual: metric_typing.EventArrayTimeArray,
         predicted: np.ndarray,
@@ -119,7 +119,7 @@ class BrierScoreTimeToEventMetric(metric.TimeToEventMetric):
         return "minimize"
 
     # Override to update the extra argument `actual_train`.
-    def evaluate(  # type: ignore [override] # pylint: disable=arguments-differ
+    def evaluate(  # pylint: disable=arguments-differ
         self,
         actual: metric_typing.EventArrayTimeArray,
         predicted: np.ndarray,
@@ -152,7 +152,7 @@ class BrierScoreTimeToEventMetric(metric.TimeToEventMetric):
         """
         return super().evaluate(actual, predicted, horizons, actual_train, *args, **kwargs)
 
-    def _evaluate(  # type: ignore [override] # pylint: disable=arguments-differ
+    def _evaluate(  # pylint: disable=arguments-differ
         self,
         actual: metric_typing.EventArrayTimeArray,
         predicted: np.ndarray,

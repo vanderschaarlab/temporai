@@ -41,7 +41,7 @@ class BaseTimeToEventAnalysis(methods_core.BasePredictor):
     # specified here for unknown reasons. For now, we just ignore the type checking for these arguments with
     # `# type: ignore [no-untyped-def]`.
     @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
-    def predict(  # type: ignore [no-untyped-def, override] # pylint: disable=arguments-differ
+    def predict(  # type: ignore [no-untyped-def] # pylint: disable=arguments-differ
         self,
         data: dataset.PredictiveDataset,
         horizons: data_typing.TimeIndex,
@@ -70,7 +70,7 @@ class BaseTimeToEventAnalysis(methods_core.BasePredictor):
         )
 
     @abc.abstractmethod
-    def _predict(  # type: ignore[override]  # pylint: disable=arguments-differ
+    def _predict(  # pylint: disable=arguments-differ
         self, data: dataset.PredictiveDataset, horizons: data_typing.TimeIndex, *args: Any, **kwargs: Any
     ) -> samples.TimeSeriesSamples:  # pragma: no cover
         ...

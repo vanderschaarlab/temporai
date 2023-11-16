@@ -170,7 +170,7 @@ plugins.register_plugin_category("prediction.one_off.regression", OneOffRegressi
 class TimeToEventMetric(Metric):
     """Metric abstract base class for the time-to-event (survival) task."""
 
-    def evaluate(  # type: ignore [override] # pylint: disable=arguments-differ
+    def evaluate(  # pylint: disable=arguments-differ
         self,
         actual: metric_typing.EventArrayTimeArray,
         predicted: np.ndarray,
@@ -200,7 +200,7 @@ class TimeToEventMetric(Metric):
         return super().evaluate(actual, predicted, horizons, *args, **kwargs)
 
     @abc.abstractmethod
-    def _evaluate(  # type: ignore [override] # pylint: disable=arguments-differ
+    def _evaluate(  # pylint: disable=arguments-differ
         self,
         actual: metric_typing.EventArrayTimeArray,
         predicted: np.ndarray,

@@ -102,7 +102,7 @@ class DynamicDeepHitTimeToEventAnalysis(BaseTimeToEventAnalysis, DDHEmbedding):
         self.model.fit(processed_data, event_times, event_values)
         return self
 
-    def _predict(  # type: ignore[override]
+    def _predict(
         self,
         data: dataset.PredictiveDataset,
         horizons: data_typing.TimeIndex,

@@ -404,7 +404,7 @@ class DynamicDeepHitModel:
 
         # Censored loss
         loss += torch.sum(torch.log(nn.ReLU()(1 - censored_cif) + constants.EPS))
-        return -loss / len(outcomes)
+        return -loss / len(outcomes)  # type: ignore [return-value]
 
     def ranking_loss(
         self,
@@ -424,9 +424,11 @@ class DynamicDeepHitModel:
                 # must have a lower risk for that cause
                 if torch.sum(t > ti) > 0:
                     # TODO: When data are sorted in time -> wan we make it even faster?
-                    loss += torch.mean(torch.exp((cif_k[t > ti][:, ti] - ci[ti])) / self.sigma)
+                    loss += torch.mean(  # type: ignore [call-overload]
+                        torch.exp((cif_k[t > ti][:, ti] - ci[ti])) / self.sigma
+                    )
 
-        return loss / len(cif)
+        return loss / len(cif)  # type: ignore [return-value]
 
     def longitudinal_loss(self, longitudinal_prediction: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
         """Penalize error in the longitudinal predictions. This function is used to compute the error made by the RNN.
@@ -471,7 +473,8 @@ class DynamicDeepHitModel:
         cif = [torch.cumsum(ok, 1) for ok in outcomes]
 
         return (
-            (1 - self.alpha - self.beta) * self.longitudinal_loss(longitudinal_prediction, x)
+            (1 - self.alpha - self.beta)
+            * self.longitudinal_loss(longitudinal_prediction, x)  # type: ignore [return-value]
             + self.alpha * self.ranking_loss(cif, t, e)
             + self.beta * self.negative_log_likelihood(outcomes, cif, t, e)
         )
