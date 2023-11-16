@@ -104,11 +104,61 @@ def test_datasource_contents():
     assert "dummy_treatments" in all_plugins["treatments"]["temporal"]
 
 
+def test_metrics_contents():
+    all_plugins = plugin_loader.list(plugin_type="metric")
+
+    # Check categories:
+    assert "prediction" in all_plugins
+    assert "time_to_event" in all_plugins
+    # assert "treatments" in all_plugins
+
+    # Check subcategories:
+    assert "one_off" in all_plugins["prediction"]
+    # assert "temporal" in all_plugins["prediction"]
+    # assert "one_off" in all_plugins["treatments"]
+    # assert "temporal" in all_plugins["treatments"]
+
+    # Check sub-subcategories:
+    assert "classification" in all_plugins["prediction"]["one_off"]
+    assert "regression" in all_plugins["prediction"]["one_off"]
+    # assert "classification" in all_plugins["prediction"]["temporal"]
+    # assert "regression" in all_plugins["prediction"]["temporal"]
+    # assert "classification" in all_plugins["treatments"]["one_off"]
+    # assert "regression" in all_plugins["treatments"]["one_off"]
+    # assert "classification" in all_plugins["treatments"]["temporal"]
+    # assert "regression" in all_plugins["treatments"]["temporal"]
+
+    # Check plugins:
+    assert "accuracy" in all_plugins["prediction"]["one_off"]["classification"]
+    assert "f1_score_micro" in all_plugins["prediction"]["one_off"]["classification"]
+    assert "f1_score_macro" in all_plugins["prediction"]["one_off"]["classification"]
+    assert "f1_score_weighted" in all_plugins["prediction"]["one_off"]["classification"]
+    assert "kappa" in all_plugins["prediction"]["one_off"]["classification"]
+    assert "kappa_quadratic" in all_plugins["prediction"]["one_off"]["classification"]
+    assert "recall_micro" in all_plugins["prediction"]["one_off"]["classification"]
+    assert "recall_macro" in all_plugins["prediction"]["one_off"]["classification"]
+    assert "recall_weighted" in all_plugins["prediction"]["one_off"]["classification"]
+    assert "precision_micro" in all_plugins["prediction"]["one_off"]["classification"]
+    assert "precision_macro" in all_plugins["prediction"]["one_off"]["classification"]
+    assert "precision_weighted" in all_plugins["prediction"]["one_off"]["classification"]
+    assert "mcc" in all_plugins["prediction"]["one_off"]["classification"]
+    assert "aucprc" in all_plugins["prediction"]["one_off"]["classification"]
+    assert "aucroc" in all_plugins["prediction"]["one_off"]["classification"]
+    # ---
+    assert "mse" in all_plugins["prediction"]["one_off"]["regression"]
+    assert "mae" in all_plugins["prediction"]["one_off"]["regression"]
+    assert "r2" in all_plugins["prediction"]["one_off"]["regression"]
+    # ---
+    assert "c_index" in all_plugins["time_to_event"]
+    assert "brier_score" in all_plugins["time_to_event"]
+
+
 def test_plugin_types():
     plugin_types = plugin_loader.list_plugin_types()
 
     assert "method" in plugin_types
     assert "datasource" in plugin_types
+    assert "metric" in plugin_types
 
 
 PLUGIN_FQNS = plugin_loader.list_full_names()
