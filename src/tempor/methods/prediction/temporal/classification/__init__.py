@@ -43,7 +43,7 @@ class BaseTemporalClassifier(methods_core.BasePredictor):
         return self
 
     @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
-    def predict(  # type: ignore [override]  # pylint: disable=arguments-differ
+    def predict(  # pylint: disable=arguments-differ
         self,
         data: dataset.PredictiveDataset,
         n_future_steps: int,
@@ -55,7 +55,7 @@ class BaseTemporalClassifier(methods_core.BasePredictor):
         return super().predict(data, n_future_steps, *args, time_delta=time_delta, **kwargs)
 
     @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
-    def predict_proba(  # type: ignore [override]  # pylint: disable=arguments-differ
+    def predict_proba(  # pylint: disable=arguments-differ
         self,
         data: dataset.PredictiveDataset,
         n_future_steps: int,
@@ -67,13 +67,13 @@ class BaseTemporalClassifier(methods_core.BasePredictor):
         return super().predict_proba(data, n_future_steps, *args, time_delta=time_delta, **kwargs)
 
     @abc.abstractmethod
-    def _predict(  # type: ignore[override]  # pylint: disable=arguments-differ
+    def _predict(  # pylint: disable=arguments-differ
         self, data: dataset.PredictiveDataset, n_future_steps: int, *args: Any, time_delta: int = 1, **kwargs: Any
     ) -> samples.TimeSeriesSamples:  # pragma: no cover
         ...
 
     @abc.abstractmethod
-    def _predict_proba(  # type: ignore[override]  # pylint: disable=arguments-differ
+    def _predict_proba(  # pylint: disable=arguments-differ
         self, data: dataset.PredictiveDataset, n_future_steps: int, *args: Any, time_delta: int = 1, **kwargs: Any
     ) -> samples.TimeSeriesSamples:  # pragma: no cover
         ...

@@ -67,7 +67,7 @@ class CRNTreatmentsRegressor(BaseTemporalTreatmentEffects):
         self.model.fit(cl_dataset)
         return self
 
-    def _predict(  # type: ignore[override]  # pylint: disable=arguments-differ
+    def _predict(  # pylint: disable=arguments-differ
         self,
         data: dataset.PredictiveDataset,
         horizons: List[List[float]],
@@ -90,7 +90,7 @@ class CRNTreatmentsRegressor(BaseTemporalTreatmentEffects):
         preds = _from_clv2_time_series(preds_cl.to_multi_index_dataframe())
         return samples.TimeSeriesSamples.from_dataframe(preds)
 
-    def _predict_counterfactuals(  # type: ignore[override]  # pylint: disable=arguments-differ
+    def _predict_counterfactuals(  # pylint: disable=arguments-differ
         self,
         data: dataset.PredictiveDataset,
         horizons: List[List[float]],

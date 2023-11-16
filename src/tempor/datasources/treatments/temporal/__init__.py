@@ -1,11 +1,6 @@
 """Package for temporal treatment effects data sources."""
 
 from tempor.core import plugins
-from tempor.datasources import datasource
-
-plugins.register_plugin_category(
-    "treatments.temporal", datasource.TemporalTreatmentEffectsDataSource, plugin_type="datasource"
-)
 
 plugins.importing.import_plugins(__file__)
 

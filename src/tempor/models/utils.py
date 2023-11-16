@@ -60,7 +60,7 @@ def enable_reproducibility(
     torch.cuda.manual_seed_all(random_seed)
     # If enabled, force deterministic algorithms:
     if torch_use_deterministic_algorithms:
-        torch.use_deterministic_algorithms(True)  # type: ignore [no-untyped-call]
+        torch.use_deterministic_algorithms(True)
         if warn_cuda_env_vars and torch.version.cuda not in ("", None):
             cuda_version = Version(torch.version.cuda)
             if (cuda_version.major, cuda_version.minor) == (10, 1) and os.environ.get(

@@ -4,7 +4,7 @@ import abc
 import copy
 import functools
 import warnings
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, cast
 
 import numpy as np
 import optuna
@@ -20,8 +20,9 @@ from tempor.data.dataset import PredictiveDataset, TimeToEventAnalysisDataset
 from tempor.log import logger
 from tempor.methods.core import BasePredictor
 from tempor.methods.core.params import Params
+from tempor.metrics import metric_typing
 
-from ._types import AutoMLCompatibleEstimator, OptimDirection
+from ._types import AutoMLCompatibleEstimator
 from .pipeline_selector import (
     DEFAULT_STATIC_IMPUTERS,
     DEFAULT_STATIC_SCALERS,
@@ -48,13 +49,6 @@ Available options:
   - `"grid"`: Use a tuner based on `optuna.samplers.GridSampler`.
 """
 
-SupportedMetric = Union[
-    evaluation.ClassifierSupportedMetric,
-    evaluation.RegressionSupportedMetric,
-    evaluation.TimeToEventSupportedMetric,
-]
-"""The type denoting all metrics supported by ``Seeker`` classes"""
-
 TUNER_OPTUNA_SAMPLER_MAP: Dict[TunerType, Any] = {
     "bayesian": optuna.samplers.TPESampler,
     "random": optuna.samplers.RandomSampler,
@@ -64,33 +58,6 @@ TUNER_OPTUNA_SAMPLER_MAP: Dict[TunerType, Any] = {
 }
 """A map from `TunerType` to the corresponding `optuna` sampler class"""
 
-METRIC_DIRECTION_MAP: Dict[SupportedMetric, OptimDirection] = {
-    # ClassifierSupportedMetric:
-    "aucroc": "maximize",
-    "aucprc": "maximize",
-    "accuracy": "maximize",
-    "f1_score_micro": "maximize",
-    "f1_score_macro": "maximize",
-    "f1_score_weighted": "maximize",
-    "kappa": "maximize",
-    "kappa_quadratic": "maximize",
-    "precision_micro": "maximize",
-    "precision_macro": "maximize",
-    "precision_weighted": "maximize",
-    "recall_micro": "maximize",
-    "recall_macro": "maximize",
-    "recall_weighted": "maximize",
-    "mcc": "maximize",
-    # RegressionSupportedMetric:
-    "mse": "minimize",
-    "mae": "minimize",
-    "r2": "maximize",
-    # TimeToEventMetricCallable:
-    "c_index": "maximize",
-    "brier_score": "minimize",
-}
-"""A map from metric (`SupportedMetric`) to its optimization direction (`OptimDirection`)"""
-
 # TODO: Parallelism support (per-estimator).
 
 
@@ -98,7 +65,7 @@ def evaluation_callback_dispatch(
     estimator: Type[BasePredictor],
     dataset: PredictiveDataset,
     task_type: PredictiveTaskType,
-    metric: SupportedMetric,
+    metric: str,
     n_cv_folds: int,
     random_state: int,
     horizon: Optional[data_typing.TimeIndex],
@@ -117,7 +84,7 @@ def evaluation_callback_dispatch(
             The dataset to use.
         task_type (PredictiveTaskType):
             The task type of the predictor.
-        metric (SupportedMetric):
+        metric (str):
             The metric to be used for evaluation.
         n_cv_folds (int):
             Number of cross-validation folds to use.
@@ -199,7 +166,7 @@ class BaseSeeker(abc.ABC):
         task_type: PredictiveTaskType,
         estimator_names: List[str],
         estimator_defs: List[Any],
-        metric: SupportedMetric,
+        metric: str,
         dataset: PredictiveDataset,
         *,
         return_top_k: int = 3,
@@ -230,7 +197,7 @@ class BaseSeeker(abc.ABC):
                 Friendly names of estimators. Will be passed one-by-one to ``_init_estimator`` method calls.
             estimator_defs (List[Any]):
                 Definition of estimators. Will be passed one-by-one to ``_init_estimator`` method calls.
-            metric (SupportedMetric):
+            metric (str):
                 The metric to use for evaluation.
             dataset (PredictiveDataset):
                 The dataset to use for evaluation.
@@ -280,7 +247,7 @@ class BaseSeeker(abc.ABC):
 
         self.study_name = study_name
         self.task_type: PredictiveTaskType = task_type
-        self.metric: SupportedMetric = metric
+        self.metric = metric
         self.dataset = dataset
         self.return_top_k = return_top_k
         self.num_cv_folds = num_cv_folds
@@ -294,6 +261,8 @@ class BaseSeeker(abc.ABC):
         self.grid = grid
         self.raise_exceptions = raise_exceptions
         self.silence_warnings = silence_warnings
+
+        self._metric_object = plugin_loader.get(f"{task_type}.{self.metric}", plugin_type="metric")
 
         if len(estimator_defs) != len(estimator_names):
             raise ValueError("`estimator_defs` and `estimator_names` must be the same length.")
@@ -324,7 +293,7 @@ class BaseSeeker(abc.ABC):
                 raise ValueError("Passing a custom tuner with `optuna.samplers.GridSampler` is not supported")
         self.custom_tuner = custom_tuner
 
-        self.direction: OptimDirection = METRIC_DIRECTION_MAP[self.metric]
+        self.direction: metric_typing.MetricDirection = self._metric_object.direction
         self.estimators: List[AutoMLCompatibleEstimator] = []
         self.tuners: List[BaseTuner] = []
 
@@ -493,7 +462,7 @@ class MethodSeeker(BaseSeeker):
         study_name: str,
         task_type: PredictiveTaskType,
         estimator_names: List[str],
-        metric: SupportedMetric,
+        metric: str,
         dataset: PredictiveDataset,
         *,
         return_top_k: int = 3,
@@ -523,7 +492,7 @@ class MethodSeeker(BaseSeeker):
             estimator_names (List[str]):
                 The candidate predictors. Provide plugin names (without category qualification), e.g. like
                 ``["nn_classifier", "cde_classifier"]``.
-            metric (SupportedMetric):
+            metric (str):
                 See `~tempor.automl.seeker.BaseSeeker`.
             dataset (PredictiveDataset):
                 See `~tempor.automl.seeker.BaseSeeker`.
@@ -604,7 +573,7 @@ class PipelineSeeker(BaseSeeker):
         study_name: str,
         task_type: PredictiveTaskType,
         estimator_names: List[str],
-        metric: SupportedMetric,
+        metric: str,
         dataset: PredictiveDataset,
         *,
         static_imputers: List[str] = DEFAULT_STATIC_IMPUTERS,
@@ -650,7 +619,7 @@ class PipelineSeeker(BaseSeeker):
             estimator_names (List[str]):
                 The candidate predictors that will be the last step of the pipeline. Provide plugin names
                 (without category qualification), e.g. like ``["nn_classifier", "cde_classifier"]``.
-            metric (SupportedMetric):
+            metric (str):
                 See `~tempor.automl.seeker.BaseSeeker`.
             dataset (PredictiveDataset):
                 See `~tempor.automl.seeker.BaseSeeker`.

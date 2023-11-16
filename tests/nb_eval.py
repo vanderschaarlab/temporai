@@ -56,19 +56,20 @@ def filter_notebooks(all_paths: List, enabled_tests: List, excluded_dirs: List) 
     return notebooks
 
 
-def run_notebook(notebook_path: Path, skip_pip_install: bool = True) -> None:
+def run_notebook(notebook_path: Path, skip_pip_install: bool = True, overwrite_file: bool = False) -> None:
     """Run a notebook.
 
     Args:
         notebook_path (Path): Path to notebook.
-        skip_pip_install (bool, optional): Comment out the pip install commands in cells if present. Defaults to True.
+        skip_pip_install (bool, optional): Comment out the pip install commands in cells if present. Defaults to `True`.
+        overwrite_file (bool, optional): Whether to overwrite the notebook file. Defaults to `False`.
     """
     with open(notebook_path, encoding="utf8") as f:
         f_str = f.read()
 
     if skip_pip_install:
         # Comment out `pip install` commands, as do not need to run those in test.
-        f_str = re.sub(r"[%!]\s*pip", "#pip", f_str, flags=re.DOTALL)
+        f_str = re.sub(r"[%!]\s*pip", "#%pip", f_str, flags=re.DOTALL)
 
     nb = nbformat.reads(f_str, as_version=4)
     proc = ExecutePreprocessor(timeout=6000)
@@ -76,13 +77,38 @@ def run_notebook(notebook_path: Path, skip_pip_install: bool = True) -> None:
     # Will raise on cell error:
     proc.preprocess(nb, {"metadata": {"path": workspace}})
 
+    if overwrite_file:
+        # Cell modifications to avoid "volatile" metadata causing unnecessary diffs.
+        for idx, cell in enumerate(nb.cells):
+            # Clear the metadata section.
+            if hasattr(cell, "metadata"):
+                cell.metadata = {}
+            # Clear `execution_count` if present.
+            if cell.cell_type == "code" and hasattr(cell, "execution_count"):
+                cell.execution_count = None
+            # Clear cell outputs' `execution_count` if present.
+            if hasattr(cell, "outputs"):
+                for output in cell.outputs:
+                    if hasattr(output, "execution_count"):
+                        output.execution_count = None
+            # Restore pip install commands if present.
+            if skip_pip_install and cell.cell_type == "code":
+                if "#%pip" in cell.source:
+                    cell.source = cell.source.replace("#%pip", "%pip")
+            # Overwrite the cell:
+            nb["cells"][idx] = cell
+
+        with open(notebook_path, "w", encoding="utf8") as f:
+            nbformat.write(nb, f)
+
 
 @joblib.delayed
-def test_notebook(p: Path) -> None:
+def test_notebook(p: Path, overwrite_file: bool = False) -> None:
     """Test a notebook.
 
     Args:
         p (Path): Path to notebook.
+        overwrite_file (bool, optional): Whether to overwrite the notebook file. Defaults to `False`.
 
     Raises:
         BaseException: Exception raised if notebook fails.
@@ -90,7 +116,7 @@ def test_notebook(p: Path) -> None:
     print("Testing notebook:", p.name)
     start = time.time()
     try:
-        run_notebook(p)
+        run_notebook(p, skip_pip_install=True, overwrite_file=overwrite_file)
     except BaseException as e:
         print("FAIL", p.name, e)
         raise e
@@ -99,17 +125,49 @@ def test_notebook(p: Path) -> None:
 
 
 @click.command()
-@click.option("--nb_dir", type=str, default=".", help="Path to directory containing notebooks to test")
-@click.option("-n", "--n_jobs", type=int, default=-1, help="Number of joblib Parallel jobs")
-@click.option("-v", "--verbose", type=int, default=0, help="Verbosity value for joblib Parallel")
-def main(nb_dir: Path, n_jobs: int, verbose: int) -> None:
+@click.option(
+    "--nb_dir",
+    type=str,
+    default=".",
+    help="Path to directory containing notebooks to test.",
+    show_default=True,
+)
+@click.option(
+    "-n",
+    "--n_jobs",
+    type=int,
+    default=-1,
+    help="Number of joblib Parallel jobs.",
+    show_default=True,
+)
+@click.option(
+    "-v",
+    "--verbose",
+    type=int,
+    default=0,
+    help="Verbosity value for joblib Parallel.",
+    show_default=True,
+)
+@click.option(
+    "-o",
+    "--overwrite_notebook",
+    is_flag=True,
+    default=False,
+    help="Whether to overwrite the notebooks with executed versions.",
+    show_default=True,
+)
+def main(nb_dir: Path, n_jobs: int, verbose: int, overwrite_notebook: bool) -> None:
     """Test all notebooks in a directory.
 
     Args:
         nb_dir (Path): Path to directory containing notebooks to test.
         n_jobs (int): Number of joblib Parallel jobs.
         verbose (int): Verbosity value for joblib Parallel.
+        overwrite_notebook (bool): Whether to overwrite the notebooks with executed versions.
     """
+
+    if overwrite_notebook:
+        print("WARNING: Overwriting notebooks with executed versions as --overwrite_notebook was enabled.")
 
     nb_dir = Path(nb_dir)
     notebook_paths = filter_notebooks(list(nb_dir.rglob("*")), ENABLED_TESTS, EXCLUDED_DIRS)
@@ -118,7 +176,9 @@ def main(nb_dir: Path, n_jobs: int, verbose: int) -> None:
 
     print(f"Running n_jobs={n_jobs} parallel jobs. Note: -1 means as many jobs as available CPUs.")
     start = time.time()
-    joblib.Parallel(n_jobs=n_jobs, backend="loky", verbose=verbose)(test_notebook(p) for p in notebook_paths)
+    joblib.Parallel(n_jobs=n_jobs, backend="loky", verbose=verbose)(
+        test_notebook(p, overwrite_file=overwrite_notebook) for p in notebook_paths
+    )
     print(f"Testing all notebooks took {time.time() - start:.2f} sec")
 
 

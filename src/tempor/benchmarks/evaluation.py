@@ -3,7 +3,7 @@
 import copy
 import warnings
 from time import time
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Sequence, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple, cast
 
 import numpy as np
 import pandas as pd
@@ -13,12 +13,12 @@ import sklearn.metrics
 import sklearn.model_selection
 from typing_extensions import Literal, get_args
 
-from tempor.core import pydantic_utils
+from tempor.core import plugins, pydantic_utils
 from tempor.data import data_typing, dataset, samples
 from tempor.log import logger
+from tempor.metrics import metric as metric_module
 from tempor.models.utils import enable_reproducibility
 
-from . import metrics as tempor_metrics
 from . import utils
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -28,100 +28,15 @@ if TYPE_CHECKING:  # pragma: no cover
 
 # TODO: Benchmarking workflow for missing cases.
 
-ClassifierSupportedMetric = Literal[
-    "aucroc",
-    "aucprc",
-    "accuracy",
-    "f1_score_micro",
-    "f1_score_macro",
-    "f1_score_weighted",
-    "kappa",
-    "kappa_quadratic",
-    "precision_micro",
-    "precision_macro",
-    "precision_weighted",
-    "recall_micro",
-    "recall_macro",
-    "recall_weighted",
-    "mcc",
+_plugin_loader = plugins.PluginLoader()
+builtin_metrics_prediction_oneoff_classification = _plugin_loader.list(plugin_type="metric")["prediction"]["one_off"][
+    "classification"
 ]
-"""Evaluation metrics supported in the classification task setting.
-
-Possible values:
-    - ``"aucroc"``:
-        The Area Under the Receiver Operating Characteristic Curve (ROC AUC) from prediction scores.
-    - ``"aucprc"``:
-        The average precision summarizes a precision-recall curve as the weighted mean of precisions achieved at each
-        threshold, with the increase in recall from the previous threshold used as the weight.
-    - ``"accuracy"``:
-        Accuracy classification score.
-    - ``"f1_score_micro"``:
-        F1 score is a harmonic mean of the precision and recall. This version uses the ``"micro"`` average:
-        calculate metrics globally by counting the total true positives, false negatives and false positives.
-    - ``"f1_score_macro"``:
-        F1 score is a harmonic mean of the precision and recall. This version uses the ``"macro"`` average:
-        calculate metrics for each label, and find their unweighted mean. This does not take label imbalance into
-        account.
-    - ``"f1_score_weighted"``:
-        F1 score is a harmonic mean of the precision and recall. This version uses the "weighted" average:
-        Calculate metrics for each label, and find their average weighted by support
-        (the number of true instances for each label).
-    - ``"kappa"``, ``"kappa_quadratic"``:
-        Computes Cohen's kappa, a score that expresses the level of agreement between two annotators on a
-        classification problem.
-    - ``"precision_micro"``:
-        Precision is defined as the number of true positives over the number of true positives plus the number of false
-        positives. This version(micro) calculates metrics globally by counting the total true positives.
-    - ``"precision_macro"``:
-        Precision is defined as the number of true positives over the number of true positives plus the number of
-        false positives. This version (macro) calculates metrics for each label, and finds their unweighted mean.
-    - ``"precision_weighted"``:
-        Precision is defined as the number of true positives over the number of true positives plus the number of
-        false positives. This version (weighted) calculates metrics for each label, and find their average weighted
-        by support.
-    - ``"recall_micro"``:
-        Recall is defined as the number of true positives over the number of true positives plus the number of false
-        negatives. This version (micro) calculates metrics globally by counting the total true positives.
-    - ``"recall_macro"``:
-        Recall is defined as the number of true positives over the number of true positives plus the number of false
-        negatives. This version (macro) calculates metrics for each label, and finds their unweighted mean.
-    - ``"recall_weighted"``:
-        Recall is defined as the number of true positives over the number of true positives plus the number of false
-        negatives. This version(weighted) calculates metrics for each label, and find their average weighted by support.
-    - ``"mcc"``:
-        The Matthews Correlation Coefficient is used in machine learning as a measure of the quality of binary and
-        multiclass classifications. It takes into account true and false positives and negatives and is generally
-        regarded as a balanced measure which can be used even if the classes are of very different sizes.
-"""
-
-RegressionSupportedMetric = Literal[
-    "mse",
-    "mae",
-    "r2",
+builtin_metrics_prediction_oneoff_regression = _plugin_loader.list(plugin_type="metric")["prediction"]["one_off"][
+    "regression"
 ]
-"""Evaluation metrics supported in the regression task setting.
+builtin_metrics_time_to_event = _plugin_loader.list(plugin_type="metric")["time_to_event"]
 
-Possible values:
-    - ``"r2"``:
-        R^2 (coefficient of determination) regression score function.
-    - ``"mse"``:
-        Mean squared error regression loss.
-    - ``"mae"``:
-        Mean absolute error regression loss.
-"""
-
-TimeToEventSupportedMetric = Literal[
-    "c_index",
-    "brier_score",
-]
-"""Evaluation metrics supported in the time-to-event (survival) task setting.
-
-Possible values:
-    - ``"c_index"``:
-        Concordance index based on inverse probability of censoring weights.
-    - ``"brier_score"``:
-        The time-dependent Brier score.
-"""
 
 OutputMetric = Literal[
     "min",
@@ -156,15 +71,6 @@ Possible values:
     - ``"durations"``:
         Average duration for the fold evaluation.
 """
-
-classifier_supported_metrics = get_args(ClassifierSupportedMetric)
-"""A tuple of all possible values of :obj:`~tempor.benchmarks.evaluation.ClassifierSupportedMetric`."""
-
-regression_supported_metrics = get_args(RegressionSupportedMetric)
-"""A tuple of all possible values of :obj:`~tempor.benchmarks.evaluation.RegressionSupportedMetric`."""
-
-time_to_event_supported_metrics = get_args(TimeToEventSupportedMetric)
-"""A tuple of all possible values of :obj:`~tempor.benchmarks.evaluation.TimeToEventSupportedMetric`."""
 
 output_metrics = get_args(OutputMetric)
 """A tuple of all possible values of :obj:`~tempor.benchmarks.evaluation.OutputMetric`."""
@@ -220,152 +126,6 @@ def _postprocess_results(results: _InternalScores) -> pd.DataFrame:
     return output
 
 
-class ClassifierMetrics:
-    @pydantic_utils.validate_arguments
-    def __init__(
-        self,
-        metric: Union[ClassifierSupportedMetric, Sequence[ClassifierSupportedMetric]] = classifier_supported_metrics,
-    ) -> None:
-        """Helper class for evaluating the performance of the classifier.
-
-        Args:
-            metric (Union[ClassifierSupportedMetric, Sequence[ClassifierSupportedMetric]], optional):
-                The type of metric(s) to use for evaluation.
-                A string (one of :obj:`~tempor.benchmarks.evaluation.ClassifierSupportedMetric`) or a sequence of such.
-                Defaults to :obj:`~tempor.benchmarks.evaluation.classifier_supported_metrics`.
-        """
-        self.metrics: Union[ClassifierSupportedMetric, Sequence[ClassifierSupportedMetric]]
-        if isinstance(metric, str):  # pragma: no cover
-            # Should be prevented by pydantic.
-            self.metrics = [cast(ClassifierSupportedMetric, metric)]
-        else:
-            self.metrics = metric
-
-    def score_proba(self, y_test: np.ndarray, y_pred_proba: np.ndarray) -> Dict[str, float]:
-        """Return the evaluation metrics for the given predictions, where the predictions are of
-        predicted probabilities form.
-
-        Args:
-            y_test (np.ndarray): Test labels.
-            y_pred_proba (np.ndarray): Predicted probabilities.
-
-        Returns:
-            Dict[str, float]: Evaluation score.
-        """
-        if y_test is None or y_pred_proba is None:
-            raise ValueError("Invalid input for score_proba")
-
-        results = {}
-        y_pred = np.argmax(np.asarray(y_pred_proba), axis=1)
-        for metric in self.metrics:
-            if metric == "aucprc":
-                results[metric] = self.average_precision_score(y_test, y_pred_proba)
-            elif metric == "aucroc":
-                results[metric] = self.roc_auc_score(y_test, y_pred_proba)
-            elif metric == "accuracy":
-                results[metric] = sklearn.metrics.accuracy_score(y_test, y_pred)
-            elif metric == "f1_score_micro":
-                results[metric] = sklearn.metrics.f1_score(
-                    y_test,
-                    y_pred,
-                    average="micro",
-                    zero_division=0,  # pyright: ignore
-                )
-            elif metric == "f1_score_macro":
-                results[metric] = sklearn.metrics.f1_score(
-                    y_test,
-                    y_pred,
-                    average="macro",
-                    zero_division=0,  # pyright: ignore
-                )
-            elif metric == "f1_score_weighted":
-                results[metric] = sklearn.metrics.f1_score(
-                    y_test,
-                    y_pred,
-                    average="weighted",
-                    zero_division=0,  # pyright: ignore
-                )
-            elif metric == "kappa":
-                results[metric] = sklearn.metrics.cohen_kappa_score(y_test, y_pred)
-            elif metric == "kappa_quadratic":
-                results[metric] = sklearn.metrics.cohen_kappa_score(y_test, y_pred, weights="quadratic")
-            elif metric == "recall_micro":
-                results[metric] = sklearn.metrics.recall_score(
-                    y_test,
-                    y_pred,
-                    average="micro",
-                    zero_division=0,  # pyright: ignore
-                )
-            elif metric == "recall_macro":
-                results[metric] = sklearn.metrics.recall_score(
-                    y_test,
-                    y_pred,
-                    average="macro",
-                    zero_division=0,  # pyright: ignore
-                )
-            elif metric == "recall_weighted":
-                results[metric] = sklearn.metrics.recall_score(
-                    y_test,
-                    y_pred,
-                    average="weighted",
-                    zero_division=0,  # pyright: ignore
-                )
-            elif metric == "precision_micro":
-                results[metric] = sklearn.metrics.precision_score(
-                    y_test,
-                    y_pred,
-                    average="micro",
-                    zero_division=0,  # pyright: ignore
-                )
-            elif metric == "precision_macro":
-                results[metric] = sklearn.metrics.precision_score(
-                    y_test,
-                    y_pred,
-                    average="macro",
-                    zero_division=0,  # pyright: ignore
-                )
-            elif metric == "precision_weighted":
-                results[metric] = sklearn.metrics.precision_score(
-                    y_test,
-                    y_pred,
-                    average="weighted",
-                    zero_division=0,  # pyright: ignore
-                )
-            elif metric == "mcc":
-                results[metric] = sklearn.metrics.matthews_corrcoef(y_test, y_pred)
-            else:  # pragma: no cover
-                raise ValueError(f"invalid metric {metric}")
-
-        logger.debug(f"evaluate_classifier: {results}")
-        return results
-
-    def roc_auc_score(self, y_test: np.ndarray, y_pred_proba: np.ndarray) -> float:
-        """Return the ROC AUC score for the given predictions, where the predictions are of
-        predicted probabilities form.
-
-        Args:
-            y_test (np.ndarray): Test labels.
-            y_pred_proba (np.ndarray): Predicted probabilities.
-
-        Returns:
-            float: ROC AUC score.
-        """
-        return utils.evaluate_auc_multiclass(y_test, y_pred_proba)[0]
-
-    def average_precision_score(self, y_test: np.ndarray, y_pred_proba: np.ndarray) -> float:
-        """Return the average precision score for the given predictions, where the predictions are of
-        predicted probabilities form.
-
-        Args:
-            y_test (np.ndarray): Test labels.
-            y_pred_proba (np.ndarray): Predicted probabilities.
-
-        Returns:
-            float: Average precision score.
-        """
-        return utils.evaluate_auc_multiclass(y_test, y_pred_proba)[1]
-
-
 @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
 def evaluate_prediction_oneoff_classifier(  # pylint: disable=unused-argument
     estimator: Any,
@@ -403,9 +163,17 @@ def evaluate_prediction_oneoff_classifier(  # pylint: disable=unused-argument
             The columns of the dataframe contain details about the cross-validation repeats: one column for each
             :obj:`~tempor.benchmarks.evaluation.OutputMetric`.
 
-            The index of the dataframe contains all the metrics evaluated: all of
-            :obj:`~tempor.benchmarks.evaluation.ClassifierSupportedMetric`.
+            The index of the dataframe contains all the metrics registered:
+            >>> from tempor import plugin_loader
+            >>> plugin_loader.list(plugin_type="metric")["prediction"]["one_off"]["classification"]
+            [...]
+
     """
+
+    # For the sake of import modularity, do not use the global plugin loader here, but create own:
+    _plugin_loader = plugins.PluginLoader()
+    metric_plugin_category = "prediction.one_off.classification"
+    supported_metrics = _plugin_loader.list(plugin_type="metric")["prediction"]["one_off"]["classification"]
 
     with warnings.catch_warnings():
         if silence_warnings:
@@ -417,9 +185,8 @@ def evaluate_prediction_oneoff_classifier(  # pylint: disable=unused-argument
         enable_reproducibility(random_state)
 
         results = _InternalScores()
-        evaluator = ClassifierMetrics()
-        for metric in classifier_supported_metrics:
-            results.metrics[metric] = np.zeros(n_splits)
+        for metric_name in supported_metrics:
+            results.metrics[metric_name] = np.zeros(n_splits)
 
         splitter = sklearn.model_selection.StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_state)
 
@@ -433,6 +200,7 @@ def evaluate_prediction_oneoff_classifier(  # pylint: disable=unused-argument
         for train_data, test_data in data.split(splitter=splitter, y=labels):
             model = copy.deepcopy(estimator_)
             start = time()
+
             try:
                 model.fit(train_data)
 
@@ -441,10 +209,15 @@ def evaluate_prediction_oneoff_classifier(  # pylint: disable=unused-argument
                 test_labels = test_data.predictive.targets.numpy()
                 preds = model.predict_proba(test_data).numpy()
 
-                scores = evaluator.score_proba(test_labels, preds)
-                for metric in scores:
-                    results.metrics[metric][indx] = scores[metric]
+                for metric_name in supported_metrics:
+                    metric = cast(
+                        metric_module.OneOffClassificationMetric,
+                        _plugin_loader.get(f"{metric_plugin_category}.{metric_name}", plugin_type="metric"),
+                    )
+                    results.metrics[metric_name][indx] = metric.evaluate(test_labels, preds)
+
                 results.errors.append(0)
+
             except BaseException as e:  # pylint: disable=broad-except
                 logger.error(f"Evaluation failed: {e}")
                 results.errors.append(1)
@@ -494,9 +267,17 @@ def evaluate_prediction_oneoff_regressor(  # pylint: disable=unused-argument
             The columns of the dataframe contain details about the cross-validation repeats: one column for each
             :obj:`~tempor.benchmarks.evaluation.OutputMetric`.
 
-            The index of the dataframe contains all the metrics evaluated: all of
-            :obj:`~tempor.benchmarks.evaluation.RegressionSupportedMetric`.
+            The index of the dataframe contains all the metrics registered:
+            >>> from tempor import plugin_loader
+            >>> plugin_loader.list(plugin_type="metric")["prediction"]["one_off"]["regression"]
+            [...]
+
     """
+
+    # For the sake of import modularity, do not use the global plugin loader here, but create own:
+    _plugin_loader = plugins.PluginLoader()
+    metric_plugin_category = "prediction.one_off.regression"
+    supported_metrics = _plugin_loader.list(plugin_type="metric")["prediction"]["one_off"]["regression"]
 
     with warnings.catch_warnings():
         if silence_warnings:
@@ -506,10 +287,9 @@ def evaluate_prediction_oneoff_regressor(  # pylint: disable=unused-argument
             raise ValueError("n_splits must be an integer >= 2")
         estimator_ = cast("BaseOneOffRegressor", estimator)
         enable_reproducibility(random_state)
-        metrics = regression_supported_metrics
 
         results = _InternalScores()
-        for metric in metrics:
+        for metric in supported_metrics:
             results.metrics[metric] = np.zeros(n_splits)
 
         splitter = sklearn.model_selection.KFold(n_splits=n_splits, shuffle=True, random_state=random_state)
@@ -518,6 +298,7 @@ def evaluate_prediction_oneoff_regressor(  # pylint: disable=unused-argument
         for train_data, test_data in data.split(splitter=splitter):
             model = copy.deepcopy(estimator_)
             start = time()
+
             try:
                 model.fit(train_data)
 
@@ -526,10 +307,15 @@ def evaluate_prediction_oneoff_regressor(  # pylint: disable=unused-argument
                 targets = test_data.predictive.targets.numpy().squeeze()
                 preds = model.predict(test_data).numpy().squeeze()
 
-                results.metrics["mse"][indx] = sklearn.metrics.mean_squared_error(targets, preds)
-                results.metrics["mae"][indx] = sklearn.metrics.mean_absolute_error(targets, preds)
-                results.metrics["r2"][indx] = sklearn.metrics.r2_score(targets, preds)
+                for metric_name in supported_metrics:
+                    metric = cast(
+                        metric_module.OneOffRegressionMetric,
+                        _plugin_loader.get(f"{metric_plugin_category}.{metric_name}", plugin_type="metric"),
+                    )
+                    results.metrics[metric_name][indx] = metric.evaluate(targets, preds)
+
                 results.errors.append(0)
+
             except BaseException as e:  # pylint: disable=broad-except
                 logger.error(f"Regression evaluation failed: {e}")
                 results.errors.append(1)
@@ -542,72 +328,17 @@ def evaluate_prediction_oneoff_regressor(  # pylint: disable=unused-argument
     return _postprocess_results(results)
 
 
-TimeToEventMetricCallable = Callable[[np.ndarray, np.ndarray, np.ndarray, List[float]], List[float]]
-"""Standardized function for time-to-event metric.
-
-Inputs are:
-    * ``training_array_struct`` (np.ndarray)
-    * ``testing_array_struct`` (np.ndarray)
-    * ``predictions`` (np.ndarray)
-    * ``horizons`` (List[float])
-
-Output is:
-    A list with the metric values for each horizon.
-"""
-
-
-def compute_c_index(
-    training_array_struct: np.ndarray, testing_array_struct: np.ndarray, predictions: np.ndarray, horizons: List[float]
-) -> List[float]:
-    """Compute the IPCW concordance index.
-
-    Args:
-        training_array_struct (np.ndarray): Training data as a structured array.
-        testing_array_struct (np.ndarray): Testing data as a structured array.
-        predictions (np.ndarray): Predictions.
-        horizons (List[float]): Evaluation horizons.
-
-    Returns:
-        List[float]: List of metric values for each horizon.
-    """
-    metrics: List[float] = []
-    for horizon_idx, horizon_time in enumerate(horizons):
-        predictions_at_horizon_time = predictions[:, horizon_idx, :].reshape((-1,))
-        out = tempor_metrics.concordance_index_ipcw(
-            training_array_struct, testing_array_struct, predictions_at_horizon_time, float(horizon_time)
-        )
-        metrics.append(out[0])
-    return metrics
-
-
-def compute_brier_score(
-    training_array_struct: np.ndarray, testing_array_struct: np.ndarray, predictions: np.ndarray, horizons: List[float]
-) -> List[float]:
-    """Compute the time-dependent Brier score.
-
-    Args:
-        training_array_struct (np.ndarray): Training data as a structured array.
-        testing_array_struct (np.ndarray): Testing data as a structured array.
-        predictions (np.ndarray): Predictions.
-        horizons (List[float]): Evaluation horizons.
-
-    Returns:
-        List[float]: List of metric values for each horizon.
-    """
-    predictions = predictions.reshape((predictions.shape[0], predictions.shape[1]))
-    times, scores = tempor_metrics.brier_score(  # pylint: disable=unused-variable
-        training_array_struct, testing_array_struct, predictions, horizons
-    )
-    return scores.tolist()
-
-
-def _compute_time_to_event_metric(
-    metric_func: TimeToEventMetricCallable,
+def _prep_data_for_time_to_event_metric(
     train_data: dataset.TimeToEventAnalysisDataset,
     test_data: dataset.TimeToEventAnalysisDataset,
     horizons: data_typing.TimeIndex,
     predictions: samples.TimeSeriesSamples,
-) -> float:
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, List[float], np.ndarray, np.ndarray]:
+    """Validate the data for time-to-event metric evaluation and
+    prepare the data in the format expected by the metric evaluation call.
+    """
+
+    # Validate the data.
     if not predictions.num_timesteps_equal():
         raise ValueError(
             f"Expected time to event prediction values for horizons {horizons} all to have equal number of time steps "
@@ -628,18 +359,15 @@ def _compute_time_to_event_metric(
         float(horizons[0])  # pyright: ignore
     except (TypeError, ValueError) as e:
         raise ValueError("Currently only int or float time horizons supported.") from e
+
+    # Prepare the data.
     horizons = cast(List[float], horizons)
 
     predictions_array = predictions.numpy()
     t_train, y_train = (df.to_numpy().reshape((-1,)) for df in train_data.predictive.targets.split_as_two_dataframes())
-    y_train_struct = tempor_metrics.create_structured_array(y_train, t_train)
     t_test, y_test = (df.to_numpy().reshape((-1,)) for df in test_data.predictive.targets.split_as_two_dataframes())
-    y_test_struct = tempor_metrics.create_structured_array(y_test, t_test)
 
-    metrics: List[float] = metric_func(y_train_struct, y_test_struct, predictions_array, horizons)
-    avg_metric = float(np.asarray(metrics).mean())
-
-    return avg_metric
+    return y_test, t_test, predictions_array, horizons, y_train, t_train
 
 
 @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
@@ -682,9 +410,18 @@ def evaluate_time_to_event(  # pylint: disable=unused-argument
             The columns of the dataframe contain details about the cross-validation repeats: one column for each
             :obj:`~tempor.benchmarks.evaluation.OutputMetric`.
 
-            The index of the dataframe contains all the metrics evaluated: all of
-            :obj:`~tempor.benchmarks.evaluation.TimeToEventSupportedMetric`.
+            The index of the dataframe contains all the metrics registered:
+            >>> from tempor import plugin_loader
+            >>> plugin_loader.list(plugin_type="metric")["time_to_event"]
+            [...]
+
     """
+
+    # For the sake of import modularity, do not use the global plugin loader here, but create own:
+    _plugin_loader = plugins.PluginLoader()
+    metric_plugin_category = "time_to_event"
+    supported_metrics = _plugin_loader.list(plugin_type="metric")["time_to_event"]
+
     with warnings.catch_warnings():
         if silence_warnings:
             warnings.simplefilter("ignore")
@@ -694,14 +431,9 @@ def evaluate_time_to_event(  # pylint: disable=unused-argument
             raise ValueError("n_splits must be an integer >= 2")
         estimator_ = cast("BaseTimeToEventAnalysis", estimator)
         enable_reproducibility(random_state)
-        metrics = time_to_event_supported_metrics
-        metrics_map = {
-            "c_index": compute_c_index,
-            "brier_score": compute_brier_score,
-        }
 
         results = _InternalScores()
-        for metric in metrics:
+        for metric in supported_metrics:
             results.metrics[metric] = np.zeros(n_splits)
 
         splitter = sklearn.model_selection.KFold(n_splits=n_splits, shuffle=True, random_state=random_state)
@@ -716,15 +448,22 @@ def evaluate_time_to_event(  # pylint: disable=unused-argument
                 # targets = test_data.predictive.targets.numpy().squeeze()
                 preds = model.predict(test_data, horizons=horizons)
 
-                for metric_name in time_to_event_supported_metrics:
-                    metric_func = metrics_map[metric_name]
-                    results.metrics[metric_name][indx] = _compute_time_to_event_metric(
-                        metric_func,
-                        train_data=train_data,
-                        test_data=test_data,
-                        horizons=horizons,
-                        predictions=preds,
+                y_test, t_test, predictions_array, horizons, y_train, t_train = _prep_data_for_time_to_event_metric(
+                    train_data=train_data,
+                    test_data=test_data,
+                    horizons=horizons,
+                    predictions=preds,
+                )
+                for metric_name in supported_metrics:
+                    metric = cast(
+                        metric_module.TimeToEventMetric,
+                        _plugin_loader.get(f"{metric_plugin_category}.{metric_name}", plugin_type="metric"),
                     )
+                    metric_per_horizon = metric.evaluate(
+                        (y_test, t_test), predictions_array, horizons, (y_train, t_train)
+                    )
+                    avg_metric = float(np.asarray(metric_per_horizon).mean())
+                    results.metrics[metric_name][indx] = avg_metric
 
                 results.errors.append(0)
 

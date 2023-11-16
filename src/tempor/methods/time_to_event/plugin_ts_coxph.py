@@ -217,7 +217,7 @@ class CoxPHTimeToEventAnalysis(BaseTimeToEventAnalysis):
         self.model.fit(data, *args, **kwargs)
         return self
 
-    def _predict(  # type: ignore[override]
+    def _predict(
         self,
         data: dataset.PredictiveDataset,
         horizons: data_typing.TimeIndex,

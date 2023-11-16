@@ -34,6 +34,7 @@ warnings.filterwarnings("ignore", message=".*validate_arguments.*", category=Dep
 
 import tempor.datasources  # noqa: E402 F401
 import tempor.methods  # noqa: E402 F401
+import tempor.metrics  # noqa: E402 F401
 
 # Prepare the plugin loader:
 from tempor.core import plugins  # noqa: E402

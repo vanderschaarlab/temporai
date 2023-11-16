@@ -5,11 +5,11 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from tempor import plugin_loader
 from tempor.automl._types import AutoMLCompatibleEstimator
 from tempor.automl.seeker import (
     DEFAULT_STATIC_SCALERS,
     DEFAULT_TEMPORAL_SCALERS,
-    METRIC_DIRECTION_MAP,
     BaseSeeker,
     MethodSeeker,
     PipelineSeeker,
@@ -83,9 +83,12 @@ def patch_slow(monkeypatch, request):
         np.random.seed(hash_)
         # --- --- ---
 
+        metric_plugin_full_names = plugin_loader.list_full_names(plugin_type="metric")
+        metric_names = [x.split(".")[-1] for x in metric_plugin_full_names]
+        num_metrics = len(metric_names)
         return pd.DataFrame(
-            data=np.random.rand(len(METRIC_DIRECTION_MAP), 1),
-            index=list(METRIC_DIRECTION_MAP.keys()),
+            data=np.random.rand(num_metrics, 1),
+            index=metric_names,
             columns=["mean"],
         )
 

@@ -1,41 +1,18 @@
-from unittest.mock import Mock
-
 import numpy as np
-import pytest
 
 from tempor.benchmarks import utils
 
 
-def test_get_y_pred_proba_hlpr_edge():
-    mock = Mock()
-    out = utils.get_y_pred_proba_hlpr(
-        y_pred_proba=mock,
-        nclasses=3,
-    )
-    assert out == mock
-
-    mock = Mock(shape=[1])
-    out = utils.get_y_pred_proba_hlpr(
-        y_pred_proba=mock,
-        nclasses=2,
-    )
-    assert out == mock
-
-    mock = Mock(shape=[1, 4])
-    out = utils.get_y_pred_proba_hlpr(
-        y_pred_proba=mock,
-        nclasses=2,
-    )
-    assert out == mock
-
-
-def test_evaluate_auc_multiclass_nans():
-    with pytest.raises(ValueError, match=".*nan.*"):
-        utils.evaluate_auc_multiclass(y_test=np.asarray([1, 1, 1]), y_pred_proba=np.asarray([0.9, np.nan, 0.9]))
-
-
-def test_evaluate_auc_multiclass():
-    out = utils.evaluate_auc_multiclass(
-        y_test=np.asarray([0, 2, 1]), y_pred_proba=np.asarray([[0.8, 0.1, 0.1], [0.1, 0.1, 0.8], [0.1, 0.8, 0.1]])
-    )
+def test_generate_score():
+    out = utils.generate_score(metric=np.asarray([1.0, 2.0, 3.0]))
     assert len(out) == 2
+
+    mean, ci = out
+    np.testing.assert_equal(mean, 2.0)
+    np.testing.assert_almost_equal(ci, 0.9239, 3)
+
+
+def test_print_score():
+    out = utils.print_score(score=(1, 2))
+    assert isinstance(out, str)
+    assert out == "1 +/- 2"

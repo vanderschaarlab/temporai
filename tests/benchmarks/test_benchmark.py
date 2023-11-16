@@ -6,9 +6,9 @@ import pytest
 from tempor import plugin_loader
 from tempor.benchmarks import (
     benchmark_models,
-    classifier_supported_metrics,
-    regression_supported_metrics,
-    time_to_event_supported_metrics,
+    builtin_metrics_prediction_oneoff_classification,
+    builtin_metrics_prediction_oneoff_regression,
+    builtin_metrics_time_to_event,
     visualize_benchmark,
 )
 from tempor.methods.pipeline import pipeline
@@ -60,7 +60,7 @@ def test_classifier_benchmark(data: str, request: pytest.FixtureRequest) -> None
         assert testcase in aggr_score.columns
         assert testcase in per_test_score
 
-    for metric in classifier_supported_metrics:
+    for metric in builtin_metrics_prediction_oneoff_classification:
         assert metric in aggr_score.index
 
         for testcase, _ in testcases:
@@ -105,7 +105,7 @@ def test_regressor_benchmark(data: str, request: pytest.FixtureRequest) -> None:
         assert testcase in aggr_score.columns
         assert testcase in per_test_score
 
-    for metric in regression_supported_metrics:
+    for metric in builtin_metrics_prediction_oneoff_regression:
         assert metric in aggr_score.index
 
         for testcase, _ in testcases:
@@ -149,7 +149,7 @@ def test_time_to_event_benchmark(
         assert testcase in aggr_score.columns
         assert testcase in per_test_score
 
-    for metric in time_to_event_supported_metrics:
+    for metric in builtin_metrics_time_to_event:
         assert metric in aggr_score.index
 
         for testcase, _ in testcases:

@@ -179,7 +179,7 @@ def visualize_benchmark(results: Dict[str, pd.DataFrame], palette: str = "viridi
                 # Known issue with seaborn 0.13.0+. If the y values are non-unique, it seems to expect the yerr values
                 # only as many as there are unique y values. We hence remap using numpy.unique with index return.
                 values = df_sns[df_sns["metric"] == metric]["mean"]
-                _, unique_indexes = np.unique(values, return_index=True)
+                _, unique_indexes = np.unique(values, return_index=True)  # pyright: ignore
                 err_remapped = err.loc[metric, :][unique_indexes]
                 out = sns.barplot(
                     df_sns[df_sns["metric"] == metric],

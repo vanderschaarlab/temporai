@@ -1,3 +1,5 @@
+# pylint: disable=unnecessary-pass
+
 import re
 from typing import Callable
 
@@ -44,6 +46,30 @@ class TestEnsureLiteralMatchesDictKeys:
     def test_fails_difference(self, lit, d, expect):
         with pytest.raises(TypeError, match=f".*{list(str(expect))}.*"):
             utils.ensure_literal_matches_dict_keys(lit, d)
+
+
+# Test RichReprStrPassthrough ----------
+
+
+def test_rich_repr_str_passthrough():
+    rich_repr_passthrough = utils.RichReprStrPassthrough("foobar")
+    assert rich_repr_passthrough.string == "foobar"
+    assert repr(rich_repr_passthrough) == "foobar"
+
+
+# Test RichReprStrPassthrough (end) ----------
+
+
+# Test is_iterable ----------
+
+
+def test_is_iterable():
+    assert utils.is_iterable([1, 2, 3])
+    assert utils.is_iterable("abc")
+    assert utils.is_iterable(999) is False
+
+
+# Test is_iterable (end) ----------
 
 
 # Test get_from_args_or_kwargs ----------
@@ -261,6 +287,9 @@ class TestGetClassFullName:
 # Test get_class_full_name (end) ----------
 
 
+# Test unique_in_order_of_appearance ----------
+
+
 class TestUniqueInOrderOfAppearance:
     def test_strs(self):
         assert utils.unique_in_order_of_appearance(["a", "a", "b", "c", "c", "a", "b"]) == ["a", "b", "c"]
@@ -270,3 +299,145 @@ class TestUniqueInOrderOfAppearance:
 
     def test_mixed(self):
         assert utils.unique_in_order_of_appearance([1, "a", 2, "a", 2, 3, 3, 1, 1, 2]) == [1, "a", 2, 3]
+
+
+# Test unique_in_order_of_appearance (end) ----------
+
+
+# Test is_method_defined_in_class ----------
+
+
+class Parent:
+    def __init__(self):
+        pass
+
+    def some_method(self):
+        pass
+
+
+class ChildInherits(Parent):
+    pass
+
+
+class ChildDoesNotInherit(Parent):
+    def __init__(self) -> None:
+        pass
+
+    def some_method(self):
+        pass
+
+
+class TestIsMethodDefinedInClass:
+    def test_yes_class(self):
+        assert utils.is_method_defined_in_class(ChildDoesNotInherit, "__init__")
+        assert utils.is_method_defined_in_class(ChildDoesNotInherit, "some_method")
+
+    def test_no_class(self):
+        assert utils.is_method_defined_in_class(ChildInherits, "__init__") is False
+        assert utils.is_method_defined_in_class(ChildInherits, "some_method") is False
+
+    def test_yes_instance(self):
+        assert utils.is_method_defined_in_class(ChildDoesNotInherit(), "__init__")
+        assert utils.is_method_defined_in_class(ChildDoesNotInherit(), "some_method")
+
+    def test_no_instance(self):
+        assert utils.is_method_defined_in_class(ChildInherits(), "__init__") is False
+        assert utils.is_method_defined_in_class(ChildInherits(), "some_method") is False
+
+
+# Test is_method_defined_in_class (end) ----------
+
+
+# Test clean_multiline_docstr ----------
+
+
+class ClassWithMultilineDocstr:
+    """This is a docstring.
+    It has multiple lines.
+    """
+
+    pass
+
+
+class ClassWithSingleLineDocstr:
+    """This is a docstring."""
+
+    pass
+
+
+class TestCleanMultilineDocstr:
+    def test_multiline(self):
+        assert (
+            utils.clean_multiline_docstr(ClassWithMultilineDocstr.__doc__)  # pyright: ignore
+            == "This is a docstring. It has multiple lines."
+        )
+
+    def test_single_line(self):
+        assert (
+            utils.clean_multiline_docstr(ClassWithSingleLineDocstr.__doc__) == "This is a docstring."  # pyright: ignore
+        )
+
+
+# Test clean_multiline_docstr (end) ----------
+
+
+# Test make_description_from_doc ----------
+
+
+class NoDocstr:
+    pass
+
+
+class DocstrClassOnly:
+    """This is a docstring."""
+
+    pass
+
+
+class DocstrInitOnly:
+    def __init__(self) -> None:
+        """This is an __init__ docstring."""
+        pass
+
+
+class DocstrClassAndInit:
+    """This is a docstring."""
+
+    def __init__(self) -> None:
+        """This is an __init__ docstring."""
+        pass
+
+
+class ParentWithInit:
+    def __init__(self) -> None:
+        """This is an __init__ docstring but it's on parent."""
+        pass
+
+
+class DocstrClassAndInitButInitOnlyFromParent:
+    """This is a docstring."""
+
+    pass
+
+
+class TestMakeDescriptionFromDoc:
+    def test_docstr_class_only(self):
+        assert utils.make_description_from_doc(DocstrClassOnly()) == "This is a docstring."
+
+    def test_init_only(self):
+        assert utils.make_description_from_doc(DocstrInitOnly()) == "This is an __init__ docstring."
+
+    def test_docstr_class_and_init(self):
+        assert (
+            utils.make_description_from_doc(DocstrClassAndInit())
+            == "This is a docstring. This is an __init__ docstring."
+        )
+
+    def test_docstr_class_and_init_but_init_only_from_parent(self):
+        assert utils.make_description_from_doc(DocstrClassAndInitButInitOnlyFromParent()) == "This is a docstring."
+
+    def test_docstr_truncated(self):
+        assert utils.make_description_from_doc(DocstrClassOnly(), max_len_keep=5) == "This ..."
+
+
+# Test make_description_from_doc (end) ----------

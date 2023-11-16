@@ -10,11 +10,12 @@ import pytest
 from packaging.version import Version
 
 from tempor import plugin_loader
-from tempor.automl import OptimDirection, tuner
+from tempor.automl import tuner
 from tempor.benchmarks import evaluation
 from tempor.data.dataset import PredictiveDataset, TimeToEventAnalysisDataset
 from tempor.methods.core._base_predictor import BasePredictor
 from tempor.methods.core.params import IntegerParams
+from tempor.metrics import metric_typing
 
 # To ignore warnings in parametrization:
 warnings.filterwarnings("ignore", category=optuna.exceptions.ExperimentalWarning)
@@ -294,7 +295,7 @@ def helper_test_optuna_tuner(
         pruner: Any,
         evaluation_case: str,
         metric: str,
-        direction: OptimDirection,
+        direction: metric_typing.MetricDirection,
         compute_baseline_score: bool,
     ):
         # A general test function for testing `tuner.OptunaTuner`.
@@ -345,7 +346,7 @@ def helper_test_optuna_tuner_pipeline_selector(
         pruner: Any,
         evaluation_case: str,
         metric: str,
-        direction: OptimDirection,
+        direction: metric_typing.MetricDirection,
     ):
         # A general test function for testing `tuner.OptunaTuner` - pipeline selector case.
 
@@ -548,7 +549,7 @@ class TestOptunaTuner:
             data: str,
             plugin: str,
             metric: str,
-            direction: OptimDirection,
+            direction: metric_typing.MetricDirection,
             helper_test_optuna_tuner: Callable,
         ):
             helper_test_optuna_tuner(
@@ -605,7 +606,12 @@ class TestOptunaTuner:
         @pytest.mark.parametrize("plugin", SETTINGS["prediction.one_off.regression"]["TEST_WITH_PLUGINS"])
         @pytest.mark.parametrize("metric,direction", SETTINGS["prediction.one_off.regression"]["METRICS"])
         def test_tune_vary_metrics(
-            self, data: str, plugin: str, metric: str, direction: OptimDirection, helper_test_optuna_tuner: Callable
+            self,
+            data: str,
+            plugin: str,
+            metric: str,
+            direction: metric_typing.MetricDirection,
+            helper_test_optuna_tuner: Callable,
         ):
             helper_test_optuna_tuner(
                 data=data,
@@ -664,7 +670,12 @@ class TestOptunaTuner:
         @pytest.mark.parametrize("plugin", SETTINGS["time_to_event"]["TEST_WITH_PLUGINS"])
         @pytest.mark.parametrize("metric,direction", SETTINGS["time_to_event"]["METRICS"])
         def test_tune_vary_metrics(
-            self, data: str, plugin: str, metric: str, direction: OptimDirection, helper_test_optuna_tuner: Callable
+            self,
+            data: str,
+            plugin: str,
+            metric: str,
+            direction: metric_typing.MetricDirection,
+            helper_test_optuna_tuner: Callable,
         ):
             helper_test_optuna_tuner(
                 data=data,

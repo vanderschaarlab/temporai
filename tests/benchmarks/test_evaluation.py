@@ -5,15 +5,14 @@ import pytest
 
 from tempor import plugin_loader
 from tempor.benchmarks import (
-    classifier_supported_metrics,
+    builtin_metrics_prediction_oneoff_classification,
+    builtin_metrics_prediction_oneoff_regression,
+    builtin_metrics_time_to_event,
     evaluate_prediction_oneoff_classifier,
     evaluate_prediction_oneoff_regressor,
     evaluate_time_to_event,
     output_metrics,
-    regression_supported_metrics,
-    time_to_event_supported_metrics,
 )
-from tempor.benchmarks.evaluation import ClassifierMetrics
 from tempor.methods.pipeline import pipeline
 
 N_ITER = 5
@@ -25,12 +24,6 @@ TEST_ON_DATASETS_TIME_TO_EVENT = ["pbc_data_small"]
 PREDICTOR_CLASSIFICATION = "prediction.one_off.classification.nn_classifier"
 PREDICTOR_REGRESSION = "prediction.one_off.regression.nn_regressor"
 PREDICTOR_TIME_TO_EVENT = "time_to_event.dynamic_deephit"
-
-
-def test_classifier_metrics_score_proba_input_validation():
-    clf_metrics = ClassifierMetrics()
-    with pytest.raises(ValueError, match=".*.input*"):
-        clf_metrics.score_proba(None, None)  # type: ignore
 
 
 @pytest.mark.parametrize("data", TEST_ON_DATASETS_CLASSIFIER)
@@ -62,7 +55,7 @@ def test_evaluate_prediction_oneoff_classifier(
     for out_metric in output_metrics:
         assert out_metric in scores
 
-    for metric in classifier_supported_metrics:
+    for metric in builtin_metrics_prediction_oneoff_classification:
         assert metric in scores.index
 
 
@@ -161,7 +154,7 @@ def test_evaluate_prediction_oneoff_regressor(
     for out_metric in output_metrics:
         assert out_metric in scores
 
-    for metric in regression_supported_metrics:
+    for metric in builtin_metrics_prediction_oneoff_regression:
         assert metric in scores.index
 
 
@@ -241,7 +234,7 @@ def test_time_to_event_evaluation(
     for out_metric in output_metrics:
         assert out_metric in scores
 
-    for metric in time_to_event_supported_metrics:
+    for metric in builtin_metrics_time_to_event:
         assert metric in scores.index
 
 
@@ -304,16 +297,14 @@ def test_time_to_event_model_error(
 def test_compute_time_to_event_metric():
     import pandas as pd
 
-    from tempor.benchmarks.evaluation import _compute_time_to_event_metric
+    from tempor.benchmarks.evaluation import _prep_data_for_time_to_event_metric
 
-    metric_func = Mock()
     mock_pred = Mock(num_timesteps_equal=Mock(return_value=True), num_features=1)
     mock_test_data = Mock(predictive=Mock(targets=Mock(num_features=1)))
     mock_train_data = Mock(predictive=Mock(targets=Mock(num_features=1)))
 
     with pytest.raises(ValueError, match=".*horizon.*"):
-        _compute_time_to_event_metric(
-            metric_func=metric_func,
+        _prep_data_for_time_to_event_metric(
             train_data=mock_train_data,
             test_data=mock_test_data,
             horizons=pd.to_datetime(["2000-01-01", "2000-01-02"]),  # type: ignore
@@ -321,8 +312,7 @@ def test_compute_time_to_event_metric():
         )
 
     with pytest.raises(ValueError, match=".*one event.*"):
-        _compute_time_to_event_metric(
-            metric_func=metric_func,
+        _prep_data_for_time_to_event_metric(
             train_data=Mock(predictive=Mock(targets=Mock(num_features=999))),
             test_data=mock_test_data,
             horizons=Mock(),
@@ -330,8 +320,7 @@ def test_compute_time_to_event_metric():
         )
 
     with pytest.raises(ValueError, match=".*targets.*"):
-        _compute_time_to_event_metric(
-            metric_func=metric_func,
+        _prep_data_for_time_to_event_metric(
             train_data=Mock(predictive=Mock(targets=None)),
             test_data=mock_test_data,
             horizons=Mock(),
@@ -339,8 +328,7 @@ def test_compute_time_to_event_metric():
         )
 
     with pytest.raises(ValueError, match=".*equal number of time steps.*"):
-        _compute_time_to_event_metric(
-            metric_func=metric_func,
+        _prep_data_for_time_to_event_metric(
             train_data=mock_train_data,
             test_data=mock_test_data,
             horizons=[1, 2, 3],
