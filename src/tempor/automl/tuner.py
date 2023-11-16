@@ -13,8 +13,9 @@ from tempor.data.dataset import PredictiveDataset
 from tempor.log import logger
 from tempor.methods.core._base_predictor import BasePredictor
 from tempor.methods.core.params import Params
+from tempor.metrics import metric_typing
 
-from ._types import AutoMLCompatibleEstimator, OptimDirection
+from ._types import AutoMLCompatibleEstimator
 from .pipeline_selector import PipelineSelector
 
 # TODO: Handle other hyperparameter tuning frameworks, e.g. hyperband.
@@ -56,7 +57,7 @@ class BaseTuner(abc.ABC):
     def __init__(  # pylint: disable=unused-argument
         self,
         study_name: str,
-        direction: OptimDirection,
+        direction: metric_typing.MetricDirection,
         **kwargs: Any,
     ):
         """Base hyperparameter tuner from which tuner implementations should derive. Defines the initializer and the
@@ -65,7 +66,7 @@ class BaseTuner(abc.ABC):
         Args:
             study_name (str):
                 Study name.
-            direction (OptimDirection):
+            direction (metric_typing.MetricDirection):
                 Optimization direction (`"minimize"` or `"maximize"`).
             **kwargs (Any):
                 Currently unused.
@@ -115,7 +116,7 @@ class OptunaTuner(BaseTuner):
     def __init__(
         self,
         study_name: str,
-        direction: OptimDirection,
+        direction: metric_typing.MetricDirection,
         *,
         study_sampler: optuna.samplers.BaseSampler,
         study_storage: Optional[Union[str, optuna.storages.BaseStorage]] = None,
@@ -129,7 +130,7 @@ class OptunaTuner(BaseTuner):
         Args:
             study_name (str):
                 Study name.
-            direction (OptimDirection):
+            direction (metric_typing.MetricDirection):
                 Optimization direction (`"minimize"` or `"maximize"`).
             study_sampler (optuna.samplers.BaseSampler):
                 An `optuna` sampler (passed to `optuna.create_study`).
