@@ -60,7 +60,7 @@ class CRNTreatmentsClassifier(BaseTemporalTreatmentEffects):
             params=self.params,  # pyright: ignore
         )
 
-        self.model.fit(cl_dataset)
+        self.model.fit(cl_dataset, **kwargs)
         return self
 
     def _predict(  # pylint: disable=arguments-differ
