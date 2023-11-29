@@ -66,7 +66,7 @@ class Seq2seqClassifier(BaseTemporalClassifier):
         **kwargs: Any,
     ) -> Self:
         cl_dataset = tempor_dataset_to_clairvoyance2_dataset(data)
-        self.model.fit(cl_dataset)
+        self.model.fit(cl_dataset, **kwargs)
         return self
 
     def _predict(
