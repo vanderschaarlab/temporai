@@ -1,6 +1,8 @@
+import urllib.error
 from typing import Type
 
 import pytest
+import requests.exceptions
 
 from tempor import plugin_loader
 from tempor.data.dataset import PredictiveDataset
@@ -47,6 +49,10 @@ def get_plugin(plugin_from: str, plugin_full_name: str) -> Type[DataSource]:
         return plugin_loader.get_class(plugin_full_name, plugin_type="datasource")
 
 
+@pytest.mark.xfail(
+    reason="May be flaky due to connection issues, xfail for now",
+    raises=(requests.exceptions.RequestException, urllib.error.URLError),
+)
 @pytest.mark.parametrize("plugin_from", ["module", "api"])
 @pytest.mark.parametrize("plugin_full_name", PLUGINS_TO_TEST.keys())
 def test_init_load_and_basic_methods(plugin_from: str, plugin_full_name: str):
@@ -66,6 +72,10 @@ def test_init_load_and_basic_methods(plugin_from: str, plugin_full_name: str):
     assert isinstance(dataset, return_type)
 
 
+@pytest.mark.xfail(
+    reason="May be flaky due to connection issues, xfail for now",
+    raises=(requests.exceptions.RequestException, urllib.error.URLError),
+)
 @pytest.mark.parametrize("plugin_from", ["module", "api"])
 @pytest.mark.parametrize("plugin_full_name", [x for x in PLUGINS_TO_TEST.keys() if x in REQUIRE_DOWNLOAD])
 def test_download_and_local(plugin_from: str, plugin_full_name: str, tmpdir, monkeypatch):
