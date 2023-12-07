@@ -23,8 +23,8 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Build and publish
         env:
-          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
         run: ${GITHUB_WORKSPACE}/.github/workflows/scripts/release_osx.sh
 
   # Build for Linux and publish, see scripts/release_linux.sh.
@@ -44,8 +44,8 @@ jobs:
           echo "/opt/python/${{ matrix.python-version }}/bin" >> $GITHUB_PATH
       - name: Build and publish
         env:
-          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
         run: ${GITHUB_WORKSPACE}/.github/workflows/scripts/release_linux.sh
 
   # Build for Windows and publish, see scripts/release_windows.bat.
@@ -65,8 +65,8 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Build and publish
         env:
-          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
         # Problems with using ${GITHUB_WORKSPACE} in windows, so using relative path "../.."
         run: |
           ../../.github/workflows/scripts/release_windows.bat

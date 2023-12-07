@@ -108,7 +108,7 @@ class DynamicDeepHitTimeToEventAnalysis(BaseTimeToEventAnalysis, DDHEmbedding):
         horizons: data_typing.TimeIndex,
         *args: Any,
         **kwargs: Any,
-    ) -> samples.TimeSeriesSamples:
+    ) -> samples.TimeSeriesSamplesBase:
         # NOTE: kwargs will be passed to DynamicDeepHitModel.predict_risk().
         # E.g. `batch_size` batch size parameter can be provided this way.
         processed_data = self.prepare_predict(data, horizons, *args, **kwargs)

@@ -72,6 +72,8 @@ PYPI_README_PATH = os.path.join(os.path.dirname(__file__), "../pypi.md")
 
 REPLACE = {
     # Add more as necessary.
+    "<!-- include_pypi": "",
+    "include_pypi_end -->": "",
     "./": REPO_URL_TREE,
 }
 
@@ -81,6 +83,9 @@ with open(README_PATH, "r", encoding="utf8") as file:
 # Replace:
 for k, v in REPLACE.items():
     readme_content = readme_content.replace(k, v)
+
+# Remove parts that should only be in repo `README.md`.
+readme_content = re.sub(r"\n<!-- exclude_pypi -->.*?<!-- exclude_pypi_end -->", "", readme_content, flags=re.DOTALL)
 
 # Fix images:
 convert = {

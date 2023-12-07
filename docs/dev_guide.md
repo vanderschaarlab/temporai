@@ -252,3 +252,7 @@ The `Pipeline` functionality is provided by the [`tempor.methods.pipeline`](api/
 
 ## Models
 The [`tempor.models`](api/tempor.models) namespace contains various underlying model components (currently mostly `torch` modules), such as [`MLP`](api/tempor.models.mlp), general-purpose [`TimeSeriesModel`](api/tempor.models.ts_model), [`NeuralODE`](api/tempor.models.ts_ode), etc. Feel free to use or build upon these in your methods.
+
+
+## Data Formats
+For implementing custom data formats (experimental), se the "Custom Data Format" tutorial in the [extending guide](user_guide/extending/index.md).

@@ -47,9 +47,9 @@ class BaseTimeToEventAnalysis(methods_core.BasePredictor):
         horizons: data_typing.TimeIndex,
         *args,
         **kwargs,
-    ) -> samples.TimeSeriesSamples:
+    ) -> samples.TimeSeriesSamplesBase:
         """Predict risk scores for the given data. Output is risk scores at time points, hence
-        `samples.TimeSeriesSamples`.
+        `samples.TimeSeriesSamplesBase`.
 
         Args:
             data (dataset.PredictiveDataset): Dataset to predict on. Should be `dataset.TimeToEventAnalysisDataset`.
@@ -58,7 +58,7 @@ class BaseTimeToEventAnalysis(methods_core.BasePredictor):
             **kwargs: Additional keyword arguments.
 
         Returns:
-            samples.TimeSeriesSamples: Predicted risk scores at the given time points.
+            samples.TimeSeriesSamplesBase: Predicted risk scores at the given time points.
         """
         check_data_class(data)
         return super().predict(data, horizons, *args, **kwargs)
@@ -72,7 +72,7 @@ class BaseTimeToEventAnalysis(methods_core.BasePredictor):
     @abc.abstractmethod
     def _predict(  # pylint: disable=arguments-differ
         self, data: dataset.PredictiveDataset, horizons: data_typing.TimeIndex, *args: Any, **kwargs: Any
-    ) -> samples.TimeSeriesSamples:  # pragma: no cover
+    ) -> samples.TimeSeriesSamplesBase:  # pragma: no cover
         ...
 
 

@@ -50,14 +50,14 @@ class BaseTemporalRegressor(methods_core.BasePredictor):
         *args: Any,
         time_delta: int = 1,
         **kwargs: Any,
-    ) -> samples.TimeSeriesSamples:  # noqa: D102
+    ) -> samples.TimeSeriesSamplesBase:  # noqa: D102
         check_data_class(data)
         return super().predict(data, n_future_steps, *args, time_delta=time_delta, **kwargs)
 
     @abc.abstractmethod
     def _predict(  # pylint: disable=arguments-differ
         self, data: dataset.PredictiveDataset, n_future_steps: int, *args: Any, time_delta: int = 1, **kwargs: Any
-    ) -> samples.TimeSeriesSamples:  # pragma: no cover
+    ) -> samples.TimeSeriesSamplesBase:  # pragma: no cover
         ...
 
 

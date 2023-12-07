@@ -332,7 +332,7 @@ def _prep_data_for_time_to_event_metric(
     train_data: dataset.TimeToEventAnalysisDataset,
     test_data: dataset.TimeToEventAnalysisDataset,
     horizons: data_typing.TimeIndex,
-    predictions: samples.TimeSeriesSamples,
+    predictions: samples.TimeSeriesSamplesBase,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, List[float], np.ndarray, np.ndarray]:
     """Validate the data for time-to-event metric evaluation and
     prepare the data in the format expected by the metric evaluation call.

@@ -227,7 +227,7 @@ class DDHEmbeddingTimeToEventAnalysis(DDHEmbedding):
         horizons: data_typing.TimeIndex,
         *args: Any,
         **kwargs: Any,
-    ) -> samples.TimeSeriesSamples:
+    ) -> samples.TimeSeriesSamplesBase:
         """Predict risk scores.
 
         ``*args`` and ``**kwargs`` will be passed to ``self.emb_model.predict_emb()``. E.g. ``batch_size`` batch size
@@ -240,7 +240,7 @@ class DDHEmbeddingTimeToEventAnalysis(DDHEmbedding):
             **kwargs (Any): Additional keyword arguments. Passed to ``self.emb_model.predict_emb()``
 
         Returns:
-            samples.TimeSeriesSamples: Predicted risk scores.
+            samples.TimeSeriesSamplesBase: Predicted risk scores.
         """
         processed_data = self.prepare_predict(data, horizons, *args, **kwargs)
 

@@ -71,7 +71,16 @@ $ pip install temporai
 
 
 ## 💥 Sample Usage
+
+
+
+
 * List the available plugins
+
+<!-- include_pypi
+* List the available plugins
+include_pypi_end -->
+
 ```{testcode}
 :hide:
 import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
@@ -85,8 +94,15 @@ from tempor import plugin_loader
 
 print(plugin_loader.list())
 ```
+
+
 
 * Use a time-to-event (survival) analysis model
+
+<!-- include_pypi
+* Use a time-to-event (survival) analysis model
+include_pypi_end -->
+
 ```{testcode}
 :hide:
 import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
@@ -120,8 +136,15 @@ model.fit(dataset)
 # Make risk predictions:
 prediction = model.predict(dataset, horizons=[0.25, 0.50, 0.75])
 ```
+
+
 
 * Use a temporal treatment effects model
+
+<!-- include_pypi
+* Use a temporal treatment effects model
+include_pypi_end -->
+
 ```{testcode}
 :hide:
 import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
@@ -199,8 +222,15 @@ counterfactuals = model.predict_counterfactuals(
     treatment_scenarios=treatment_scenarios,
 )
 ```
+
+
 
 * Use a missing data imputer
+
+<!-- include_pypi
+* Use a missing data imputer
+include_pypi_end -->
+
 ```{testcode}
 :hide:
 import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
@@ -256,8 +286,16 @@ temporal_data_n_missing = imputed.time_series.dataframe().isna().sum().sum()
 print(static_data_n_missing, temporal_data_n_missing)
 assert temporal_data_n_missing == 0
 ```
+
+
+
 
 * Use a one-off classifier (prediction)
+
+<!-- include_pypi
+* Use a one-off classifier (prediction)
+include_pypi_end -->
+
 ```{testcode}
 :hide:
 import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
@@ -289,8 +327,14 @@ model.fit(dataset)
 # Predict:
 prediction = model.predict(dataset)
 ```
+
 
 * Use a temporal regressor (forecasting)
+
+<!-- include_pypi
+* Use a temporal regressor (forecasting)
+include_pypi_end -->
+
 ```{testcode}
 :hide:
 import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
@@ -332,8 +376,15 @@ model.fit(dataset)
 # Predict:
 prediction = model.predict(dataset, n_future_steps=5)
 ```
+
+
 
 * Benchmark models, time-to-event task
+
+<!-- include_pypi
+* Benchmark models, time-to-event task
+include_pypi_end -->
+
 ```{testcode}
 :hide:
 import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
@@ -411,8 +462,15 @@ aggr_score, per_test_score = benchmark_models(
 
 print(aggr_score)
 ```
+
+
 
 * Serialization
+
+<!-- include_pypi
+* Serialization
+include_pypi_end -->
+
 ```{testcode}
 :hide:
 import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
@@ -441,7 +499,14 @@ reloaded = load(buff)  # Reload model.
 # `save_to_file`, `load_from_file` also available in the serialization module.
 ```
 
+
+
 * AutoML - search for the best pipeline for your task
+
+<!-- include_pypi
+* AutoML - search for the best pipeline for your task
+include_pypi_end -->
+
 ```{testcode}
 :hide:
 import os; import sys; f = open(os.devnull, 'w'); sys.stdout = f
@@ -506,12 +571,68 @@ best_pipelines, best_scores = seeker.search()  # doctest: +SKIP
 
 
 
+
+## 📖 Tutorials
+
+### Data
+
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/data/tutorial01_data_format.ipynb) - [Data Format](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/data/tutorial01_data_format.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/data/tutorial02_datasets.ipynb) - [Datasets](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/data/tutorial02_datasets.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/data/tutorial03_datasources.ipynb) - [Data Loaders](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/data/tutorial03_datasources.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/data/tutorial04_data_splitting.ipynb) - [Data Splitting](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/data/tutorial04_data_splitting.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/data/tutorial05_other_data_formats.ipynb) - [Other Data Formats](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/data/tutorial05_other_data_formats.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/data/tutorial06_mimic_use_case.ipynb) - [MIMIC Use Case](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/data/tutorial06_mimic_use_case.ipynb)
+
+### User Guide
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/usage/tutorial01_plugins.ipynb) - [Plugins](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/usage/tutorial01_plugins.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/usage/tutorial02_imputation.ipynb) - [Imputation](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/usage/tutorial02_imputation.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/usage/tutorial03_scaling.ipynb) - [Scaling](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/usage/tutorial03_scaling.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/usage/tutorial04_prediction.ipynb) - [Prediction](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/usage/tutorial04_prediction.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/usage/tutorial05_time_to_event.ipynb) - [Time-to-event Analysis](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/usage/tutorial05_time_to_event.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/usage/tutorial06_treatments.ipynb) - [Treatment Effects](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/usage/tutorial06_treatments.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/usage/tutorial07_pipeline.ipynb) - [Pipeline](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/usage/tutorial07_pipeline.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/usage/tutorial08_benchmarks.ipynb) - [Benchmarks](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/usage/tutorial08_benchmarks.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/usage/tutorial09_automl.ipynb) - [AutoML](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/usage/tutorial09_automl.ipynb)
+
+### Extending TemporAI
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/extending/tutorial01_custom_method.ipynb) - [Writing a Custom Method Plugin](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/extending/tutorial01_custom_method.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/extending/tutorial02_testing_custom_method.ipynb) - [Testing a Custom Method Plugin](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/extending/tutorial02_testing_custom_method.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/extending/tutorial03_custom_datasource.ipynb) - [Writing a Custom Data Source Plugin](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/extending/tutorial03_custom_datasource.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/extending/tutorial04_custom_metric.ipynb) - [Writing a Custom Metric Plugin](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/extending/tutorial04_custom_metric.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/extending/tutorial05_custom_dataformat.ipynb) - [Writing a Custom Data Format](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/extending/tutorial05_custom_dataformat.ipynb)
+
+
+
+
+
+
+<!--- Reusable --->
+  [van der Schaar Lab]:    https://www.vanderschaar-lab.com/
+  [docs]:                  https://temporai.readthedocs.io/en/latest/
+
+
+
+## 🌍 TemporAI Ecosystem (*Experimental*)
+
+We provide additional tools in the TemporAI ecosystem, which are in active development, and are currently (very) experimental. Suggestions and contributions are welcome!
+
+These include:
+- [`temporai-clinic`](https://github.com/vanderschaarlab/temporai-clinic): A web app tool for interacting and visualising TemporAI models, data, and predictions.
+- [`temporai-mivdp`](https://github.com/vanderschaarlab/temporai-mivdp): A [MIMIC-IV-Data-Pipeline](https://github.com/healthylaife/MIMIC-IV-Data-Pipeline) adaptation for TemporAI.
+
+
+
+
 {#methods}
 ## 🔑 Methods
 
 
 
 ### Time-to-Event (survival) analysis over time
+
+<!-- include_pypi
+### Time-to-Event (survival) analysis over time
+include_pypi_end -->
 
 Risk estimation given event data (category: `time_to_event`)
 
@@ -524,6 +645,10 @@ Risk estimation given event data (category: `time_to_event`)
 
 
 ### Treatment effects
+
+<!-- include_pypi
+### Treatment effects
+include_pypi_end -->
 
 #### One-off
 Treatment effects estimation where treatments are a one-off event.
@@ -556,6 +681,10 @@ Treatment effects estimation where treatments are temporal (time series).
 
 
 ### Prediction
+
+<!-- include_pypi
+### Prediction
+include_pypi_end -->
 
 #### One-off
 Prediction where targets are static.
@@ -596,6 +725,10 @@ Prediction where targets are temporal (time series).
 
 
 ### Preprocessing
+
+<!-- include_pypi
+### Preprocessing
+include_pypi_end -->
 
 #### Feature Encoding
 
@@ -646,40 +779,7 @@ Prediction where targets are temporal (time series).
 
 
 
-## 📖 Tutorials
 
-### Data
-
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/data/tutorial01_data_format.ipynb) - [Data Format](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/data/tutorial01_data_format.ipynb)
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/data/tutorial02_datasets.ipynb) - [Datasets](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/data/tutorial02_datasets.ipynb)
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/data/tutorial03_datasources.ipynb) - [Data Loaders](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/data/tutorial03_datasources.ipynb)
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/data/tutorial04_data_splitting.ipynb) - [Data Splitting](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/data/tutorial04_data_splitting.ipynb)
-
-### User Guide
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/usage/tutorial01_plugins.ipynb) - [Plugins](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/usage/tutorial01_plugins.ipynb)
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/usage/tutorial02_imputation.ipynb) - [Imputation](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/usage/tutorial02_imputation.ipynb)
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/usage/tutorial03_scaling.ipynb) - [Scaling](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/usage/tutorial03_scaling.ipynb)
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/usage/tutorial04_prediction.ipynb) - [Prediction](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/usage/tutorial04_prediction.ipynb)
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/usage/tutorial05_time_to_event.ipynb) - [Time-to-event Analysis](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/usage/tutorial05_time_to_event.ipynb)
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/usage/tutorial06_treatments.ipynb) - [Treatment Effects](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/usage/tutorial06_treatments.ipynb)
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/usage/tutorial07_pipeline.ipynb) - [Pipeline](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/usage/tutorial07_pipeline.ipynb)
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/usage/tutorial08_benchmarks.ipynb) - [Benchmarks](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/usage/tutorial08_benchmarks.ipynb)
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/usage/tutorial09_automl.ipynb) - [AutoML](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/usage/tutorial09_automl.ipynb)
-
-### Extending TemporAI
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/extending/tutorial01_custom_method.ipynb) - [Writing a Custom Method Plugin](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/extending/tutorial01_custom_method.ipynb)
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/extending/tutorial02_testing_custom_method.ipynb) - [Testing a Custom Method Plugin](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/extending/tutorial02_testing_custom_method.ipynb)
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/extending/tutorial03_custom_datasource.ipynb) - [Writing a Custom Data Source Plugin](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/extending/tutorial03_custom_datasource.ipynb)
-- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/extending/tutorial04_custom_metric.ipynb) - [Writing a Custom Metric Plugin](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/extending/tutorial04_custom_metric.ipynb)
-
-
-
-
-
-
-<!--- Reusable --->
-  [van der Schaar Lab]:    https://www.vanderschaar-lab.com/
-  [docs]:                  https://temporai.readthedocs.io/en/latest/
 
 ## 🔨 Tests and Development
 
@@ -701,6 +801,8 @@ For development and contribution to TemporAI, see:
 * 📓 [Extending TemporAI tutorials](https://github.com/vanderschaarlab/temporai/tree/main/tutorials/extending/)
 * 📃 [Contribution guide](https://github.com/vanderschaarlab/temporai/tree/main/CONTRIBUTING.md)
 * 👩‍💻 [Developer's guide](dev_guide.md)
+
+
 
 ## ✍️ Citing
 

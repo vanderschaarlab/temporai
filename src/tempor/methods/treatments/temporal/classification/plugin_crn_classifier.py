@@ -69,7 +69,7 @@ class CRNTreatmentsClassifier(BaseTemporalTreatmentEffects):
         horizons: List[List[float]],
         *args: Any,
         **kwargs: Any,
-    ) -> samples.TimeSeriesSamples:
+    ) -> samples.TimeSeriesSamplesBase:
         if self.model is None:
             raise RuntimeError("Fit the model first")
         if len(data) != len(horizons):
