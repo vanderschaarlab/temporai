@@ -500,7 +500,7 @@ class StaticSamples(StaticSamplesBase):
             **kwargs (Any): Any additional keyword arguments. Currently unused.
 
         Returns:
-            pd.DataFrame: _description_
+            pd.DataFrame: The dataframe.
         """
         return self._data
 
@@ -946,15 +946,6 @@ class EventSamples(EventSamplesBase):
     _data: pd.DataFrame
     _schema: pa.DataFrameSchema
     _schema_split: pa.DataFrameSchema
-
-    @property
-    def modality(self) -> data_typing.DataModality:
-        """Return the data modality enum corresponding to the class. Here, ``EVENT``.
-
-        Returns:
-            data_typing.DataModality: The data modality enum. Here, ``EVENT``.
-        """
-        return data_typing.DataModality.EVENT
 
     @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def __init__(
