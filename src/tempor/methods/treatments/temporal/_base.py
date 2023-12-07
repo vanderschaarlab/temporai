@@ -40,14 +40,14 @@ class BaseTemporalTreatmentEffects(methods_core.BasePredictor):
         data: dataset.PredictiveDataset,
         *args: Any,
         **kwargs: Any,
-    ) -> samples.TimeSeriesSamples:  # noqa: D102
+    ) -> samples.TimeSeriesSamplesBase:  # noqa: D102
         check_data_class(data)
         return super().predict(data, *args, **kwargs)
 
     @abc.abstractmethod
     def _predict(
         self, data: dataset.PredictiveDataset, *args: Any, **kwargs: Any
-    ) -> samples.TimeSeriesSamples:  # pragma: no cover
+    ) -> samples.TimeSeriesSamplesBase:  # pragma: no cover
         ...
 
     @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))

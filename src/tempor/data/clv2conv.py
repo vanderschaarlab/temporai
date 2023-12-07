@@ -122,16 +122,16 @@ def clairvoyance2_dataset_to_tempor_dataset(data: Clairvoyance2Dataset) -> datas
     )
 
 
-def _to_clv2_static(s: samples.StaticSamples) -> pd.DataFrame:
+def _to_clv2_static(s: samples.StaticSamplesBase) -> pd.DataFrame:
     int_sample_index = list(range(s.num_samples))
     return s.dataframe().set_index(keys=pd.Index(int_sample_index), drop=True)
 
 
-def _to_clv2_time_series(s: samples.TimeSeriesSamples) -> List[pd.DataFrame]:
+def _to_clv2_time_series(s: samples.TimeSeriesSamplesBase) -> List[pd.DataFrame]:
     return [df.droplevel(0) for df in s.list_of_dataframes()]
 
 
-def _to_clv2_event(s: samples.EventSamples) -> pd.DataFrame:
+def _to_clv2_event(s: samples.EventSamplesBase) -> pd.DataFrame:
     int_sample_index = list(range(s.num_samples))
 
     df_event_times, df_event_values = s.split_as_two_dataframes()
@@ -166,25 +166,25 @@ def tempor_dataset_to_clairvoyance2_dataset(data: dataset.BaseDataset) -> Clairv
 
     def has_temporal_targets(d: dataset.BaseDataset) -> bool:
         if d.predictive is not None:
-            return isinstance(d.predictive.targets, samples.TimeSeriesSamples)
+            return isinstance(d.predictive.targets, samples.TimeSeriesSamplesBase)
         else:
             return False
 
     def has_temporal_treatments(d: dataset.BaseDataset) -> bool:
         if d.predictive is not None:
-            return isinstance(d.predictive.treatments, samples.TimeSeriesSamples)
+            return isinstance(d.predictive.treatments, samples.TimeSeriesSamplesBase)
         else:
             return False
 
     def has_event_targets(d: dataset.BaseDataset) -> bool:
         if d.predictive is not None:
-            return isinstance(d.predictive.targets, samples.EventSamples)
+            return isinstance(d.predictive.targets, samples.EventSamplesBase)
         else:
             return False
 
     def has_event_treatments(d: dataset.BaseDataset) -> bool:
         if d.predictive is not None:
-            return isinstance(d.predictive.treatments, samples.EventSamples)
+            return isinstance(d.predictive.treatments, samples.EventSamplesBase)
         else:
             return False
 

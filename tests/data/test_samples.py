@@ -313,7 +313,7 @@ class TestStaticSamples:
     def test_getitem(self, df_static: pd.DataFrame, key, expected_sample_index):
         s = samples.StaticSamples.from_dataframe(df_static)
         s = s[key]
-        assert isinstance(s, samples.StaticSamples)
+        assert isinstance(s, samples.StaticSamplesBase)
         assert s.sample_index() == expected_sample_index
 
 
@@ -612,7 +612,7 @@ class TestTimeSeriesSamples:
             (samples.TimeSeriesSamples.from_numpy(np.ones(shape=(3, 5, 2))), True),
         ],
     )
-    def test_num_timesteps_equal(self, samples: samples.TimeSeriesSamples, expected: bool):
+    def test_num_timesteps_equal(self, samples: samples.TimeSeriesSamplesBase, expected: bool):
         assert samples.num_timesteps_equal() is expected
 
     def test_repr(self, df_time_series: pd.DataFrame):
@@ -663,7 +663,7 @@ class TestTimeSeriesSamples:
 
         s = samples.TimeSeriesSamples.from_dataframe(df)
         s = s[key]
-        assert isinstance(s, samples.TimeSeriesSamples)
+        assert isinstance(s, samples.TimeSeriesSamplesBase)
         assert s.sample_index() == expected_sample_index
 
 
@@ -827,5 +827,5 @@ class TestEventSamples:
         df.set_index("sample_idx", drop=True, inplace=True)
         s = samples.EventSamples.from_dataframe(df)
         s = s[key]
-        assert isinstance(s, samples.EventSamples)
+        assert isinstance(s, samples.EventSamplesBase)
         assert s.sample_index() == expected_sample_index

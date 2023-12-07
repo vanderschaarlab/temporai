@@ -58,8 +58,8 @@ EXCEPTION_MESSAGES = _ExceptionMessages()
 
 
 class BaseDataset(abc.ABC):
-    _time_series: samples.TimeSeriesSamples
-    _static: Optional[samples.StaticSamples]
+    _time_series: samples.TimeSeriesSamplesBase
+    _static: Optional[samples.StaticSamplesBase]
     predictive: Optional[pred.PredictiveTaskData]
 
     def __init__(
@@ -175,30 +175,30 @@ class BaseDataset(abc.ABC):
         ...
 
     @property
-    def time_series(self) -> samples.TimeSeriesSamples:
+    def time_series(self) -> samples.TimeSeriesSamplesBase:
         """The property containing the time series covariates of the dataset.
 
         Returns:
-            samples.TimeSeriesSamples: The time series covariates of the dataset.
+            samples.TimeSeriesSamplesBase: The time series covariates of the dataset.
         """
         return self._time_series
 
     @time_series.setter
-    def time_series(self, value: samples.TimeSeriesSamples) -> None:
+    def time_series(self, value: samples.TimeSeriesSamplesBase) -> None:
         self._time_series = value
         self.validate()
 
     @property
-    def static(self) -> Optional[samples.StaticSamples]:
+    def static(self) -> Optional[samples.StaticSamplesBase]:
         """The property containing the static covariates of the dataset.
 
         Returns:
-            Optional[samples.StaticSamples]: The static covariates of the dataset.
+            Optional[samples.StaticSamplesBase]: The static covariates of the dataset.
         """
         return self._static
 
     @static.setter
-    def static(self, value: Optional[samples.StaticSamples]) -> None:
+    def static(self, value: Optional[samples.StaticSamplesBase]) -> None:
         self._static = value
         self.validate()
 

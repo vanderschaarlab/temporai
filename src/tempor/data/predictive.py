@@ -108,7 +108,7 @@ class PredictiveTaskData(abc.ABC):
 class OneOffPredictionTaskData(PredictiveTaskData):
     # One-off prediction (e.g., one-off classification with a target like patient death).
 
-    targets: Optional[samples.StaticSamples]
+    targets: Optional[samples.StaticSamplesBase]
     treatments: None
 
     @property
@@ -138,7 +138,7 @@ class OneOffPredictionTaskData(PredictiveTaskData):
 class TemporalPredictionTaskData(PredictiveTaskData):
     # Temporal prediction (e.g., predicting a patient's temperature real valued time series).
 
-    targets: Optional[samples.TimeSeriesSamples]
+    targets: Optional[samples.TimeSeriesSamplesBase]
     treatments: None
 
     @property
@@ -171,7 +171,7 @@ class TemporalPredictionTaskData(PredictiveTaskData):
 class TimeToEventAnalysisTaskData(PredictiveTaskData):
     # Time-to-event (survival) analysis (e.g. Dynamic DeepHit).
 
-    targets: Optional[samples.EventSamples]
+    targets: Optional[samples.EventSamplesBase]
     treatments: None
 
     @property
@@ -204,8 +204,8 @@ class TimeToEventAnalysisTaskData(PredictiveTaskData):
 class OneOffTreatmentEffectsTaskData(PredictiveTaskData):
     # Treatment effects with time series outcomes but one-off treatment event(s) (e.g. SyncTwin)
 
-    targets: Optional[samples.TimeSeriesSamples]
-    treatments: samples.EventSamples
+    targets: Optional[samples.TimeSeriesSamplesBase]
+    treatments: samples.EventSamplesBase
 
     @property
     def predictive_task(self) -> data_typing.PredictiveTask:
@@ -239,8 +239,8 @@ class OneOffTreatmentEffectsTaskData(PredictiveTaskData):
 class TemporalTreatmentEffectsTaskData(PredictiveTaskData):
     # Temporal treatment effects (i.e. outcomes are time series and treatments are also time series, e.g. RMSN, CRN).
 
-    targets: Optional[samples.TimeSeriesSamples]
-    treatments: samples.TimeSeriesSamples
+    targets: Optional[samples.TimeSeriesSamplesBase]
+    treatments: samples.TimeSeriesSamplesBase
 
     @property
     def predictive_task(self) -> data_typing.PredictiveTask:

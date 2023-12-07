@@ -49,7 +49,7 @@ class BaseOneOffClassifier(methods_core.BasePredictor):
         data: dataset.PredictiveDataset,
         *args: Any,
         **kwargs: Any,
-    ) -> samples.StaticSamples:  # noqa: D102
+    ) -> samples.StaticSamplesBase:  # noqa: D102
         check_data_class(data)
         return super().predict(data, *args, **kwargs)
 
@@ -59,7 +59,7 @@ class BaseOneOffClassifier(methods_core.BasePredictor):
         data: dataset.PredictiveDataset,
         *args: Any,
         **kwargs: Any,
-    ) -> samples.StaticSamples:  # noqa: D102
+    ) -> samples.StaticSamplesBase:  # noqa: D102
         check_data_class(data)
         return super().predict_proba(data, *args, **kwargs)
 
@@ -69,13 +69,13 @@ class BaseOneOffClassifier(methods_core.BasePredictor):
         data: dataset.PredictiveDataset,
         *args: Any,
         **kwargs: Any,
-    ) -> samples.StaticSamples:  # pragma: no cover
+    ) -> samples.StaticSamplesBase:  # pragma: no cover
         ...
 
     @abc.abstractmethod
     def _predict_proba(
         self, data: dataset.PredictiveDataset, *args: Any, **kwargs: Any
-    ) -> samples.StaticSamples:  # pragma: no cover
+    ) -> samples.StaticSamplesBase:  # pragma: no cover
         ...
 
     def _unpack_dataset(self, data: dataset.BaseDataset) -> Tuple:

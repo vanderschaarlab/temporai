@@ -2,7 +2,7 @@
 
 import dataclasses
 import itertools
-from typing import Any, ClassVar, Iterable, List, Optional, Sequence, Tuple, Union
+from typing import Any, ClassVar, Iterable, List, Optional, Sequence, Tuple, Union, cast
 
 import numpy as np
 import pandas as pd
@@ -322,6 +322,7 @@ def make_sample_time_index_tuples(
     """
     if len(sample_index) != len(time_indexes):
         raise ValueError("Expected the same number of elements in `sample_index` and `time_indexes`")
+    time_indexes = cast(Any, time_indexes)  # Kludge for a flaky mypy type error in next line.
     sample_indexes_copied = [[si] * len(tis) for si, tis in zip(sample_index, time_indexes)]
     sample_indexes_flattened = list(itertools.chain.from_iterable(sample_indexes_copied))
     time_indexes_flattened = list(itertools.chain.from_iterable(time_indexes))

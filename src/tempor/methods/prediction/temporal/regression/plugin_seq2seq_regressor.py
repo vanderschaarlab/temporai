@@ -76,7 +76,7 @@ class Seq2seqRegressor(BaseTemporalRegressor):
         *args: Any,
         time_delta: int = 1,
         **kwargs: Any,
-    ) -> samples.TimeSeriesSamples:
+    ) -> samples.TimeSeriesSamplesBase:
         if self.model is None:
             raise RuntimeError("Fit the model first")
         cl_dataset = tempor_dataset_to_clairvoyance2_dataset(data)

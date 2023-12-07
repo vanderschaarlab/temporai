@@ -14,14 +14,14 @@ from packaging.version import Version
 from typing_extensions import Self
 
 import tempor.exc
-from tempor.core import pydantic_utils
+from tempor.core import plugins, pydantic_utils
 from tempor.log import log_helpers, logger
 
 from . import data_typing, pandera_utils, utils
 from .settings import DATA_SETTINGS
 
 
-class DataSamples(abc.ABC):
+class DataSamples(plugins.Plugin, abc.ABC):
     _data: Any
 
     @property
@@ -45,6 +45,8 @@ class DataSamples(abc.ABC):
             data (data_typing.DataContainer): The data container.
             **kwargs (Any): Any additional keyword arguments.
         """
+        plugins.Plugin.__init__(self)
+
         if "_skip_validate" not in kwargs:
             # For efficiency, pass `_skip_validate` internally (e.g. in `__getitem__`)
             # when there is no need to validate.
@@ -189,6 +191,144 @@ class DataSamples(abc.ABC):
         ...
 
 
+class StaticSamplesBase(DataSamples):
+    @property
+    def modality(self) -> data_typing.DataModality:
+        """Return the data modality enum corresponding to the class. Here, ``STATIC``.
+
+        Returns:
+            data_typing.DataModality: The data modality enum. Here, ``STATIC``.
+        """
+        return data_typing.DataModality.STATIC
+
+
+class TimeSeriesSamplesBase(DataSamples):
+    @property
+    def modality(self) -> data_typing.DataModality:
+        """Return the data modality enum corresponding to the class. Here, ``TIME_SERIES``.
+
+        Returns:
+            data_typing.DataModality: The data modality enum. Here, ``TIME_SERIES``.
+        """
+        return data_typing.DataModality.TIME_SERIES
+
+    @abc.abstractmethod
+    def time_indexes(self) -> data_typing.TimeIndexList:
+        """Get a list containing time indexes for each sample. Each time index is represented as a list of time step
+        elements.
+
+        Returns:
+            data_typing.TimeIndexList: A list containing time indexes for each sample.
+        """
+        ...
+
+    @abc.abstractmethod
+    def time_indexes_as_dict(self) -> data_typing.SampleToTimeIndexDict:
+        """Get a dictionary mapping each sample index to its time index. Time index is represented as a list of time
+        step elements.
+
+        Returns:
+            data_typing.SampleToTimeIndexDict: The dictionary mapping each sample index to its time index.
+        """
+        ...
+
+    @abc.abstractmethod
+    def time_indexes_float(self) -> List[np.ndarray]:
+        """Return time indexes but converting their elements to `float` values.
+
+        Date-time time index will be converted using :obj:`~tempor.data.utils.datetime_time_index_to_float`.
+
+        Returns:
+            List[np.ndarray]: List of 1D `numpy.ndarray` s of `float` values, corresponding to the time index.
+        """
+        ...
+
+    @abc.abstractmethod
+    def num_timesteps(self) -> List[int]:
+        """Get the number of timesteps for each sample.
+
+        Returns:
+            List[int]: List containing the number of timesteps for each sample.
+        """
+        ...
+
+    @abc.abstractmethod
+    def num_timesteps_as_dict(self) -> data_typing.SampleToNumTimestepsDict:
+        """Get a dictionary mapping each sample index to its the number of timesteps.
+
+        Returns:
+            data_typing.SampleToNumTimestepsDict: List containing the number of timesteps for each sample.
+        """
+        ...
+
+    @abc.abstractmethod
+    def num_timesteps_equal(self) -> bool:
+        """Returns `True` if all samples share the same number of timesteps, `False` otherwise.
+
+        Returns:
+            bool: whether all samples share the same number of timesteps.
+        """
+        ...
+
+    @abc.abstractmethod
+    def list_of_dataframes(self) -> List[pd.DataFrame]:
+        """Returns a list of dataframes where each dataframe has the data for each sample.
+
+        Returns:
+            List[pd.DataFrame]: List of dataframes for each sample.
+        """
+        ...
+
+
+_DEFAULT_EVENTS_TIME_FEATURE_SUFFIX = "_time"
+
+
+class EventSamplesBase(DataSamples):
+    @property
+    def modality(self) -> data_typing.DataModality:
+        """Return the data modality enum corresponding to the class. Here, ``EVENT``.
+
+        Returns:
+            data_typing.DataModality: The data modality enum. Here, ``EVENT``.
+        """
+        return data_typing.DataModality.EVENT
+
+    @abc.abstractmethod
+    def split(self, time_feature_suffix: str = _DEFAULT_EVENTS_TIME_FEATURE_SUFFIX) -> pd.DataFrame:
+        """Return a `pandas.DataFrame` where the time component of each event feature has been split off to its own
+        column. The new columns that contain the times will be named ``"<original column name><time_feature_suffix>"``
+        and will be inserted before each corresponding ``<original column name>`` column. The ``<original column name>``
+        columns will contain only the event value.
+
+        Args:
+            time_feature_suffix (str, optional):
+                A column name suffix string to identify the time columns that will be split off. Defaults to
+                ``"_time"``.
+
+        Returns:
+            pd.DataFrame: The output dataframe.
+        """
+        ...
+
+    @abc.abstractmethod
+    def split_as_two_dataframes(
+        self, time_feature_suffix: str = _DEFAULT_EVENTS_TIME_FEATURE_SUFFIX
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        """Analogous to :func:`~tempor.data.samples.EventSamples.split` but returns two `pandas.DataFrame` s:
+            - first dataframe contains the event times of each feature.
+            - second dataframe contains the event values (`True`/`False`) of each feature.
+
+        Args:
+            time_feature_suffix (str, optional):
+                A column name suffix string to identify the time columns that will be split off. Defaults to
+                ``"_time"``.
+
+        Returns:
+            Tuple[pd.DataFrame, pd.DataFrame]: Two `pandas.DataFrame` s containing event times and values respectively.
+        """
+        ...
+
+
 def _array_default_sample_index(array: np.ndarray) -> List[int]:
     n_samples, *_ = array.shape
     return list(range(0, n_samples))
@@ -204,7 +344,13 @@ def _array_default_time_indexes(array: np.ndarray, padding_indicator: Any) -> Li
     return [list(range(x)) for x in lengths]
 
 
-class StaticSamples(DataSamples):
+plugins.register_plugin_category("static_samples", StaticSamplesBase, plugin_type="dataformat")
+plugins.register_plugin_category("time_series_samples", TimeSeriesSamplesBase, plugin_type="dataformat")
+plugins.register_plugin_category("event_samples", EventSamplesBase, plugin_type="dataformat")
+
+
+@plugins.register_plugin(name="static_samples_df", category="static_samples", plugin_type="dataformat")
+class StaticSamples(StaticSamplesBase):
     _data: pd.DataFrame
     _schema: pa.DataFrameSchema
 
@@ -238,15 +384,6 @@ class StaticSamples(DataSamples):
         else:  # pragma: no cover  # Prevented by pydantic check.
             raise ValueError(f"Data object {type(data)} not supported")
         super().__init__(data, **kwargs)
-
-    @property
-    def modality(self) -> data_typing.DataModality:
-        """Return the data modality enum corresponding to the class. Here, ``STATIC``.
-
-        Returns:
-            data_typing.DataModality: The data modality enum. Here, ``STATIC``.
-        """
-        return data_typing.DataModality.STATIC
 
     def _validate(self) -> None:
         schema = pandera_utils.init_schema(self._data, coerce=False)
@@ -293,7 +430,10 @@ class StaticSamples(DataSamples):
         self._schema = schema
 
     @staticmethod
-    def from_dataframe(dataframe: pd.DataFrame, **kwargs: Any) -> "StaticSamples":
+    def from_dataframe(
+        dataframe: pd.DataFrame,
+        **kwargs: Any,
+    ) -> "StaticSamples":  # pyright: ignore
         """Create :class:`StaticSamples` from `pandas.DataFrame`. The rows represent samples, the columns represent
         features.
 
@@ -313,7 +453,7 @@ class StaticSamples(DataSamples):
         sample_index: Optional[data_typing.SampleIndex] = None,
         feature_index: Optional[data_typing.FeatureIndex] = None,
         **kwargs: Any,
-    ) -> "StaticSamples":
+    ) -> "StaticSamples":  # pyright: ignore
         """Create :class:`StaticSamples` from `numpy.ndarray`. The 0th dimension represents samples, the 1st dimension
         represents features.
 
@@ -449,18 +589,10 @@ def workaround_pandera_pd2_1_0_multiindex_compatibility(schema: pa.DataFrameSche
         pass
 
 
-class TimeSeriesSamples(DataSamples):
+@plugins.register_plugin(name="time_series_samples_df", category="time_series_samples", plugin_type="dataformat")
+class TimeSeriesSamples(TimeSeriesSamplesBase):
     _data: pd.DataFrame
     _schema: pa.DataFrameSchema
-
-    @property
-    def modality(self) -> data_typing.DataModality:
-        """Return the data modality enum corresponding to the class. Here, ``TIME_SERIES``.
-
-        Returns:
-            data_typing.DataModality: The data modality enum. Here, ``TIME_SERIES``.
-        """
-        return data_typing.DataModality.TIME_SERIES
 
     @pydantic_utils.validate_arguments(config=pydantic.ConfigDict(arbitrary_types_allowed=True))
     def __init__(
@@ -574,7 +706,10 @@ class TimeSeriesSamples(DataSamples):
         # - Time index float / int expected non-negative values.
 
     @staticmethod
-    def from_dataframe(dataframe: pd.DataFrame, **kwargs: Any) -> "TimeSeriesSamples":
+    def from_dataframe(
+        dataframe: pd.DataFrame,
+        **kwargs: Any,
+    ) -> "TimeSeriesSamples":  # pyright: ignore
         """Create :class:`TimeSeriesSamples` from `pandas.DataFrame`. This row index of the dataframe should be a
         2-level multiindex (sample, timestep). The columns should be the features.
 
@@ -596,7 +731,7 @@ class TimeSeriesSamples(DataSamples):
         time_indexes: Optional[data_typing.TimeIndexList] = None,
         feature_index: Optional[data_typing.FeatureIndex] = None,
         **kwargs: Any,
-    ) -> "TimeSeriesSamples":
+    ) -> "TimeSeriesSamples":  # pyright: ignore
         """Create :class:`TimeSeriesSamples` from `numpy.ndarray`.
 
         This should be a 3D array, with dimensions ``(sample, timestep, feature)``.
@@ -806,10 +941,8 @@ class TimeSeriesSamples(DataSamples):
         )
 
 
-_DEFAULT_EVENTS_TIME_FEATURE_SUFFIX = "_time"
-
-
-class EventSamples(DataSamples):
+@plugins.register_plugin(name="event_samples_df", category="event_samples", plugin_type="dataformat")
+class EventSamples(EventSamplesBase):
     _data: pd.DataFrame
     _schema: pa.DataFrameSchema
     _schema_split: pa.DataFrameSchema
@@ -919,7 +1052,10 @@ class EventSamples(DataSamples):
         self._schema = schema
 
     @staticmethod
-    def from_dataframe(dataframe: pd.DataFrame, **kwargs: Any) -> "EventSamples":
+    def from_dataframe(
+        dataframe: pd.DataFrame,
+        **kwargs: Any,
+    ) -> "EventSamples":  # pyright: ignore
         """Create :class:`EventSamples` from `pandas.DataFrame`. The row index of the dataframe should be the sample
         indexes. The columns should be the features. Each feature should contain a tuple of ``(time, value)``
         representing the event.
@@ -940,7 +1076,7 @@ class EventSamples(DataSamples):
         sample_index: Optional[data_typing.SampleIndex] = None,
         feature_index: Optional[data_typing.FeatureIndex] = None,
         **kwargs: Any,
-    ) -> "EventSamples":
+    ) -> "EventSamples":  # pyright: ignore
         """Create :class:`EventSamples` from `numpy.ndarray`. The array should be a 2D array, with dimensions
         ``(sample, feature)``. Each element should contain a tuple of ``(time, value)`` representing the event.
 

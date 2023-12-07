@@ -143,7 +143,7 @@ class ODERegressor(BaseOneOffRegressor):
         data: dataset.PredictiveDataset,
         *args: Any,
         **kwargs: Any,
-    ) -> samples.StaticSamples:
+    ) -> samples.StaticSamplesBase:
         if self.model is None:
             raise RuntimeError("Fit the model first")
         static, temporal, observation_times, _ = self._unpack_dataset(data)

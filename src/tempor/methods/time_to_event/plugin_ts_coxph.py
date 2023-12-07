@@ -223,7 +223,7 @@ class CoxPHTimeToEventAnalysis(BaseTimeToEventAnalysis):
         horizons: data_typing.TimeIndex,
         *args: Any,
         **kwargs: Any,
-    ) -> samples.TimeSeriesSamples:
+    ) -> samples.TimeSeriesSamplesBase:
         return self.model.predict(data, horizons, *args, **kwargs)
 
     @staticmethod

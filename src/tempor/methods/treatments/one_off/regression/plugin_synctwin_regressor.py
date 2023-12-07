@@ -81,7 +81,7 @@ class SyncTwinTreatmentsRegressor(BaseOneOffTreatmentEffects):
         horizons: List[List[float]],
         *args: Any,
         **kwargs: Any,
-    ) -> samples.TimeSeriesSamples:
+    ) -> samples.TimeSeriesSamplesBase:
         raise NotImplementedError(
             "SyncTwin implementation does not currently support `predict`, only `predict_counterfactuals`"
         )
