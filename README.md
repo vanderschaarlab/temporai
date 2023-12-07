@@ -513,6 +513,7 @@ best_pipelines, best_scores = seeker.search()  # doctest: +SKIP
 - [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/extending/tutorial02_testing_custom_method.ipynb) - [Testing a Custom Method Plugin](./tutorials/extending/tutorial02_testing_custom_method.ipynb)
 - [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/extending/tutorial03_custom_datasource.ipynb) - [Writing a Custom Data Source Plugin](./tutorials/extending/tutorial03_custom_datasource.ipynb)
 - [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/extending/tutorial04_custom_metric.ipynb) - [Writing a Custom Metric Plugin](./tutorials/extending/tutorial04_custom_metric.ipynb)
+- [![Test In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vanderschaarlab/temporai/blob/main/tutorials/extending/tutorial05_custom_dataformat.ipynb) - [Writing a Custom Data Format](./tutorials/extending/tutorial05_custom_dataformat.ipynb)
 
 
 
