@@ -46,7 +46,7 @@ jobs:
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        run: ${GITHUB_WORKSPACE}/.github/workflows/scripts/release_linux.sh
+        run: ${{ github.workspace }}/.github/workflows/scripts/release_linux.sh
 
   # Build for Windows and publish, see scripts/release_windows.bat.
   deploy_windows:
@@ -69,4 +69,4 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
         # Problems with using ${GITHUB_WORKSPACE} in windows, so using relative path "../.."
         run: |
-          ../../.github/workflows/scripts/release_windows.bat
+          ${{ github.workspace }}/.github/workflows/scripts/release_windows.bat
