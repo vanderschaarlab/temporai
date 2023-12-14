@@ -213,7 +213,7 @@ class TimeSeriesSamplesBase(DataSamples):
         return data_typing.DataModality.TIME_SERIES
 
     @abc.abstractmethod
-    def time_indexes(self) -> data_typing.TimeIndexList:
+    def time_indexes(self) -> data_typing.TimeIndexList:  # pragma: no cover
         """Get a list containing time indexes for each sample. Each time index is represented as a list of time step
         elements.
 
@@ -223,7 +223,7 @@ class TimeSeriesSamplesBase(DataSamples):
         ...
 
     @abc.abstractmethod
-    def time_indexes_as_dict(self) -> data_typing.SampleToTimeIndexDict:
+    def time_indexes_as_dict(self) -> data_typing.SampleToTimeIndexDict:  # pragma: no cover
         """Get a dictionary mapping each sample index to its time index. Time index is represented as a list of time
         step elements.
 
@@ -233,7 +233,7 @@ class TimeSeriesSamplesBase(DataSamples):
         ...
 
     @abc.abstractmethod
-    def time_indexes_float(self) -> List[np.ndarray]:
+    def time_indexes_float(self) -> List[np.ndarray]:  # pragma: no cover
         """Return time indexes but converting their elements to `float` values.
 
         Date-time time index will be converted using :obj:`~tempor.data.utils.datetime_time_index_to_float`.
@@ -244,7 +244,7 @@ class TimeSeriesSamplesBase(DataSamples):
         ...
 
     @abc.abstractmethod
-    def num_timesteps(self) -> List[int]:
+    def num_timesteps(self) -> List[int]:  # pragma: no cover
         """Get the number of timesteps for each sample.
 
         Returns:
@@ -253,7 +253,7 @@ class TimeSeriesSamplesBase(DataSamples):
         ...
 
     @abc.abstractmethod
-    def num_timesteps_as_dict(self) -> data_typing.SampleToNumTimestepsDict:
+    def num_timesteps_as_dict(self) -> data_typing.SampleToNumTimestepsDict:  # pragma: no cover
         """Get a dictionary mapping each sample index to its the number of timesteps.
 
         Returns:
@@ -262,7 +262,7 @@ class TimeSeriesSamplesBase(DataSamples):
         ...
 
     @abc.abstractmethod
-    def num_timesteps_equal(self) -> bool:
+    def num_timesteps_equal(self) -> bool:  # pragma: no cover
         """Returns `True` if all samples share the same number of timesteps, `False` otherwise.
 
         Returns:
@@ -271,7 +271,7 @@ class TimeSeriesSamplesBase(DataSamples):
         ...
 
     @abc.abstractmethod
-    def list_of_dataframes(self) -> List[pd.DataFrame]:
+    def list_of_dataframes(self) -> List[pd.DataFrame]:  # pragma: no cover
         """Returns a list of dataframes where each dataframe has the data for each sample.
 
         Returns:
