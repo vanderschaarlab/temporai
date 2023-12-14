@@ -17,6 +17,7 @@ License <license>
 Authors <authors>
 Changelog <changelog>
 Developer's Guide <dev_guide>
+Computational Performance <computational_performance>
 Module Reference <api/modules>
 ```
 

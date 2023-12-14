@@ -97,7 +97,7 @@ $ pip install temporai
 
 <!-- exclude_docs -->
 <!-- exclude_pypi -->
-(↕️ Expand to view the sections below.)
+(▶️ Expand to view the sections below.)
 <!-- exclude_docs_end -->
 
 
@@ -521,6 +521,12 @@ best_pipelines, best_scores = seeker.search()  # doctest: +SKIP
 ## 📘 Documentation
 
 See the full project documentation [here](https://temporai.readthedocs.io/en/latest/).
+
+#### Note on documentation versions:
+- If you have installed TemporAI from PyPI, you should refer to the *stable* documentation.
+- If you have installed TemporAI from source, you should refer to the *latest* documentation.
+
+See the [**Instal with `pip`**](https://github.com/vanderschaarlab/temporai#instal-with-pip) section for reference.
 <!-- exclude_docs_end -->
 
 
@@ -550,7 +556,7 @@ These include:
 
 <!-- exclude_docs -->
 <!-- exclude_pypi -->
-(↕️ Expand to view the sections below.)
+(▶️ Expand to view the sections below.)
 <!-- exclude_pypi_end -->
 <!-- exclude_docs_end -->
 
