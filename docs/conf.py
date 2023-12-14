@@ -441,6 +441,9 @@ zeta_suppress_records = [
     ["sphinx_immaterial", r".*Parameter name '\*\*params'.*"],
     # The annotations for `PipelineMeta` seem to have their own set of issues, ignore here:
     ["sphinx_immaterial", r".*Parameter name.*PipelineMeta.*"],
+    # Some warnings caused ultimately by pytorch docstrings:
+    r".*undefined label: 'extending-autograd'.*",
+    r".*undefined label: 'combining-forward-context'.*",
 ]
 
 # `sphinx-zeta-suppress` (more specific warnings suppression) configuration [end].

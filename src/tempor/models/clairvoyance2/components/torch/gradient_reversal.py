@@ -3,14 +3,8 @@ Adapted from:
 https://github.com/tadeephuy/GradientReversal
 
 Citation:
-@misc{ganin2015unsupervised,
-      title={Unsupervised Domain Adaptation by Backpropagation},
-      author={Yaroslav Ganin and Victor Lempitsky},
-      year={2015},
-      eprint={1409.7495},
-      archivePrefix={arXiv},
-      primaryClass={stat.ML}
-}
+Ganin, Yaroslav, and Victor Lempitsky. "Unsupervised domain adaptation by backpropagation." International
+conference on machine learning. PMLR, 2015.
 """
 # mypy: ignore-errors
 

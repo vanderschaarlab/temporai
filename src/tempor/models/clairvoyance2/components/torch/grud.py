@@ -3,16 +3,8 @@ Adapted from:
 https://github.com/zhiyongc/GRU-D/blob/master/GRUD.py
 
 Citation:
-@article{che2018recurrent,
-  title={Recurrent neural networks for multivariate time series with missing values},
-  author={Che, Zhengping and Purushotham, Sanjay and Cho, Kyunghyun and Sontag, David and Liu, Yan},
-  journal={Scientific reports},
-  volume={8},
-  number={1},
-  pages={6085},
-  year={2018},
-  publisher={Nature Publishing Group}
-}
+Ganin, Yaroslav, and Victor Lempitsky. "Unsupervised domain adaptation by backpropagation." International
+conference on machine learning. PMLR, 2015.
 """
 # mypy: ignore-errors
 
@@ -76,19 +68,12 @@ class GRUD(nn.Module):
         """
         Recurrent Neural Networks for Multivariate Times Series with Missing Values
         GRU-D: GRU exploit two representations of informative missingness patterns, i.e., masking and time interval.
-        Implemented based on the paper:
-        @article{che2018recurrent,
-          title={Recurrent neural networks for multivariate time series with missing values},
-          author={Che, Zhengping and Purushotham, Sanjay and Cho, Kyunghyun and Sontag, David and Liu, Yan},
-          journal={Scientific reports},
-          volume={8},
-          number={1},
-          pages={6085},
-          year={2018},
-          publisher={Nature Publishing Group}
-        }
 
-        GRU-D:
+        Implemented based on the paper:
+        Ganin, Yaroslav, and Victor Lempitsky. "Unsupervised domain adaptation by backpropagation." International
+        conference on machine learning. PMLR, 2015.
+
+        Note:
             input_size: variable dimension of each time
             hidden_size: dimension of hidden_state
             mask_size: dimension of masking vector
