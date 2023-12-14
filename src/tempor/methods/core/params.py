@@ -168,7 +168,7 @@ class IntegerParams(Params):
         return [self.name, self.low, self.high, self.step]
 
     def _sample_optuna_trial(self, trial: Trial) -> Any:
-        return trial.suggest_int(self.name, self.low, self.high, self.step)
+        return trial.suggest_int(self.name, self.low, self.high, step=self.step)
 
     def _sample_default(self) -> Any:
         return random.SystemRandom().choice(self.choices)
