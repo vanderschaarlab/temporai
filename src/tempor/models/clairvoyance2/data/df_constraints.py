@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 from dataclasses import dataclass
 from typing import Iterable, Optional, Sequence, Tuple
 
@@ -76,13 +78,13 @@ class ConstraintsChecker:
         index_or_columns: pd.Index, constraints: IndexConstraints, index_or_columns_str: str
     ) -> None:
         if constraints.types is not None and len(constraints.types) > 0:
-            if not isinstance(index_or_columns, tuple(constraints.types)):
+            if not isinstance(index_or_columns, tuple(constraints.types)):  # type: ignore
                 raise TypeError(
                     f"DataFrame {index_or_columns_str} must be one of types: {constraints.types}. "
                     f"Was found to be of type: {type(index_or_columns)}."
                 )
         if constraints.dtypes is not None and len(constraints.dtypes) > 0:
-            if python_type_from_np_pd_dtype(index_or_columns.dtype) not in constraints.dtypes:
+            if python_type_from_np_pd_dtype(index_or_columns.dtype) not in constraints.dtypes:  # type: ignore
                 raise TypeError(
                     f"DataFrame {index_or_columns_str} dtype must be one of: {constraints.dtypes}. "
                     f"Was found to be of dtype: {index_or_columns.dtype}"

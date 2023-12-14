@@ -3,9 +3,9 @@
 from typing import List, Type
 
 import pandas as pd
-from clairvoyance2.data import Dataset as Clairvoyance2Dataset
 
 from tempor.data import dataset, samples
+from tempor.models.clairvoyance2.data import Dataset as Clairvoyance2Dataset
 
 from . import utils
 

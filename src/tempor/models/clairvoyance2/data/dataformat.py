@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 import warnings
 from typing import Any, Iterator, List, Optional, Sequence, Tuple, Union
 
@@ -35,16 +37,13 @@ from .update_from import UpdateFromArrayExtension, UpdateFromSequenceOfArraysExt
 # pylint: disable=useless-super-delegation
 # ^ In some methods, "useless" super delegation used to add type hints.
 
-# pylint: disable=abstract-method
-# ^ Pylint detects some expected NotImplementedError methods as abstract.
-
 
 with warnings.catch_warnings():
     # This is to suppress (expected) FutureWarnings for index types like pd.Int64Index.
     warnings.filterwarnings("ignore", message=r".*Use pandas.Index.*", category=FutureWarning)
 
     _DF_CONSTRAINTS_FEATURES = dfc.IndexConstraints(
-        types=T_FeatureIndexClass_AsTuple,
+        types=T_FeatureIndexClass_AsTuple,  # type: ignore
         dtypes=dfc.cast_to_index_constraints_dtypes(T_FeatureIndexDtype_AsTuple),
         dtype_object_constrain_types=T_ElementsObjectType_AsTuple,
         enforce_monotonic_increasing=False,
@@ -52,7 +51,7 @@ with warnings.catch_warnings():
         enforce_not_multi_index=True,
     )
     _DF_CONSTRAINTS_SAMPLES = dfc.IndexConstraints(
-        types=T_SampleIndexClass_AsTuple,
+        types=T_SampleIndexClass_AsTuple,  # type: ignore
         dtypes=dfc.cast_to_index_constraints_dtypes(T_SamplesIndexDtype_AsTuple),
         dtype_object_constrain_types=None,
         enforce_monotonic_increasing=True,
@@ -60,7 +59,7 @@ with warnings.catch_warnings():
         enforce_not_multi_index=True,
     )
     _DF_CONSTRAINTS_TS_INDEX = dfc.IndexConstraints(
-        types=T_TSIndexClass_AsTuple,
+        types=T_TSIndexClass_AsTuple,  # type: ignore
         dtypes=dfc.cast_to_index_constraints_dtypes(T_TSIndexDtype_AsTuple),
         dtype_object_constrain_types=None,
         enforce_monotonic_increasing=True,
@@ -249,7 +248,7 @@ class TimeSeriesSamples(
     @staticmethod
     def _make_nested_df(data: Sequence[TimeSeries], index: T_SampleIndex_Compatible) -> pd.DataFrame:
         assert len(data) > 0
-        nested_df = pd.DataFrame(index=index, columns=data[0].df.columns, dtype=object)
+        nested_df = pd.DataFrame(index=index, columns=data[0].df.columns, dtype=object)  # type: ignore
         for c in nested_df.columns:
             for idx, ts in zip(index, data):
                 nested_df.at[idx, c] = ts.df[c]
@@ -289,11 +288,13 @@ class TimeSeriesSamples(
 
     @property
     def df_repr_html(self):
-        repr_ = self._df_repr_get_multi_index_df(at_internal_idx=0)._repr_html_()  # pylint: disable=protected-access
+        # pylint: disable-next=protected-access
+        repr_ = self._df_repr_get_multi_index_df(at_internal_idx=0)._repr_html_()  # type: ignore
+        # pylint: disable-next=protected-access
         if self._internal[0].df.head().shape[0] < self._internal[0].df.shape[0] or len(self._internal) > 1:
             repr_ += "<p>...</p>"
         if len(self._internal) > 1:
-            repr_ += self._df_repr_get_multi_index_df(  # pylint: disable=protected-access
+            repr_ += self._df_repr_get_multi_index_df(  # pylint: disable=protected-access  # type: ignore
                 at_internal_idx=-1
             )._repr_html_()
         return repr_
@@ -309,11 +310,11 @@ class TimeSeriesSamples(
         if not inplace:
             ts_list = []
             for ts in self:
-                ts_list.append(ts.apply_time_indexing(key, inplace=False))  # pylint: disable=protected-access
+                ts_list.append(ts.apply_time_indexing(key, inplace=False))
             return self.new_like(like=self, data=ts_list)
         else:
             for ts in self:
-                ts_list.append(ts.apply_time_indexing(key, inplace=True))  # pylint: disable=protected-access
+                ts_list.append(ts.apply_time_indexing(key, inplace=True))  # type: ignore
             return None
 
     def _get_single_ts(self, key: T_SamplesIndexDtype):
@@ -323,18 +324,18 @@ class TimeSeriesSamples(
         return len(self._internal)
 
     def _getitem_index(self, index_key) -> Union["TimeSeriesSamples", TimeSeries]:
-        selection: pd.DataFrame = self._data.loc[index_key, :]
+        selection: pd.DataFrame = self._data.loc[index_key, :]  # type: ignore
         if isinstance(selection, pd.Series):
             assert not isinstance(index_key, slice)
-            return self._get_single_ts(index_key)
+            return self._get_single_ts(index_key)  # type: ignore
         new_keys = [i for i in selection.index]
-        data: Tuple[TimeSeries, ...] = tuple([self._get_single_ts(idx) for idx in new_keys])
+        data: Tuple[TimeSeries, ...] = tuple([self._get_single_ts(idx) for idx in new_keys])  # type: ignore
         return self.new_like(like=self, data=data, sample_indices=new_keys)
 
     def _getitem_column(self, column_key) -> "TimeSeriesSamples":
-        new_data = [ts.df.loc[:, column_key] for ts in self]
+        new_data = [ts.df.loc[:, column_key] for ts in self]  # type: ignore
         if isinstance(new_data[0], pd.Series):
-            new_data = [pd.DataFrame(data=ts.df.loc[:, column_key], columns=[column_key]) for ts in self]
+            new_data = [pd.DataFrame(data=ts.df.loc[:, column_key], columns=[column_key]) for ts in self]  # type: ignore
         return self.new_like(like=self, data=new_data)
 
     def __getitem__(self, key) -> Union["TimeSeriesSamples", TimeSeries]:
@@ -580,15 +581,17 @@ class EventSamples(
     # --- Sequence Interface ---
 
     def _getitem_index_helper(self, index_key) -> pd.DataFrame:
-        new_data: pd.DataFrame = self._data.loc[index_key, :, :]  # loc[] call modified.
+        new_data: pd.DataFrame = self._data.loc[index_key, :, :]  # loc[] call modified.  # type: ignore
         if isinstance(new_data, pd.Series) or not isinstance(new_data.index, pd.MultiIndex):
-            new_data = self._data.loc[[index_key], :, :]  # loc[] call modified.
+            new_data = self._data.loc[[index_key], :, :]  # loc[] call modified.  # type: ignore
         return new_data
 
     def _getitem_column_helper(self, column_key) -> pd.DataFrame:
-        new_data: pd.DataFrame = self._data.loc[(slice(None), slice(None)), column_key]  # loc[] call modified.
+        new_data: pd.DataFrame = self._data.loc[  # type: ignore
+            (slice(None), slice(None)), column_key
+        ]  # loc[] call modified.
         if isinstance(new_data, pd.Series):
-            new_data = self._data.loc[(slice(None), slice(None)), [column_key]]  # loc[] call modified.
+            new_data = self._data.loc[(slice(None), slice(None)), [column_key]]  # loc[] call modified.  # type: ignore
         return new_data
 
     def _getitem_index(self, index_key):

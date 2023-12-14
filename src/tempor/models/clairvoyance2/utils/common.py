@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 from typing import Any, Iterable, Mapping, Sequence, Tuple, Union
 
 import numpy as np

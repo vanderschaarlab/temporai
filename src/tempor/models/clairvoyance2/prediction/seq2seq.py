@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 from typing import TYPE_CHECKING, Any, Mapping, NamedTuple, Optional, Sequence, Tuple
 
 import torch
@@ -170,11 +172,11 @@ class Seq2SeqCRNStylePredictorBase(
     def _init_optimizers(self):
         # Initialize optimizers.
         self.encoder_optim = OPTIM_MAP[self.params.optimizer_str](
-            params=self.encoder.parameters(),
+            params=self.encoder.parameters(),  # type: ignore
             **self.params.optimizer_kwargs,
         )
         self.decoder_optim = OPTIM_MAP[self.params.optimizer_str](
-            params=[*self.adapter.parameters(), *self.decoder.parameters()],
+            params=[*self.adapter.parameters(), *self.decoder.parameters()],  # type: ignore
             **self.params.optimizer_kwargs,
         )
 
@@ -297,7 +299,7 @@ class Seq2SeqCRNStylePredictorBase(
         ts_targ = time_index_utils.time_series_samples.take_one_before_start(
             data.temporal_targets, horizon, inplace=False
         )
-        t_targ_0 = ts_targ.to_torch_tensor(
+        t_targ_0 = ts_targ.to_torch_tensor(  # type: ignore
             padding_indicator=self.params.padding_indicator,
             max_len=1,
             dtype=self.dtype,
@@ -467,7 +469,7 @@ class Seq2SeqCRNStylePredictorBase(
         h_adapted = self._shape_h_for_adapter(
             encoded_representations=(h, c), n_samples=n_samples, h_dim_info=self.encoder_output_and_h_dim
         )
-        h_adapted = self.adapter(h_adapted)
+        h_adapted = self.adapter(h_adapted)  # type: ignore
         h_adapted = self._shape_h_back_after_adapter(
             h_after_adapter=h_adapted,
             n_samples=n_samples,
@@ -524,7 +526,7 @@ class Seq2SeqCRNStylePredictorBase(
             epoch_loss /= n_samples_cumul
             print(f"Epoch: {epoch_idx}, Loss: {epoch_loss}")
 
-    def _fit(self, data: Dataset, horizon: Horizon = None, **kwargs) -> "Seq2SeqCRNStylePredictorBase":
+    def _fit(self, data: Dataset, horizon: Horizon = None, **kwargs) -> "Seq2SeqCRNStylePredictorBase":  # type: ignore
         self.set_attributes_from_kwargs(**kwargs)
 
         # Ensure there are at least 2 timesteps in the posterior part of TimeSeries after the split

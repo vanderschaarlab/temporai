@@ -3,13 +3,12 @@
 import dataclasses
 from typing import Any, List
 
-from clairvoyance2.treatment_effects.synctwin import SyncTwinRegressor
-
 from tempor.core import plugins
 from tempor.data import dataset, samples
 from tempor.data.clv2conv import tempor_dataset_to_clairvoyance2_dataset
 from tempor.methods.core.params import FloatParams, IntegerParams, Params
 from tempor.methods.treatments.one_off._base import BaseOneOffTreatmentEffects
+from tempor.models.clairvoyance2.treatment_effects.synctwin import SyncTwinRegressor
 
 
 @dataclasses.dataclass
@@ -62,7 +61,7 @@ class SyncTwinTreatmentsRegressor(BaseOneOffTreatmentEffects):
         """
         super().__init__(**params)
         self.model = SyncTwinRegressor(
-            params=self.params,  # pyright: ignore
+            params=self.params,  # type: ignore [arg-type]  # pyright: ignore
         )
 
     def _fit(

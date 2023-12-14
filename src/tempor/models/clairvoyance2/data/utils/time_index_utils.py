@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 from typing import Callable, List, Sequence, Union
 
 from ...interface.horizon import TimeIndexHorizon, TimeIndexSequence

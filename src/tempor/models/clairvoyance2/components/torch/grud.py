@@ -14,6 +14,7 @@ Citation:
   publisher={Nature Publishing Group}
 }
 """
+# mypy: ignore-errors
 
 import math
 
@@ -50,7 +51,11 @@ class FilterLinear(nn.Module):
             self.bias.data.uniform_(-stdv, stdv)
 
     def forward(self, x):
-        return F.linear(x, self.filter_square_matrix.mul(self.weight), self.bias)
+        return F.linear(  # pylint: disable=not-callable
+            x,
+            self.filter_square_matrix.mul(self.weight),  # type: ignore
+            self.bias,
+        )
 
     def __repr__(self):
         return (
@@ -163,7 +168,7 @@ class GRUD(nn.Module):
                 outputs = torch.cat((outputs, Hidden_State.unsqueeze(1)), 1)
 
         if self.output_last:
-            return outputs[:, -1, :]
+            return outputs[:, -1, :]  # type: ignore
         else:
             return outputs
 

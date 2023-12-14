@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 import contextlib
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -210,14 +212,14 @@ class RecurrentFFNet(AutoregressiveMixin, nn.Module):
             assert h is not None
 
         if _DEBUG is True:  # pragma: no cover
-            print("rnn_out.shape", rnn_out.shape)
-            print("h (or h concat c) shape", rnn_out.shape)
+            print("rnn_out.shape", rnn_out.shape)  # type: ignore
+            print("h (or h concat c) shape", rnn_out.shape)  # type: ignore
 
         # TODO: Possibly an option to concatenate *non* last layer's h_n[, c_n], but may be needlessly complex.
         # h_flattened = h.reshape(shape=[current_batch_size, -1])
         # print("h_flattened.shape", h_flattened.shape)
 
-        rnn_out_postprocessed = self.rnn_out_postprocess(rnn_out, **kwargs_rnn_out_callback)
+        rnn_out_postprocessed = self.rnn_out_postprocess(rnn_out, **kwargs_rnn_out_callback)  # type: ignore
 
         out = apply_to_each_timestep(
             self.ffnn,
@@ -227,7 +229,7 @@ class RecurrentFFNet(AutoregressiveMixin, nn.Module):
             padding_indicator=padding_indicator,
             expected_module_input_size=self.ff_in_size,
         )
-        return out, rnn_out, h
+        return out, rnn_out, h  # type: ignore
 
     def _forward_for_autoregress(self, x: torch.Tensor, timestep_idx: int, **kwargs) -> torch.Tensor:
         out, *_ = self.forward(x, **kwargs)
@@ -354,7 +356,7 @@ def apply_to_each_timestep(
         # Overwrite with padding value:
         # TODO: better way of masking?
         if padding_indicator is not None:
-            assert isinstance(is_padding_selector, torch.Tensor)
+            assert isinstance(is_padding_selector, torch.Tensor)  # type: ignore
             module_out_template[~is_padding_selector] = module_out_timestep
         else:
             module_out_template[:] = module_out_timestep

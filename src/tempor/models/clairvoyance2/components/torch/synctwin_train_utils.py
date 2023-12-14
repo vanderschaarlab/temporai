@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 import copy
 import os
 
@@ -135,7 +137,7 @@ def pre_train_reconstruction_prognostic_loss(
 
                         loss = loss_X + loss_Y + loss
 
-                print("Iter {:04d} | Total Loss {:.6f}".format(itr, loss.item()))
+                print("Iter {:04d} | Total Loss {:.6f}".format(itr, loss.item()))  # type: ignore
                 if loss < best_loss:
                     best_loss = loss
 

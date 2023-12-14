@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 from typing import TYPE_CHECKING, Any, List, Mapping, NamedTuple, Optional, Sequence, Tuple, cast
 
 import torch

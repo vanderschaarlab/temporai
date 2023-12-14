@@ -94,7 +94,9 @@ repos:
       "torch",
       "tsai",
     ]
-    exclude: "^src/tempor/models/clairvoyance2/.*"
+    # NOTE:
+    # src/tempor/models/clairvoyance2/ is excluded via file `# mypy: ignore-errors` comments as otherwise mypy
+    # does not appear to ignore this properly.
 
 - repo: https://github.com/PyCQA/bandit
   rev: 1.7.5

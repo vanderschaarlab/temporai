@@ -7,14 +7,14 @@ from pathlib import Path
 from typing import Any, Tuple, cast
 
 import requests
-from clairvoyance2.datasets.uci import uci_diabetes
-from clairvoyance2.preprocessing.convenience import TemporalTargetsExtractor
 
 from tempor.core import plugins
 from tempor.data import dataset
 from tempor.data.clv2conv import clairvoyance2_dataset_to_tempor_dataset
 from tempor.datasources import datasource
 from tempor.log import logger
+from tempor.models.clairvoyance2.datasets.uci import uci_diabetes
+from tempor.models.clairvoyance2.preprocessing.convenience import TemporalTargetsExtractor
 
 from ...datasource import monkeypatch_ssl_error_workaround
 

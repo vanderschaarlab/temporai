@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 from .horizon import Horizon, HorizonOpts, NStepAheadHorizon, TimeIndexHorizon
 from .model import (
     BaseModel,

@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 from typing import Callable, NamedTuple, Sequence, TypeVar, Union
 
 import numpy as np
@@ -77,7 +79,7 @@ def eq_indicator(a: TTensorLike, indicator: float) -> TTensorLike:
     if np.isnan(indicator):
         return isnan(a)
     else:
-        return a == indicator
+        return a == indicator  # type: ignore
 
 
 def concatenate(tensors: Sequence[TTensorLike], **kwargs) -> TTensorLike:

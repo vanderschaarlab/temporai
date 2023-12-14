@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 from .constants import DEFAULT_PADDING_INDICATOR
 from .dataformat import EventSamples, StaticSamples, TimeSeries, TimeSeriesSamples
 from .dataset import Dataset

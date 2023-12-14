@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 from typing import Dict, List, Sequence, Tuple, TypeVar
 
 import pandas as pd

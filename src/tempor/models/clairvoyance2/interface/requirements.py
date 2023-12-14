@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 from dataclasses import dataclass
 from enum import Enum, auto
 from typing import TYPE_CHECKING, NoReturn, Optional, Sequence, Union
@@ -335,7 +337,7 @@ class RequirementsChecker:
                     ts = container[0]
                     if TYPE_CHECKING:
                         assert isinstance(ts, TimeSeries)
-                    dtype = python_type_from_np_pd_dtype(ts.time_index.dtype)
+                    dtype = python_type_from_np_pd_dtype(ts.time_index.dtype)  # type: ignore
                     if dtype not in acceptable_types:
                         raise_requirements_mismatch_error(
                             "Dataset requirement: requires numeric timeseries index",

@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 import math
 
 import torch
@@ -30,8 +32,8 @@ class SyncTwinModule(nn.Module):
 
         self.n_unit = n_unit
         self.n_treated = n_treated
-        self.encoder = encoder.to(device)
-        self.decoder = decoder.to(device)
+        self.encoder = encoder.to(device)  # type: ignore
+        self.decoder = decoder.to(device)  # type: ignore
         if decoder_Y is not None:
             self.decoder_Y = decoder_Y.to(device)
         self.device = device

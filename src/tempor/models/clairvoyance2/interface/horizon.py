@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 from abc import ABC
 from dataclasses import dataclass
 from enum import Enum, auto
@@ -60,7 +62,7 @@ class TimeIndexHorizon(Horizon):
                 raise ValueError(
                     f"Time index horizon `time_index` must be one of the following types: {T_TSIndexClass_AsTuple}"
                 )
-            if not issubclass(python_type_from_np_pd_dtype(ti.dtype), T_TSIndexDtype_AsTuple):
+            if not issubclass(python_type_from_np_pd_dtype(ti.dtype), T_TSIndexDtype_AsTuple):  # type: ignore
                 raise ValueError(f"Time index horizon `time_index` dtype must be one of: {T_TSIndexDtype_AsTuple}")
         self.time_index_sequence = time_index_sequence
 
@@ -76,7 +78,7 @@ class TimeIndexHorizon(Horizon):
                 feature=f"{TimeIndexHorizon.__name__} from Dataset initialization when `time_delta` "
                 f"is not one of: {T_NumericDtype_AsTuple}, was {type(time_delta)}"
             )
-        targets_index_dtype = python_type_from_np_pd_dtype(targets.sample_index.dtype)
+        targets_index_dtype = python_type_from_np_pd_dtype(targets.sample_index.dtype)  # type: ignore
         if not issubclass(targets_index_dtype, T_NumericDtype_AsTuple):
             raise_not_implemented(
                 feature=f"{TimeIndexHorizon.__name__} from Dataset initialization when temporal targets index "

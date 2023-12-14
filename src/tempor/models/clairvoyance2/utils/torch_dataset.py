@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 from collections import namedtuple
 from typing import Dict, List, NoReturn, Optional, Sequence, Tuple, Union
 

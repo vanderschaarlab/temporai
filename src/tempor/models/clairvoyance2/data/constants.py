@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 import warnings
 from typing import Sequence, Union
 
@@ -34,76 +36,24 @@ with warnings.catch_warnings():
     # This is to suppress (expected) FutureWarnings for index types like pd.Int64Index.
     warnings.filterwarnings("ignore", message=r".*Use pandas.Index.*", category=FutureWarning)
 
-    if "Int64Index" in dir(pd):
-        T_TSIndexClass = Union[
-            pd.RangeIndex,
-            pd.DatetimeIndex,
-            pd.Int64Index,  # pylint: disable=no-member
-            pd.UInt64Index,  # pylint: disable=no-member
-            pd.Float64Index,  # pylint: disable=no-member
-            pd.Index,
-        ]
-    else:
-        T_TSIndexClass = Union[pd.RangeIndex, pd.DatetimeIndex, pd.Index]  # type: ignore
-    if "Int64Index" in dir(pd):
-        T_TSIndexClass_AsTuple = (
-            pd.RangeIndex,
-            pd.DatetimeIndex,
-            pd.Int64Index,  # pylint: disable=no-member
-            pd.UInt64Index,  # pylint: disable=no-member
-            pd.Float64Index,  # pylint: disable=no-member
-            pd.Index,
-        )
-    else:
-        T_TSIndexClass_AsTuple = (
-            pd.RangeIndex,
-            pd.DatetimeIndex,
-            pd.Index,
-        )
+    T_TSIndexClass = Union[pd.RangeIndex, pd.DatetimeIndex, pd.Index]  # type: ignore
+    T_TSIndexClass_AsTuple = (
+        pd.RangeIndex,
+        pd.DatetimeIndex,
+        pd.Index,
+    )
 
-    if "Int64Index" in dir(pd):
-        T_FeatureIndexClass = Union[
-            pd.Int64Index,  # pylint: disable=no-member
-            pd.UInt64Index,  # pylint: disable=no-member
-            pd.Index,
-        ]
-    else:
-        T_FeatureIndexClass = Union[pd.Index,]  # type: ignore
-    if "Int64Index" in dir(pd):
-        T_FeatureIndexClass_AsTuple = (
-            (
-                pd.Int64Index,  # pylint: disable=no-member
-                pd.UInt64Index,  # pylint: disable=no-member
-                pd.Index,
-            ),
-        )
-    else:
-        T_FeatureIndexClass_AsTuple = ((pd.Index,),)
+    T_FeatureIndexClass = Union[pd.Index,]  # type: ignore
+    T_FeatureIndexClass_AsTuple = ((pd.Index,),)
 
-    if "Int64Index" in dir(pd):
-        T_SampleIndexClass = Union[
-            pd.RangeIndex,
-            pd.Int64Index,  # pylint: disable=no-member
-            pd.UInt64Index,  # pylint: disable=no-member
-            pd.Index,
-        ]
-    else:
-        T_SampleIndexClass = Union[  # type: ignore
-            pd.RangeIndex,
-            pd.Index,
-        ]
-    if "Int64Index" in dir(pd):
-        T_SampleIndexClass_AsTuple = (
-            pd.RangeIndex,
-            pd.Int64Index,  # pylint: disable=no-member
-            pd.UInt64Index,  # pylint: disable=no-member
-            pd.Index,
-        )
-    else:
-        T_SampleIndexClass_AsTuple = (
-            pd.RangeIndex,
-            pd.Index,
-        )
+    T_SampleIndexClass = Union[  # type: ignore
+        pd.RangeIndex,
+        pd.Index,
+    ]
+    T_SampleIndexClass_AsTuple = (
+        pd.RangeIndex,
+        pd.Index,
+    )
 
 T_SampleIndex_Compatible = Union[Sequence[T_SamplesIndexDtype], T_SampleIndexClass]
 

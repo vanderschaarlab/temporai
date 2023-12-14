@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 from typing import Any, Sequence
 
 import numpy as np
@@ -18,7 +20,7 @@ def get_n_step_ahead_index(time_index: T_TSIndexClass, n_step: int) -> T_TSIndex
     if diff is None:
         raise RuntimeError("Time index must have at least two elements to compute n step ahead index")
     last_index = time_index[-1]
-    new_indices = [last_index + i * diff for i in range(1, n_step + 1)]
+    new_indices = [last_index + i * diff for i in range(1, n_step + 1)]  # type: ignore
     time_index = time_index.append(pd.Index(new_indices))
     return time_index[n_step:]
 
@@ -42,7 +44,7 @@ class UpdateFromArrayExtension:
                 f"but was {len(list(time_index))} and {update_array.shape[0]} respectively"
             )
 
-        df_new = pd.DataFrame(data=update_array, index=time_index, columns=self.df.columns)
+        df_new = pd.DataFrame(data=update_array, index=time_index, columns=self.df.columns)  # type: ignore
 
         selector = df_eq_indicator(df_new, padding_indicator)
         df_new[selector] = np.nan

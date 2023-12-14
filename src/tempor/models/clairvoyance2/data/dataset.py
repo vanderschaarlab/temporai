@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 import copy
 from collections.abc import Sequence as SequenceABC
 from typing import Callable, Dict, Iterator, Optional, Sequence, Tuple, Union
@@ -179,7 +181,7 @@ class Dataset(Copyable, SupportsNewLike, SequenceABC):
                 repr_helper = self._time_series_samples_repr
             else:
                 repr_helper = self._event_samples_repr
-            attributes_repr += f"{sep}{container_name}={repr_helper(container)},"
+            attributes_repr += f"{sep}{container_name}={repr_helper(container)},"  # type: ignore
 
         return f"{self.__class__.__name__}({attributes_repr}\n)"
 
@@ -197,7 +199,7 @@ class Dataset(Copyable, SupportsNewLike, SequenceABC):
         return self.temporal_covariates.n_samples
 
     @property
-    def sample_index(self) -> T_SampleIndexClass:
+    def sample_index(self) -> T_SampleIndexClass:  # type: ignore
         return self.temporal_covariates.sample_index
 
     @property

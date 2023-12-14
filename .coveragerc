@@ -2,10 +2,11 @@
 [run]
 branch = True
 source = tempor
-# omit = bad_file.py
 disable_warnings =
     # pytest-xdist occasionally raises rogue module-not-measured warnings, ignore:
     module-not-measured
+# omit =
+#     src/tempor/models/clairvoyance2/*
 
 [paths]
 source =
@@ -29,5 +30,6 @@ exclude_lines =
     # Don't complain if non-runnable code isn't run:
     if 0:
     if __name__ == .__main__.:
+
 
     @overload

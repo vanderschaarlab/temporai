@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 import copy
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
@@ -30,20 +32,20 @@ class CustomGetItemMixin(Generic[TIndexItem, TColumnItem]):
 
     # A helper for the straight-forward (_data is simple DF) case.
     def _getitem_index_helper(self, index_key: TIndexIndexers) -> pd.DataFrame:
-        new_data: pd.DataFrame = self._data.loc[index_key, :]
+        new_data: pd.DataFrame = self._data.loc[index_key, :]  # type: ignore
         if isinstance(new_data, pd.Series):
             # Handle the case of where single item indexer leads to a pd.Series being returned, by indexing such that
             # a pd.DataFrame is returned.
-            new_data = self._data.loc[[index_key], :]
+            new_data = self._data.loc[[index_key], :]  # type: ignore
         return new_data
 
     # A helper for the straight-forward (_data is simple DF) case.
     def _getitem_column_helper(self, column_key: TColumnIndexers) -> pd.DataFrame:
-        new_data: pd.DataFrame = self._data.loc[:, column_key]
+        new_data: pd.DataFrame = self._data.loc[:, column_key]  # type: ignore
         if isinstance(new_data, pd.Series):
             # Handle the case of where single item indexer leads to a pd.Series being returned, by indexing such that
             # a pd.DataFrame is returned.
-            new_data = self._data.loc[:, [column_key]]
+            new_data = self._data.loc[:, [column_key]]  # type: ignore
         return new_data
 
     def _getitem_index_then_column_key(self, index_key, column_key):
@@ -105,7 +107,7 @@ class BaseContainer(CustomGetItemMixin[TIndexItem, TColumnItem], Sequence):
 
     def _repr_html_(self) -> Optional[str]:
         if self.df_repr_html is None:
-            df_repr_html = self._data._repr_html_()  # pylint: disable=protected-access
+            df_repr_html = self._data._repr_html_()  # type: ignore
         else:
             df_repr_html = self.df_repr_html
         repr_ = (

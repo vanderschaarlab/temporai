@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 from typing import NoReturn, Tuple
 
 from ..data import DEFAULT_PADDING_INDICATOR
@@ -106,5 +108,5 @@ def compute_deltas(tensor: TTensorLike, padding_indicator: float = DEFAULT_PADDI
         _raise_wrong_dim("tensor", tensor.ndim)
     out = tl.zeros_like(tensor)
     out[:, 1:, :] = tl.diff(tensor, axis=1)
-    out[tl.eq_indicator(tensor, padding_indicator)] = padding_indicator
+    out[tl.eq_indicator(tensor, padding_indicator)] = padding_indicator  # type: ignore
     return out

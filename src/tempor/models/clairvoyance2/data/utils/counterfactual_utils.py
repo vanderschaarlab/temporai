@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 from typing import List, Sequence, Union
 
 import numpy as np

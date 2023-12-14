@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 import warnings
 from typing import Sequence
 
@@ -18,7 +20,7 @@ PD_SERIES_OBJECT_DTYPE_ALLOWED_TYPES = T_ElementsObjectType_AsTuple  # May chang
 
 def _infer_dtype(series: T_FeatureContainer) -> type:
     if series.dtype != object:
-        return python_type_from_np_pd_dtype(series.dtype)
+        return python_type_from_np_pd_dtype(series.dtype)  # type: ignore
     else:
         if all_items_are_of_types(series, str):
             return str

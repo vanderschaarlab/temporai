@@ -3,7 +3,7 @@
 import dataclasses
 from typing import Any, Dict, List, Optional
 
-from clairvoyance2.data import DEFAULT_PADDING_INDICATOR
+from tempor.models.clairvoyance2.data import DEFAULT_PADDING_INDICATOR
 
 
 @dataclasses.dataclass
