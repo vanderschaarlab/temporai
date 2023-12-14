@@ -5,8 +5,8 @@ source = tempor
 disable_warnings =
     # pytest-xdist occasionally raises rogue module-not-measured warnings, ignore:
     module-not-measured
-# omit =
-#     src/tempor/models/clairvoyance2/*
+omit =
+    src/tempor/models/clairvoyance2/*
 
 [paths]
 source =
@@ -31,5 +31,5 @@ exclude_lines =
     if 0:
     if __name__ == .__main__.:
 
-
+    # Custom additions:
     @overload
