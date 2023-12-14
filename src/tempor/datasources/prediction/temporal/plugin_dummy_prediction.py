@@ -2,12 +2,11 @@
 
 from typing import Any, Optional, cast
 
-from clairvoyance2.datasets.dummy import dummy_dataset
-
 from tempor.core import plugins
 from tempor.data import dataset
 from tempor.data.clv2conv import clairvoyance2_dataset_to_tempor_dataset
 from tempor.datasources import datasource
+from tempor.models.clairvoyance2.datasets.dummy import dummy_dataset
 
 
 @plugins.register_plugin(name="dummy_prediction", category="prediction.temporal", plugin_type="datasource")

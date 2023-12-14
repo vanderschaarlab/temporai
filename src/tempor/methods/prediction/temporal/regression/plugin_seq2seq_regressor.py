@@ -2,16 +2,17 @@
 
 from typing import Any, List, cast
 
-import clairvoyance2.data.dataformat as cl_dataformat
-from clairvoyance2.prediction.seq2seq import Seq2SeqRegressor, TimeIndexHorizon
 from typing_extensions import Self
 
+import tempor.models.clairvoyance2.data.dataformat as cl_dataformat
 from tempor.core import plugins
 from tempor.data import dataset, samples
 from tempor.data.clv2conv import _from_clv2_time_series, tempor_dataset_to_clairvoyance2_dataset
 from tempor.methods.constants import Seq2seqParams
 from tempor.methods.core.params import CategoricalParams, FloatParams, IntegerParams, Params
 from tempor.methods.prediction.temporal.regression import BaseTemporalRegressor
+from tempor.models.clairvoyance2.interface.horizon import TimeIndexHorizon
+from tempor.models.clairvoyance2.prediction.seq2seq import Seq2SeqRegressor
 
 
 @plugins.register_plugin(name="seq2seq_regressor", category="prediction.temporal.regression")
@@ -56,7 +57,7 @@ class Seq2seqRegressor(BaseTemporalRegressor):
         """
         super().__init__(**params)
         self.model = Seq2SeqRegressor(
-            params=self.params,  # pyright: ignore
+            params=self.params,  # type: ignore [arg-type]  # pyright: ignore
         )
 
     def _fit(

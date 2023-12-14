@@ -2,17 +2,18 @@
 
 from typing import Any, List, Optional, cast
 
-import clairvoyance2.data.dataformat as cl_dataformat
 import pandas as pd
-from clairvoyance2.treatment_effects.crn import CRNClassifier, TimeIndexHorizon
 from typing_extensions import Self
 
+import tempor.models.clairvoyance2.data.dataformat as cl_dataformat
 from tempor.core import plugins
 from tempor.data import dataset, samples
 from tempor.data.clv2conv import _from_clv2_time_series, tempor_dataset_to_clairvoyance2_dataset
 from tempor.methods.constants import Seq2seqParams
 from tempor.methods.core.params import CategoricalParams, FloatParams, IntegerParams, Params
 from tempor.methods.treatments.temporal._base import BaseTemporalTreatmentEffects
+from tempor.models.clairvoyance2.interface.horizon import TimeIndexHorizon
+from tempor.models.clairvoyance2.treatment_effects.crn import CRNClassifier
 
 
 @plugins.register_plugin(name="crn_classifier", category="treatments.temporal.classification")
@@ -57,7 +58,7 @@ class CRNTreatmentsClassifier(BaseTemporalTreatmentEffects):
         cl_dataset = tempor_dataset_to_clairvoyance2_dataset(data)
 
         self.model = CRNClassifier(
-            params=self.params,  # pyright: ignore
+            params=self.params,  # type: ignore [arg-type]  # pyright: ignore
         )
 
         self.model.fit(cl_dataset, **kwargs)

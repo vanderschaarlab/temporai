@@ -92,7 +92,8 @@ class StaticSamplesDask(samples.StaticSamplesBase):
         sample_index: Optional[data_typing.SampleIndex] = None,
         feature_index: Optional[data_typing.FeatureIndex] = None,
         **kwargs: Any,
-    ) -> "StaticSamplesDask":  # pyright: ignore  # noqa: D102
+    ) -> "StaticSamplesDask":  # pyright: ignore
+        """Not implemented yet."""
         raise NotImplementedError("`StaticSamplesDask` does not support `numpy.ndarray` input yet.")
 
     def numpy(self, **kwargs: Any) -> np.ndarray:
@@ -243,7 +244,8 @@ class TimeSeriesSamplesDask(samples.TimeSeriesSamplesBase):
     def from_numpy(
         array: np.ndarray,
         **kwargs: Any,
-    ) -> "TimeSeriesSamplesDask":  # pyright: ignore  # noqa: D102
+    ) -> "TimeSeriesSamplesDask":  # pyright: ignore
+        """Not implemented yet."""
         raise NotImplementedError("`TimeSeriesSamples` does not support `numpy.ndarray` input yet.")
 
     def numpy(self, *, padding_indicator: Any = DATA_SETTINGS.default_padding_indicator, **kwargs: Any) -> np.ndarray:
@@ -455,7 +457,8 @@ class EventSamplesDask(samples.EventSamplesBase):
     def from_numpy(
         array: np.ndarray,
         **kwargs: Any,
-    ) -> "EventSamplesDask":  # pyright: ignore  # noqa: D102
+    ) -> "EventSamplesDask":  # pyright: ignore
+        """Not implemented yet."""
         raise NotImplementedError("`EventSamplesDask` does not support `numpy.ndarray` input yet.")
 
     def numpy(self, **kwargs: Any) -> np.ndarray:

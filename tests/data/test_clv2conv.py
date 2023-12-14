@@ -4,13 +4,13 @@ from unittest.mock import Mock
 import numpy as np
 import pandas as pd
 import pytest
-from clairvoyance2.data import Dataset as Clairvoyance2Dataset
-from clairvoyance2.data import dataformat as clairvoyance_samples
-from clairvoyance2.datasets import dummy_dataset, simple_pkpd_dataset
 
 from tempor.data import clv2conv, dataset
 from tempor.datasources.prediction.one_off.plugin_sine import SineDataSource
 from tempor.datasources.time_to_event.plugin_pbc import PBCDataSource
+from tempor.models.clairvoyance2.data import Dataset as Clairvoyance2Dataset
+from tempor.models.clairvoyance2.data import dataformat as clairvoyance_samples
+from tempor.models.clairvoyance2.datasets import dummy_dataset, simple_pkpd_dataset
 
 
 @pytest.fixture(scope="module")

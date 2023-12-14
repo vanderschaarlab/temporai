@@ -2,12 +2,11 @@
 
 from typing import Any, cast
 
-from clairvoyance2.datasets.simulated.simple_pkpd import simple_pkpd_dataset
-
 from tempor.core import plugins
 from tempor.data import dataset
 from tempor.data.clv2conv import clairvoyance2_dataset_to_tempor_dataset
 from tempor.datasources import datasource
+from tempor.models.clairvoyance2.datasets.simulated.simple_pkpd import simple_pkpd_dataset
 
 
 @plugins.register_plugin(name="pkpd", category="treatments.one_off", plugin_type="datasource")
